@@ -1,21 +1,25 @@
 /* =============================================================
-   Energy × Digital Nexus — Morocco Infrastructure Map v1.0
+   Energy × Digital Nexus — Morocco Infrastructure Map
    Single-file app logic: country switch, layer manifest, map,
    tooltips, popups, methodology modal.
 
-   v1.0.1 — bugfix pass:
-     · borders (Morocco + Western Sahara from Natural Earth)
-     · markers migrated from DOM → native Mapbox GL source/layers
-       (DOM markers drifted at extreme zoom)
-     · popup converted to position:fixed (independent of canvas)
-     · zoom-dependent labels, clustering for power plants
+   v1.1 — public basemap pass:
+     · Mapbox GL → MapLibre GL + CARTO dark-matter / positron
+     · No token required (fully public, like enersite / Pawel)
+     · WS boundary filtered out of render
+     · DC bubble radius scales with capacity_estimate_mw
+     · Planned / announced DCs rendered with lower opacity
    ============================================================= */
 
 (function(){
   "use strict";
 
   // ---------- Config & country manifest ----------
-  const CFG       = window.APP_CONFIG || { mapboxToken:null, defaultCountry:"morocco" };
+  const CFG       = window.APP_CONFIG || { defaultCountry:"morocco" };
+  const BASEMAP = {
+    dark:  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+    light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+  };
   const COUNTRIES = window.COUNTRIES || {};
   const ENABLED   = (window.COUNTRIES_ENABLED || ["morocco"]).filter(k=>COUNTRIES[k]);
   const REPO_URL  = "https://github.com/redatahiri37/morocco-energy-digital-map";
@@ -58,7 +62,7 @@
     document.body.dataset.theme = next;
     localStorage.setItem("mg.theme", next);
     if(map){
-      map.setStyle(next === "dark" ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/light-v11");
+      map.setStyle(next === "dark" ? BASEMAP.dark : BASEMAP.light);
       map.once("styledata", ()=>buildMapLayers(currentCountry));
     }
   });
@@ -101,23 +105,10 @@
   function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
   function layerKind(layerId){ return LAYER_KIND[layerId] || "other"; }
 
-  // ---------- Token handling ----------
-  function getToken(){
-    return (CFG.mapboxToken && CFG.mapboxToken.startsWith("pk.") ? CFG.mapboxToken : null)
-        || localStorage.getItem("mg.token");
-  }
-  function showNoToken(reason){
+  function showMapError(reason){
     noTokenCard.classList.remove("hidden");
     if(reason) console.warn("[MoroccoMap]", reason);
   }
-  $("#tokenSave").addEventListener("click", ()=>{
-    const v = $("#tokenInput").value.trim();
-    if(!v.startsWith("pk.")){ $("#tokenInput").style.borderColor = "#ef4444"; return; }
-    localStorage.setItem("mg.token", v);
-    noTokenCard.classList.add("hidden");
-    bootMap(v);
-  });
-  $("#tokenInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") $("#tokenSave").click(); });
 
   // ---------- Boot ----------
   function boot(){
@@ -129,43 +120,33 @@
       renderKPIs(initialCountry);
       renderMethodologySources(initialCountry);
     });
-
-    const token = getToken();
-    if(!token){ showNoToken("No Mapbox token available"); return; }
-    bootMap(token);
+    bootMap();
   }
 
-  function bootMap(token){
+  function bootMap(){
+    if(typeof maplibregl === "undefined"){ showMapError("MapLibre GL not loaded"); return; }
     try{
-      mapboxgl.accessToken = token;
       const c = COUNTRIES[currentCountry];
-      map = new mapboxgl.Map({
+      map = new maplibregl.Map({
         container: "map",
-        style: document.body.dataset.theme === "dark"
-               ? "mapbox://styles/mapbox/dark-v11"
-               : "mapbox://styles/mapbox/light-v11",
+        style: document.body.dataset.theme === "dark" ? BASEMAP.dark : BASEMAP.light,
         center: c.center, zoom: c.zoom,
-        attributionControl: { compact:true },
-        projection: "mercator"   // explicit: prevents edge-case drift
+        attributionControl: false
       });
-      map.addControl(new mapboxgl.NavigationControl({ showCompass:false }), "bottom-right");
+      map.addControl(new maplibregl.NavigationControl({ showCompass:false }), "bottom-right");
+      map.addControl(new maplibregl.AttributionControl({ compact:true }), "bottom-left");
 
       map.on("load", ()=>buildMapLayers(currentCountry));
       map.on("click", (e)=>{
-        // Click on empty map closes the popup (feature clicks stopPropagation via layer handlers)
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
       });
       map.on("error", (e)=>{
         const msg = e && e.error && String(e.error.message||"");
-        if(/token|401|Unauthor/i.test(msg)){
-          localStorage.removeItem("mg.token");
-          if(map){ map.remove(); map = null; }
-          showNoToken("Invalid or restricted token: " + msg);
-        }
+        console.warn("[MoroccoMap] map error:", msg);
       });
     } catch(err){
-      showNoToken(String(err));
+      showMapError(String(err));
     }
   }
 
@@ -268,7 +249,8 @@
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
-    ).join("") + `<li><strong>Boundary:</strong> Natural Earth 1:50m Admin 0 — <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">naturalearthdata.com</a> (public domain). Territory shown reflects administrative control; Western Sahara status is disputed internationally.</li>`;
+    ).join("") + `<li><strong>Boundary:</strong> Natural Earth 1:50m Admin 0 — <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">naturalearthdata.com</a> (public domain).</li>` +
+    `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> + <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors — public, no token required.</li>`;
   }
 
   // ---------- Layer ID bookkeeping ----------
@@ -278,7 +260,7 @@
     const kind = layerKind(dataLayerId);
     if(kind === "grid"){
       return [
-        "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned"
+        "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
       ];
     }
     if(dataLayerId === "power-plants"){
@@ -300,6 +282,7 @@
     if(map && map.getLayer("lyr-grid-mv"))      ids.push("lyr-grid-mv");
     if(map && map.getLayer("lyr-grid-lv"))      ids.push("lyr-grid-lv");
     if(map && map.getLayer("lyr-grid-planned")) ids.push("lyr-grid-planned");
+    if(map && map.getLayer("lyr-grid-idle"))    ids.push("lyr-grid-idle");
     if(map && map.getLayer("lyr-power-points")) ids.push("lyr-power-points");
     if(map && map.getLayer("lyr-ind-points"))   ids.push("lyr-ind-points");
     if(map && map.getLayer("lyr-dig-points"))   ids.push("lyr-dig-points");
@@ -311,16 +294,22 @@
   function buildMapLayers(countryKey){
     if(!map) return;
 
-    // Boundary (Morocco + Western Sahara) — added first so everything draws on top
+    // Boundary: keep Morocco only, filter out Western Sahara feature
     if(boundaryData){
-      addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
+      const morocco = {
+        type:"FeatureCollection",
+        features: (boundaryData.features || []).filter(f=>{
+          const n = (f.properties && (f.properties.name || f.properties.NAME || "")) + "";
+          return n.toLowerCase() !== "western sahara";
+        })
+      };
+      addOrReplace("src-boundary", { type:"geojson", data: morocco });
       if(!map.getLayer("lyr-boundary-line")){
         map.addLayer({
           id:"lyr-boundary-line", type:"line", source:"src-boundary",
           paint:{
-            "line-color":"rgba(255,255,255,0.38)",
-            "line-width":1.3,
-            "line-dasharray":[1,0]
+            "line-color":"rgba(255,255,255,0.32)",
+            "line-width":1.1
           }
         });
       }
@@ -359,7 +348,7 @@
 
   function buildLineLayer(dataLayerId, fc){
     const srcId = "src-grid";
-    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned"];
+    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle","lyr-grid-idle"];
     ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
@@ -375,6 +364,9 @@
     map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
       paint:{ "line-color":"#a37df0", "line-width":1.6, "line-opacity":0.9, "line-dasharray":[2,2] }});
+    map.addLayer({ id:"lyr-grid-idle", type:"line", source:srcId,
+      filter:["==",["get","status"],"idle"],
+      paint:{ "line-color":"#6a6a70", "line-width":1.3, "line-opacity":0.55, "line-dasharray":[1,2] }});
   }
 
   function buildPowerLayer(fc){
@@ -543,16 +535,37 @@
       }
     });
 
-    // Regular DCs (non-cable)
+    // Regular DCs (non-cable). Radius scales with capacity; planned/announced
+    // DCs render at lower opacity with a dashed stroke so the pipeline is
+    // visually distinct from energised capacity.
     map.addLayer({
       id:"lyr-dig-points", type:"circle", source: srcId,
       filter:["!=",["get","category"],"cable_landing"],
       paint:{
         "circle-color": DIGITAL_COLOR,
-        "circle-radius":["interpolate",["linear"],["zoom"], 4, 4.5, 7, 7, 10, 9],
-        "circle-stroke-color":"rgba(0,0,0,0.6)",
+        "circle-radius":[
+          "interpolate",["linear"],
+          ["coalesce",["get","capacity_estimate_mw"], 3],
+          0, 5,
+          10, 7,
+          40, 11,
+          100, 16,
+          300, 22
+        ],
+        "circle-stroke-color":[
+          "case",
+          ["in",["get","status"],["literal",["announced","construction","planned"]]], "rgba(163,125,240,0.9)",
+          "rgba(0,0,0,0.6)"
+        ],
         "circle-stroke-width":1.5,
-        "circle-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
+        "circle-opacity":[
+          "case",
+          ["boolean",["feature-state","dim"],false], 0.25,
+          ["==",["get","status"],"announced"], 0.38,
+          ["==",["get","status"],"planned"],   0.38,
+          ["==",["get","status"],"construction"], 0.65,
+          0.95
+        ]
       }
     });
 
@@ -606,7 +619,8 @@
       { id:"lyr-grid-hv",      src:"src-grid", dataLayer:"grid-lines" },
       { id:"lyr-grid-mv",      src:"src-grid", dataLayer:"grid-lines" },
       { id:"lyr-grid-lv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" }
+      { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" },
+      { id:"lyr-grid-idle",    src:"src-grid", dataLayer:"grid-lines" }
     ];
 
     pointLayers.forEach(({id, src, dataLayer})=>{

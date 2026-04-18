@@ -457,12 +457,15 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .bb-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .bb-right a{color:var(--text-1);font-weight:500}
 
-/* Mapbox overrides */
-.mapboxgl-ctrl-attrib{font-size:9px !important;background:rgba(14,14,13,.55) !important}
+/* Map GL overrides (MapLibre + legacy Mapbox class names) */
+.maplibregl-ctrl-attrib,.mapboxgl-ctrl-attrib{font-size:9px !important;background:rgba(14,14,13,.55) !important}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-attrib a,
 .mapboxgl-ctrl-attrib,.mapboxgl-ctrl-attrib a{color:var(--text-3) !important}
-.mapboxgl-popup{display:none}
-.mapboxgl-ctrl-group{background:var(--bg-1) !important;border:1px solid var(--border) !important}
-.mapboxgl-ctrl-icon{filter:invert(.85) hue-rotate(180deg)}
+.maplibregl-popup,.mapboxgl-popup{display:none}
+.maplibregl-ctrl-group,.mapboxgl-ctrl-group{background:var(--bg-1) !important;border:1px solid var(--border) !important}
+.maplibregl-ctrl-icon,.mapboxgl-ctrl-icon{filter:invert(.85) hue-rotate(180deg)}
+[data-theme="light"] .maplibregl-ctrl-icon{filter:none}
+[data-theme="light"] .maplibregl-ctrl-attrib{background:rgba(245,244,239,.75) !important}
 
 /* Modal */
 .modal{

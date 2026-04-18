@@ -32,6 +32,8 @@ or a PR on GitHub.*
 | OpenStreetMap — Overpass API | https://overpass-turbo.eu/ | ODbL 1.0 — attribution required, share-alike on derived databases |
 | ONEE network maps (public domain overview) | http://www.one.org.ma/ | Public information, attribution required |
 | MIICEN announcements (HVDC corridor) | https://www.mem.gov.ma/ | Government press material |
+| REE — Spain/Morocco interconnection | https://www.ree.es/en/activities/operation-of-the-electricity-system/international-interconnections | Public disclosure |
+| Xlinks — Morocco-UK Power Project | https://xlinks.co/morocco-uk-power-project/ | Company press material |
 
 **Attribution:** `© OpenStreetMap contributors, ODbL 1.0 · ONEE`
 
@@ -82,11 +84,22 @@ Not shipped in v1.0. Intended sources for v1.1:
 
 ---
 
-## Base map
-- **Mapbox** — dark-v11 / light-v11. Requires an account token.
-  Production deployments use a URL-restricted token.
-- **Fallback (not yet wired):** MapLibre GL JS + OpenFreeMap tiles.
-  See `ASSUMPTIONS.md` §7.
+## Base map (v1.1)
+- **MapLibre GL JS** — open-source WebGL map renderer (BSD-3).
+- **CARTO basemaps** — `dark-matter-gl-style` / `positron-gl-style`.
+  Free for use with attribution: `© CARTO, © OpenStreetMap contributors`.
+  https://carto.com/basemaps · https://carto.com/attributions
+- **OpenStreetMap** (underlying source for CARTO) — ODbL 1.0.
+  https://www.openstreetmap.org/copyright
+
+No account, token, or API key is required.
+
+## Country boundary
+- **Natural Earth** — 1:50m Admin 0 Countries (public domain).
+  https://www.naturalearthdata.com/
+  The boundary layer renders Morocco only; the Western Sahara
+  territorial question is outside the scope of this energy-infrastructure
+  project and is not drawn.
 
 ## Known gaps (as of 2026-04-17)
 - No sub-60 kV distribution network.

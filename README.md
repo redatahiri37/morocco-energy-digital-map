@@ -28,30 +28,21 @@ inspectable from the map tooltip.
 
 ## Quick start — run locally
 
-This is a static site. Any HTTP server works.
+This is a static site. **No token, no account, no signup.** The basemap
+uses MapLibre GL + CARTO dark-matter / positron + OpenStreetMap tiles
+— all public.
 
 ```bash
-# 1. Get a Mapbox token
-#    → https://account.mapbox.com/access-tokens
-
-# 2. Copy the config template and paste your token
-cp docs/config.example.js docs/config.js
-#   then edit docs/config.js:  mapboxToken: "pk.…"
-
-# 3. Serve the docs/ folder
 cd docs
 python3 -m http.server 8000
-#   open http://localhost:8000
+# open http://localhost:8000
 ```
 
-If you don't want to create a `config.js`, the page accepts a token
-at runtime — the "Map engine unavailable" card has a field that stores
-the token in `localStorage`.
+That's it.
 
-> **Token is domain-restricted in production.** If you clone this repo
-> and try to run it under your own URL, you must use your own Mapbox
-> token. The production token is restricted to the deployed GitHub
-> Pages URL only.
+> **v1.1 note** — the app used to require a Mapbox token. It no longer
+> does. `config.js` is kept only for future per-country overrides; you
+> can safely leave `docs/config.example.js` as-is or delete it.
 
 ## Project structure
 
