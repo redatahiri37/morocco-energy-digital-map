@@ -2,6 +2,13 @@
    Energy × Digital Nexus — Morocco Infrastructure Map v1.0
    Single-file app logic: country switch, layer manifest, map,
    tooltips, popups, methodology modal.
+
+   v1.0.1 — bugfix pass:
+     · borders (Morocco + Western Sahara from Natural Earth)
+     · markers migrated from DOM → native Mapbox GL source/layers
+       (DOM markers drifted at extreme zoom)
+     · popup converted to position:fixed (independent of canvas)
+     · zoom-dependent labels, clustering for power plants
    ============================================================= */
 
 (function(){
@@ -33,8 +40,9 @@
   let map = null;
   let currentCountry = null;
   let layerData      = {};   // id -> GeoJSON
-  let markersByLayer = {};   // id -> Marker[]
   let visibility     = {};   // id -> bool
+  let hoveredLayer   = null; // {layerId, featureId}
+  let boundaryData   = null;
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -74,7 +82,6 @@
   $("#panelCollapse").addEventListener("click", ()=>layout.classList.add("panel-collapsed"));
   $("#panelExpand").addEventListener("click",   ()=>layout.classList.remove("panel-collapsed"));
 
-  // ---------- Repo / contribute links ----------
   ["githubLink","githubContribute","githubFooter"].forEach(id=>{ const el = $("#"+id); if(el) el.href = REPO_URL; });
 
   // ---------- Methodology modal ----------
@@ -91,9 +98,7 @@
     return "$" + v.toLocaleString();
   }
   function fmtCap(mw){ return mw == null ? "—" : mw.toLocaleString() + " MW"; }
-  function fmtDate(iso){ return iso || "—"; }
   function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
-
   function layerKind(layerId){ return LAYER_KIND[layerId] || "other"; }
 
   // ---------- Token handling ----------
@@ -119,7 +124,6 @@
     const initialCountry = ENABLED.includes(CFG.defaultCountry) ? CFG.defaultCountry : ENABLED[0];
     countrySelect.value = initialCountry;
     currentCountry = initialCountry;
-    renderPanelShell(initialCountry);   // panel works even without a map
     loadAllData(initialCountry).then(()=>{
       renderLayerList(initialCountry);
       renderKPIs(initialCountry);
@@ -142,14 +146,15 @@
                : "mapbox://styles/mapbox/light-v11",
         center: c.center, zoom: c.zoom,
         attributionControl: { compact:true },
-        projection: "mercator"
+        projection: "mercator"   // explicit: prevents edge-case drift
       });
       map.addControl(new mapboxgl.NavigationControl({ showCompass:false }), "bottom-right");
 
       map.on("load", ()=>buildMapLayers(currentCountry));
       map.on("click", (e)=>{
-        if(e.originalEvent.target.closest(".mg-pin")) return;
-        closePopup();
+        // Click on empty map closes the popup (feature clicks stopPropagation via layer handlers)
+        const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
+        if(features.length === 0) closePopup();
       });
       map.on("error", (e)=>{
         const msg = e && e.error && String(e.error.message||"");
@@ -168,11 +173,20 @@
   async function loadAllData(countryKey){
     const c = COUNTRIES[countryKey];
     layerData = {};
-    const promises = c.layers.map(async (L)=>{
+    // Load boundary (if the file exists)
+    try{
+      const r = await fetch(c.dataPath + "boundary.geojson");
+      if(r.ok) boundaryData = await r.json();
+    } catch(e){ boundaryData = null; }
+
+    const promises = c.layers.map(async (L, idx)=>{
       try{
         const res = await fetch(c.dataPath + L.file);
         if(!res.ok) throw new Error(res.status + " " + L.file);
-        layerData[L.id] = await res.json();
+        const fc = await res.json();
+        // Ensure each feature has a stable numeric id — required for feature-state
+        fc.features.forEach((f,i)=>{ if(f.id == null) f.id = idx*10000 + i; });
+        layerData[L.id] = fc;
       } catch(e){
         console.warn("[MoroccoMap] failed to load", L.file, e);
         layerData[L.id] = { type:"FeatureCollection", features:[] };
@@ -183,13 +197,6 @@
   }
 
   // ---------- Panel: layer list ----------
-  function renderPanelShell(countryKey){
-    const c = COUNTRIES[countryKey];
-    if(!c) return;
-    // KPI placeholders so it renders pre-data
-    renderKPIs(countryKey);
-  }
-
   function renderLayerList(countryKey){
     const c = COUNTRIES[countryKey];
     const host = $("#layerList");
@@ -233,19 +240,16 @@
     });
   }
 
-  // ---------- Panel: KPIs (computed, not hardcoded) ----------
   function renderKPIs(countryKey){
     const host = $("#kpiGrid");
     const fcPower = layerData["power-plants"] || { features:[] };
     const fcDC    = layerData["digital"]      || { features:[] };
-
     const totalMW = fcPower.features.reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
     const renewMW = fcPower.features.filter(f=>["solar","wind","hydro"].includes(f.properties.fuel_type))
                     .reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
     const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
     const dcMW = fcDC.features.reduce((s,f)=>s + (f.properties.capacity_estimate_mw || 0), 0);
     const dcInvest = fcDC.features.reduce((s,f)=>s + (f.properties.investment_usd || 0), 0);
-
     host.innerHTML = `
       <div class="kpi"><div class="k">Tracked capacity</div>
         <div class="v">${(totalMW/1000).toFixed(1)}<small> GW</small></div></div>
@@ -258,178 +262,466 @@
     `;
   }
 
-  // ---------- Methodology modal content ----------
   function renderMethodologySources(countryKey){
     const c = COUNTRIES[countryKey];
     const host = $("#methodologySources");
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
-    ).join("");
+    ).join("") + `<li><strong>Boundary:</strong> Natural Earth 1:50m Admin 0 — <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">naturalearthdata.com</a> (public domain). Territory shown reflects administrative control; Western Sahara status is disputed internationally.</li>`;
   }
 
-  // ---------- Map layers ----------
+  // ---------- Layer ID bookkeeping ----------
+  // Each data layer produces a set of Mapbox GL layers. queryableLayers()
+  // returns the ones that should catch clicks (everything except clusters).
+  function layersFor(dataLayerId){
+    const kind = layerKind(dataLayerId);
+    if(kind === "grid"){
+      return [
+        "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned"
+      ];
+    }
+    if(dataLayerId === "power-plants"){
+      return ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
+    }
+    if(dataLayerId === "industrial"){
+      return ["lyr-ind-points","lyr-ind-labels"];
+    }
+    if(dataLayerId === "digital"){
+      return ["lyr-dig-halo","lyr-dig-points","lyr-dig-cables","lyr-dig-labels"];
+    }
+    return [];
+  }
+
+  function queryableLayers(){
+    // Only interactive (non-cluster, non-halo) layers
+    const ids = [];
+    if(map && map.getLayer("lyr-grid-hv"))      ids.push("lyr-grid-hv");
+    if(map && map.getLayer("lyr-grid-mv"))      ids.push("lyr-grid-mv");
+    if(map && map.getLayer("lyr-grid-lv"))      ids.push("lyr-grid-lv");
+    if(map && map.getLayer("lyr-grid-planned")) ids.push("lyr-grid-planned");
+    if(map && map.getLayer("lyr-power-points")) ids.push("lyr-power-points");
+    if(map && map.getLayer("lyr-ind-points"))   ids.push("lyr-ind-points");
+    if(map && map.getLayer("lyr-dig-points"))   ids.push("lyr-dig-points");
+    if(map && map.getLayer("lyr-dig-cables"))   ids.push("lyr-dig-cables");
+    return ids;
+  }
+
+  // ---------- Build map layers ----------
   function buildMapLayers(countryKey){
     if(!map) return;
-    markersByLayer = {};
 
-    const c = COUNTRIES[countryKey];
-    c.layers.forEach(L=>{
-      const fc = layerData[L.id] || { features:[] };
-      const kind = layerKind(L.id);
-
-      if(L.kind === "lines"){
-        buildLineLayer(L.id, fc);
-      } else {
-        buildPointLayer(L.id, fc, kind);
+    // Boundary (Morocco + Western Sahara) — added first so everything draws on top
+    if(boundaryData){
+      addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
+      if(!map.getLayer("lyr-boundary-line")){
+        map.addLayer({
+          id:"lyr-boundary-line", type:"line", source:"src-boundary",
+          paint:{
+            "line-color":"rgba(255,255,255,0.38)",
+            "line-width":1.3,
+            "line-dasharray":[1,0]
+          }
+        });
       }
-      applyLayerVisibility(L.id, visibility[L.id] !== false);
+    }
+
+    // Transmission lines
+    buildLineLayer("grid-lines", layerData["grid-lines"] || { features:[] });
+
+    // Power plants (clustered)
+    buildPowerLayer(layerData["power-plants"] || { features:[] });
+
+    // Industrial
+    buildPointLayer({
+      idPrefix: "lyr-ind",
+      sourceId: "src-industrial",
+      data:     layerData["industrial"] || { features:[] },
+      color:    INDUSTRIAL_COLOR,
+      minZoomLabel: 7,
+      labelField: "name"
+    });
+
+    // Digital infrastructure — split cables (diamond) from regular DC circles
+    buildDigitalLayer(layerData["digital"] || { features:[] });
+
+    // Apply visibility from state
+    Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
+
+    // Wire interactions
+    wireLayerInteractions();
+  }
+
+  function addOrReplace(id, spec){
+    if(map.getSource(id)) map.removeSource(id);
+    map.addSource(id, spec);
+  }
+
+  function buildLineLayer(dataLayerId, fc){
+    const srcId = "src-grid";
+    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned"];
+    ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    addOrReplace(srcId, { type:"geojson", data: fc });
+
+    map.addLayer({ id:"lyr-grid-hv", type:"line", source:srcId,
+      filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
+      paint:{ "line-color":GRID_COLOR, "line-width":2, "line-opacity":0.85 }});
+    map.addLayer({ id:"lyr-grid-mv", type:"line", source:srcId,
+      filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
+      paint:{ "line-color":GRID_COLOR, "line-width":1.2, "line-opacity":0.6 }});
+    map.addLayer({ id:"lyr-grid-lv", type:"line", source:srcId,
+      filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
+      paint:{ "line-color":GRID_COLOR, "line-width":0.8, "line-opacity":0.35 }});
+    map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
+      filter:["==",["get","status"],"planned"],
+      paint:{ "line-color":"#a37df0", "line-width":1.6, "line-opacity":0.9, "line-dasharray":[2,2] }});
+  }
+
+  function buildPowerLayer(fc){
+    const srcId = "src-power";
+    const toRemove = ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
+    toRemove.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+
+    addOrReplace(srcId, {
+      type:"geojson", data: fc,
+      cluster: true, clusterMaxZoom: 6, clusterRadius: 35,
+      generateId: false
+    });
+
+    // Cluster bubbles
+    map.addLayer({
+      id:"lyr-power-clusters", type:"circle", source:srcId,
+      filter:["has","point_count"],
+      paint:{
+        "circle-color":"rgba(245,158,11,0.85)",
+        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22],
+        "circle-stroke-color":"#0e0e0d",
+        "circle-stroke-width":1.5
+      }
+    });
+    map.addLayer({
+      id:"lyr-power-cluster-count", type:"symbol", source:srcId,
+      filter:["has","point_count"],
+      layout:{
+        "text-field":["get","point_count_abbreviated"],
+        "text-font":["Open Sans Bold","Arial Unicode MS Bold"],
+        "text-size":11,
+        "text-allow-overlap":true
+      },
+      paint:{ "text-color":"#0e0e0d" }
+    });
+
+    // Halo for announced/construction status
+    map.addLayer({
+      id:"lyr-power-halo", type:"circle", source:srcId,
+      filter:["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
+      paint:{
+        "circle-color":"rgba(245,158,11,0.25)",
+        "circle-radius":11,
+        "circle-blur":0.3
+      }
+    });
+
+    // Individual plants, color by fuel
+    map.addLayer({
+      id:"lyr-power-points", type:"circle", source:srcId,
+      filter:["!",["has","point_count"]],
+      paint:{
+        "circle-color":[
+          "match",["get","fuel_type"],
+          "solar", FUEL_COLOR.solar,
+          "wind",  FUEL_COLOR.wind,
+          "hydro", FUEL_COLOR.hydro,
+          "coal",  FUEL_COLOR.coal,
+          "gas",   FUEL_COLOR.gas,
+          "oil",   FUEL_COLOR.oil,
+          "#888"
+        ],
+        "circle-radius":[
+          "interpolate",["linear"],["zoom"],
+          4, 4,
+          7, 6,
+          10, 8
+        ],
+        "circle-stroke-color":"rgba(0,0,0,0.55)",
+        "circle-stroke-width":1.5,
+        "circle-opacity":[
+          "case",
+          ["boolean",["feature-state","dim"],false], 0.3,
+          1
+        ]
+      }
+    });
+
+    // Labels at zoom >= 7
+    map.addLayer({
+      id:"lyr-power-labels", type:"symbol", source:srcId,
+      filter:["!",["has","point_count"]],
+      minzoom: 7,
+      layout:{
+        "text-field":["get","name"],
+        "text-font":["Open Sans Regular","Arial Unicode MS Regular"],
+        "text-size":10.5,
+        "text-offset":[0, 1.1],
+        "text-anchor":"top",
+        "text-allow-overlap":false
+      },
+      paint:{
+        "text-color":"#f1efe9",
+        "text-halo-color":"rgba(0,0,0,0.85)",
+        "text-halo-width":1.2
+      }
+    });
+
+    // Cluster click → zoom in
+    map.on("click","lyr-power-clusters",(e)=>{
+      const f = e.features[0];
+      const clusterId = f.properties.cluster_id;
+      map.getSource(srcId).getClusterExpansionZoom(clusterId, (err, zoom)=>{
+        if(err) return;
+        map.easeTo({ center: f.geometry.coordinates, zoom });
+      });
+    });
+    map.on("mouseenter","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor="pointer"; });
+    map.on("mouseleave","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor=""; });
+  }
+
+  function buildPointLayer(opts){
+    const { idPrefix, sourceId, data, color, minZoomLabel, labelField } = opts;
+    const pts = idPrefix + "-points";
+    const lbs = idPrefix + "-labels";
+    [pts, lbs].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    addOrReplace(sourceId, { type:"geojson", data, promoteId: "id" });
+
+    map.addLayer({
+      id: pts, type:"circle", source: sourceId,
+      paint:{
+        "circle-color": color,
+        "circle-radius":["interpolate",["linear"],["zoom"], 4, 4, 7, 6, 10, 8],
+        "circle-stroke-color":"rgba(0,0,0,0.55)",
+        "circle-stroke-width":1.5,
+        "circle-opacity":[
+          "case",
+          ["boolean",["feature-state","dim"],false], 0.3,
+          1
+        ]
+      }
+    });
+    map.addLayer({
+      id: lbs, type:"symbol", source: sourceId,
+      minzoom: minZoomLabel,
+      layout:{
+        "text-field":["get", labelField],
+        "text-font":["Open Sans Regular","Arial Unicode MS Regular"],
+        "text-size":10.5,
+        "text-offset":[0, 1.1],
+        "text-anchor":"top",
+        "text-allow-overlap":false
+      },
+      paint:{
+        "text-color":"#f1efe9",
+        "text-halo-color":"rgba(0,0,0,0.85)",
+        "text-halo-width":1.2
+      }
     });
   }
 
-  function buildLineLayer(layerId, fc){
-    const srcId = "src-" + layerId;
-    const layerHV   = "lyr-" + layerId + "-hv";
-    const layerMV   = "lyr-" + layerId + "-mv";
-    const layerLV   = "lyr-" + layerId + "-lv";
-    const layerPLAN = "lyr-" + layerId + "-planned";
+  function buildDigitalLayer(fc){
+    const srcId = "src-digital";
+    const ids = ["lyr-dig-halo","lyr-dig-points","lyr-dig-cables","lyr-dig-labels"];
+    ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    addOrReplace(srcId, { type:"geojson", data: fc, promoteId: "id" });
 
-    // Clean up prior instance (theme switch)
-    [layerHV,layerMV,layerLV,layerPLAN].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-    if(map.getSource(srcId)) map.removeSource(srcId);
-
-    map.addSource(srcId, { type:"geojson", data: fc });
-
-    map.addLayer({ id: layerHV, type:"line", source: srcId,
-      filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
-      paint:{ "line-color":GRID_COLOR, "line-width":2, "line-opacity":0.85 }
-    });
-    map.addLayer({ id: layerMV, type:"line", source: srcId,
-      filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
-      paint:{ "line-color":GRID_COLOR, "line-width":1.2, "line-opacity":0.6 }
-    });
-    map.addLayer({ id: layerLV, type:"line", source: srcId,
-      filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
-      paint:{ "line-color":GRID_COLOR, "line-width":0.8, "line-opacity":0.35 }
-    });
-    map.addLayer({ id: layerPLAN, type:"line", source: srcId,
-      filter:["==",["get","status"],"planned"],
-      paint:{ "line-color":"#a37df0", "line-width":1.6, "line-opacity":0.9, "line-dasharray":[2,2] }
+    // Halo for announced status (pulsing-style, static render)
+    map.addLayer({
+      id:"lyr-dig-halo", type:"circle", source: srcId,
+      filter:["any",["==",["get","status"],"announced"],["==",["get","status"],"construction"]],
+      paint:{
+        "circle-color":"rgba(124,58,237,0.22)",
+        "circle-radius":13,
+        "circle-blur":0.35
+      }
     });
 
-    // Click behaviour on lines
-    [layerHV,layerMV,layerLV,layerPLAN].forEach(id=>{
-      map.on("mouseenter", id, ()=>{ map.getCanvas().style.cursor = "pointer"; });
-      map.on("mouseleave", id, ()=>{ map.getCanvas().style.cursor = ""; hideTooltip(); });
+    // Regular DCs (non-cable)
+    map.addLayer({
+      id:"lyr-dig-points", type:"circle", source: srcId,
+      filter:["!=",["get","category"],"cable_landing"],
+      paint:{
+        "circle-color": DIGITAL_COLOR,
+        "circle-radius":["interpolate",["linear"],["zoom"], 4, 4.5, 7, 7, 10, 9],
+        "circle-stroke-color":"rgba(0,0,0,0.6)",
+        "circle-stroke-width":1.5,
+        "circle-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
+      }
+    });
+
+    // Cable landings — symbol diamond
+    map.addLayer({
+      id:"lyr-dig-cables", type:"symbol", source: srcId,
+      filter:["==",["get","category"],"cable_landing"],
+      layout:{
+        "text-field":"◆",
+        "text-font":["Open Sans Bold","Arial Unicode MS Bold"],
+        "text-size":["interpolate",["linear"],["zoom"], 4, 13, 10, 19],
+        "text-allow-overlap":true
+      },
+      paint:{
+        "text-color": CABLE_COLOR,
+        "text-halo-color":"rgba(0,0,0,0.85)",
+        "text-halo-width":1.2,
+        "text-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
+      }
+    });
+
+    // Labels
+    map.addLayer({
+      id:"lyr-dig-labels", type:"symbol", source: srcId,
+      minzoom: 7,
+      layout:{
+        "text-field":["get","name"],
+        "text-font":["Open Sans Regular","Arial Unicode MS Regular"],
+        "text-size":10.5,
+        "text-offset":[0, 1.2],
+        "text-anchor":"top",
+        "text-allow-overlap":false
+      },
+      paint:{
+        "text-color":"#f1efe9",
+        "text-halo-color":"rgba(0,0,0,0.85)",
+        "text-halo-width":1.2
+      }
+    });
+  }
+
+  // ---------- Layer interactions (hover dim + tooltip + click) ----------
+  function wireLayerInteractions(){
+    const pointLayers = [
+      { id:"lyr-power-points", src:"src-power",    dataLayer:"power-plants" },
+      { id:"lyr-ind-points",   src:"src-industrial", dataLayer:"industrial" },
+      { id:"lyr-dig-points",   src:"src-digital",  dataLayer:"digital" },
+      { id:"lyr-dig-cables",   src:"src-digital",  dataLayer:"digital" }
+    ];
+    const lineLayers = [
+      { id:"lyr-grid-hv",      src:"src-grid", dataLayer:"grid-lines" },
+      { id:"lyr-grid-mv",      src:"src-grid", dataLayer:"grid-lines" },
+      { id:"lyr-grid-lv",      src:"src-grid", dataLayer:"grid-lines" },
+      { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" }
+    ];
+
+    pointLayers.forEach(({id, src, dataLayer})=>{
+      if(!map.getLayer(id)) return;
       map.on("mousemove", id, (e)=>{
-        const f = e.features[0];
-        showLineTooltip(f, e.point);
+        const f = e.features[0]; if(!f) return;
+        map.getCanvas().style.cursor = "pointer";
+        setHoverDim(src, id, f.id);
+        showPointTooltip(dataLayer, f, e.point);
+      });
+      map.on("mouseleave", id, ()=>{
+        map.getCanvas().style.cursor = "";
+        clearHoverDim();
+        hideTooltip();
       });
       map.on("click", id, (e)=>{
+        e.originalEvent.stopPropagation();
         const f = e.features[0];
-        openLinePopup(f);
+        openPointPopup(dataLayer, f);
+        map.easeTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 7), duration: 600 });
+      });
+    });
+
+    lineLayers.forEach(({id, src, dataLayer})=>{
+      if(!map.getLayer(id)) return;
+      map.on("mousemove", id, (e)=>{
+        const f = e.features[0]; if(!f) return;
+        map.getCanvas().style.cursor = "pointer";
+        showLineTooltip(f, e.point);
+      });
+      map.on("mouseleave", id, ()=>{
+        map.getCanvas().style.cursor = "";
+        hideTooltip();
+      });
+      map.on("click", id, (e)=>{
+        e.originalEvent.stopPropagation();
+        openLinePopup(e.features[0]);
       });
     });
   }
 
-  function buildPointLayer(layerId, fc, kind){
-    markersByLayer[layerId] = (markersByLayer[layerId]||[]).map(m=>{ m.remove(); return null; });
-    markersByLayer[layerId] = [];
-
+  // ---------- Hover dim: set `dim=true` on all OTHER features in a layer ----------
+  function setHoverDim(sourceId, layerId, keepId){
+    clearHoverDim();
+    const fc = map.getSource(sourceId) && map.getSource(sourceId)._data;
+    if(!fc || !fc.features) return;
     fc.features.forEach(f=>{
-      const p = f.properties || {};
-      const el = document.createElement("div");
-      el.className = "mg-pin";
-      // Fuel / category class
-      if(kind === "power"){
-        el.classList.add(p.fuel_type || "coal");
-      } else if(kind === "industrial"){
-        el.classList.add("industrial");
-      } else if(kind === "digital"){
-        if(p.category === "cable_landing") el.classList.add("cable");
-        else el.classList.add("digital");
+      if(f.id !== keepId && f.id != null){
+        map.setFeatureState({ source: sourceId, id: f.id }, { dim: true });
       }
-      if(p.status === "announced") el.classList.add("announced");
-      if(p.status === "construction") el.classList.add("construction");
-
-      const m = new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat(f.geometry.coordinates)
-        .addTo(map);
-
-      el.addEventListener("mouseenter", ()=>showPointTooltip(layerId, f));
-      el.addEventListener("mousemove",  (e)=>moveTooltip(e));
-      el.addEventListener("mouseleave", hideTooltip);
-      el.addEventListener("click", (e)=>{
-        e.stopPropagation();
-        openPointPopup(layerId, f);
-        map.flyTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 6.5), speed: 0.8, curve: 1.4 });
-      });
-
-      markersByLayer[layerId].push(m);
     });
+    hoveredLayer = { sourceId, keepId };
   }
-
-  function applyLayerVisibility(layerId, on){
-    if(!map) return;
-    const kind = layerKind(layerId);
-    if(kind === "grid"){
-      ["hv","mv","lv","planned"].forEach(k=>{
-        const id = "lyr-"+layerId+"-"+k;
-        if(map.getLayer(id)) map.setLayoutProperty(id,"visibility", on ? "visible" : "none");
-      });
-    } else {
-      (markersByLayer[layerId] || []).forEach(m=>{
-        const el = m.getElement();
-        el.style.opacity = on ? "1" : "0";
-        el.style.pointerEvents = on ? "auto" : "none";
-        el.style.transition = "opacity 200ms ease";
+  function clearHoverDim(){
+    if(!hoveredLayer) return;
+    const { sourceId } = hoveredLayer;
+    const fc = map.getSource(sourceId) && map.getSource(sourceId)._data;
+    if(fc && fc.features){
+      fc.features.forEach(f=>{
+        if(f.id != null) map.setFeatureState({ source: sourceId, id: f.id }, { dim: false });
       });
     }
+    hoveredLayer = null;
+  }
+
+  function applyLayerVisibility(dataLayerId, on){
+    if(!map) return;
+    const ids = layersFor(dataLayerId);
+    ids.forEach(id=>{
+      if(map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+    });
   }
 
   // ---------- Tooltip ----------
-  function showPointTooltip(layerId, f){
+  function showPointTooltip(dataLayerId, f, point){
     const p = f.properties || {};
-    const kind = layerKind(layerId);
+    const kind = layerKind(dataLayerId);
     let metric = "";
-    if(kind === "power")       metric = `${fmtCap(p.capacity_mw)} · ${p.fuel_type || ""}`;
+    if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${p.fuel_type || ""}`;
     else if(kind === "industrial") metric = `${p.sector || ""} · est. ${fmtCap(p.estimated_demand_mw)}`;
     else if(kind === "digital")    metric = p.capacity_estimate_mw ? `${fmtCap(p.capacity_estimate_mw)} · ${p.operator || ""}` : (p.operator || p.category || "");
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
-        <a href="${escapeHtml(p.source_url || "#")}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>
-        · ${escapeHtml(p.commissioning_year || p.year || "")}
-      </div>
-    `;
-    tooltip.style.display = "block";
+        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
+        ${p.commissioning_year || p.year ? " · " + escapeHtml(p.commissioning_year || p.year) : ""}
+      </div>`;
+    positionTooltip(point);
   }
   function showLineTooltip(f, point){
     const p = f.properties || {};
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
       <div class="tt-metric">${p.voltage_kv} kV · ${escapeHtml(p.status || "")}</div>
-      <div class="tt-meta"><a href="${escapeHtml(p.source_url || "#")}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a></div>
-    `;
-    const rect = $("#map").getBoundingClientRect();
-    tooltip.style.left = (point.x) + "px";
-    tooltip.style.top  = (point.y) + "px";
-    tooltip.style.display = "block";
+      <div class="tt-meta">${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
+    positionTooltip(point);
   }
-  function moveTooltip(e){
+  function positionTooltip(point){
     const rect = $("#map").getBoundingClientRect();
-    tooltip.style.left = (e.clientX - rect.left) + "px";
-    tooltip.style.top  = (e.clientY - rect.top)  + "px";
+    tooltip.style.left = (rect.left + point.x) + "px";
+    tooltip.style.top  = (rect.top  + point.y) + "px";
+    tooltip.style.display = "block";
   }
   function hideTooltip(){ tooltip.style.display = "none"; }
 
   // ---------- Popup ----------
-  function openPointPopup(layerId, f){
+  function openPointPopup(dataLayerId, f){
     const p = f.properties || {};
-    const kind = layerKind(layerId);
+    const kind = layerKind(dataLayerId);
     const badgeClass = kind === "power" ? "power" : kind === "industrial" ? "industrial" : kind === "digital" ? "digital" : "grid";
-    const badgeLabel = kind === "power" ? "Generation" : kind === "industrial" ? "Industrial consumer" : kind === "digital" ? (p.category === "cable_landing" ? "Submarine cable" : "Data center") : "Infrastructure";
+    const badgeLabel = kind === "power" ? "Generation"
+                     : kind === "industrial" ? "Industrial consumer"
+                     : kind === "digital" ? (p.category === "cable_landing" ? "Submarine cable" : "Data center")
+                     : "Infrastructure";
 
     let stats = "";
     if(kind === "power"){
@@ -437,29 +729,30 @@
         <div class="cell"><div class="k">Capacity</div><div class="v">${fmtCap(p.capacity_mw)}</div></div>
         <div class="cell"><div class="k">Fuel</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.fuel_type)}</div></div>
         <div class="cell"><div class="k">Technology</div><div class="v" style="font-size:12px">${escapeHtml(p.tech || "—")}</div></div>
-        <div class="cell"><div class="k">${p.status==="operational"?"Commissioned":"Target year"}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>
-      `;
+        <div class="cell"><div class="k">${p.status==="operational"?"Commissioned":"Target year"}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>`;
     } else if(kind === "industrial"){
       stats = `
         <div class="cell"><div class="k">Sector</div><div class="v" style="font-size:12px">${escapeHtml(p.sector)}</div></div>
         <div class="cell"><div class="k">Est. demand</div><div class="v">${fmtCap(p.estimated_demand_mw)}</div></div>
         <div class="cell"><div class="k">Grid connection</div><div class="v" style="font-size:11.5px">${escapeHtml(p.grid_connection || "—")}</div></div>
-        <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || "—")}</div></div>
-      `;
+        <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || "—")}</div></div>`;
     } else if(kind === "digital"){
       stats = `
         <div class="cell"><div class="k">Operator</div><div class="v" style="font-size:12px">${escapeHtml(p.operator || "—")}</div></div>
         <div class="cell"><div class="k">Capacity</div><div class="v">${p.capacity_estimate_mw!=null ? fmtCap(p.capacity_estimate_mw) : "—"}</div></div>
         <div class="cell"><div class="k">Investment</div><div class="v">${fmtInvestment(p.investment_usd)}</div></div>
-        <div class="cell"><div class="k">${p.status==="operational"?"Energised":"Target year"}</div><div class="v">${escapeHtml(p.year || "—")}</div></div>
-      `;
+        <div class="cell"><div class="k">${p.status==="operational"?"Energised":"Target year"}</div><div class="v">${escapeHtml(p.year || "—")}</div></div>`;
     }
 
     const [lng, lat] = f.geometry.coordinates;
     const coords = `${Math.abs(lat).toFixed(2)}°${lat>=0?"N":"S"}, ${Math.abs(lng).toFixed(2)}°${lng>=0?"E":"W"}`;
 
-    $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}"><span class="dot" style="background:${ badgeClass==='power'?FUEL_COLOR[p.fuel_type]||FUEL_COLOR.solar:badgeClass==='industrial'?INDUSTRIAL_COLOR:badgeClass==='digital'?(p.category==='cable_landing'?CABLE_COLOR:DIGITAL_COLOR):GRID_COLOR }"></span>${badgeLabel}</span>`;
+    const dotColor = badgeClass==='power'      ? (FUEL_COLOR[p.fuel_type] || FUEL_COLOR.solar)
+                   : badgeClass==='industrial' ? INDUSTRIAL_COLOR
+                   : badgeClass==='digital'    ? (p.category==='cable_landing' ? CABLE_COLOR : DIGITAL_COLOR)
+                   : GRID_COLOR;
 
+    $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}"><span class="dot" style="background:${dotColor}"></span>${badgeLabel}</span>`;
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${escapeHtml(p.region || "")} · ${coords}</div>
@@ -476,8 +769,7 @@
       <div class="pop-actions">
         <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
-      </div>
-    `;
+      </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
   }
@@ -505,8 +797,7 @@
       </details>
       <div class="pop-actions">
         <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}">Report an error</a>
-      </div>
-    `;
+      </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
   }
@@ -528,14 +819,10 @@
     renderKPIs(key);
     renderMethodologySources(key);
     if(map){
-      // tear down existing markers
-      Object.values(markersByLayer).forEach(arr => arr.forEach(m=>m.remove()));
-      markersByLayer = {};
       map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
       buildMapLayers(key);
     }
   });
 
-  // ---------- Go ----------
   boot();
 })();
