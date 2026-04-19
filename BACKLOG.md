@@ -7,6 +7,17 @@ Last reshuffle: **2026-04-18**.
 
 ---
 
+## ✅ Just shipped (v1.2)
+
+- **Black-screen fix** — CARTO vector style swapped for inline raster
+  style (dark_all / light_all). Bulletproof.
+- **OpenInfraMap vector overlay** — full OSM-sourced transmission grid,
+  substations, plants worldwide. No ingest, no maintenance. ODbL.
+- **Editorial grid stripped** — dropped 10 hand-traced MV/LV lines.
+  We now only carry the 6 strategic features: ES-MA I/II/III, DZ-MA
+  (idle), Xlinks UK-MA HVDC, Dakhla-Agadir HVDC. These render in teal
+  (operational) or purple-dashed (planned) on top of OIM's grey grid.
+
 ## 🟢 Now — in flight this week
 
 - **v1.1 engine swap** — Mapbox GL → MapLibre GL + CARTO dark-matter / positron.
@@ -26,10 +37,9 @@ Last reshuffle: **2026-04-18**.
   breakdown (N+ONE, inwi, Maroc Telecom, Atos, + announced Oracle MA region,
   Microsoft Azure MA region when confirmed). Add provider legend in the
   sidebar (color stripe per operator on the DC row).
-- **Substation dataset** — currently we only have line endpoints.
-  Overpass query `power=substation` in MA bbox, filter by
-  `voltage>=60000`, render as squares. This unblocks any future
-  grid-suitability scoring.
+- ~~**Substation dataset**~~ — *delivered via OpenInfraMap vector
+  overlay in v1.2.* Full OSM `power=substation` coverage comes for
+  free; no ingest pipeline needed.
 - **DC detail pane** — on click, show `Tier`, `PUE` (if public),
   `cooling` (air / liquid / immersion), `connected_substation_id`.
 - **Bilingual UI (FR / EN)** — audience is split roughly 50/50;

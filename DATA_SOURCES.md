@@ -25,21 +25,29 @@ or a PR on GitHub.*
 `Data: Global Energy Monitor · ONEE · MASEN · operator disclosures`
 
 ## Layer 2 — Transmission Grid
-**File:** `docs/data/morocco/grid-lines.geojson`
+**File:** `docs/data/morocco/grid-lines.geojson` (editorial overlay only)
+
+As of v1.2 the full transmission grid and substations are rendered
+directly from **OpenInfraMap** vector tiles — no ingest, always
+fresh, full OSM coverage. Our `grid-lines.geojson` now carries only
+the editorial overlay: cross-border interconnectors and planned
+HVDC corridors that are either absent from OSM or tell a
+strategic story OSM doesn't (status=idle, status=planned with
+commissioning year, capacity).
 
 | Source | URL | License |
 |---|---|---|
-| OpenStreetMap — Overpass API | https://overpass-turbo.eu/ | ODbL 1.0 — attribution required, share-alike on derived databases |
-| ONEE network maps (public domain overview) | http://www.one.org.ma/ | Public information, attribution required |
-| MIICEN announcements (HVDC corridor) | https://www.mem.gov.ma/ | Government press material |
+| **OpenInfraMap vector tiles** (live grid + substations) | https://openinframap.org/ | ODbL 1.0 via OSM — attribution required |
+| OpenStreetMap (underlying OIM data) | https://www.openstreetmap.org/copyright | ODbL 1.0 |
 | REE — Spain/Morocco interconnection | https://www.ree.es/en/activities/operation-of-the-electricity-system/international-interconnections | Public disclosure |
 | Xlinks — Morocco-UK Power Project | https://xlinks.co/morocco-uk-power-project/ | Company press material |
+| MIICEN announcements (Dakhla-Agadir HVDC) | https://www.mem.gov.ma/ | Government press material |
 
-**Attribution:** `© OpenStreetMap contributors, ODbL 1.0 · ONEE`
+**Attribution:** `OpenInfraMap · © OpenStreetMap contributors, ODbL 1.0`
 
-**Note:** Line routing is **approximate** — traced from ONEE schematic
-maps and OSM power=line ways, not digitised from a grid-operator
-shapefile.
+**Note on precision:** The OIM overlay is as accurate as OSM — survey-grade
+in populated areas, patchy in remote ones. The editorial interconnector
+geometries are indicative great-circle routes, not actual cable paths.
 
 ## Layer 3 — Industrial Consumers
 **File:** `docs/data/morocco/industrial.geojson`

@@ -15,11 +15,33 @@
   "use strict";
 
   // ---------- Config & country manifest ----------
-  const CFG       = window.APP_CONFIG || { defaultCountry:"morocco" };
-  const BASEMAP = {
-    dark:  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-    light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-  };
+  const CFG = window.APP_CONFIG || { defaultCountry:"morocco" };
+
+  // Basemap: CARTO raster tiles (dark_all / light_all). We build the
+  // MapLibre style inline so there is zero chance of a style-spec parse
+  // failure at load time. Raster is heavier than vector but bulletproof.
+  function basemapStyle(theme){
+    const variant = theme === "dark" ? "dark_all" : "light_all";
+    return {
+      version: 8,
+      glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+      sources: {
+        "carto-base": {
+          type: "raster",
+          tiles: ["a","b","c","d"].map(s =>
+            `https://${s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}.png`),
+          tileSize: 256,
+          attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
+        }
+      },
+      layers: [{ id: "carto-base", type: "raster", source: "carto-base" }]
+    };
+  }
+
+  // OpenInfraMap vector tiles — transmission grid, substations, plants.
+  // Data is OSM under ODbL; attribution is mandatory.
+  const OIM_TILES = "https://openinframap.org/tiles/{z}/{x}/{y}.pbf";
+  const OIM_ATTR  = '<a href="https://openinframap.org" target="_blank">OpenInfraMap</a> (ODbL)';
   const COUNTRIES = window.COUNTRIES || {};
   const ENABLED   = (window.COUNTRIES_ENABLED || ["morocco"]).filter(k=>COUNTRIES[k]);
   const REPO_URL  = "https://github.com/redatahiri37/morocco-energy-digital-map";
@@ -62,7 +84,7 @@
     document.body.dataset.theme = next;
     localStorage.setItem("mg.theme", next);
     if(map){
-      map.setStyle(next === "dark" ? BASEMAP.dark : BASEMAP.light);
+      map.setStyle(basemapStyle(next));
       map.once("styledata", ()=>buildMapLayers(currentCountry));
     }
   });
@@ -129,7 +151,7 @@
       const c = COUNTRIES[currentCountry];
       map = new maplibregl.Map({
         container: "map",
-        style: document.body.dataset.theme === "dark" ? BASEMAP.dark : BASEMAP.light,
+        style: basemapStyle(document.body.dataset.theme),
         center: c.center, zoom: c.zoom,
         attributionControl: false
       });
@@ -294,6 +316,59 @@
   function buildMapLayers(countryKey){
     if(!map) return;
 
+    // OpenInfraMap vector overlay — full OSM-sourced transmission grid,
+    // substations and plants. Free, ODbL, no API key. Rendered below all
+    // editorial features so our announced/planned overlays stay on top.
+    addOrReplace("src-oim", {
+      type: "vector",
+      tiles: [OIM_TILES],
+      minzoom: 0, maxzoom: 17,
+      attribution: OIM_ATTR
+    });
+    const oimIds = ["lyr-oim-line-lv","lyr-oim-line-mv","lyr-oim-line-hv",
+                    "lyr-oim-substation-poly","lyr-oim-substation-pt"];
+    oimIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+
+    // Lines — styled by voltage. OIM exposes a numeric `voltage` (volts).
+    // Non-numeric / multi-voltage tags coerce to 0 and fall into LV.
+    const voltExpr = ["coalesce", ["to-number", ["get","voltage"]], 0];
+    map.addLayer({
+      id:"lyr-oim-line-lv", type:"line", source:"src-oim", "source-layer":"power_line",
+      filter:["<", voltExpr, 100000],
+      minzoom: 8,
+      paint:{ "line-color":"rgba(229,228,224,0.22)", "line-width":0.6 }
+    });
+    map.addLayer({
+      id:"lyr-oim-line-mv", type:"line", source:"src-oim", "source-layer":"power_line",
+      filter:["all",[">=",voltExpr,100000],["<",voltExpr,300000]],
+      paint:{ "line-color":"rgba(229,228,224,0.55)", "line-width":1.0 }
+    });
+    map.addLayer({
+      id:"lyr-oim-line-hv", type:"line", source:"src-oim", "source-layer":"power_line",
+      filter:[">=", voltExpr, 300000],
+      paint:{ "line-color":GRID_COLOR, "line-width":1.8, "line-opacity":0.9 }
+    });
+
+    // Substations — polygon at high zoom, points at low zoom
+    map.addLayer({
+      id:"lyr-oim-substation-poly", type:"fill", source:"src-oim", "source-layer":"power_substation",
+      minzoom: 10,
+      paint:{
+        "fill-color":"rgba(229,228,224,0.15)",
+        "fill-outline-color":"rgba(229,228,224,0.55)"
+      }
+    });
+    map.addLayer({
+      id:"lyr-oim-substation-pt", type:"circle", source:"src-oim", "source-layer":"power_substation_point",
+      minzoom: 5,
+      paint:{
+        "circle-color":"rgba(229,228,224,0.75)",
+        "circle-radius":["interpolate",["linear"],["zoom"], 5,1.2, 10,3.5],
+        "circle-stroke-color":"rgba(0,0,0,0.55)",
+        "circle-stroke-width":0.5
+      }
+    });
+
     // Boundary: keep Morocco only, filter out Western Sahara feature
     if(boundaryData){
       const morocco = {
@@ -352,21 +427,24 @@
     ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
+    // Editorial overlay — interconnectors, HVDC corridors, planned/idle
+    // strategic links. Rendered bold/colored on top of OIM's grey OSM grid
+    // so the strategic story pops.
     map.addLayer({ id:"lyr-grid-hv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
-      paint:{ "line-color":GRID_COLOR, "line-width":2, "line-opacity":0.85 }});
+      paint:{ "line-color":"#0D9488", "line-width":2.6, "line-opacity":0.95 }});
     map.addLayer({ id:"lyr-grid-mv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
-      paint:{ "line-color":GRID_COLOR, "line-width":1.2, "line-opacity":0.6 }});
+      paint:{ "line-color":"#0D9488", "line-width":1.6, "line-opacity":0.85 }});
     map.addLayer({ id:"lyr-grid-lv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
-      paint:{ "line-color":GRID_COLOR, "line-width":0.8, "line-opacity":0.35 }});
+      paint:{ "line-color":"#0D9488", "line-width":1.0, "line-opacity":0.6 }});
     map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
-      paint:{ "line-color":"#a37df0", "line-width":1.6, "line-opacity":0.9, "line-dasharray":[2,2] }});
+      paint:{ "line-color":"#a37df0", "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
     map.addLayer({ id:"lyr-grid-idle", type:"line", source:srcId,
       filter:["==",["get","status"],"idle"],
-      paint:{ "line-color":"#6a6a70", "line-width":1.3, "line-opacity":0.55, "line-dasharray":[1,2] }});
+      paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }});
   }
 
   function buildPowerLayer(fc){
