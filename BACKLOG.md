@@ -3,25 +3,53 @@
 Kanban for the Morocco Infrastructure Map and its MENA expansion.
 Moves top-to-bottom within a column; moves right across columns as work lands.
 
-Last reshuffle: **2026-04-18**.
+Last reshuffle: **2026-04-19**.
 
 ---
 
-## ✅ Just shipped (v1.3)
+## ✅ Just shipped (v1.5)
+
+- **National transmission network (WBG 2018)** — 541 lines at 150 / 225 /
+  400 kV rendered under the editorial overlay. Steel-blue voltage-stepped
+  palette (thicker + lighter = higher kV). Dropped 60 kV (distribution
+  clutter). Reprojected from Merchich Nord Maroc → WGS84 via
+  `scripts/build-transmission-geojson.py`.
+- **v0.2 calc-engine design doc** — `docs/CALC_ENGINE.md` scopes the
+  node-capacity model (graph extraction, SIL-based thermal limits,
+  N−1 headroom, Pawel-style 1–5 suitability score). NOT YET BUILT.
+
+## 🟢 Now — v0.2 in flight
+
+- **Calc engine — phase 1** — build the grid graph offline:
+  `scripts/build-grid-graph.py` emits `nodes.geojson` + `edges.json` by
+  snapping line endpoints within 500 m, tagging max-kV per node. No UI yet.
+- **Calc engine — phase 2** — compute per-node N−1 headroom from SIL
+  tables + existing connected generation/load. Precomputed, ships as
+  `grid-graph.json` so the browser stays fast.
+- **Calc engine — phase 3** — "click anywhere" popup in `app.js`:
+  nearest-node distance, headroom MW, dominant kV, 1–5 score.
+
+## ✅ Shipped (v1.4)
+
+- **Tester agent** — `.claude/agents/map-tester.md`. Runs the pre-flight
+  checklist; returns GO / NO-GO with evidence. Two-agent loop wired
+  into DEBUGGING.md.
+- **Button readability pass** — `.ghost-btn` / `.icon-btn` rebuilt
+  (text-0 on bg-3, teal hover, focus-visible, light-theme override).
+  MapLibre control groups restyled.
+- **Mapbox remnants stripped** — `docs/config.example.js` removed,
+  legacy `.mapboxgl-*` CSS selectors pruned. Pure MapLibre now.
+- **Timeline reverted** — year-slider pulled from UI, parked in "Later"
+  with restore pointers to the v1.3 prototype commit.
+
+## ✅ Shipped (v1.3)
 
 - **DC provider legend** — bubbles coloured by operator (N+ONE, inwi,
   Maroc Telecom, Naver×Nvidia, Iozera, gov. sovereign); sidebar legend
   auto-filters to operators actually present in the data.
 - **Debugger agent** — `.claude/agents/map-debugger.md`. Auto-invoked on
   bug reports. Refuses to guess; requires console output + one-line
-  symptom before it'll touch code. User-facing template in
-  `DEBUGGING.md` at the repo root.
-- **Tester agent** — `.claude/agents/map-tester.md`. Runs the pre-flight
-  checklist (static + network + data integrity + requirement-specific)
-  before any "shipped" claim. Returns GO / NO-GO with evidence.
-- **Button readability pass** — bumped all `.ghost-btn` / `.icon-btn`
-  contrast (text-0 on bg-3, hover state teal-on-white); MapLibre
-  navigation controls restyled for both themes.
+  symptom before it'll touch code.
 
 ## ✅ Shipped (v1.2)
 
