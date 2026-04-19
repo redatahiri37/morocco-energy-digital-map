@@ -59,3 +59,20 @@ REGRESSION RISK: none; raster is a strict superset of what rendered before
 
 If the VERIFY step fails when you try it, reply with the new console
 output — the agent will iterate.
+
+---
+
+## Two agents, one loop
+
+- **`map-debugger`** — diagnoses and fixes what broke.
+- **`map-tester`** — runs the pre-flight checklist before any "shipped"
+  claim. Returns `GO` or `NO-GO` with evidence. Refuses to rubber-stamp.
+
+The main flow I want Claude to follow on every change:
+
+```
+change → map-tester → FAIL? → map-debugger → fix → map-tester → PASS → ship
+```
+
+If Claude ever tells you "it works" without a tester `GO` verdict, call
+it out. That's the guarantee.

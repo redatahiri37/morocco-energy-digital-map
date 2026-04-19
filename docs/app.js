@@ -89,9 +89,6 @@
   let visibility     = {};   // id -> bool
   let hoveredLayer   = null; // {layerId, featureId}
   let boundaryData   = null;
-  const YEAR_MIN = 2000, YEAR_MAX = 2035;
-  let currentYear    = YEAR_MAX; // "show everything" by default
-  let timelineTimer  = null;
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -167,7 +164,6 @@
       renderMethodologySources(initialCountry);
     });
     bootMap();
-    initTimeline();
   }
 
   function bootMap(){
@@ -451,9 +447,6 @@
 
     // Apply visibility from state
     Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
-
-    // Re-apply year filter if timeline isn't at "All"
-    if(currentYear < YEAR_MAX) applyYearFilter();
 
     // Wire interactions
     wireLayerInteractions();
@@ -942,97 +935,6 @@
     popup.setAttribute("aria-hidden","true");
   }
   $("#popupClose").addEventListener("click", closePopup);
-
-  // ---------- Timeline (year slider) ----------
-  // Shows only features with commissioning_year <= currentYear. Industrial
-  // consumers have no year tag → always visible. OIM overlay is unfiltered.
-  function initTimeline(){
-    const slider = $("#timelineSlider");
-    const yearEl = $("#timelineYear");
-    const playBtn = $("#timelinePlay");
-    const resetBtn = $("#timelineReset");
-    const drawer = $("#timeline");
-    if(!slider) return;
-
-    const updateFill = ()=>{
-      const pct = ((currentYear - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
-      slider.style.setProperty("--fill", pct + "%");
-    };
-    const setYear = (y, from)=>{
-      currentYear = Math.max(YEAR_MIN, Math.min(YEAR_MAX, y|0));
-      if(from !== "slider") slider.value = currentYear;
-      yearEl.textContent = currentYear === YEAR_MAX ? "All" : String(currentYear);
-      updateFill();
-      applyYearFilter();
-    };
-    slider.addEventListener("input", e=>setYear(+e.target.value, "slider"));
-    resetBtn.addEventListener("click", ()=>{ stopPlay(); setYear(YEAR_MAX); });
-
-    function stopPlay(){
-      if(timelineTimer){ clearInterval(timelineTimer); timelineTimer = null; }
-      drawer.classList.remove("playing");
-      playBtn.setAttribute("aria-label","Play timeline");
-    }
-    function startPlay(){
-      drawer.classList.add("playing");
-      playBtn.setAttribute("aria-label","Pause timeline");
-      if(currentYear >= YEAR_MAX) setYear(YEAR_MIN);
-      timelineTimer = setInterval(()=>{
-        if(currentYear >= YEAR_MAX){ stopPlay(); return; }
-        setYear(currentYear + 1);
-      }, 350);
-    }
-    playBtn.addEventListener("click", ()=>{
-      if(timelineTimer) stopPlay(); else startPlay();
-    });
-    updateFill();
-  }
-
-  // Filter expression: a feature is visible when its commissioning year
-  // (power / grid) or its `year` (digital) is <= currentYear. Missing values
-  // coerce to 0 → always visible. YEAR_MAX means "show everything".
-  function yearFilter(prop){
-    return ["<=", ["coalesce", ["to-number", ["get", prop]], 0], currentYear];
-  }
-  function applyYearFilter(){
-    if(!map) return;
-    const showAll = currentYear >= YEAR_MAX;
-
-    const apply = (layerId, baseFilter, yearProp)=>{
-      if(!map.getLayer(layerId)) return;
-      const f = showAll ? baseFilter
-        : (baseFilter ? ["all", baseFilter, yearFilter(yearProp)] : yearFilter(yearProp));
-      map.setFilter(layerId, f);
-    };
-
-    // Power plants (clustered + halo + points + labels)
-    apply("lyr-power-points", ["!",["has","point_count"]], "commissioning_year");
-    apply("lyr-power-labels", ["!",["has","point_count"]], "commissioning_year");
-    apply("lyr-power-halo",
-      ["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
-      "commissioning_year");
-
-    // Digital (non-cable)
-    apply("lyr-dig-points", ["!=",["get","category"],"cable_landing"], "year");
-    apply("lyr-dig-labels", null, "year");
-    apply("lyr-dig-halo",
-      ["any",["==",["get","status"],"announced"],["==",["get","status"],"construction"]],
-      "year");
-    apply("lyr-dig-cables", ["==",["get","category"],"cable_landing"], "year");
-
-    // Editorial grid (interconnectors, HVDC)
-    apply("lyr-grid-hv",
-      ["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
-      "commissioning_year");
-    apply("lyr-grid-mv",
-      ["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
-      "commissioning_year");
-    apply("lyr-grid-lv",
-      ["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
-      "commissioning_year");
-    apply("lyr-grid-planned", ["==",["get","status"],"planned"], "commissioning_year");
-    apply("lyr-grid-idle",    ["==",["get","status"],"idle"],    "commissioning_year");
-  }
 
   // ---------- Country switch ----------
   countrySelect.addEventListener("change", async (e)=>{

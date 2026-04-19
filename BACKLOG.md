@@ -12,13 +12,16 @@ Last reshuffle: **2026-04-18**.
 - **DC provider legend** — bubbles coloured by operator (N+ONE, inwi,
   Maroc Telecom, Naver×Nvidia, Iozera, gov. sovereign); sidebar legend
   auto-filters to operators actually present in the data.
-- **Timeline slider (capacity buildout 2000→2035)** — drag the slider to
-  fade in features as they reach their `commissioning_year` / `year`.
-  Play button auto-advances 1yr / 350ms. "All" button resets.
 - **Debugger agent** — `.claude/agents/map-debugger.md`. Auto-invoked on
   bug reports. Refuses to guess; requires console output + one-line
   symptom before it'll touch code. User-facing template in
   `DEBUGGING.md` at the repo root.
+- **Tester agent** — `.claude/agents/map-tester.md`. Runs the pre-flight
+  checklist (static + network + data integrity + requirement-specific)
+  before any "shipped" claim. Returns GO / NO-GO with evidence.
+- **Button readability pass** — bumped all `.ghost-btn` / `.icon-btn`
+  contrast (text-0 on bg-3, hover state teal-on-white); MapLibre
+  navigation controls restyled for both themes.
 
 ## ✅ Shipped (v1.2)
 
@@ -58,12 +61,18 @@ Last reshuffle: **2026-04-18**.
 - **Bilingual UI (FR / EN)** — audience is split roughly 50/50;
   i18n dictionary in `docs/i18n/` driven by `<html lang>` + a top-bar toggle.
 
-## 🔵 Later — v1.2+ scope
+## 🟡 Next — picked up once "Now" ships
 
-- **Capacity buildout timeline** — year slider (2000→2035). Filter
-  `commissioning_year <= $year`, fade announced features in at their
-  target year. This is the headline visual for the Substack post.
-  Needs a bottom drawer with timeline + play button.
+- **Capacity buildout timeline (prototyped in v1.3, reverted)** — year
+  slider 2000→2035, filter `commissioning_year <= $year`, fade announced
+  features in at their target year. Play button auto-advances. This is
+  the Substack headline visual. Implementation already worked; pulled
+  to keep v1.3 small. Restore when the Substack post needs it. Files:
+  bottom drawer in `index.html`, `.timeline` block in `style.css`,
+  `initTimeline()` + `applyYearFilter()` in `app.js`. Git history has
+  the full diff under the pre-reverted commit.
+
+## 🔵 Later — v1.2+ scope
 - **Grid-suitability index (Pawel-style 1–5 score)** — per 0.1° cell,
   blend: nearest HV line (km), available generation within 50 km,
   renewables share, cooling-water proximity, seismic risk.
