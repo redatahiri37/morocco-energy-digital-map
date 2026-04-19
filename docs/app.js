@@ -55,6 +55,26 @@
   const CABLE_COLOR      = "#F97316";
   const GRID_COLOR       = "#E5E4E0";
 
+  // DC provider palette — shown in the sidebar legend, used on the map.
+  // Keep the list short; anything unknown falls back to DIGITAL_COLOR.
+  const PROVIDERS = [
+    { key:"N+ONE",                     color:"#9B6BF0", label:"N+ONE (colocation)" },
+    { key:"inwi",                      color:"#5BBFD9", label:"inwi (telco)" },
+    { key:"Maroc Telecom (IAM)",       color:"#EC4899", label:"Maroc Telecom / IAM (telco)" },
+    { key:"Naver / Nvidia consortium", color:"#F59E0B", label:"Naver × Nvidia (hyperscale, announced)" },
+    { key:"Iozera",                    color:"#F97316", label:"Iozera (hyperscale, announced)" },
+    { key:"Government of Morocco",     color:"#10B981", label:"Gov. of Morocco (sovereign)" },
+    { key:"ADD (Agence de Développement du Digital)",
+                                       color:"#10B981", label:"ADD (gov. sovereign)" }
+  ];
+  const PROVIDER_COLOR_EXPR = (function(){
+    // Build a case expression: operator match → color; else category default
+    const expr = ["case"];
+    PROVIDERS.forEach(p => { expr.push(["==",["get","operator"], p.key], p.color); });
+    expr.push(DIGITAL_COLOR); // default
+    return expr;
+  })();
+
   const LAYER_KIND = {
     "power-plants":"power",
     "grid-lines":"grid",
@@ -69,6 +89,9 @@
   let visibility     = {};   // id -> bool
   let hoveredLayer   = null; // {layerId, featureId}
   let boundaryData   = null;
+  const YEAR_MIN = 2000, YEAR_MAX = 2035;
+  let currentYear    = YEAR_MAX; // "show everything" by default
+  let timelineTimer  = null;
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -140,9 +163,11 @@
     loadAllData(initialCountry).then(()=>{
       renderLayerList(initialCountry);
       renderKPIs(initialCountry);
+      renderProviderLegend();
       renderMethodologySources(initialCountry);
     });
     bootMap();
+    initTimeline();
   }
 
   function bootMap(){
@@ -241,6 +266,21 @@
       if(visibility[L.id] === false) row.classList.add("muted");
       host.appendChild(row);
     });
+  }
+
+  function renderProviderLegend(){
+    const host = $("#providerLegend");
+    if(!host) return;
+    const fc = layerData["digital"] || { features:[] };
+    // Count features per operator to show only providers that are in data
+    const seen = new Set(fc.features.map(f => (f.properties||{}).operator).filter(Boolean));
+    const rows = PROVIDERS
+      .filter(p => seen.has(p.key))
+      .map(p => `<div class="row"><span class="swatch" style="background:${p.color}"></span>${escapeHtml(p.label)}</div>`)
+      .join("");
+    const cableRow = fc.features.some(f => f.properties && f.properties.category === "cable_landing")
+      ? `<div class="row cable"><span class="swatch" style="background:${CABLE_COLOR}"></span>Submarine cable landing</div>` : "";
+    host.innerHTML = rows + cableRow;
   }
 
   function renderKPIs(countryKey){
@@ -411,6 +451,9 @@
 
     // Apply visibility from state
     Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
+
+    // Re-apply year filter if timeline isn't at "All"
+    if(currentYear < YEAR_MAX) applyYearFilter();
 
     // Wire interactions
     wireLayerInteractions();
@@ -620,7 +663,7 @@
       id:"lyr-dig-points", type:"circle", source: srcId,
       filter:["!=",["get","category"],"cable_landing"],
       paint:{
-        "circle-color": DIGITAL_COLOR,
+        "circle-color": PROVIDER_COLOR_EXPR,
         "circle-radius":[
           "interpolate",["linear"],
           ["coalesce",["get","capacity_estimate_mw"], 3],
@@ -899,6 +942,97 @@
     popup.setAttribute("aria-hidden","true");
   }
   $("#popupClose").addEventListener("click", closePopup);
+
+  // ---------- Timeline (year slider) ----------
+  // Shows only features with commissioning_year <= currentYear. Industrial
+  // consumers have no year tag → always visible. OIM overlay is unfiltered.
+  function initTimeline(){
+    const slider = $("#timelineSlider");
+    const yearEl = $("#timelineYear");
+    const playBtn = $("#timelinePlay");
+    const resetBtn = $("#timelineReset");
+    const drawer = $("#timeline");
+    if(!slider) return;
+
+    const updateFill = ()=>{
+      const pct = ((currentYear - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
+      slider.style.setProperty("--fill", pct + "%");
+    };
+    const setYear = (y, from)=>{
+      currentYear = Math.max(YEAR_MIN, Math.min(YEAR_MAX, y|0));
+      if(from !== "slider") slider.value = currentYear;
+      yearEl.textContent = currentYear === YEAR_MAX ? "All" : String(currentYear);
+      updateFill();
+      applyYearFilter();
+    };
+    slider.addEventListener("input", e=>setYear(+e.target.value, "slider"));
+    resetBtn.addEventListener("click", ()=>{ stopPlay(); setYear(YEAR_MAX); });
+
+    function stopPlay(){
+      if(timelineTimer){ clearInterval(timelineTimer); timelineTimer = null; }
+      drawer.classList.remove("playing");
+      playBtn.setAttribute("aria-label","Play timeline");
+    }
+    function startPlay(){
+      drawer.classList.add("playing");
+      playBtn.setAttribute("aria-label","Pause timeline");
+      if(currentYear >= YEAR_MAX) setYear(YEAR_MIN);
+      timelineTimer = setInterval(()=>{
+        if(currentYear >= YEAR_MAX){ stopPlay(); return; }
+        setYear(currentYear + 1);
+      }, 350);
+    }
+    playBtn.addEventListener("click", ()=>{
+      if(timelineTimer) stopPlay(); else startPlay();
+    });
+    updateFill();
+  }
+
+  // Filter expression: a feature is visible when its commissioning year
+  // (power / grid) or its `year` (digital) is <= currentYear. Missing values
+  // coerce to 0 → always visible. YEAR_MAX means "show everything".
+  function yearFilter(prop){
+    return ["<=", ["coalesce", ["to-number", ["get", prop]], 0], currentYear];
+  }
+  function applyYearFilter(){
+    if(!map) return;
+    const showAll = currentYear >= YEAR_MAX;
+
+    const apply = (layerId, baseFilter, yearProp)=>{
+      if(!map.getLayer(layerId)) return;
+      const f = showAll ? baseFilter
+        : (baseFilter ? ["all", baseFilter, yearFilter(yearProp)] : yearFilter(yearProp));
+      map.setFilter(layerId, f);
+    };
+
+    // Power plants (clustered + halo + points + labels)
+    apply("lyr-power-points", ["!",["has","point_count"]], "commissioning_year");
+    apply("lyr-power-labels", ["!",["has","point_count"]], "commissioning_year");
+    apply("lyr-power-halo",
+      ["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
+      "commissioning_year");
+
+    // Digital (non-cable)
+    apply("lyr-dig-points", ["!=",["get","category"],"cable_landing"], "year");
+    apply("lyr-dig-labels", null, "year");
+    apply("lyr-dig-halo",
+      ["any",["==",["get","status"],"announced"],["==",["get","status"],"construction"]],
+      "year");
+    apply("lyr-dig-cables", ["==",["get","category"],"cable_landing"], "year");
+
+    // Editorial grid (interconnectors, HVDC)
+    apply("lyr-grid-hv",
+      ["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
+      "commissioning_year");
+    apply("lyr-grid-mv",
+      ["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
+      "commissioning_year");
+    apply("lyr-grid-lv",
+      ["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
+      "commissioning_year");
+    apply("lyr-grid-planned", ["==",["get","status"],"planned"], "commissioning_year");
+    apply("lyr-grid-idle",    ["==",["get","status"],"idle"],    "commissioning_year");
+  }
 
   // ---------- Country switch ----------
   countrySelect.addEventListener("change", async (e)=>{

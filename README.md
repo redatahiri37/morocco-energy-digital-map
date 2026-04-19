@@ -44,6 +44,11 @@ That's it.
 > does. `config.js` is kept only for future per-country overrides; you
 > can safely leave `docs/config.example.js` as-is or delete it.
 
+## Reporting a bug
+
+See [DEBUGGING.md](./DEBUGGING.md) — paste a 4-field template and the
+`map-debugger` agent triages it.
+
 ## Project structure
 
 ```

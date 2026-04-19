@@ -7,7 +7,20 @@ Last reshuffle: **2026-04-18**.
 
 ---
 
-## ✅ Just shipped (v1.2)
+## ✅ Just shipped (v1.3)
+
+- **DC provider legend** — bubbles coloured by operator (N+ONE, inwi,
+  Maroc Telecom, Naver×Nvidia, Iozera, gov. sovereign); sidebar legend
+  auto-filters to operators actually present in the data.
+- **Timeline slider (capacity buildout 2000→2035)** — drag the slider to
+  fade in features as they reach their `commissioning_year` / `year`.
+  Play button auto-advances 1yr / 350ms. "All" button resets.
+- **Debugger agent** — `.claude/agents/map-debugger.md`. Auto-invoked on
+  bug reports. Refuses to guess; requires console output + one-line
+  symptom before it'll touch code. User-facing template in
+  `DEBUGGING.md` at the repo root.
+
+## ✅ Shipped (v1.2)
 
 - **Black-screen fix** — CARTO vector style swapped for inline raster
   style (dark_all / light_all). Bulletproof.
