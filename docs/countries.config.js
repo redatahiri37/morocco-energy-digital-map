@@ -11,7 +11,7 @@ window.COUNTRIES = {
     iso:   "MA",
     center: [-6.3, 31.8],
     zoom:   5.5,
-    bounds: [[-17.5, 20.5], [-0.8, 36.25]],
+    bounds: [[-17.5, 20.5], [-0.8, 36.35]],
     dataPath: "./data/morocco/",
     layers: [
       { id: "power-plants", file: "power-plants.geojson", kind: "points",

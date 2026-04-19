@@ -58,8 +58,9 @@ For each GeoJSON:
 - [ ] `type == "FeatureCollection"`.
 - [ ] Every feature has `properties.name`, `properties.source`,
       `properties.source_url`.
-- [ ] Every coordinate in `[-17.5, 20.5]` to `[-0.8, 36.25]` (Morocco bbox,
-      with a ~5 km north buffer for Cap Spartel tip);
+- [ ] Every coordinate in `[-17.5, 20.5]` to `[-0.8, 36.35]` (Morocco bbox,
+      north edge buffered to 36.35 to cover the Tangier ↔ Tarifa 400 kV
+      submarine interconnector vertices in the WBG 2018 dataset);
       **exception:** Xlinks feature extends to UK (allow up to lat 51.5).
 
 ### Requirement-specific checks (per feature)
