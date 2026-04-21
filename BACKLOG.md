@@ -9,14 +9,25 @@ Last reshuffle: **2026-04-19**.
 
 ## ✅ Just shipped (v1.5)
 
-- **National transmission network (WBG 2018)** — 541 lines at 150 / 225 /
-  400 kV rendered under the editorial overlay. Steel-blue voltage-stepped
-  palette (thicker + lighter = higher kV). Dropped 60 kV (distribution
-  clutter). Reprojected from Merchich Nord Maroc → WGS84 via
-  `scripts/build-transmission-geojson.py`.
+- **Planned-line overlay from WBG 2018** — 5 future HV/EHV corridors
+  (2 × 225 kV, 3 × 400 kV) merged into the editorial `grid-lines.geojson`
+  so they render as purple dashed lines on top of OpenInfraMap's live
+  OSM grid. Existing lines are NOT re-ingested — OIM already renders
+  them from OSM (fresher than WBG's 2018 frozen dataset).
+- **Race-condition fix** — boot now waits for BOTH `loadAllData` AND
+  `map.on("load")` before `buildMapLayers`. Latent race masked until
+  the 221 KB WBG fetch slowed things down.
+- **WBG shapefile → WGS84 GeoJSON pipeline** —
+  `scripts/build-transmission-geojson.py` (pyproj, reproducible via
+  `WBG_DIR=…`). GeoJSON kept on disk at
+  `docs/data/morocco/transmission-lines.geojson` — not rendered,
+  reserved as v0.2 calc-engine input (need real geometry for the
+  graph, not rendered tiles).
 - **v0.2 calc-engine design doc** — `docs/CALC_ENGINE.md` scopes the
-  node-capacity model (graph extraction, SIL-based thermal limits,
-  N−1 headroom, Pawel-style 1–5 suitability score). NOT YET BUILT.
+  node-capacity model using OSM Overpass as primary + WBG 2018 as
+  cross-check. NOT YET BUILT.
+- **Tester agent upgrade** — new `GO-STATIC` verdict tier. Static-only
+  passes are no longer shippable without browser evidence.
 
 ## 🟢 Now — v0.2 in flight
 

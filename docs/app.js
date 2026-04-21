@@ -78,7 +78,6 @@
   const LAYER_KIND = {
     "power-plants":"power",
     "grid-lines":"grid",
-    "transmission-lines":"transmission",
     "industrial":"industrial",
     "digital":"digital"
   };
@@ -242,11 +241,10 @@
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
       const dotColor = (
-        kind==="power"        ? FUEL_COLOR.solar :
-        kind==="grid"         ? GRID_COLOR :
-        kind==="transmission" ? "#7a9ab8" :
-        kind==="industrial"   ? INDUSTRIAL_COLOR :
-        kind==="digital"      ? DIGITAL_COLOR : "#999"
+        kind==="power"      ? FUEL_COLOR.solar :
+        kind==="grid"       ? GRID_COLOR :
+        kind==="industrial" ? INDUSTRIAL_COLOR :
+        kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
       const row = document.createElement("label");
       row.className = "layer-row";
@@ -334,9 +332,6 @@
       return [
         "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
       ];
-    }
-    if(kind === "transmission"){
-      return ["lyr-tx-150","lyr-tx-225","lyr-tx-400","lyr-tx-planned","lyr-tx-hit"];
     }
     if(dataLayerId === "power-plants"){
       return ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
@@ -451,11 +446,10 @@
       catch(e){ console.error("[MoroccoMap] layer failed:", label, e); }
     };
 
-    // National transmission network (WBG 2018) — renders UNDER editorial grid
-    safe("transmission-lines", () =>
-      buildTransmissionLayer(layerData["transmission-lines"] || { features:[] }));
-
-    // Editorial grid overlay (interconnectors, HVDC corridors) — on top
+    // Editorial overlay — interconnectors, HVDC corridors, planned lines.
+    // The existing national transmission grid is rendered by OpenInfraMap
+    // (OSM vector tiles, added above), so this layer only carries what
+    // OIM doesn't: cross-border links and future/planned corridors.
     safe("grid-lines", () =>
       buildLineLayer("grid-lines", layerData["grid-lines"] || { features:[] }));
 
@@ -516,36 +510,6 @@
       paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }});
   }
 
-  function buildTransmissionLayer(fc){
-    const srcId = "src-transmission";
-    const ids = ["lyr-tx-400","lyr-tx-225","lyr-tx-150","lyr-tx-planned","lyr-tx-hit"];
-    ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-    // No promoteId: features have only a top-level GeoJSON `id`, no
-    // `properties.id`. Letting MapLibre auto-assign keeps feature-state
-    // safe (the prior promoteId:"id" resolved to undefined for every row).
-    addOrReplace(srcId, { type:"geojson", data: fc });
-
-    // Voltage-stepped steel-blue palette — distinct from the teal editorial
-    // grid and OIM's grey overlay. Higher kV = thicker + lighter.
-    // Filters flattened (no nested ["all", ["all", ...], ...]) to avoid
-    // known validator flakiness in MapLibre 4.7 GeoJSON pipelines.
-    map.addLayer({ id:"lyr-tx-150", type:"line", source:srcId,
-      filter:["all",["==",["get","status"],"existing"],["==",["get","voltage_kv"],150]],
-      paint:{ "line-color":"#5b7a9a", "line-width":0.9, "line-opacity":0.75 }});
-    map.addLayer({ id:"lyr-tx-225", type:"line", source:srcId,
-      filter:["all",["==",["get","status"],"existing"],["==",["get","voltage_kv"],225]],
-      paint:{ "line-color":"#7a9ab8", "line-width":1.3, "line-opacity":0.85 }});
-    map.addLayer({ id:"lyr-tx-400", type:"line", source:srcId,
-      filter:["all",["==",["get","status"],"existing"],["==",["get","voltage_kv"],400]],
-      paint:{ "line-color":"#b8cfdf", "line-width":1.9, "line-opacity":0.95 }});
-    map.addLayer({ id:"lyr-tx-planned", type:"line", source:srcId,
-      filter:["==",["get","status"],"planned"],
-      paint:{ "line-color":"#9fb7d0", "line-width":1.5, "line-opacity":0.9, "line-dasharray":[2,2] }});
-
-    // Invisible thick hit-layer for hover/click without needing pixel-perfect aim
-    map.addLayer({ id:"lyr-tx-hit", type:"line", source:srcId,
-      paint:{ "line-color":"#000", "line-width":10, "line-opacity":0.001 }});
-  }
 
   function buildPowerLayer(fc){
     const srcId = "src-power";
@@ -798,8 +762,7 @@
       { id:"lyr-grid-mv",      src:"src-grid", dataLayer:"grid-lines" },
       { id:"lyr-grid-lv",      src:"src-grid", dataLayer:"grid-lines" },
       { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-idle",    src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-tx-hit",       src:"src-transmission", dataLayer:"transmission-lines" }
+      { id:"lyr-grid-idle",    src:"src-grid", dataLayer:"grid-lines" }
     ];
 
     pointLayers.forEach(({id, src, dataLayer})=>{

@@ -10,10 +10,15 @@ Same mental model, lighter weight, fully open-source inputs.
 
 ## Model — four steps
 
-1. **Node extraction.** From `transmission-lines.geojson`, detect line
-   endpoints and junctions as nominal "nodes". Merge endpoints within
-   500 m. Each node inherits the **max kV of incident lines**.
-   Output: `nodes.geojson` (points) + `edges.json` (adjacency list).
+1. **Node extraction.** OpenInfraMap renders the existing Moroccan grid
+   from OSM, but tiles aren't a graph — we need actual geometry. Use
+   **OSM Overpass** (query `power=line`+`power=substation` in the
+   Morocco bbox) as the primary source and **`transmission-lines.geojson`
+   (WBG 2018, kept on disk, not rendered)** as a cross-check for any
+   corridors OSM has missed. Detect line endpoints and junctions as
+   nominal "nodes"; merge endpoints within 500 m. Each node inherits
+   the **max kV of incident lines**. Output: `nodes.geojson` (points) +
+   `edges.json` (adjacency list).
 
 2. **Per-line thermal capacity.** Rule-of-thumb SIL ratings (MVA) used
    as first-order capacity:
@@ -58,8 +63,8 @@ Same mental model, lighter weight, fully open-source inputs.
 
 ## Data caveat
 
-Transmission network is **World Bank Group, 2018**. Frozen snapshot.
-The 4 ES–MA interconnectors and the Xlinks corridor are added as
-editorial overlay in `grid-lines.geojson`. Anything commissioned in
-2019–2025 (e.g. new 400 kV segments in the south) is missing until we
-cross-check against ONEE's most recent Plan d'Équipement.
+Rendering is **OpenInfraMap** (OSM, ODbL, fresh). The WBG 2018 shapefile
+is kept on disk only for the calc engine — it's a frozen snapshot but
+useful as a cross-check when OSM is incomplete in the south.
+Interconnectors, HVDC corridors and 5 planned WBG-2018 lines are in
+`grid-lines.geojson` as the editorial overlay.
