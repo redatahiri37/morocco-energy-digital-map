@@ -77,10 +77,32 @@
 
   const LAYER_KIND = {
     "power-plants":"power",
-    "grid-lines":"grid",
+    "oim-grid":"oim",
+    "interconnectors":"grid",
+    "planned-corridors":"grid",
+    "grid-lines":"grid",        // legacy fallback
     "industrial":"industrial",
     "digital":"digital"
   };
+
+  // Industrial sector colour palette
+  const SECTOR_COLOR = {
+    "phosphates / fertilisers": "#F59E0B",
+    "phosphate mining":         "#F59E0B",
+    "cement":                   "#A1A1AA",
+    "steel":                    "#64748B",
+    "automotive":               "#0EA5E9",
+    "oil refining":             "#DC2626",
+    "mining / metallurgy":      "#92400E",
+  };
+  const SECTOR_COLOR_EXPR = (function(){
+    const expr = ["case"];
+    Object.entries(SECTOR_COLOR).forEach(([k,v])=>{
+      expr.push(["==",["get","sector"],k], v);
+    });
+    expr.push(INDUSTRIAL_COLOR); // default
+    return expr;
+  })();
 
   // ---------- State ----------
   let map = null;
@@ -216,6 +238,10 @@
     } catch(e){ boundaryData = null; }
 
     const promises = c.layers.map(async (L, idx)=>{
+      if(!L.file){ // OIM or other virtual layers — no fetch needed
+        if(visibility[L.id] === undefined) visibility[L.id] = true;
+        return;
+      }
       try{
         const res = await fetch(c.dataPath + L.file);
         if(!res.ok) throw new Error(res.status + " " + L.file);
@@ -243,6 +269,7 @@
       const dotColor = (
         kind==="power"      ? FUEL_COLOR.solar :
         kind==="grid"       ? GRID_COLOR :
+        kind==="oim"        ? "#6B7280" :
         kind==="industrial" ? INDUSTRIAL_COLOR :
         kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
@@ -256,7 +283,7 @@
           <div class="layer-head">
             <span class="layer-dot" style="background:${dotColor}"></span>
             <span class="layer-name">${escapeHtml(L.title)}</span>
-            <span class="layer-count">${fc.features.length}</span>
+            <span class="layer-count">${kind==="oim" ? "OSM live" : fc.features.length}</span>
           </div>
           <div class="layer-meta">
             <span>${escapeHtml(L.source)}</span> ·
@@ -328,6 +355,10 @@
   // returns the ones that should catch clicks (everything except clusters).
   function layersFor(dataLayerId){
     const kind = layerKind(dataLayerId);
+    if(dataLayerId === "oim-grid"){
+      return ["lyr-oim-line-lv","lyr-oim-line-mv","lyr-oim-line-hv",
+              "lyr-oim-substation-poly","lyr-oim-substation-pt"];
+    }
     if(kind === "grid"){
       return [
         "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
@@ -417,22 +448,27 @@
       }
     });
 
-    // Boundary: keep Morocco only, filter out Western Sahara feature
+    // Boundary: dissolved single polygon (Morocco + Southern Provinces as
+    // one territory — no internal border). The geojson was pre-dissolved
+    // by scripts/build-transmission-geojson.py companion pass.
     if(boundaryData){
-      const morocco = {
-        type:"FeatureCollection",
-        features: (boundaryData.features || []).filter(f=>{
-          const n = (f.properties && (f.properties.name || f.properties.NAME || "")) + "";
-          return n.toLowerCase() !== "western sahara";
-        })
-      };
-      addOrReplace("src-boundary", { type:"geojson", data: morocco });
+      addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
+      if(!map.getLayer("lyr-boundary-fill")){
+        map.addLayer({
+          id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
+          paint:{
+            "fill-color":"rgba(255,255,255,0.03)",
+            "fill-outline-color":"rgba(0,0,0,0)"
+          }
+        });
+      }
       if(!map.getLayer("lyr-boundary-line")){
         map.addLayer({
           id:"lyr-boundary-line", type:"line", source:"src-boundary",
           paint:{
-            "line-color":"rgba(255,255,255,0.32)",
-            "line-width":1.1
+            "line-color":"rgba(255,255,255,0.28)",
+            "line-width":1.0,
+            "line-dasharray":[3,2]
           }
         });
       }
@@ -446,26 +482,27 @@
       catch(e){ console.error("[MoroccoMap] layer failed:", label, e); }
     };
 
-    // Editorial overlay — interconnectors, HVDC corridors, planned lines.
-    // The existing national transmission grid is rendered by OpenInfraMap
-    // (OSM vector tiles, added above), so this layer only carries what
-    // OIM doesn't: cross-border links and future/planned corridors.
-    safe("grid-lines", () =>
-      buildLineLayer("grid-lines", layerData["grid-lines"] || { features:[] }));
+    // Operational interconnectors (ES-MA I/II, DZ-MA idle)
+    safe("interconnectors", () =>
+      buildLineLayer("interconnectors", layerData["interconnectors"] || { features:[] }));
+
+    // Planned corridors (ES-MA III, Xlinks, Dakhla HVDC, WBG 2018 planned)
+    safe("planned-corridors", () =>
+      buildLineLayer("planned-corridors", layerData["planned-corridors"] || { features:[] }));
 
     // Power plants (clustered)
     safe("power-plants", () =>
       buildPowerLayer(layerData["power-plants"] || { features:[] }));
 
-    // Industrial
+    // Industrial — sector-coloured by SECTOR_COLOR_EXPR
     safe("industrial", () =>
       buildPointLayer({
-        idPrefix: "lyr-ind",
-        sourceId: "src-industrial",
-        data:     layerData["industrial"] || { features:[] },
-        color:    INDUSTRIAL_COLOR,
+        idPrefix:     "lyr-ind",
+        sourceId:     "src-industrial",
+        data:         layerData["industrial"] || { features:[] },
+        color:        SECTOR_COLOR_EXPR,
         minZoomLabel: 7,
-        labelField: "name"
+        labelField:   "name"
       }));
 
     // Digital infrastructure — split cables (diamond) from regular DC circles
