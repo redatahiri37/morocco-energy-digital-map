@@ -431,27 +431,40 @@
       }
     }
 
+    // Each build*Layer call is isolated: if one throws (bad MapLibre
+    // expression, missing source, etc.), the rest still render and the
+    // error surfaces in the console for the map-debugger agent.
+    const safe = (label, fn) => {
+      try { fn(); }
+      catch(e){ console.error("[MoroccoMap] layer failed:", label, e); }
+    };
+
     // National transmission network (WBG 2018) — renders UNDER editorial grid
-    buildTransmissionLayer(layerData["transmission-lines"] || { features:[] });
+    safe("transmission-lines", () =>
+      buildTransmissionLayer(layerData["transmission-lines"] || { features:[] }));
 
     // Editorial grid overlay (interconnectors, HVDC corridors) — on top
-    buildLineLayer("grid-lines", layerData["grid-lines"] || { features:[] });
+    safe("grid-lines", () =>
+      buildLineLayer("grid-lines", layerData["grid-lines"] || { features:[] }));
 
     // Power plants (clustered)
-    buildPowerLayer(layerData["power-plants"] || { features:[] });
+    safe("power-plants", () =>
+      buildPowerLayer(layerData["power-plants"] || { features:[] }));
 
     // Industrial
-    buildPointLayer({
-      idPrefix: "lyr-ind",
-      sourceId: "src-industrial",
-      data:     layerData["industrial"] || { features:[] },
-      color:    INDUSTRIAL_COLOR,
-      minZoomLabel: 7,
-      labelField: "name"
-    });
+    safe("industrial", () =>
+      buildPointLayer({
+        idPrefix: "lyr-ind",
+        sourceId: "src-industrial",
+        data:     layerData["industrial"] || { features:[] },
+        color:    INDUSTRIAL_COLOR,
+        minZoomLabel: 7,
+        labelField: "name"
+      }));
 
     // Digital infrastructure — split cables (diamond) from regular DC circles
-    buildDigitalLayer(layerData["digital"] || { features:[] });
+    safe("digital", () =>
+      buildDigitalLayer(layerData["digital"] || { features:[] }));
 
     // Apply visibility from state
     Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
@@ -467,7 +480,7 @@
 
   function buildLineLayer(dataLayerId, fc){
     const srcId = "src-grid";
-    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle","lyr-grid-idle"];
+    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"];
     ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
@@ -495,19 +508,23 @@
     const srcId = "src-transmission";
     const ids = ["lyr-tx-400","lyr-tx-225","lyr-tx-150","lyr-tx-planned","lyr-tx-hit"];
     ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-    addOrReplace(srcId, { type:"geojson", data: fc, promoteId:"id" });
+    // No promoteId: features have only a top-level GeoJSON `id`, no
+    // `properties.id`. Letting MapLibre auto-assign keeps feature-state
+    // safe (the prior promoteId:"id" resolved to undefined for every row).
+    addOrReplace(srcId, { type:"geojson", data: fc });
 
     // Voltage-stepped steel-blue palette — distinct from the teal editorial
     // grid and OIM's grey overlay. Higher kV = thicker + lighter.
-    const base = ["all",["==",["get","status"],"existing"]];
+    // Filters flattened (no nested ["all", ["all", ...], ...]) to avoid
+    // known validator flakiness in MapLibre 4.7 GeoJSON pipelines.
     map.addLayer({ id:"lyr-tx-150", type:"line", source:srcId,
-      filter:["all",base,["==",["get","voltage_kv"],150]],
+      filter:["all",["==",["get","status"],"existing"],["==",["get","voltage_kv"],150]],
       paint:{ "line-color":"#5b7a9a", "line-width":0.9, "line-opacity":0.75 }});
     map.addLayer({ id:"lyr-tx-225", type:"line", source:srcId,
-      filter:["all",base,["==",["get","voltage_kv"],225]],
+      filter:["all",["==",["get","status"],"existing"],["==",["get","voltage_kv"],225]],
       paint:{ "line-color":"#7a9ab8", "line-width":1.3, "line-opacity":0.85 }});
     map.addLayer({ id:"lyr-tx-400", type:"line", source:srcId,
-      filter:["all",base,["==",["get","voltage_kv"],400]],
+      filter:["all",["==",["get","status"],"existing"],["==",["get","voltage_kv"],400]],
       paint:{ "line-color":"#b8cfdf", "line-width":1.9, "line-opacity":0.95 }});
     map.addLayer({ id:"lyr-tx-planned", type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],

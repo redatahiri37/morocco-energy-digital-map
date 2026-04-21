@@ -110,10 +110,23 @@ FAIL  <check name> — <exact signal, e.g. `HTTP 404 on boundary.geojson`>
 8. ...
 
 ## Verdict
-<GO | NO-GO>  — <one-sentence justification>
+<GO | GO-STATIC | NO-GO>  — <one-sentence justification>
 ```
 
-If `NO-GO`, list the single smallest fix that would flip it to GO.
+Verdict rules — **strict**:
+
+- `GO` requires **browser-level evidence**: either a paste of the live
+  site's DevTools console (zero `console.error` entries matching
+  `MoroccoMap|maplibre|Error`), OR a Claude-in-Chrome / Preview MCP run
+  that opens the URL and reports the same. Quote the evidence inline.
+- `GO-STATIC` is the ceiling when only static + network checks passed
+  and **no browser evidence is available**. The main agent MUST treat
+  `GO-STATIC` as **non-shippable** — it is an "I checked what I could
+  from the outside" receipt, nothing more. Do not announce "shipped"
+  on `GO-STATIC`.
+- `NO-GO` on any automated FAIL.
+
+If `NO-GO`, list the single smallest fix that would flip it forward.
 **Do not suggest fixes for more than one failure at a time** — pipeline
 the work back to the main agent.
 
