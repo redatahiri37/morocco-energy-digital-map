@@ -16,7 +16,7 @@ GeoJSON folder and one config entry per country.
 | 2 | Transmission grid | lines (400 / 225 / 60 kV + HVDC planned) | OSM · ONEE |
 | 3 | Industrial consumers | points | OCP · Holcim · SONASID · operator disclosures |
 | 4 | Digital infrastructure | points | Datacentermap.com · OSM · DCD · press |
-| 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas | EU Commission PHOTOVOLTAIC GEOGRAPHICAL INFORMATION SYSTEM | 
+| 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas  EU Commission PHOTOVOLTAIC GEOGRAPHICAL INFORMATION SYSTEM | 
 
 All source URLs are in [DATA_SOURCES.md](./DATA_SOURCES.md). Every
 feature carries a `source` and `source_url` property so provenance is
@@ -33,12 +33,6 @@ cd docs
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
-
-That's it.
-
-> **v1.1 note** — the app used to require a Mapbox token. It no longer
-> does. `config.js` is kept only for future per-country overrides; you
-> can safely leave `docs/config.example.js` as-is or delete it.
 
 ## Reporting a bug
 
@@ -78,7 +72,7 @@ morocco-map/
 4. **Unsourced edits will be closed.** Provide a public URL.
 5. Open a PR. Describe what you changed and why.
 
-### Adding a country (MENA expansion)
+### Adding a country (Middle-East and Africa expansion)
 
 ```js
 // docs/countries.config.js
@@ -139,7 +133,7 @@ referenced in the data. All opinions are the author's.
 
 ## License
 
-Code: MIT.
+Code: MIT & Reda.
 Data: aggregated from public sources — see `DATA_SOURCES.md` for the
 license of each upstream dataset. OpenStreetMap-derived data is under
 ODbL 1.0 and must retain attribution on redistribution.
