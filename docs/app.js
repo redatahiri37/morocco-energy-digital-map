@@ -154,6 +154,16 @@
   }
 
   // ---------- Boot ----------
+  // Data + map init race each other. Before v1.5 the fetches were small
+  // enough that loadAllData usually beat map.on("load"); the 221 KB WBG
+  // transmission file flipped that and buildMapLayers started running
+  // against empty layerData, so nothing rendered. Track both readiness
+  // signals explicitly and only build when both are true.
+  let dataReady = false, mapReady = false;
+  function tryBuild(){
+    if(dataReady && mapReady) buildMapLayers(currentCountry);
+  }
+
   function boot(){
     const initialCountry = ENABLED.includes(CFG.defaultCountry) ? CFG.defaultCountry : ENABLED[0];
     countrySelect.value = initialCountry;
@@ -163,6 +173,8 @@
       renderKPIs(initialCountry);
       renderProviderLegend();
       renderMethodologySources(initialCountry);
+      dataReady = true;
+      tryBuild();
     });
     bootMap();
   }
@@ -180,7 +192,7 @@
       map.addControl(new maplibregl.NavigationControl({ showCompass:false }), "bottom-right");
       map.addControl(new maplibregl.AttributionControl({ compact:true }), "bottom-left");
 
-      map.on("load", ()=>buildMapLayers(currentCountry));
+      map.on("load", ()=>{ mapReady = true; tryBuild(); });
       map.on("click", (e)=>{
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
