@@ -6,10 +6,6 @@ transmission grid, industrial load and data-center pipeline.
 v1.0 · Morocco only. Structured to scale to MENA by dropping one
 GeoJSON folder and one config entry per country.
 
-> Inspired by [Pawel Czyzak's Data Center Siting Tool](https://paczyzak.substack.com/p/data-centers)
-> (transparency-first UX) and [enersite.app](https://www.enersite.app/)
-> (multi-layer spatial analysis).
-
 ---
 
 ## Layers (v1.0)
@@ -20,7 +16,7 @@ GeoJSON folder and one config entry per country.
 | 2 | Transmission grid | lines (400 / 225 / 60 kV + HVDC planned) | OSM · ONEE |
 | 3 | Industrial consumers | points | OCP · Holcim · SONASID · operator disclosures |
 | 4 | Digital infrastructure | points | Datacentermap.com · OSM · DCD · press |
-| 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas |
+| 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas | EU Commission PHOTOVOLTAIC GEOGRAPHICAL INFORMATION SYSTEM | 
 
 All source URLs are in [DATA_SOURCES.md](./DATA_SOURCES.md). Every
 feature carries a `source` and `source_url` property so provenance is
