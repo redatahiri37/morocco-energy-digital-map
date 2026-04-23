@@ -37,6 +37,7 @@
   --blue:#3b82f6;--blue-dim:#3b82f633;
   --purple:#7a39bb;--purple-dim:#7a39bb44;--purple-glow:#7a39bb22;
   --orange:#da7101;--orange-dim:#da710133;
+  --crimson:#b6465f;--crimson-dim:#b6465f33;
   --green-zone:#2d6a2e22;
   --red:#ef4444;
   --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -70,6 +71,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   color:var(--text-2);cursor:pointer;transition:all .15s;flex-shrink:0;
 }
 .top-btn:hover{border-color:var(--teal);color:var(--teal)}
+.top-btn:focus-visible,
+#fit-btn:focus-visible,
+#token-btn:focus-visible,
+#token-dismiss:focus-visible,
+.layer-toggle:focus-visible,
+.ip-close:focus-visible,
+.ip-link:focus-visible,
+#mob-handle:focus-visible,
+#token-input:focus-visible{
+  outline:2px solid var(--teal);
+  outline-offset:2px;
+}
 
 /* Token bar */
 #token-bar{
@@ -112,8 +125,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .layer-toggle{
   display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:6px;
   cursor:pointer;transition:background .12s;user-select:none;margin-bottom:2px;
+  width:100%;border:none;background:transparent;text-align:left;color:inherit;
 }
 .layer-toggle:hover{background:var(--bg-2)}
+.layer-toggle[aria-pressed="true"]{background:var(--bg-2)}
 .lt-check{
   width:14px;height:14px;border-radius:3px;border:2px solid var(--text-3);
   display:flex;align-items:center;justify-content:center;
@@ -137,7 +152,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 
 /* Attribution */
 .attr{font-size:9px;color:var(--text-3);line-height:1.6}
-.attr a{color:var(--teal);text-decoration:none}
 
 /* ── MAP ─────────────────────────────────────── */
 #map-wrap{
@@ -195,6 +209,15 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   transform:rotate(45deg);
   box-shadow:0 0 0 2px var(--orange-dim);
 }
+.mg-consumer{
+  width:16px;height:16px;border-radius:4px;
+  background:var(--crimson);border:2px solid var(--bg-0);
+  box-shadow:0 0 0 2px var(--crimson-dim);
+  position:relative;
+}
+.mg-consumer::before{
+  content:'';position:absolute;inset:3px;border:1px solid rgba(255,255,255,.65);border-radius:1px;
+}
 @keyframes marker-pulse{
   0%{transform:scale(1);opacity:.7}
   100%{transform:scale(2.5);opacity:0}
@@ -235,6 +258,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .ip-badge.tx{background:var(--blue-dim);color:var(--blue)}
 .ip-badge.dc{background:var(--purple-dim);color:var(--purple)}
 .ip-badge.cable{background:var(--orange-dim);color:var(--orange)}
+.ip-badge.consumer{background:var(--crimson-dim);color:var(--crimson)}
 .ip-badge.zone{background:var(--green-zone);color:#5cb85c}
 .ip-name{font-family:var(--font-serif);font-size:22px;color:var(--text-0);line-height:1.25;font-weight:400}
 .ip-status{
@@ -256,24 +280,45 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   display:inline-flex;align-items:center;gap:4px;
 }
 .ip-link:hover{text-decoration:underline}
+.ip-link.hidden{display:none}
 .ip-src{font-size:9px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.ip-helper{
+  font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;
+  margin-bottom:12px;
+}
+
+/* Selection overlay */
+#panel-backdrop{
+  position:fixed;inset:var(--top-h) 0 0 0;background:rgba(10,10,9,.48);
+  backdrop-filter:blur(2px);opacity:0;pointer-events:none;
+  transition:opacity .2s var(--ease);z-index:790;
+}
+#panel-backdrop.visible{opacity:1;pointer-events:auto}
 
 /* ── MOBILE ──────────────────────────────────── */
 @media(max-width:900px){
+  #topbar{padding:0 12px;gap:8px}
+  #topbar .tagline,
+  #topbar .ts{display:none}
   #sidebar{
     top:auto;bottom:0;left:0;right:0;width:100%;height:48vh;
     border-right:none;border-top:1px solid var(--border);
     transform:translateY(calc(100% - 48px));
+    box-shadow:0 -10px 32px rgba(0,0,0,.22);
   }
   #sidebar.mob-open{transform:translateY(0)}
   #mob-handle{
     display:flex;align-items:center;justify-content:center;
     height:48px;cursor:pointer;border-bottom:1px solid var(--border);
     flex-shrink:0;
+    background:var(--bg-1);width:100%;border:none;color:inherit;
   }
   #mob-handle .bar{width:36px;height:4px;background:var(--border-hi);border-radius:2px}
-  #map-wrap{left:0;bottom:0}
-  #info-panel{width:100%;top:var(--top-h)}
+  #map-wrap{left:0;bottom:48px}
+  #fit-btn{bottom:20px;right:10px}
+  #info-panel{width:100%;top:var(--top-h);bottom:0}
+  .ip-grid{grid-template-columns:1fr}
+  #panel-backdrop{inset:var(--top-h) 0 48px 0}
 }
 @media(min-width:901px){
   #mob-handle{display:none}
@@ -311,44 +356,52 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <button id="token-dismiss" onclick="hideTokenBar()">&times;</button>
 </div>
 
+<div id="panel-backdrop" onclick="closeInfo()"></div>
+
 <!-- ═══════ SIDEBAR ═══════ -->
 <aside id="sidebar">
-  <div id="mob-handle" onclick="document.getElementById('sidebar').classList.toggle('mob-open')"><div class="bar"></div></div>
+  <button id="mob-handle" type="button" aria-expanded="false" aria-controls="sidebar-inner" onclick="toggleMobileSidebar()"><div class="bar"></div></button>
   <div id="sidebar-inner">
 
     <!-- Layers -->
     <div class="sec">
       <div class="sec-label">Map Layers</div>
-      <div class="layer-toggle" onclick="toggleLayer('generation')">
+      <button class="layer-toggle" type="button" aria-pressed="true" onclick="toggleLayer('generation')">
         <div class="lt-check on" id="ck-generation" style="color:var(--yellow)"></div>
         <div class="lt-dot" style="background:var(--yellow)"></div>
         <span class="lt-name">Generation</span>
         <span class="lt-count">6 sites</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('transmission')">
+      </button>
+      <button class="layer-toggle" type="button" aria-pressed="true" onclick="toggleLayer('transmission')">
         <div class="lt-check on" id="ck-transmission" style="color:var(--blue)"></div>
         <div class="lt-dot" style="background:var(--blue)"></div>
         <span class="lt-name">Transmission Grid</span>
-        <span class="lt-count">400kV</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('datacenters')">
+        <span class="lt-count">150/225/400kV</span>
+      </button>
+      <button class="layer-toggle" type="button" aria-pressed="true" onclick="toggleLayer('datacenters')">
         <div class="lt-check on" id="ck-datacenters" style="color:var(--purple)"></div>
         <div class="lt-dot" style="background:var(--purple)"></div>
         <span class="lt-name">Data Center Pipeline</span>
         <span class="lt-count">4 sites</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('cables')">
+      </button>
+      <button class="layer-toggle" type="button" aria-pressed="true" onclick="toggleLayer('cables')">
         <div class="lt-check on" id="ck-cables" style="color:var(--orange)"></div>
         <div class="lt-dot" style="background:var(--orange)"></div>
         <span class="lt-name">Submarine Cables</span>
         <span class="lt-count">2 landings</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('zones')">
+      </button>
+      <button class="layer-toggle" type="button" aria-pressed="true" onclick="toggleLayer('consumers')">
+        <div class="lt-check on" id="ck-consumers" style="color:var(--crimson)"></div>
+        <div class="lt-dot" style="background:var(--crimson)"></div>
+        <span class="lt-name">Large Energy Consumers</span>
+        <span class="lt-count">6 sites</span>
+      </button>
+      <button class="layer-toggle" type="button" aria-pressed="true" onclick="toggleLayer('zones')">
         <div class="lt-check on" id="ck-zones" style="color:#5cb85c"></div>
         <div class="lt-dot" style="background:#5cb85c"></div>
         <span class="lt-name">RE Zones</span>
         <span class="lt-count">2 zones</span>
-      </div>
+      </button>
     </div>
 
     <!-- KPIs -->
@@ -373,7 +426,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <!-- Attribution -->
     <div class="sec">
       <div class="attr">
-        Sources: <a href="#">ONEE</a>, <a href="#">IEA Energy &amp; AI (2025)</a>, <a href="#">Reuters</a>, <a href="#">DCD</a><br>
+        Sources: ONEE, IEA Energy &amp; AI (2025), Reuters, DCD<br>
         Built for thought leadership on Energy &times; Digital in Africa.
       </div>
     </div>
@@ -400,9 +453,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <div id="ip-status" class="ip-status"></div>
   </div>
   <div class="ip-body">
+    <div class="ip-helper">Click any marker or corridor to inspect the asset context.</div>
     <div id="ip-grid" class="ip-grid"></div>
     <div id="ip-desc" class="ip-desc"></div>
-    <a class="ip-link" href="#" id="ip-link">Read more <span>&rarr;</span></a>
+    <a class="ip-link hidden" href="#" id="ip-link" target="_blank" rel="noreferrer">Read source <span>&rarr;</span></a>
     <div id="ip-src" class="ip-src"></div>
   </div>
 </div>
@@ -430,14 +484,14 @@ const SITES = [
   // ── Cables ──
   { id:'cable-2africa', name:'2Africa Cable — Casablanca Landing', type:'cable', coords:[-7.6,33.6], capacity_mw:null, investment_usd:null, status:'Operational', description:'Part of the 45,000 km 2Africa submarine cable system backed by Meta, connecting 33 countries across Africa, Europe, and the Middle East. The Casablanca landing station provides Morocco with massive international bandwidth capacity and sub-10ms latency to Southern Europe. It is the backbone for future hyperscaler deployments in the kingdom.', source:'TeleGeography / Meta', year:2024 },
   { id:'cable-ace', name:'ACE Cable — Agadir Landing', type:'cable', coords:[-9.6,30.4], capacity_mw:null, investment_usd:null, status:'Operational', description:'The Africa Coast to Europe (ACE) cable is a 17,000 km submarine system linking France to South Africa via West Africa. The Agadir landing gives Morocco a southern connectivity path complementing the northern Mediterranean routes. ACE carries approximately 5.12 Tbps design capacity and serves 23 countries.', source:'TeleGeography / ACE Consortium', year:2012 },
-];
 
-// ── Transmission corridors (GeoJSON LineStrings) ──
-const TX_CORRIDORS = [
-  { id:'tx-casa-marr-ouar', name:'Casablanca — Marrakech — Ouarzazate 400kV', type:'transmission', status:'Operational', voltage:'400kV', description:'The backbone corridor connecting Morocco\'s economic capital to the Noor solar complex. This 400kV double-circuit line evacuates up to 600 MW of solar generation from Ouarzazate through Marrakech and into the Casablanca load center — the grid\'s heaviest consumption node.', coords:[[-7.58,33.57],[-7.62,33.00],[-8.00,31.68],[-6.85,31.00]] },
-  { id:'tx-casa-ken-tang', name:'Casablanca — Kenitra — Tangier 400kV', type:'transmission', status:'Operational', voltage:'400kV', description:'Northern backbone linking Casablanca to the Tangier Med industrial zone. This corridor carries power from Jorf Lasfar and renewable generation northward, and supports the HVAC interconnect to Spain across the Strait of Gibraltar (1,400 MW capacity).', coords:[[-7.58,33.57],[-6.58,34.26],[-6.84,34.02],[-5.80,35.78]] },
-  { id:'tx-oujda-fes-rabat', name:'Oujda — Fès — Rabat 400kV', type:'transmission', status:'Operational', voltage:'400kV', description:'Eastern corridor connecting the Algerian border interconnect at Oujda through Fès to the capital. This line supports the bilateral energy exchange with Algeria (COMELEC) and evacuates power from the Ain Beni Mathar ISCC plant.', coords:[[-1.91,34.69],[-5.00,34.06],[-5.55,33.89],[-6.84,34.02]] },
-  { id:'tx-hvdc-sahara', name:'Dakhla — Agadir HVDC Corridor (Planned)', type:'transmission', status:'Planned', voltage:'HVDC', description:'A planned high-voltage DC corridor that would evacuate massive wind and solar resources from the Dakhla region to the southern grid hub at Agadir — spanning over 1,000 km. This line is central to Morocco\'s green hydrogen export ambitions and the proposed Xlinks Morocco-UK Power Project (3.6 GW).', coords:[[-15.93,23.71],[-14.50,25.50],[-13.20,27.15],[-12.00,28.50],[-9.60,30.43]] },
+  // ── Large energy consumers ──
+  { id:'lc-ocp-jfc3', name:'OCP Jorf Fertilizers Company 3', type:'consumer', sector:'Phosphate fertilizers', coords:[-8.603333,33.104722], demand_mw:62, demand_estimated:false, coord_precision:'Platform-level', status:'Operational', description:'Integrated fertilizer train inside the Jorf Lasfar platform. OCP disclosed that JFC3 includes a 62 MW thermoelectric unit and is energy-autonomous at nominal production.', source:'LesEco / OCP / Sulphuric Acid on the Web', source_url:'https://leseco.ma/business/l-ocp-met-en-service-sa-nouvelle-usine-d-engrais.html', demand_basis:'Disclosed by OCP for the integrated JFC3 train. Coordinate is pinned to the Jorf platform process area rather than a separately verified JFC3 gate.', year:2017 },
+  { id:'lc-ocp-safi', name:'OCP Safi Phosphate Platform', type:'consumer', sector:'Phosphoric acid and fertilizers', coords:[-9.241944,32.218056], demand_mw:55, demand_estimated:true, coord_precision:'Platform-level', status:'Operational', description:'Legacy OCP processing platform in Safi covering Maroc Chimie, Maroc Phosphore I and Maroc Phosphore II. The site co-generates electricity from sulfuric-acid operations, but the net electrical load is not publicly disclosed in a clean plant-level figure.', source:'OCP / Sulphuric Acid on the Web / Safi-ville', source_url:'https://www.ocpgroup.ma/en/what-we-do/industrial-operations', demand_basis:'Estimate based on disclosed platform capacity of about 1.1 Mt/y phosphoric acid and 0.4 Mt/y MAP, benchmarked against comparable phosphate-process electrical loads. Coordinate is pinned to the platform process area, not a single unit boundary.', year:1981 },
+  { id:'lc-sonasid-jorf', name:'Sonasid Jorf Lasfar Steel Plant', type:'consumer', sector:'Electric arc furnace steel', coords:[-8.603555,33.136529], demand_mw:40, demand_estimated:true, coord_precision:'Exact', status:'Operational', description:'Morocco’s main EAF-based long-steel site. The plant runs an electric arc furnace, caster and rolling capacity at Jorf Lasfar, making it one of the clearest flexible heavy-power loads on the Moroccan grid.', source:'Global Energy Monitor / Sonasid / ArcelorMittal', source_url:'https://www.gem.wiki/ArcelorMittal_Sonasid_Jorf_Lasfar_steel_plant', demand_basis:'Estimated from GEM-reported 2024 output of 700 kt and a typical EAF electricity intensity near 500 kWh/t; rounded to an average site load.', year:2005 },
+  { id:'lc-lhm-bouskoura', name:'LafargeHolcim Bouskoura Cement Plant', type:'consumer', sector:'Integrated cement', coords:[-7.748509,33.366748], demand_mw:31, demand_estimated:true, coord_precision:'Exact', status:'Operational', description:'Large integrated cement works in the Casablanca-Settat industrial belt. Cement kilns are more thermal than electrical loads, but grinding, fans, conveying and auxiliaries still make this a material industrial power sink.', source:'Global Energy Monitor', source_url:'https://www.gem.wiki/Lafarge_Settat_Cement_Plant_2', demand_basis:'Estimated from GEM capacity of 3.0 Mt/y and a benchmark electricity intensity near 90 kWh/t cement.', year:1983 },
+  { id:'lc-cdm-aitbaha', name:'Ciments du Maroc Ait Baha Plant', type:'consumer', sector:'Integrated cement', coords:[-9.153566,30.220341], demand_mw:23, demand_estimated:true, coord_precision:'Exact', status:'Operational', description:'One of Morocco’s most efficient cement hubs, with ISO 50001 and site-level decarbonization programs. Despite process optimization, the integrated kiln and grinding lines remain a meaningful steady electrical demand.', source:'Global Energy Monitor / Ciments du Maroc', source_url:'https://www.gem.wiki/Imi_Mqourn_Cement_Plant', demand_basis:'Estimated from GEM capacity of 2.2 Mt/y and a benchmark electricity intensity near 90 kWh/t cement.', year:2010 },
+  { id:'lc-temara', name:'Temara Cement Plant', type:'consumer', sector:'Integrated cement', coords:[-6.949269,33.891329], demand_mw:14, demand_estimated:true, coord_precision:'Exact', status:'Operational', description:'Integrated cement plant serving the Rabat-Casablanca corridor. Smaller than Bouskoura or Ait Baha, but still a significant baseload industrial off-taker at the substation level.', source:'Global Energy Monitor', source_url:'https://www.gem.wiki/Temara_Cement_Plant', demand_basis:'Estimated from GEM capacity of 1.4 Mt/y and a benchmark electricity intensity near 90 kWh/t cement.', year:1979 },
 ];
 
 // ── RE Zones (polygons) ──
@@ -454,40 +508,17 @@ const RE_ZONES = [
 let map = null;
 let mapLoaded = false;
 let markers = [];
-let layerState = { generation:true, transmission:true, datacenters:true, cables:true, zones:true };
+let layerState = { generation:true, transmission:true, datacenters:true, cables:true, consumers:true, zones:true };
 let activeInfo = null;
+let chart = null;
+let transmissionData = null;
 
 // ═══════════════════════════════════════════════
 // CHART
 // ═══════════════════════════════════════════════
 (function initChart(){
   const ctx = document.getElementById('mix-chart').getContext('2d');
-  new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels:['Coal','Gas','Solar','Wind','Hydro','Other'],
-      datasets:[{
-        data:[28,21,14,13,8,16],
-        backgroundColor:['#6b7280','#9ca3af','#d19900','#3b82f6','#06b6d4','#525252'],
-        borderRadius:3,
-        barPercentage:.7,
-      }]
-    },
-    options:{
-      indexAxis:'y',
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{ legend:{ display:false }, tooltip:{
-        backgroundColor:'#1a1a18',borderColor:'#2a2a27',borderWidth:1,
-        titleFont:{family:'var(--font-ui)',size:11},bodyFont:{family:'var(--font-ui)',size:11},
-        callbacks:{ label:ctx=> ctx.parsed.x+'%' }
-      }},
-      scales:{
-        x:{ max:35, grid:{ color:'#2a2a2710' }, ticks:{ color:'#5a5850', font:{size:9}, callback:v=>v+'%' }},
-        y:{ grid:{ display:false }, ticks:{ color:'#8a877e', font:{size:10,weight:500} }}
-      }
-    }
-  });
+  chart = createMixChart(ctx, true);
 })();
 
 // ═══════════════════════════════════════════════
@@ -495,6 +526,12 @@ let activeInfo = null;
 // ═══════════════════════════════════════════════
 function hideTokenBar(){ document.getElementById('token-bar').classList.add('hidden'); }
 function showTokenBar(){ document.getElementById('token-bar').classList.remove('hidden'); }
+function toggleMobileSidebar(forceOpen){
+  const sidebar = document.getElementById('sidebar');
+  const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !sidebar.classList.contains('mob-open');
+  sidebar.classList.toggle('mob-open', shouldOpen);
+  document.getElementById('mob-handle').setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+}
 
 document.getElementById('token-toggle').addEventListener('click', ()=>{
   document.getElementById('token-bar').classList.toggle('hidden');
@@ -505,6 +542,16 @@ function applyToken(){
   if(!tk){ alert('Paste a valid Mapbox token.'); return; }
   mapboxgl.accessToken = tk;
   hideTokenBar();
+  localStorage.setItem('mg-token', tk);
+  if(map){
+    closeInfo();
+    clearMarkers();
+    map.remove();
+    map = null;
+    mapLoaded = false;
+    document.getElementById('map-placeholder').classList.remove('hidden');
+    document.getElementById('fit-btn').style.display = 'none';
+  }
   initMap();
 }
 
@@ -519,7 +566,7 @@ const MAPBOX_TOKEN = 'MAPBOX_TOKEN_REDACTED';
   initMap();
 })();
 
-function initMap(){
+async function initMap(){
   if(mapLoaded) return;
   const ph = document.getElementById('map-placeholder');
   try{
@@ -532,12 +579,12 @@ function initMap(){
       pitch:0,
     });
     map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
-    map.on('load', ()=>{
+    map.on('load', async ()=>{
       mapLoaded = true;
       ph.classList.add('hidden');
       document.getElementById('fit-btn').style.display='flex';
-      localStorage.setItem('mg-token', mapboxgl.accessToken);
-      renderAllLayers();
+      await loadTransmissionData();
+      await renderAllLayers();
     });
     map.on('click', (e)=>{
       if(!e.originalEvent.target.closest('.mg-marker')) closeInfo();
@@ -557,23 +604,27 @@ function initMap(){
 // ═══════════════════════════════════════════════
 // RENDER LAYERS
 // ═══════════════════════════════════════════════
-function renderAllLayers(){
+async function renderAllLayers(){
   clearMarkers();
   renderZones();
   renderTransmission();
   renderGenerationMarkers();
   renderDCMarkers();
   renderCableMarkers();
+  renderConsumerMarkers();
 }
 
 function clearMarkers(){
   markers.forEach(m=>m.remove());
   markers=[];
   // Remove transmission and zone sources/layers
-  ['tx-corridor-op','tx-corridor-planned','tx-dash-anim','zone-sahara-fill','zone-atlantic-fill','cable-eu-line'].forEach(id=>{
+  [
+    'tx-existing-casing','tx-existing-lines','tx-planned-casing','tx-planned-lines',
+    'zone-sahara-fill','zone-atlantic-fill','cable-eu-line'
+  ].forEach(id=>{
     if(map.getLayer(id)) map.removeLayer(id);
   });
-  ['tx-op','tx-planned','zone-sahara','zone-atlantic','cable-eu'].forEach(id=>{
+  ['tx-existing','tx-planned','zone-sahara','zone-atlantic','cable-eu'].forEach(id=>{
     if(map.getSource(id)) map.removeSource(id);
   });
 }
@@ -632,54 +683,174 @@ function renderCableMarkers(){
   });
 }
 
+// ── Large energy consumer markers ──
+function renderConsumerMarkers(){
+  if(!layerState.consumers) return;
+  SITES.filter(s=>s.type==='consumer').forEach(s=>{
+    const el = document.createElement('div');
+    el.className = 'mg-marker';
+    const label = s.demand_estimated ? `${s.demand_mw} MW avg (est.)` : `${s.demand_mw} MW`;
+    el.innerHTML = `<div class="mg-consumer"></div>
+      <div class="mg-tooltip"><b>${s.name}</b><div class="tt-cap">${label}</div></div>`;
+    el.addEventListener('click',(e)=>{ e.stopPropagation(); openInfo(s); });
+    const m = new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat(s.coords).addTo(map);
+    markers.push(m);
+  });
+}
+
+function transmissionFilePath(filename){
+  return filename;
+}
+
+async function loadTransmissionData(){
+  if(transmissionData) return transmissionData;
+  const [existingRes, plannedRes] = await Promise.all([
+    fetch(transmissionFilePath('existingtransmissionlines.geojson')),
+    fetch(transmissionFilePath('futuretransmissionlines.geojson')),
+  ]);
+  if(!existingRes.ok || !plannedRes.ok){
+    throw new Error('Unable to load transmission GeoJSON files.');
+  }
+  const [existingRaw, plannedRaw] = await Promise.all([existingRes.json(), plannedRes.json()]);
+  transmissionData = {
+    existing: normalizeTransmissionFeatures(existingRaw.features || [], 'Operational'),
+    planned: normalizeTransmissionFeatures(plannedRaw.features || [], 'Planned'),
+  };
+  return transmissionData;
+}
+
+function normalizeTransmissionFeatures(features, status){
+  return {
+    type:'FeatureCollection',
+    features:features
+      .filter(feature=>['150 kV','225 kV','400 kV'].includes(feature.properties?.Legend))
+      .map((feature, index)=>{
+        const legend = feature.properties.Legend;
+        return {
+          type:'Feature',
+          geometry:feature.geometry,
+          properties:{
+            id:`tx-${status.toLowerCase()}-${index + 1}`,
+            type:'transmission',
+            status,
+            voltage:legend,
+            name:`${legend} transmission line`,
+            source:'World Bank Group — Morocco Power Sector Masterplan (2018)',
+            description: status === 'Operational'
+              ? `Mapped ${legend} transmission segment from the 2018 Morocco Power Sector Masterplan dataset.`
+              : `Planned ${legend} transmission segment from the 2018 Morocco Power Sector Masterplan dataset.`,
+          },
+        };
+      }),
+  };
+}
+
+function transmissionWidthExpression(){
+  return [
+    'match',
+    ['get','voltage'],
+    '400 kV', 3.4,
+    '225 kV', 2.4,
+    '150 kV', 1.6,
+    1.8
+  ];
+}
+
+function transmissionColorExpression(status){
+  if(status === 'Planned'){
+    return [
+      'match',
+      ['get','voltage'],
+      '400 kV', '#22d3ee',
+      '225 kV', '#38bdf8',
+      '150 kV', '#7dd3fc',
+      '#38bdf8'
+    ];
+  }
+  return [
+    'match',
+    ['get','voltage'],
+    '400 kV', '#60a5fa',
+    '225 kV', '#3b82f6',
+    '150 kV', '#94a3b8',
+    '#3b82f6'
+  ];
+}
+
+function bindTransmissionLayerEvents(layerId, dataset){
+  map.on('click', layerId, (e)=>{
+    const feature = e.features?.[0];
+    if(!feature) return;
+    const site = dataset.features.find(item=>item.properties.id === feature.properties.id);
+    if(site){
+      openInfo({
+        ...site.properties,
+        type:'transmission',
+      });
+    }
+  });
+  map.on('mouseenter', layerId, ()=>{ map.getCanvas().style.cursor='pointer'; });
+  map.on('mouseleave', layerId, ()=>{ map.getCanvas().style.cursor=''; });
+}
+
 // ── Transmission corridors ──
 function renderTransmission(){
   if(!layerState.transmission) return;
-  const opLines = TX_CORRIDORS.filter(c=>c.status==='Operational');
-  const plannedLines = TX_CORRIDORS.filter(c=>c.status==='Planned');
+  if(!transmissionData) return;
 
-  if(!map.getSource('tx-op')){
-    map.addSource('tx-op',{
-      type:'geojson',
-      data:{ type:'FeatureCollection', features:opLines.map(c=>({
-        type:'Feature',
-        properties:{name:c.name,id:c.id},
-        geometry:{type:'LineString',coordinates:c.coords}
-      }))}
+  if(!map.getSource('tx-existing')){
+    map.addSource('tx-existing',{ type:'geojson', data:transmissionData.existing });
+    map.addLayer({
+      id:'tx-existing-casing',
+      type:'line',
+      source:'tx-existing',
+      paint:{
+        'line-color':'rgba(7, 11, 23, 0.9)',
+        'line-width':['+', transmissionWidthExpression(), 1.8],
+        'line-opacity':0.85,
+      },
+      layout:{ 'line-join':'round', 'line-cap':'round' }
     });
     map.addLayer({
-      id:'tx-corridor-op', type:'line', source:'tx-op',
-      paint:{ 'line-color':'#3b82f6','line-width':2,'line-opacity':0.6 }
+      id:'tx-existing-lines',
+      type:'line',
+      source:'tx-existing',
+      paint:{
+        'line-color':transmissionColorExpression('Operational'),
+        'line-width':transmissionWidthExpression(),
+        'line-opacity':0.95,
+      },
+      layout:{ 'line-join':'round', 'line-cap':'round' }
     });
-    map.on('click','tx-corridor-op',(e)=>{
-      const f = e.features[0];
-      const site = TX_CORRIDORS.find(c=>c.id===f.properties.id);
-      if(site) openInfo(site);
-    });
-    map.on('mouseenter','tx-corridor-op',()=>{ map.getCanvas().style.cursor='pointer'; });
-    map.on('mouseleave','tx-corridor-op',()=>{ map.getCanvas().style.cursor=''; });
+    bindTransmissionLayerEvents('tx-existing-lines', transmissionData.existing);
   }
 
   if(!map.getSource('tx-planned')){
-    map.addSource('tx-planned',{
-      type:'geojson',
-      data:{ type:'FeatureCollection', features:plannedLines.map(c=>({
-        type:'Feature',
-        properties:{name:c.name,id:c.id},
-        geometry:{type:'LineString',coordinates:c.coords}
-      }))}
+    map.addSource('tx-planned',{ type:'geojson', data:transmissionData.planned });
+    map.addLayer({
+      id:'tx-planned-casing',
+      type:'line',
+      source:'tx-planned',
+      paint:{
+        'line-color':'rgba(7, 11, 23, 0.85)',
+        'line-width':['+', transmissionWidthExpression(), 1.6],
+        'line-opacity':0.8,
+      },
+      layout:{ 'line-join':'round', 'line-cap':'round' }
     });
     map.addLayer({
-      id:'tx-corridor-planned', type:'line', source:'tx-planned',
-      paint:{ 'line-color':'#06b6d4','line-width':2.5,'line-opacity':0.55,'line-dasharray':[6,4] }
+      id:'tx-planned-lines',
+      type:'line',
+      source:'tx-planned',
+      paint:{
+        'line-color':transmissionColorExpression('Planned'),
+        'line-width':transmissionWidthExpression(),
+        'line-opacity':0.95,
+        'line-dasharray':[2,1.4]
+      },
+      layout:{ 'line-join':'round', 'line-cap':'round' }
     });
-    map.on('click','tx-corridor-planned',(e)=>{
-      const f = e.features[0];
-      const site = TX_CORRIDORS.find(c=>c.id===f.properties.id);
-      if(site) openInfo(site);
-    });
-    map.on('mouseenter','tx-corridor-planned',()=>{ map.getCanvas().style.cursor='pointer'; });
-    map.on('mouseleave','tx-corridor-planned',()=>{ map.getCanvas().style.cursor=''; });
+    bindTransmissionLayerEvents('tx-planned-lines', transmissionData.planned);
   }
 }
 
@@ -710,18 +881,15 @@ function renderZones(){
 // ═══════════════════════════════════════════════
 // LAYER TOGGLE
 // ═══════════════════════════════════════════════
-function toggleLayer(key){
+async function toggleLayer(key){
   layerState[key] = !layerState[key];
   const ck = document.getElementById('ck-'+key);
+  const toggle = ck.closest('.layer-toggle');
   if(layerState[key]){ ck.classList.add('on'); } else { ck.classList.remove('on'); }
+  if(toggle) toggle.setAttribute('aria-pressed', layerState[key] ? 'true' : 'false');
   if(!mapLoaded) return;
   // Re-render everything cleanly
-  clearMarkers();
-  renderZones();
-  renderTransmission();
-  renderGenerationMarkers();
-  renderDCMarkers();
-  renderCableMarkers();
+  await renderAllLayers();
 }
 
 // ═══════════════════════════════════════════════
@@ -737,6 +905,7 @@ function openInfo(site){
   const desc  = document.getElementById('ip-desc');
   const link  = document.getElementById('ip-link');
   const src   = document.getElementById('ip-src');
+  const backdrop = document.getElementById('panel-backdrop');
 
   // Badge
   const typeMap = {
@@ -744,6 +913,7 @@ function openInfo(site){
     transmission:{ label:'Transmission', cls:'tx' },
     datacenter:{ label:'Data Center', cls:'dc' },
     cable:{ label:'Submarine Cable', cls:'cable' },
+    consumer:{ label:'Large Energy Consumer', cls:'consumer' },
     zone:{ label:'Renewable Energy Zone', cls:'zone' }
   };
   const tm = typeMap[site.type]||typeMap.generation;
@@ -768,23 +938,38 @@ function openInfo(site){
   // Grid cells
   let cells = '';
   if(site.capacity_mw) cells += cell('Capacity', site.capacity_mw+' MW');
+  if(site.demand_mw) cells += cell(site.demand_estimated ? 'Power demand (est.)' : 'Power demand', site.demand_mw+' MW');
   if(site.voltage) cells += cell('Voltage', site.voltage);
   if(site.investment_usd) cells += cell('Investment', '$'+fmtM(site.investment_usd));
+  if(site.sector) cells += cell('Sector', site.sector);
+  if(site.coord_precision) cells += cell('Coordinates', site.coord_precision);
   if(site.year) cells += cell(site.status==='Operational'?'Commissioned':'Target year', site.year);
   if(site.type==='zone') cells = cell('Type','Renewable Zone') + cell('Status','Active');
   grid.innerHTML = cells;
 
   // Description
-  desc.textContent = site.description||'';
+  desc.textContent = site.description ? (site.demand_basis ? `${site.description} ${site.demand_basis}` : site.description) : '';
+
+  // Source link
+  if(site.source_url){
+    link.href = site.source_url;
+    link.classList.remove('hidden');
+  }else{
+    link.removeAttribute('href');
+    link.classList.add('hidden');
+  }
 
   // Source
   src.textContent = site.source ? 'Source: '+site.source : '';
 
   panel.classList.add('open');
+  backdrop.classList.add('visible');
+  if(window.innerWidth <= 900) toggleMobileSidebar(false);
 }
 
 function closeInfo(){
   document.getElementById('info-panel').classList.remove('open');
+  document.getElementById('panel-backdrop').classList.remove('visible');
   activeInfo = null;
 }
 
@@ -806,6 +991,42 @@ function fitMorocco(){
   map.flyTo({ center:[-6.0,31.0], zoom:5.2, duration:1200 });
 }
 
+function createMixChart(ctx, dark){
+  const tc = dark ? '#5a5850' : '#9a9890';
+  const gc = dark ? '#2a2a2710' : '#ccc9c210';
+  return new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['Coal','Gas','Solar','Wind','Hydro','Other'],
+      datasets:[{
+        data:[28,21,14,13,8,16],
+        backgroundColor:['#6b7280','#9ca3af','#d19900','#3b82f6','#06b6d4','#525252'],
+        borderRadius:3,
+        barPercentage:.7,
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{
+        backgroundColor:dark ? '#1a1a18' : '#f5f4f1',
+        borderColor:dark ? '#2a2a27' : '#ccc9c2',
+        borderWidth:1,
+        titleColor:dark ? '#f2f0ec' : '#1a1a18',
+        bodyColor:dark ? '#c4c1b8' : '#3a3a36',
+        titleFont:{size:11},
+        bodyFont:{size:11},
+        callbacks:{ label:item=> item.parsed.x+'%' }
+      }},
+      scales:{
+        x:{ max:35, grid:{ color:gc }, ticks:{ color:tc, font:{size:9}, callback:value=>value+'%' }},
+        y:{ grid:{ display:false }, ticks:{ color:dark ? '#8a877e' : '#6a6860', font:{size:10,weight:500} }}
+      }
+    }
+  });
+}
+
 // ═══════════════════════════════════════════════
 // THEME TOGGLE
 // ═══════════════════════════════════════════════
@@ -815,44 +1036,27 @@ document.getElementById('theme-toggle').addEventListener('click',()=>{
   document.body.classList.toggle('light',!darkMode);
   if(map && mapLoaded){
     map.setStyle(darkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
-    map.once('style.load',()=>{
-      renderAllLayers();
+    map.once('style.load', async ()=>{
+      await loadTransmissionData();
+      await renderAllLayers();
     });
   }
   // Recreate chart for theme
   const wrap = document.getElementById('mix-chart-wrap');
   const old = document.getElementById('mix-chart');
+  if(chart) chart.destroy();
   const nw = document.createElement('canvas');
   nw.id = 'mix-chart';
   nw.style.cssText = old.style.cssText;
   wrap.replaceChild(nw, old);
-  const ctx = nw.getContext('2d');
-  const tc = darkMode ? '#5a5850' : '#9a9890';
-  const gc = darkMode ? '#2a2a2710' : '#ccc9c210';
-  new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels:['Coal','Gas','Solar','Wind','Hydro','Other'],
-      datasets:[{
-        data:[28,21,14,13,8,16],
-        backgroundColor:['#6b7280','#9ca3af','#d19900','#3b82f6','#06b6d4','#525252'],
-        borderRadius:3, barPercentage:.7
-      }]
-    },
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{
-        backgroundColor:darkMode?'#1a1a18':'#f5f4f1',
-        borderColor:darkMode?'#2a2a27':'#ccc9c2',borderWidth:1,
-        titleColor:darkMode?'#f2f0ec':'#1a1a18',bodyColor:darkMode?'#c4c1b8':'#3a3a36',
-        titleFont:{size:11},bodyFont:{size:11},callbacks:{label:c=>c.parsed.x+'%'}
-      }},
-      scales:{
-        x:{max:35,grid:{color:gc},ticks:{color:tc,font:{size:9},callback:v=>v+'%'}},
-        y:{grid:{display:false},ticks:{color:darkMode?'#8a877e':'#6a6860',font:{size:10,weight:500}}}
-      }
-    }
-  });
+  chart = createMixChart(nw.getContext('2d'), darkMode);
+});
+
+document.addEventListener('keydown', (event)=>{
+  if(event.key === 'Escape'){
+    closeInfo();
+    if(window.innerWidth <= 900) toggleMobileSidebar(false);
+  }
 });
 
 // ═══════════════════════════════════════════════

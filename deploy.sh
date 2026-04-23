@@ -1,59 +1,38 @@
 #!/bin/bash
 
-# MoroccoGrid — Push to GitHub
-# Run this script from your Mac terminal
+set -euo pipefail
 
-set -e
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+CANONICAL_HTML="$ROOT/index.html"
+MIRROR_HTML="$ROOT/morocco-grid.html"
+PUBLISH_HTML="$ROOT/morocco-grid/public/index.html"
+EXISTING_TX="$ROOT/existingtransmissionlines.geojson"
+FUTURE_TX="$ROOT/futuretransmissionlines.geojson"
+PUBLISH_EXISTING_TX="$ROOT/morocco-grid/public/existingtransmissionlines.geojson"
+PUBLISH_FUTURE_TX="$ROOT/morocco-grid/public/futuretransmissionlines.geojson"
+DEPLOY_REPO="$ROOT/morocco-grid"
 
-# Navigate to your project folder
-cd "$(dirname "$0")/morocco-grid"
+if [[ ! -f "$CANONICAL_HTML" ]]; then
+  echo "Missing canonical app file: $CANONICAL_HTML" >&2
+  exit 1
+fi
 
-echo "📍 Working directory: $(pwd)"
-echo ""
-
-# Initialize git
-echo "🔧 Initializing git repository..."
-git init -b main
-git config user.email "reda.tahiri1@gmail.com"
-git config user.name "Reda Tahiri"
-
-# Add all files
-echo "📦 Adding files..."
-git add -A
-
-# Create initial commit
-echo "💾 Creating commit..."
-git commit -m "Initial release: MoroccoGrid infrastructure intelligence map
-
-Single-file interactive map of Morocco's electricity grid and digital
-infrastructure pipeline. 5 layers: generation (6 sites), transmission
-(400kV backbone + HVDC planned), data centers (4 sites, ~1.4 GW),
-submarine cables (2Africa + ACE), and renewable energy zones.
-
-GitHub Actions CI/CD for auto-deploy to Pages on push to main."
-
-# Add remote
-echo "🔗 Adding GitHub remote..."
-git remote add origin https://github.com/redatahiri37/morocco-grid.git
-
-# Push to GitHub
-echo "🚀 Pushing to GitHub..."
-echo "    (You will be prompted for your GitHub credentials)"
-echo "    Use token: GITHUB_PAT_REDACTED"
-echo ""
-git push -u origin main
+echo "Syncing publish artifacts from root index.html..."
+cp "$CANONICAL_HTML" "$MIRROR_HTML"
+cp "$CANONICAL_HTML" "$PUBLISH_HTML"
+cp "$EXISTING_TX" "$PUBLISH_EXISTING_TX"
+cp "$FUTURE_TX" "$PUBLISH_FUTURE_TX"
 
 echo ""
-echo "✅ Success! Your app is being deployed."
+echo "Publish artifacts are up to date."
+echo "Deployment repository: $DEPLOY_REPO"
 echo ""
 echo "Next steps:"
-echo "1. Wait ~60 seconds for GitHub Actions to build"
-echo "2. Go to: https://github.com/redatahiri37/morocco-grid/actions"
-echo "3. Watch the deploy workflow run"
-echo "4. Your live app: https://redatahiri.github.io/morocco-grid/"
+echo "1. cd \"$DEPLOY_REPO\""
+echo "2. git status"
+echo "3. git add public/index.html public/existingtransmissionlines.geojson public/futuretransmissionlines.geojson ../morocco-grid.html README.md"
+echo "4. git commit -m \"Update MoroccoGrid\""
+echo "5. git push"
 echo ""
-echo "To update in the future, just:"
-echo "  cd \"Energy x Digital Nexus in Emerging countries (e.g., Morocco)/morocco-grid\""
-echo "  git add ."
-echo "  git commit -m 'Your message'"
-echo "  git push"
+echo "GitHub Actions:"
+echo "https://github.com/redatahiri37/morocco-grid/actions"
