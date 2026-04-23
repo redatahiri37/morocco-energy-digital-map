@@ -1,0 +1,110 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-7.58,33.57],[-7.62,33.00],[-8.00,31.68],[-6.85,31.00]]
+      },
+      "properties": {
+        "id": "tx-casa-marr-ouar",
+        "name": "Casablanca — Marrakech — Ouarzazate 400kV",
+        "layer": "grid_hv",
+        "sector": "energy",
+        "subsector": "transmission",
+        "voltage": "400kV",
+        "status": "operational",
+        "operator": "ONEE",
+        "source": "ONEE / OSM",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Backbone corridor connecting Morocco's economic capital to the Noor solar complex. This 400kV double-circuit line evacuates up to 600 MW of solar generation from Ouarzazate through Marrakech into the Casablanca load center — the grid's heaviest consumption node."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-7.58,33.57],[-6.58,34.26],[-6.84,34.02],[-5.80,35.78]]
+      },
+      "properties": {
+        "id": "tx-casa-ken-tang",
+        "name": "Casablanca — Kenitra — Tangier 400kV",
+        "layer": "grid_hv",
+        "sector": "energy",
+        "subsector": "transmission",
+        "voltage": "400kV",
+        "status": "operational",
+        "operator": "ONEE",
+        "source": "ONEE / OSM",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Northern backbone linking Casablanca to the Tangier Med industrial zone. Carries power from Jorf Lasfar northward and supports the HVAC interconnect to Spain across the Strait of Gibraltar (1,400 MW bidirectional capacity)."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-1.91,34.69],[-5.00,34.06],[-5.55,33.89],[-6.84,34.02]]
+      },
+      "properties": {
+        "id": "tx-oujda-fes-rabat",
+        "name": "Oujda — Fès — Rabat 400kV",
+        "layer": "grid_hv",
+        "sector": "energy",
+        "subsector": "transmission",
+        "voltage": "400kV",
+        "status": "operational",
+        "operator": "ONEE",
+        "source": "ONEE / OSM",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Eastern corridor connecting the Algerian border interconnect at Oujda through Fès to the capital. Supports bilateral energy exchange with Algeria (COMELEC) and evacuates power from the Ain Beni Mathar ISCC plant."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-15.93,23.71],[-14.50,25.50],[-13.20,27.15],[-12.00,28.50],[-9.60,30.43]]
+      },
+      "properties": {
+        "id": "tx-hvdc-sahara",
+        "name": "Dakhla — Agadir HVDC Corridor (Planned)",
+        "layer": "grid_hv",
+        "sector": "energy",
+        "subsector": "transmission",
+        "voltage": "HVDC",
+        "status": "planned",
+        "operator": "MASEN / ONEE",
+        "source": "MASEN / Xlinks feasibility",
+        "coord_confidence": "approximate",
+        "coord_method": "manual_estimate",
+        "description": "Planned HVDC corridor to evacuate massive wind and solar resources from the Dakhla region to the southern grid hub at Agadir — spanning over 1,000 km. Central to Morocco's green hydrogen export ambitions and the proposed Xlinks Morocco-UK Power Project (3.6 GW, 3,800 km HVDC to UK)."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-8.63,33.09],[-7.58,33.57]]
+      },
+      "properties": {
+        "id": "tx-jorf-casa",
+        "name": "Jorf Lasfar — Casablanca 400kV",
+        "layer": "grid_hv",
+        "sector": "energy",
+        "subsector": "transmission",
+        "voltage": "400kV",
+        "status": "operational",
+        "operator": "ONEE",
+        "source": "ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Direct 400kV feed from Jorf Lasfar thermal complex to the Grand Casablanca load center. One of the highest-loaded transmission corridors in Morocco, carrying up to 2 GW from the country's largest power station."
+      }
+    }
+  ]
+}

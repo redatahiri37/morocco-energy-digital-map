@@ -1,0 +1,120 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.9, 32.88] },
+      "properties": {
+        "id": "ind-ocp-khouribga",
+        "name": "OCP Khouribga Mining & Processing Hub",
+        "layer": "ind_ocp",
+        "sector": "industrial",
+        "subsector": "phosphates",
+        "operator": "OCP Group",
+        "estimated_demand_mw": 380,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 225,
+        "own_generation_mw": 0,
+        "status": "operational",
+        "year_operational": 1921,
+        "source": "OCP annual report 2023",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "satellite_verified",
+        "description": "OCP's primary phosphate mining hub — the world's largest single phosphate deposit. Khouribga feeds ore via a 187 km slurry pipeline to Jorf Lasfar for processing. The hub's electrification and energy efficiency programs are central to OCP's decarbonization roadmap, which targets net-zero by 2040."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-8.63, 33.08] },
+      "properties": {
+        "id": "ind-ocp-jorf",
+        "name": "OCP Jorf Lasfar Industrial Port Complex",
+        "layer": "ind_ocp",
+        "sector": "industrial",
+        "subsector": "phosphates",
+        "operator": "OCP Group",
+        "estimated_demand_mw": 500,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 400,
+        "own_generation_mw": 150,
+        "status": "operational",
+        "year_operational": 1982,
+        "source": "OCP Group / ONEE",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "satellite_verified",
+        "description": "OCP's largest industrial platform — phosphoric acid, fertilizer production, and export terminal. Co-located with the Jorf Lasfar thermal power complex. OCP is investing in 1 GW of dedicated renewables to power this complex, including captive solar and wind farms under development. One of Africa's largest single industrial energy consumers."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.23, 32.3] },
+      "properties": {
+        "id": "ind-ocp-safi",
+        "name": "OCP Safi Chemical Platform",
+        "layer": "ind_ocp",
+        "sector": "industrial",
+        "subsector": "phosphates",
+        "operator": "OCP Group",
+        "estimated_demand_mw": 150,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 225,
+        "own_generation_mw": 0,
+        "status": "operational",
+        "year_operational": 1965,
+        "source": "OCP Group",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Historic phosphate processing and export terminal at Safi. Older than Jorf Lasfar, the Safi complex processes phosphate rock into phosphoric acid and fertilizers. OCP is evaluating captive renewable integration to reduce grid dependency and Scope 2 emissions at this site."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.95, 32.23] },
+      "properties": {
+        "id": "ind-ocp-benguerir",
+        "name": "OCP Benguerir — Green Industry Complex",
+        "layer": "ind_ocp",
+        "sector": "industrial",
+        "subsector": "phosphates",
+        "operator": "OCP Group",
+        "estimated_demand_mw": 120,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 225,
+        "own_generation_mw": 100,
+        "status": "operational",
+        "year_operational": 2020,
+        "source": "OCP Group / Mohammed VI Polytechnic University",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "satellite_verified",
+        "description": "Benguerir is OCP's flagship green industrial city, hosting phosphate mining, the Mohammed VI Polytechnic University, and a 100 MW captive solar farm. It is the physical embodiment of OCP's ambition to build a vertically integrated, low-carbon phosphate-to-fertilizer value chain powered by Moroccan renewables."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-13.2, 27.15] },
+      "properties": {
+        "id": "ind-ocp-laayoune",
+        "name": "OCP Laâyoune / Boucraâ (Phosboucraa)",
+        "layer": "ind_ocp",
+        "sector": "industrial",
+        "subsector": "phosphates",
+        "operator": "OCP Group / Phosboucraa",
+        "estimated_demand_mw": 80,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 60,
+        "own_generation_mw": 0,
+        "status": "operational",
+        "year_operational": 1972,
+        "source": "OCP Group / Phosboucraa",
+        "source_url": "",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "Boucraâ mine and the Laâyoune processing hub form the southernmost node of OCP's phosphate network. The world's longest industrial conveyor belt (98 km) connects the inland mine to the coast. Grid reliability here is limited, making this site a strong candidate for off-grid renewable power."
+      }
+    }
+  ]
+}

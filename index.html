@@ -279,6 +279,50 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   #mob-handle{display:none}
 }
 
+/* ── INDUSTRIAL MARKERS ──────────────────────── */
+.mg-ind{
+  width:15px;height:15px;
+  border:2px solid var(--bg-0);
+  position:relative;
+}
+.mg-ocp{
+  background:#f97316;
+  clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
+  box-shadow:0 0 0 2px #f9731633;
+}
+.mg-cement{
+  background:#a78bfa;border-radius:2px;
+  box-shadow:0 0 0 2px #a78bfa33;
+}
+.mg-wind{ background:#06b6d4 }
+.mg-solar{ background:#d19900 }
+.mg-thermal{ background:#9ca3af }
+.mg-hydro{ background:#60a5fa }
+
+/* Confidence modifiers */
+.conf-approx .mg-gen,
+.conf-approx .mg-ind,
+.conf-approx .mg-dc,
+.conf-approx .mg-cable{
+  border-style:dashed;opacity:.85;
+}
+.conf-centroid .mg-gen,
+.conf-centroid .mg-ind,
+.conf-centroid .mg-dc,
+.conf-centroid .mg-cable{
+  opacity:.55;transform:scale(1.4);
+}
+
+/* Industrial badge */
+.ip-badge.ind{background:#f9731622;color:#f97316}
+
+/* Confidence notice */
+#ip-confidence{
+  display:none;font-size:9px;font-weight:600;letter-spacing:.5px;
+  text-transform:uppercase;padding:3px 7px;border-radius:4px;margin-top:6px;
+  background:#d1990022;color:#d19900;
+}
+
 /* ── ANIMATED DASH ───────────────────────────── */
 @keyframes dash-flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-24}}
 </style>
@@ -316,40 +360,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <div id="mob-handle" onclick="document.getElementById('sidebar').classList.toggle('mob-open')"><div class="bar"></div></div>
   <div id="sidebar-inner">
 
-    <!-- Layers -->
-    <div class="sec">
-      <div class="sec-label">Map Layers</div>
-      <div class="layer-toggle" onclick="toggleLayer('generation')">
-        <div class="lt-check on" id="ck-generation" style="color:var(--yellow)"></div>
-        <div class="lt-dot" style="background:var(--yellow)"></div>
-        <span class="lt-name">Generation</span>
-        <span class="lt-count">6 sites</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('transmission')">
-        <div class="lt-check on" id="ck-transmission" style="color:var(--blue)"></div>
-        <div class="lt-dot" style="background:var(--blue)"></div>
-        <span class="lt-name">Transmission Grid</span>
-        <span class="lt-count">400kV</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('datacenters')">
-        <div class="lt-check on" id="ck-datacenters" style="color:var(--purple)"></div>
-        <div class="lt-dot" style="background:var(--purple)"></div>
-        <span class="lt-name">Data Center Pipeline</span>
-        <span class="lt-count">4 sites</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('cables')">
-        <div class="lt-check on" id="ck-cables" style="color:var(--orange)"></div>
-        <div class="lt-dot" style="background:var(--orange)"></div>
-        <span class="lt-name">Submarine Cables</span>
-        <span class="lt-count">2 landings</span>
-      </div>
-      <div class="layer-toggle" onclick="toggleLayer('zones')">
-        <div class="lt-check on" id="ck-zones" style="color:#5cb85c"></div>
-        <div class="lt-dot" style="background:#5cb85c"></div>
-        <span class="lt-name">RE Zones</span>
-        <span class="lt-count">2 zones</span>
-      </div>
-    </div>
+    <!-- Layers — populated dynamically from js/layers.js registry -->
+    <div class="sec" id="layers-list"></div>
 
     <!-- KPIs -->
     <div class="sec">
@@ -394,471 +406,19 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- ═══════ INFO PANEL ═══════ -->
 <div id="info-panel">
   <div class="ip-head">
-    <button class="ip-close" onclick="closeInfo()"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    <button class="ip-close" id="ip-close-btn"><i data-lucide="x" style="width:18px;height:18px"></i></button>
     <div id="ip-badge" class="ip-badge"></div>
     <div id="ip-name" class="ip-name"></div>
     <div id="ip-status" class="ip-status"></div>
   </div>
   <div class="ip-body">
     <div id="ip-grid" class="ip-grid"></div>
+    <div id="ip-confidence"></div>
     <div id="ip-desc" class="ip-desc"></div>
-    <a class="ip-link" href="#" id="ip-link">Read more <span>&rarr;</span></a>
     <div id="ip-src" class="ip-src"></div>
   </div>
 </div>
 
-<script>
-// ═══════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════
-
-const SITES = [
-  // ── Generation ──
-  { id:'gen-noor', name:'Noor Ouarzazate Solar Complex', type:'generation', coords:[-6.85,31.0], capacity_mw:580, investment_usd:null, status:'Operational', description:'Africa\'s largest concentrated solar power complex. Noor I–IV combine CSP parabolic trough, CSP tower, and PV technologies across 3,000 hectares in the Draa-Tafilalet region. The complex provides 3 hours of thermal storage, enabling dispatchable solar power after sunset — a critical capability for grid stability.', source:'MASEN / ONEE', year:2016 },
-  { id:'gen-tarfaya', name:'Tarfaya Wind Farm', type:'generation', coords:[-12.98,27.93], capacity_mw:300, investment_usd:null, status:'Operational', description:'Located on the Atlantic coast near Tarfaya, this was Africa\'s largest wind farm when commissioned. The site exploits some of the continent\'s strongest and most consistent wind resources, with capacity factors exceeding 40%. Operated by Nareva and ENGIE under a 20-year PPA with ONEE.', source:'ONEE / Nareva', year:2014 },
-  { id:'gen-jorf', name:'Jorf Lasfar Thermal Complex', type:'generation', coords:[-8.63,33.09], capacity_mw:2056, investment_usd:null, status:'Operational', description:'Morocco\'s single largest power station and the backbone of its baseload capacity. Units 1–4 (1,356 MW) are operated by JLEC (TAQA); units 5–6 (700 MW) by ONEE. The plant burns imported coal and is a primary candidate for future carbon capture or phased retirement under Morocco\'s NDC commitments.', source:'TAQA / ONEE', year:1994 },
-  { id:'gen-abm', name:'Ain Beni Mathar ISCC', type:'generation', coords:[-2.07,33.97], capacity_mw:472, investment_usd:null, status:'Operational', description:'Africa\'s first Integrated Solar Combined Cycle plant, pairing a 20 MW parabolic trough solar field with a 452 MW gas-fired combined cycle. Located in the Oriental region near the Algerian border. The solar component displaces roughly 12,000 tonnes of CO₂ per year and proved the viability of hybrid solar-thermal in North Africa.', source:'ONEE / AfDB', year:2010 },
-  { id:'gen-tensift', name:'Tensift Wind Farm (Essaouira)', type:'generation', coords:[-9.8,31.5], capacity_mw:100, investment_usd:null, status:'Operational', description:'Part of Morocco\'s Integrated Wind Programme, the Tensift facility near Essaouira leverages the Mogador coast\'s strong trade winds. The site is embedded in a region of growing tourism and agriculture, illustrating the coexistence of renewable energy with local economic activity.', source:'MASEN', year:2019 },
-  { id:'gen-abdel', name:'Abdelmoumen Pumped Storage', type:'generation', coords:[-9.0,30.37], capacity_mw:350, investment_usd:null, status:'Under Construction', description:'Morocco\'s first large-scale energy storage project, located in the Souss-Massa region. The pumped hydro facility will store surplus renewable energy during off-peak hours and release it during demand spikes — a critical flexibility asset as Morocco pushes past 52% RE by 2030. Expected commissioning 2027.', source:'ONEE / World Bank', year:2027 },
-
-  // ── Data Centers ──
-  { id:'dc-naver', name:'Naver / Nvidia AI Data Center', type:'datacenter', coords:[-7.58,33.37], capacity_mw:500, investment_usd:1200000000, status:'Announced', description:'A landmark $1.2 billion facility announced by South Korean tech giant Naver in partnership with Nvidia. Located in Nouaceur near Mohammed V Airport, this 500 MW campus will be one of Africa\'s largest AI-ready data centers. The project anchors Morocco\'s ambition to become a continental AI compute hub and signals significant hyperscaler interest in North African infrastructure.', source:'Reuters / Naver Corp.', year:2025 },
-  { id:'dc-iozera', name:'Iozera AI Hub', type:'datacenter', coords:[-5.37,35.57], capacity_mw:386, investment_usd:500000000, status:'Announced', description:'A $500 million AI-focused data center complex planned for Eureka Park in Tetouan, near the Strait of Gibraltar. Iozera targets 386 MW of IT load capacity, leveraging proximity to submarine cable landings and the Spain-Morocco power interconnect. The project positions Morocco\'s northern coast as a low-latency bridge between European cloud regions and African markets.', source:'DCD / Morocco Investment Authority', year:2025 },
-  { id:'dc-dakhla', name:'Government DC — Dakhla', type:'datacenter', coords:[-15.93,23.71], capacity_mw:500, investment_usd:null, status:'Planned', description:'A sovereign data center planned for Dakhla as part of Morocco\'s Digital Strategy 2030. The site would leverage the region\'s exceptional wind and solar resources for near-100% renewable power, while the planned 2Africa submarine cable landing would provide international connectivity. This facility could catalyze a green data corridor from sub-Saharan Africa to Europe.', source:'Morocco Digital Development Agency', year:2028 },
-  { id:'dc-rabat', name:'Government DC — Rabat Technopolis', type:'datacenter', coords:[-6.86,33.98], capacity_mw:50, investment_usd:null, status:'Under Construction', description:'A 50 MW government and sovereign cloud facility under construction at Rabat Technopolis. Designed to host critical government services, citizen data, and AI research workloads under Moroccan data sovereignty regulations. The site is powered by a dedicated 33 kV feeder from ONEE with rooftop solar and battery backup.', source:'ADD / DGSSI', year:2026 },
-
-  // ── Cables ──
-  { id:'cable-2africa', name:'2Africa Cable — Casablanca Landing', type:'cable', coords:[-7.6,33.6], capacity_mw:null, investment_usd:null, status:'Operational', description:'Part of the 45,000 km 2Africa submarine cable system backed by Meta, connecting 33 countries across Africa, Europe, and the Middle East. The Casablanca landing station provides Morocco with massive international bandwidth capacity and sub-10ms latency to Southern Europe. It is the backbone for future hyperscaler deployments in the kingdom.', source:'TeleGeography / Meta', year:2024 },
-  { id:'cable-ace', name:'ACE Cable — Agadir Landing', type:'cable', coords:[-9.6,30.4], capacity_mw:null, investment_usd:null, status:'Operational', description:'The Africa Coast to Europe (ACE) cable is a 17,000 km submarine system linking France to South Africa via West Africa. The Agadir landing gives Morocco a southern connectivity path complementing the northern Mediterranean routes. ACE carries approximately 5.12 Tbps design capacity and serves 23 countries.', source:'TeleGeography / ACE Consortium', year:2012 },
-];
-
-// ── Transmission corridors (GeoJSON LineStrings) ──
-const TX_CORRIDORS = [
-  { id:'tx-casa-marr-ouar', name:'Casablanca — Marrakech — Ouarzazate 400kV', type:'transmission', status:'Operational', voltage:'400kV', description:'The backbone corridor connecting Morocco\'s economic capital to the Noor solar complex. This 400kV double-circuit line evacuates up to 600 MW of solar generation from Ouarzazate through Marrakech and into the Casablanca load center — the grid\'s heaviest consumption node.', coords:[[-7.58,33.57],[-7.62,33.00],[-8.00,31.68],[-6.85,31.00]] },
-  { id:'tx-casa-ken-tang', name:'Casablanca — Kenitra — Tangier 400kV', type:'transmission', status:'Operational', voltage:'400kV', description:'Northern backbone linking Casablanca to the Tangier Med industrial zone. This corridor carries power from Jorf Lasfar and renewable generation northward, and supports the HVAC interconnect to Spain across the Strait of Gibraltar (1,400 MW capacity).', coords:[[-7.58,33.57],[-6.58,34.26],[-6.84,34.02],[-5.80,35.78]] },
-  { id:'tx-oujda-fes-rabat', name:'Oujda — Fès — Rabat 400kV', type:'transmission', status:'Operational', voltage:'400kV', description:'Eastern corridor connecting the Algerian border interconnect at Oujda through Fès to the capital. This line supports the bilateral energy exchange with Algeria (COMELEC) and evacuates power from the Ain Beni Mathar ISCC plant.', coords:[[-1.91,34.69],[-5.00,34.06],[-5.55,33.89],[-6.84,34.02]] },
-  { id:'tx-hvdc-sahara', name:'Dakhla — Agadir HVDC Corridor (Planned)', type:'transmission', status:'Planned', voltage:'HVDC', description:'A planned high-voltage DC corridor that would evacuate massive wind and solar resources from the Dakhla region to the southern grid hub at Agadir — spanning over 1,000 km. This line is central to Morocco\'s green hydrogen export ambitions and the proposed Xlinks Morocco-UK Power Project (3.6 GW).', coords:[[-15.93,23.71],[-14.50,25.50],[-13.20,27.15],[-12.00,28.50],[-9.60,30.43]] },
-];
-
-// ── RE Zones (polygons) ──
-const RE_ZONES = [
-  { id:'zone-sahara', name:'Saharan Solar & Wind Zone', type:'zone', status:'Active', description:'A vast corridor stretching from Dakhla to Ouarzazate encompassing some of the world\'s highest solar irradiance (>2,500 kWh/m²/yr) and consistent Atlantic wind resources. This zone is central to the Xlinks project, MASEN\'s pipeline, and green hydrogen feasibility studies by IRENA and CWP Global.',
-    polygon:[[-15.5,23.0],[-14.0,24.5],[-10.5,27.5],[-8.0,30.0],[-6.0,31.5],[-5.5,31.0],[-7.5,29.0],[-10.0,27.0],[-13.5,24.0],[-15.0,22.5],[-15.5,23.0]] },
-  { id:'zone-atlantic', name:'Atlantic Wind Corridor', type:'zone', status:'Active', description:'A narrow coastal strip from Tarfaya to Essaouira exploiting strong, consistent Atlantic trade winds. Average wind speeds exceed 9 m/s at hub height. This corridor hosts the Tarfaya wind farm and multiple planned expansions under Morocco\'s Integrated Wind Programme.',
-    polygon:[[-13.3,27.5],[-13.0,28.0],[-10.5,31.0],[-10.1,31.8],[-9.5,31.8],[-9.8,31.0],[-12.5,28.0],[-12.8,27.5],[-13.3,27.5]] },
-];
-
-// ═══════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════
-let map = null;
-let mapLoaded = false;
-let markers = [];
-let layerState = { generation:true, transmission:true, datacenters:true, cables:true, zones:true };
-let activeInfo = null;
-
-// ═══════════════════════════════════════════════
-// CHART
-// ═══════════════════════════════════════════════
-(function initChart(){
-  const ctx = document.getElementById('mix-chart').getContext('2d');
-  new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels:['Coal','Gas','Solar','Wind','Hydro','Other'],
-      datasets:[{
-        data:[28,21,14,13,8,16],
-        backgroundColor:['#6b7280','#9ca3af','#d19900','#3b82f6','#06b6d4','#525252'],
-        borderRadius:3,
-        barPercentage:.7,
-      }]
-    },
-    options:{
-      indexAxis:'y',
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{ legend:{ display:false }, tooltip:{
-        backgroundColor:'#1a1a18',borderColor:'#2a2a27',borderWidth:1,
-        titleFont:{family:'var(--font-ui)',size:11},bodyFont:{family:'var(--font-ui)',size:11},
-        callbacks:{ label:ctx=> ctx.parsed.x+'%' }
-      }},
-      scales:{
-        x:{ max:35, grid:{ color:'#2a2a2710' }, ticks:{ color:'#5a5850', font:{size:9}, callback:v=>v+'%' }},
-        y:{ grid:{ display:false }, ticks:{ color:'#8a877e', font:{size:10,weight:500} }}
-      }
-    }
-  });
-})();
-
-// ═══════════════════════════════════════════════
-// TOKEN & MAP INIT
-// ═══════════════════════════════════════════════
-function hideTokenBar(){ document.getElementById('token-bar').classList.add('hidden'); }
-function showTokenBar(){ document.getElementById('token-bar').classList.remove('hidden'); }
-
-document.getElementById('token-toggle').addEventListener('click', ()=>{
-  document.getElementById('token-bar').classList.toggle('hidden');
-});
-
-function applyToken(){
-  const tk = document.getElementById('token-input').value.trim();
-  if(!tk){ alert('Paste a valid Mapbox token.'); return; }
-  mapboxgl.accessToken = tk;
-  hideTokenBar();
-  initMap();
-}
-
-// Auto-init with hardcoded token (override via token bar if needed)
-const MAPBOX_TOKEN = 'MAPBOX_TOKEN_REDACTED';
-(function autoInit(){
-  const override = localStorage.getItem('mg-token');
-  const tk = override || MAPBOX_TOKEN;
-  document.getElementById('token-input').value = tk;
-  mapboxgl.accessToken = tk;
-  hideTokenBar();
-  initMap();
-})();
-
-function initMap(){
-  if(mapLoaded) return;
-  const ph = document.getElementById('map-placeholder');
-  try{
-    map = new mapboxgl.Map({
-      container:'map',
-      style:'mapbox://styles/mapbox/dark-v11',
-      center:[-6.0,31.0],
-      zoom:5.2,
-      attributionControl:true,
-      pitch:0,
-    });
-    map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
-    map.on('load', ()=>{
-      mapLoaded = true;
-      ph.classList.add('hidden');
-      document.getElementById('fit-btn').style.display='flex';
-      localStorage.setItem('mg-token', mapboxgl.accessToken);
-      renderAllLayers();
-    });
-    map.on('click', (e)=>{
-      if(!e.originalEvent.target.closest('.mg-marker')) closeInfo();
-    });
-    map.on('error',(e)=>{
-      console.error(e);
-      ph.classList.remove('hidden');
-      showTokenBar();
-    });
-  }catch(err){
-    console.error(err);
-    ph.classList.remove('hidden');
-    showTokenBar();
-  }
-}
-
-// ═══════════════════════════════════════════════
-// RENDER LAYERS
-// ═══════════════════════════════════════════════
-function renderAllLayers(){
-  clearMarkers();
-  renderZones();
-  renderTransmission();
-  renderGenerationMarkers();
-  renderDCMarkers();
-  renderCableMarkers();
-}
-
-function clearMarkers(){
-  markers.forEach(m=>m.remove());
-  markers=[];
-  // Remove transmission and zone sources/layers
-  ['tx-corridor-op','tx-corridor-planned','tx-dash-anim','zone-sahara-fill','zone-atlantic-fill','cable-eu-line'].forEach(id=>{
-    if(map.getLayer(id)) map.removeLayer(id);
-  });
-  ['tx-op','tx-planned','zone-sahara','zone-atlantic','cable-eu'].forEach(id=>{
-    if(map.getSource(id)) map.removeSource(id);
-  });
-}
-
-// ── Generation markers ──
-function renderGenerationMarkers(){
-  if(!layerState.generation) return;
-  SITES.filter(s=>s.type==='generation').forEach(s=>{
-    const el = document.createElement('div');
-    el.className = 'mg-marker';
-    const large = s.capacity_mw >= 400;
-    el.innerHTML = `<div class="mg-gen ${large?'large':''}"></div>
-      <div class="mg-tooltip"><b>${s.name}</b>${s.capacity_mw?`<div class="tt-cap">${s.capacity_mw} MW</div>`:''}</div>`;
-    el.addEventListener('click',(e)=>{ e.stopPropagation(); openInfo(s); });
-    const m = new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat(s.coords).addTo(map);
-    markers.push(m);
-  });
-}
-
-// ── DC markers ──
-function renderDCMarkers(){
-  if(!layerState.datacenters) return;
-  SITES.filter(s=>s.type==='datacenter').forEach(s=>{
-    const el = document.createElement('div');
-    el.className = 'mg-marker';
-    const pulse = s.status==='Announced'||s.status==='Planned';
-    el.innerHTML = `<div class="mg-dc ${pulse?'pulse':''}"></div>
-      <div class="mg-tooltip"><b>${s.name}</b>${s.capacity_mw?`<div class="tt-cap">${s.capacity_mw} MW</div>`:''}</div>`;
-    el.addEventListener('click',(e)=>{ e.stopPropagation(); openInfo(s); });
-    const m = new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat(s.coords).addTo(map);
-    markers.push(m);
-  });
-}
-
-// ── Cable markers ──
-function renderCableMarkers(){
-  if(!layerState.cables) return;
-  SITES.filter(s=>s.type==='cable').forEach(s=>{
-    const el = document.createElement('div');
-    el.className = 'mg-marker';
-    el.innerHTML = `<div class="mg-cable"></div>
-      <div class="mg-tooltip"><b>${s.name}</b></div>`;
-    el.addEventListener('click',(e)=>{ e.stopPropagation(); openInfo(s); });
-    const m = new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat(s.coords).addTo(map);
-    markers.push(m);
-  });
-  // Line to Europe
-  if(map.getSource('cable-eu')) return;
-  map.addSource('cable-eu',{
-    type:'geojson',
-    data:{ type:'Feature', geometry:{ type:'LineString', coordinates:[[-7.6,33.6],[-6.5,35.0],[-5.0,36.5],[-3.0,37.5],[-1.0,38.5]] }}
-  });
-  map.addLayer({
-    id:'cable-eu-line', type:'line', source:'cable-eu',
-    paint:{ 'line-color':'#da7101','line-width':1.5,'line-opacity':0.25,'line-dasharray':[4,3] }
-  });
-}
-
-// ── Transmission corridors ──
-function renderTransmission(){
-  if(!layerState.transmission) return;
-  const opLines = TX_CORRIDORS.filter(c=>c.status==='Operational');
-  const plannedLines = TX_CORRIDORS.filter(c=>c.status==='Planned');
-
-  if(!map.getSource('tx-op')){
-    map.addSource('tx-op',{
-      type:'geojson',
-      data:{ type:'FeatureCollection', features:opLines.map(c=>({
-        type:'Feature',
-        properties:{name:c.name,id:c.id},
-        geometry:{type:'LineString',coordinates:c.coords}
-      }))}
-    });
-    map.addLayer({
-      id:'tx-corridor-op', type:'line', source:'tx-op',
-      paint:{ 'line-color':'#3b82f6','line-width':2,'line-opacity':0.6 }
-    });
-    map.on('click','tx-corridor-op',(e)=>{
-      const f = e.features[0];
-      const site = TX_CORRIDORS.find(c=>c.id===f.properties.id);
-      if(site) openInfo(site);
-    });
-    map.on('mouseenter','tx-corridor-op',()=>{ map.getCanvas().style.cursor='pointer'; });
-    map.on('mouseleave','tx-corridor-op',()=>{ map.getCanvas().style.cursor=''; });
-  }
-
-  if(!map.getSource('tx-planned')){
-    map.addSource('tx-planned',{
-      type:'geojson',
-      data:{ type:'FeatureCollection', features:plannedLines.map(c=>({
-        type:'Feature',
-        properties:{name:c.name,id:c.id},
-        geometry:{type:'LineString',coordinates:c.coords}
-      }))}
-    });
-    map.addLayer({
-      id:'tx-corridor-planned', type:'line', source:'tx-planned',
-      paint:{ 'line-color':'#06b6d4','line-width':2.5,'line-opacity':0.55,'line-dasharray':[6,4] }
-    });
-    map.on('click','tx-corridor-planned',(e)=>{
-      const f = e.features[0];
-      const site = TX_CORRIDORS.find(c=>c.id===f.properties.id);
-      if(site) openInfo(site);
-    });
-    map.on('mouseenter','tx-corridor-planned',()=>{ map.getCanvas().style.cursor='pointer'; });
-    map.on('mouseleave','tx-corridor-planned',()=>{ map.getCanvas().style.cursor=''; });
-  }
-}
-
-// ── RE Zones ──
-function renderZones(){
-  if(!layerState.zones) return;
-  RE_ZONES.forEach(z=>{
-    const srcId = z.id;
-    if(map.getSource(srcId)) return;
-    map.addSource(srcId,{
-      type:'geojson',
-      data:{ type:'Feature',
-        properties:{name:z.name,id:z.id},
-        geometry:{type:'Polygon',coordinates:[z.polygon]}
-      }
-    });
-    map.addLayer({
-      id:srcId+'-fill', type:'fill', source:srcId,
-      paint:{ 'fill-color':z.id.includes('sahara')?'#d19900':'#3b82f6', 'fill-opacity':0.06 }
-    });
-    map.on('click',srcId+'-fill',(e)=>{
-      const site = RE_ZONES.find(rz=>rz.id===z.id);
-      if(site) openInfo(site);
-    });
-  });
-}
-
-// ═══════════════════════════════════════════════
-// LAYER TOGGLE
-// ═══════════════════════════════════════════════
-function toggleLayer(key){
-  layerState[key] = !layerState[key];
-  const ck = document.getElementById('ck-'+key);
-  if(layerState[key]){ ck.classList.add('on'); } else { ck.classList.remove('on'); }
-  if(!mapLoaded) return;
-  // Re-render everything cleanly
-  clearMarkers();
-  renderZones();
-  renderTransmission();
-  renderGenerationMarkers();
-  renderDCMarkers();
-  renderCableMarkers();
-}
-
-// ═══════════════════════════════════════════════
-// INFO PANEL
-// ═══════════════════════════════════════════════
-function openInfo(site){
-  activeInfo = site;
-  const panel = document.getElementById('info-panel');
-  const badge = document.getElementById('ip-badge');
-  const name  = document.getElementById('ip-name');
-  const status= document.getElementById('ip-status');
-  const grid  = document.getElementById('ip-grid');
-  const desc  = document.getElementById('ip-desc');
-  const link  = document.getElementById('ip-link');
-  const src   = document.getElementById('ip-src');
-
-  // Badge
-  const typeMap = {
-    generation:{ label:'Generation', cls:'gen' },
-    transmission:{ label:'Transmission', cls:'tx' },
-    datacenter:{ label:'Data Center', cls:'dc' },
-    cable:{ label:'Submarine Cable', cls:'cable' },
-    zone:{ label:'Renewable Energy Zone', cls:'zone' }
-  };
-  const tm = typeMap[site.type]||typeMap.generation;
-  badge.className = 'ip-badge '+tm.cls;
-  badge.textContent = tm.label;
-
-  // Name
-  name.textContent = site.name;
-
-  // Status
-  const statusMap = {
-    'Operational':{ cls:'operational', dot:'#4ade80' },
-    'Under Construction':{ cls:'construction', dot:'#d19900' },
-    'Announced':{ cls:'announced', dot:'#c084fc' },
-    'Planned':{ cls:'planned', dot:'#3b82f6' },
-    'Active':{ cls:'operational', dot:'#4ade80' },
-  };
-  const sm = statusMap[site.status]||statusMap.Operational;
-  status.className = 'ip-status '+sm.cls;
-  status.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${sm.dot};display:inline-block"></span> ${site.status}`;
-
-  // Grid cells
-  let cells = '';
-  if(site.capacity_mw) cells += cell('Capacity', site.capacity_mw+' MW');
-  if(site.voltage) cells += cell('Voltage', site.voltage);
-  if(site.investment_usd) cells += cell('Investment', '$'+fmtM(site.investment_usd));
-  if(site.year) cells += cell(site.status==='Operational'?'Commissioned':'Target year', site.year);
-  if(site.type==='zone') cells = cell('Type','Renewable Zone') + cell('Status','Active');
-  grid.innerHTML = cells;
-
-  // Description
-  desc.textContent = site.description||'';
-
-  // Source
-  src.textContent = site.source ? 'Source: '+site.source : '';
-
-  panel.classList.add('open');
-}
-
-function closeInfo(){
-  document.getElementById('info-panel').classList.remove('open');
-  activeInfo = null;
-}
-
-function cell(lbl,val){
-  return `<div class="ip-cell"><div class="ip-cell-lbl">${lbl}</div><div class="ip-cell-val">${val}</div></div>`;
-}
-
-function fmtM(n){
-  if(n>=1e9) return (n/1e9).toFixed(1)+'B';
-  if(n>=1e6) return (n/1e6).toFixed(0)+'M';
-  return n.toLocaleString();
-}
-
-// ═══════════════════════════════════════════════
-// FIT MOROCCO
-// ═══════════════════════════════════════════════
-function fitMorocco(){
-  if(!map) return;
-  map.flyTo({ center:[-6.0,31.0], zoom:5.2, duration:1200 });
-}
-
-// ═══════════════════════════════════════════════
-// THEME TOGGLE
-// ═══════════════════════════════════════════════
-let darkMode = true;
-document.getElementById('theme-toggle').addEventListener('click',()=>{
-  darkMode = !darkMode;
-  document.body.classList.toggle('light',!darkMode);
-  if(map && mapLoaded){
-    map.setStyle(darkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
-    map.once('style.load',()=>{
-      renderAllLayers();
-    });
-  }
-  // Recreate chart for theme
-  const wrap = document.getElementById('mix-chart-wrap');
-  const old = document.getElementById('mix-chart');
-  const nw = document.createElement('canvas');
-  nw.id = 'mix-chart';
-  nw.style.cssText = old.style.cssText;
-  wrap.replaceChild(nw, old);
-  const ctx = nw.getContext('2d');
-  const tc = darkMode ? '#5a5850' : '#9a9890';
-  const gc = darkMode ? '#2a2a2710' : '#ccc9c210';
-  new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels:['Coal','Gas','Solar','Wind','Hydro','Other'],
-      datasets:[{
-        data:[28,21,14,13,8,16],
-        backgroundColor:['#6b7280','#9ca3af','#d19900','#3b82f6','#06b6d4','#525252'],
-        borderRadius:3, barPercentage:.7
-      }]
-    },
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{
-        backgroundColor:darkMode?'#1a1a18':'#f5f4f1',
-        borderColor:darkMode?'#2a2a27':'#ccc9c2',borderWidth:1,
-        titleColor:darkMode?'#f2f0ec':'#1a1a18',bodyColor:darkMode?'#c4c1b8':'#3a3a36',
-        titleFont:{size:11},bodyFont:{size:11},callbacks:{label:c=>c.parsed.x+'%'}
-      }},
-      scales:{
-        x:{max:35,grid:{color:gc},ticks:{color:tc,font:{size:9},callback:v=>v+'%'}},
-        y:{grid:{display:false},ticks:{color:darkMode?'#8a877e':'#6a6860',font:{size:10,weight:500}}}
-      }
-    }
-  });
-});
-
-// ═══════════════════════════════════════════════
-// LUCIDE ICONS INIT
-// ═══════════════════════════════════════════════
-lucide.createIcons();
-</script>
+<script type="module" src="js/map.js"></script>
 </body>
 </html>

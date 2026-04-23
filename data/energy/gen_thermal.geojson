@@ -1,0 +1,89 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-8.63, 33.09] },
+      "properties": {
+        "id": "gen-jorf",
+        "name": "Jorf Lasfar Thermal Complex",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Coal steam",
+        "operator": "JLEC (TAQA) / ONEE",
+        "capacity_mw": 2056,
+        "status": "operational",
+        "year_operational": 1994,
+        "source": "TAQA / ONEE",
+        "source_url": "",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "Morocco's single largest power station and the backbone of its baseload capacity. Units 1–4 (1,356 MW) are operated by JLEC (TAQA); units 5–6 (700 MW) by ONEE. The plant burns imported coal and is a primary candidate for phased retirement under Morocco's NDC commitments. It shares the Jorf Lasfar industrial port with OCP's phosphate processing complex."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-2.07, 33.97] },
+      "properties": {
+        "id": "gen-abm",
+        "name": "Ain Beni Mathar ISCC",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Integrated Solar Combined Cycle",
+        "operator": "ONEE",
+        "capacity_mw": 472,
+        "status": "operational",
+        "year_operational": 2010,
+        "source": "ONEE / AfDB",
+        "source_url": "",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "Africa's first Integrated Solar Combined Cycle plant: a 20 MW parabolic trough solar field paired with a 452 MW gas combined cycle. Located in the Oriental region near the Algerian border. The solar component displaces ~12,000 t CO₂/yr and proved the viability of hybrid solar-thermal at utility scale in North Africa."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.44, 35.7] },
+      "properties": {
+        "id": "gen-tahaddart",
+        "name": "Tahaddart CCGT",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Combined cycle gas turbine",
+        "operator": "ONEE / EDF / Endesa",
+        "capacity_mw": 384,
+        "status": "operational",
+        "year_operational": 2005,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Morocco's first independent power producer (IPP) under a BOT contract. Located near Tangier, it receives natural gas via the Maghreb–Europe Gas Pipeline from Algeria. The plant serves as peaking and mid-merit capacity for the northern grid and the Spain interconnect."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.37, 33.73] },
+      "properties": {
+        "id": "gen-mohammedia",
+        "name": "Mohammedia Thermal Plant",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Heavy fuel oil / gas",
+        "operator": "ONEE",
+        "capacity_mw": 600,
+        "status": "operational",
+        "year_operational": 1983,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Aging heavy fuel oil plant near Mohammedia, between Casablanca and Rabat. Increasingly used as a strategic reserve rather than baseload, given its high operating costs relative to renewables. A candidate for decommissioning or repowering as grid flexibility assets are added."
+      }
+    }
+  ]
+}

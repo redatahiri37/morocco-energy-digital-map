@@ -1,0 +1,104 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.6, 33.6] },
+      "properties": {
+        "id": "cable-2africa-casa",
+        "name": "2Africa Cable — Casablanca Landing",
+        "layer": "dig_telecom",
+        "sector": "digital",
+        "subsector": "cable",
+        "operator": "Meta / 2Africa Consortium",
+        "status": "operational",
+        "year_operational": 2024,
+        "source": "TeleGeography / Meta",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Part of the 45,000 km 2Africa system backed by Meta, connecting 33 countries. The Casablanca landing station provides massive international bandwidth and sub-10ms latency to Southern Europe. Backbone for future hyperscaler deployments in the kingdom."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.6, 30.4] },
+      "properties": {
+        "id": "cable-ace-agadir",
+        "name": "ACE Cable — Agadir Landing",
+        "layer": "dig_telecom",
+        "sector": "digital",
+        "subsector": "cable",
+        "operator": "ACE Consortium",
+        "status": "operational",
+        "year_operational": 2012,
+        "source": "TeleGeography / ACE Consortium",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "The Africa Coast to Europe (ACE) cable: 17,000 km from France to South Africa via West Africa. The Agadir landing gives Morocco a southern connectivity path complementing northern Mediterranean routes. ~5.12 Tbps design capacity across 23 countries."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.79, 35.78] },
+      "properties": {
+        "id": "cable-medusa-tangier",
+        "name": "Medusa Cable — Tangier Landing",
+        "layer": "dig_telecom",
+        "sector": "digital",
+        "subsector": "cable",
+        "operator": "Medusa Consortium (Maroc Telecom)",
+        "status": "operational",
+        "year_operational": 2023,
+        "source": "TeleGeography / Medusa",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "manual_estimate",
+        "description": "New 9,700 km submarine cable system connecting Morocco, Spain, France, Portugal, Senegal, and Côte d'Ivoire. The Tangier landing positions the Tangier Med industrial zone as a digital hub, co-located with the Spain power interconnect crossing at the Strait of Gibraltar."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-7.6,33.6],[-6.5,35.0],[-5.0,36.5],[-3.0,37.5],[-1.0,38.5]
+        ]
+      },
+      "properties": {
+        "id": "cable-2africa-route",
+        "name": "2Africa Cable Route (schematic)",
+        "layer": "dig_telecom",
+        "sector": "digital",
+        "subsector": "cable_route",
+        "status": "operational",
+        "source": "TeleGeography",
+        "coord_confidence": "approximate",
+        "coord_method": "manual_estimate",
+        "description": "Schematic routing of 2Africa cable from Casablanca landing northward toward Southern Europe."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-9.6,30.4],[-10.5,30.8],[-12.0,32.5],[-10.0,35.5],[-8.5,37.0],[-9.1,38.7]
+        ]
+      },
+      "properties": {
+        "id": "cable-ace-route",
+        "name": "ACE Cable Route (schematic)",
+        "layer": "dig_telecom",
+        "sector": "digital",
+        "subsector": "cable_route",
+        "status": "operational",
+        "source": "TeleGeography",
+        "coord_confidence": "approximate",
+        "coord_method": "manual_estimate",
+        "description": "Schematic routing of Africa Coast to Europe (ACE) cable from Agadir northward to Portugal and France."
+      }
+    }
+  ]
+}

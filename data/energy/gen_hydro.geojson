@@ -1,0 +1,89 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.0, 30.37] },
+      "properties": {
+        "id": "gen-abdel",
+        "name": "Abdelmoumen Pumped Storage (STEP)",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Pumped storage hydro",
+        "operator": "ONEE",
+        "capacity_mw": 350,
+        "status": "under_construction",
+        "year_operational": 2027,
+        "source": "ONEE / World Bank",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Morocco's first large-scale pumped hydro energy storage (STEP) project, in the Souss-Massa region. It will store surplus renewable energy during off-peak hours and dispatch during demand spikes — critical flexibility as Morocco targets 52% RE by 2030. The project is part of a broader STEP program that could add 2–3 GW of storage nationally."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.47, 32.08] },
+      "properties": {
+        "id": "gen-bin-ouidane",
+        "name": "Bin el Ouidane Dam",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Run-of-river / reservoir hydro",
+        "operator": "ONEE",
+        "capacity_mw": 135,
+        "status": "operational",
+        "year_operational": 1953,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "One of Morocco's oldest large hydroelectric facilities, on the Oued El Abid in the High Atlas. The reservoir is a major water resource for the Tadla agricultural region. Output is highly variable with precipitation, underlining Morocco's dependence on imported fossil fuels during drought years."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.16, 34.52] },
+      "properties": {
+        "id": "gen-al-wahda",
+        "name": "Al Wahda Dam",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Reservoir hydro",
+        "operator": "ONEE",
+        "capacity_mw": 240,
+        "status": "operational",
+        "year_operational": 1996,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "Africa's second-largest dam by storage volume. Located on the Oued Ouerrha in the Rif, it provides both power generation and irrigation for the Gharb plain. With a catchment area of ~7,200 km², its output is sensitive to inter-annual precipitation variability."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.6, 33.1] },
+      "properties": {
+        "id": "gen-hassan-ii",
+        "name": "Hassan II Dam STEP",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Pumped storage hydro",
+        "operator": "ONEE",
+        "capacity_mw": 180,
+        "status": "operational",
+        "year_operational": 1994,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Morocco's first pumped storage facility, providing peaking capacity and frequency regulation on the national grid. Located in the Middle Atlas range on the Oued El Abid headwaters. As the share of variable renewables rises, its flexibility role becomes increasingly strategic."
+      }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-15.5,23.0],[-14.0,24.5],[-10.5,27.5],[-8.0,30.0],
+          [-6.0,31.5],[-5.5,31.0],[-7.5,29.0],[-10.0,27.0],
+          [-13.5,24.0],[-15.0,22.5],[-15.5,23.0]
+        ]]
+      },
+      "properties": {
+        "id": "zone-sahara",
+        "name": "Saharan Solar & Wind Zone",
+        "layer": "re_zones",
+        "sector": "energy",
+        "subsector": "zone",
+        "status": "active",
+        "color": "#d19900",
+        "source": "MASEN / IRENA",
+        "coord_confidence": "approximate",
+        "coord_method": "manual_estimate",
+        "description": "A vast corridor from Dakhla to Ouarzazate with some of the world's highest solar irradiance (>2,500 kWh/m²/yr) and consistent Atlantic wind resources. Central to the Xlinks project, MASEN's pipeline, and green hydrogen feasibility studies by IRENA and CWP Global."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-13.3,27.5],[-13.0,28.0],[-10.5,31.0],[-10.1,31.8],
+          [-9.5,31.8],[-9.8,31.0],[-12.5,28.0],[-12.8,27.5],[-13.3,27.5]
+        ]]
+      },
+      "properties": {
+        "id": "zone-atlantic",
+        "name": "Atlantic Wind Corridor",
+        "layer": "re_zones",
+        "sector": "energy",
+        "subsector": "zone",
+        "status": "active",
+        "color": "#3b82f6",
+        "source": "MASEN / GIZ",
+        "coord_confidence": "approximate",
+        "coord_method": "manual_estimate",
+        "description": "A narrow coastal strip from Tarfaya to Essaouira with average wind speeds exceeding 9 m/s at hub height. Hosts the Tarfaya wind farm and multiple planned expansions under Morocco's Integrated Wind Programme. Capacity factors regularly exceed 40%."
+      }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.67, 33.47] },
+      "properties": {
+        "id": "ind-cement-bouskoura",
+        "name": "LafargeHolcim Bouskoura",
+        "layer": "ind_cement",
+        "sector": "industrial",
+        "subsector": "cement",
+        "operator": "Holcim Maroc",
+        "capacity_mt_yr": 2.7,
+        "estimated_demand_mw": 55,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 60,
+        "status": "operational",
+        "year_operational": 1953,
+        "source": "Holcim Maroc annual report",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "satellite_verified",
+        "description": "Morocco's largest cement plant by capacity. Located in the Casablanca industrial belt, it serves the Grand Casablanca construction market — Africa's most active. Holcim Maroc has committed to 30% alternative fuels and captive renewable power targets by 2030."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.56, 30.38] },
+      "properties": {
+        "id": "ind-cement-agadir",
+        "name": "Ciments du Maroc — Agadir",
+        "layer": "ind_cement",
+        "sector": "industrial",
+        "subsector": "cement",
+        "operator": "Ciments du Maroc (HeidelbergMaterials)",
+        "capacity_mt_yr": 1.5,
+        "estimated_demand_mw": 30,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 60,
+        "status": "operational",
+        "year_operational": 1976,
+        "source": "Ciments du Maroc",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Regional cement plant serving the Souss-Massa and southern Morocco markets. Close proximity to OCP's phosphate operations provides synergies for industrial demand response. The Agadir region's strong solar resource makes captive PV economically attractive for cement kilns."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.37, 35.57] },
+      "properties": {
+        "id": "ind-cement-tetouan",
+        "name": "Holcim Tetouan",
+        "layer": "ind_cement",
+        "sector": "industrial",
+        "subsector": "cement",
+        "operator": "Holcim Maroc",
+        "capacity_mt_yr": 1.2,
+        "estimated_demand_mw": 25,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 60,
+        "status": "operational",
+        "year_operational": 1963,
+        "source": "Holcim Maroc",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Plant serving the northern market around Tangier-Tetouan-Al Hoceïma region. Co-located in a zone of high data center and industrial interest (Iozera AI Hub planned nearby). The plant's demand profile makes it a candidate for industrial demand response programs as the grid absorbs more variable renewables."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.62, 32.98] },
+      "properties": {
+        "id": "ind-cement-settat",
+        "name": "SCM Settat (Ciments du Maroc)",
+        "layer": "ind_cement",
+        "sector": "industrial",
+        "subsector": "cement",
+        "operator": "Ciments du Maroc (HeidelbergMaterials)",
+        "capacity_mt_yr": 1.0,
+        "estimated_demand_mw": 22,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 60,
+        "status": "operational",
+        "year_operational": 1975,
+        "source": "Ciments du Maroc",
+        "source_url": "",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "Settat plant of Société des Ciments de Meknès, serving the Chaouia-Ouardigha region between Casablanca and Marrakech. Sits on the Casablanca–Marrakech 400kV corridor, giving it access to large-scale renewable evacuation infrastructure."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.91, 33.93] },
+      "properties": {
+        "id": "ind-cement-temara",
+        "name": "Asment Temara (Ciments Prompt)",
+        "layer": "ind_cement",
+        "sector": "industrial",
+        "subsector": "cement",
+        "operator": "Asment Temara",
+        "capacity_mt_yr": 0.8,
+        "estimated_demand_mw": 18,
+        "demand_confidence": "estimated",
+        "grid_connection_kv": 60,
+        "status": "operational",
+        "year_operational": 1985,
+        "source": "Industry sources",
+        "source_url": "",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "Regional plant near the capital, supplying the Rabat-Salé construction market. Located on the ONEE grid between the Casablanca load center and the Rabat government data center corridor."
+      }
+    }
+  ]
+}

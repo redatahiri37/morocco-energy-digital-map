@@ -1,0 +1,110 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-12.98, 27.93] },
+      "properties": {
+        "id": "gen-tarfaya",
+        "name": "Tarfaya Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "Nareva / ENGIE",
+        "capacity_mw": 300,
+        "status": "operational",
+        "year_operational": 2014,
+        "source": "ONEE / Nareva",
+        "source_url": "",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "Africa's largest wind farm at commissioning. Located on the Atlantic coast near Tarfaya, it exploits capacity factors exceeding 40% on consistently strong trade winds. Operated under a 20-year PPA with ONEE."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.8, 31.5] },
+      "properties": {
+        "id": "gen-tensift",
+        "name": "Tensift Wind Farm (Essaouira)",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "MASEN / Nareva",
+        "capacity_mw": 100,
+        "status": "operational",
+        "year_operational": 2019,
+        "source": "MASEN",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Part of Morocco's Integrated Wind Programme. The Essaouira coastline benefits from strong Alizé trade winds with speeds exceeding 9 m/s at hub height. The site coexists with local tourism and agriculture in one of Morocco's most culturally significant regions."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-12.8, 29.0] },
+      "properties": {
+        "id": "gen-akhfennir",
+        "name": "Akhfennir Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE",
+        "capacity_mw": 100,
+        "status": "operational",
+        "year_operational": 2013,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Located in the Guelmim-Oued Noun region on the southern Atlantic coast. Part of the first phase of Morocco's Integrated Wind Programme. The site anchors the southern half of the Atlantic wind corridor."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-4.02, 34.2] },
+      "properties": {
+        "id": "gen-taza",
+        "name": "Taza Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "MASEN / Nareva",
+        "capacity_mw": 150,
+        "status": "operational",
+        "year_operational": 2021,
+        "source": "MASEN",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Located in the Rif mountain foothills near Taza, this project exploits a topographic wind acceleration corridor. The first wind farm in Morocco's interior, demonstrating that viable wind resources extend beyond the Atlantic coast."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-14.48, 26.12] },
+      "properties": {
+        "id": "gen-boujdour",
+        "name": "Boujdour Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE / MASEN",
+        "capacity_mw": 100,
+        "status": "operational",
+        "year_operational": 2015,
+        "source": "ONEE",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Commissioned in the southern provinces near Boujdour. This site demonstrates the exceptional wind resources of the Saharan Atlantic coast, with capacity factors among the highest in Africa. A precursor to much larger planned developments in the region."
+      }
+    }
+  ]
+}

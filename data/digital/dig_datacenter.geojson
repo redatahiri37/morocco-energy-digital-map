@@ -1,0 +1,115 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.58, 33.37] },
+      "properties": {
+        "id": "dc-naver",
+        "name": "Naver / Nvidia AI Data Center — Nouaceur",
+        "layer": "dig_datacenter",
+        "sector": "digital",
+        "subsector": "datacenter",
+        "operator": "Naver Corp. / Nvidia",
+        "capacity_mw": 500,
+        "investment_usd": 1200000000,
+        "tier": "IV",
+        "status": "announced",
+        "year_operational": 2027,
+        "source": "Reuters / Naver Corp.",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "address_geocoded",
+        "description": "A landmark $1.2B facility announced by South Korean tech giant Naver in partnership with Nvidia. Located in Nouaceur near Mohammed V Airport, this 500 MW campus will be one of Africa's largest AI-ready data centers. Anchors Morocco's ambition to become a continental AI compute hub and signals significant hyperscaler confidence in North African infrastructure."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.37, 35.57] },
+      "properties": {
+        "id": "dc-iozera",
+        "name": "Iozera AI Hub — Tetouan",
+        "layer": "dig_datacenter",
+        "sector": "digital",
+        "subsector": "datacenter",
+        "operator": "Iozera",
+        "capacity_mw": 386,
+        "investment_usd": 500000000,
+        "tier": null,
+        "status": "announced",
+        "year_operational": 2027,
+        "source": "DCD / Morocco Investment Authority",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "address_geocoded",
+        "description": "A $500M AI-focused campus planned for Eureka Park in Tetouan, near the Strait of Gibraltar. Targets 386 MW IT load, leveraging proximity to submarine cable landings and the Spain-Morocco power interconnect. Positions Morocco's northern coast as a low-latency bridge between European cloud regions and African markets."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-15.93, 23.71] },
+      "properties": {
+        "id": "dc-dakhla",
+        "name": "Sovereign Data Center — Dakhla",
+        "layer": "dig_datacenter",
+        "sector": "digital",
+        "subsector": "datacenter",
+        "operator": "ADD / Moroccan Government",
+        "capacity_mw": 500,
+        "investment_usd": null,
+        "tier": null,
+        "status": "planned",
+        "year_operational": 2028,
+        "source": "ADD — Morocco Digital Development Agency",
+        "source_url": "",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "Sovereign data center planned for Dakhla under Morocco's Digital Strategy 2030. Would leverage the region's world-class wind and solar resources for near-100% renewable power. If the 2Africa cable landing at Dakhla is confirmed, this facility could catalyze a green AI corridor from sub-Saharan Africa to Europe."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.86, 33.98] },
+      "properties": {
+        "id": "dc-rabat",
+        "name": "Government Data Center — Rabat Technopolis",
+        "layer": "dig_datacenter",
+        "sector": "digital",
+        "subsector": "datacenter",
+        "operator": "ADD / DGSSI",
+        "capacity_mw": 50,
+        "investment_usd": null,
+        "tier": "III",
+        "status": "under_construction",
+        "year_operational": 2026,
+        "source": "ADD / DGSSI",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "satellite_verified",
+        "description": "Sovereign cloud facility at Rabat Technopolis for government services, citizen data, and AI research under Moroccan data sovereignty regulations. Powered by a dedicated 33 kV ONEE feeder with rooftop solar and battery backup. First node in Morocco's sovereign cloud infrastructure."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.59, 33.57] },
+      "properties": {
+        "id": "dc-casa-existing",
+        "name": "Casablanca Carrier-Neutral Data Center",
+        "layer": "dig_datacenter",
+        "sector": "digital",
+        "subsector": "datacenter",
+        "operator": "Maroc Telecom / IXP",
+        "capacity_mw": 12,
+        "investment_usd": null,
+        "tier": "III",
+        "status": "operational",
+        "year_operational": 2015,
+        "source": "Datacentermap.com / Maroc Telecom",
+        "source_url": "",
+        "coord_confidence": "approximate",
+        "coord_method": "address_geocoded",
+        "description": "Casablanca's primary carrier-neutral colocation facility and home to the country's main Internet Exchange Point (IX-MOR). Serves Moroccan ISPs, CDN providers, and enterprise cloud customers. The 2Africa cable landing at Casablanca has significantly boosted this facility's strategic value for hyperscalers exploring North African PoPs."
+      }
+    }
+  ]
+}
