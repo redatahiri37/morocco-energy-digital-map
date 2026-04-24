@@ -52,8 +52,11 @@
   };
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
-  const CABLE_COLOR      = "#F97316";
+  const CABLE_COLOR      = "#2DD4BF";  // teal — was orange, collided with industrial
   const GRID_COLOR       = "#E5E4E0";
+
+  // Resolves current theme; called inside buildMapLayers which re-runs on theme change
+  const isDark = () => document.body.dataset.theme !== "light";
 
   // DC provider palette — shown in the sidebar legend, used on the map.
   // Keep the list short; anything unknown falls back to DIGITAL_COLOR.
@@ -420,12 +423,12 @@
     map.addLayer({
       id:"lyr-oim-line-mv", type:"line", source:"src-oim", "source-layer":"power_line",
       filter:["all",[">=",voltExpr,100000],["<",voltExpr,300000]],
-      paint:{ "line-color":"rgba(229,228,224,0.55)", "line-width":1.0 }
+      paint:{ "line-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.65)", "line-width":1.0 }
     });
     map.addLayer({
       id:"lyr-oim-line-hv", type:"line", source:"src-oim", "source-layer":"power_line",
       filter:[">=", voltExpr, 300000],
-      paint:{ "line-color":GRID_COLOR, "line-width":1.8, "line-opacity":0.9 }
+      paint:{ "line-color": isDark() ? GRID_COLOR : "#3b3b3f", "line-width":1.8, "line-opacity":0.9 }
     });
 
     // Substations — polygon at high zoom, points at low zoom
@@ -530,15 +533,17 @@
     // Editorial overlay — interconnectors, HVDC corridors, planned/idle
     // strategic links. Rendered bold/colored on top of OIM's grey OSM grid
     // so the strategic story pops.
+    // Interconnector color: blue family — distinct from wind's teal (#0D9488)
+    const intColor = isDark() ? "#60A5FA" : "#1D4ED8";
     map.addLayer({ id:"lyr-grid-hv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
-      paint:{ "line-color":"#0D9488", "line-width":2.6, "line-opacity":0.95 }});
+      paint:{ "line-color": intColor, "line-width":2.6, "line-opacity":0.95 }});
     map.addLayer({ id:"lyr-grid-mv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
-      paint:{ "line-color":"#0D9488", "line-width":1.6, "line-opacity":0.85 }});
+      paint:{ "line-color": intColor, "line-width":1.6, "line-opacity":0.85 }});
     map.addLayer({ id:"lyr-grid-lv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
-      paint:{ "line-color":"#0D9488", "line-width":1.0, "line-opacity":0.6 }});
+      paint:{ "line-color": intColor, "line-width":1.0, "line-opacity":0.6 }});
     map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
       paint:{ "line-color":"#a37df0", "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
@@ -638,9 +643,9 @@
         "text-allow-overlap":false
       },
       paint:{
-        "text-color":"#f1efe9",
-        "text-halo-color":"rgba(0,0,0,0.85)",
-        "text-halo-width":1.2
+        "text-color": isDark() ? "#f1efe9" : "#18181a",
+        "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
+        "text-halo-width":1.5
       }
     });
 
@@ -690,9 +695,9 @@
         "text-allow-overlap":false
       },
       paint:{
-        "text-color":"#f1efe9",
-        "text-halo-color":"rgba(0,0,0,0.85)",
-        "text-halo-width":1.2
+        "text-color": isDark() ? "#f1efe9" : "#18181a",
+        "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
+        "text-halo-width":1.5
       }
     });
   }
@@ -779,9 +784,9 @@
         "text-allow-overlap":false
       },
       paint:{
-        "text-color":"#f1efe9",
-        "text-halo-color":"rgba(0,0,0,0.85)",
-        "text-halo-width":1.2
+        "text-color": isDark() ? "#f1efe9" : "#18181a",
+        "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
+        "text-halo-width":1.5
       }
     });
   }
