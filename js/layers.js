@@ -22,7 +22,7 @@ export const LAYER_REGISTRY = [
     file: 'data/energy/gen_wind.geojson',
     type: 'point',
     markerClass: 'mg-gen mg-wind',
-    color: '#06b6d4',
+    color: '#10B981',
     defaultOn: true,
   },
   {
@@ -32,7 +32,7 @@ export const LAYER_REGISTRY = [
     file: 'data/energy/gen_thermal.geojson',
     type: 'point',
     markerClass: 'mg-gen mg-thermal',
-    color: '#9ca3af',
+    color: '#C2783A',
     defaultOn: true,
   },
   {
@@ -42,7 +42,7 @@ export const LAYER_REGISTRY = [
     file: 'data/energy/gen_hydro.geojson',
     type: 'point',
     markerClass: 'mg-gen mg-hydro',
-    color: '#60a5fa',
+    color: '#38BDF8',
     defaultOn: true,
   },
 
@@ -58,15 +58,26 @@ export const LAYER_REGISTRY = [
     defaultOn: true,
     splitByStatus: true,  // renders operational and planned as separate layers
     paintOperational: {
-      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#06b6d4', '#3b82f6'],
-      'line-width': ['match', ['get', 'voltage'], 'HVDC', 3, 2],
-      'line-opacity': 0.65,
+      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#A78BFA', '#60A5FA'],
+      'line-width': ['match', ['get', 'voltage'], 'HVDC', 3.5, 2.5],
+      'line-opacity': 0.9,
+    },
+    paintOperationalLight: {
+      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#6D28D9', '#1D4ED8'],
+      'line-width': ['match', ['get', 'voltage'], 'HVDC', 3.5, 2.5],
+      'line-opacity': 1.0,
     },
     paintPlanned: {
-      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#06b6d4', '#3b82f6'],
-      'line-width': ['match', ['get', 'voltage'], 'HVDC', 3, 2],
-      'line-opacity': 0.4,
-      'line-dasharray': [6, 4],
+      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#A78BFA', '#60A5FA'],
+      'line-width': ['match', ['get', 'voltage'], 'HVDC', 2, 1.5],
+      'line-opacity': 0.55,
+      'line-dasharray': [8, 5],
+    },
+    paintPlannedLight: {
+      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#6D28D9', '#1D4ED8'],
+      'line-width': ['match', ['get', 'voltage'], 'HVDC', 2, 1.5],
+      'line-opacity': 0.6,
+      'line-dasharray': [8, 5],
     },
   },
   {
@@ -98,7 +109,7 @@ export const LAYER_REGISTRY = [
     file: 'data/industrial/ind_cement.geojson',
     type: 'point',
     markerClass: 'mg-ind mg-cement',
-    color: '#a78bfa',
+    color: '#818CF8',
     defaultOn: false,
   },
 
@@ -111,7 +122,7 @@ export const LAYER_REGISTRY = [
     file: 'data/digital/dig_datacenter.geojson',
     type: 'point',
     markerClass: 'mg-dc',
-    color: '#7a39bb',
+    color: '#C084FC',
     defaultOn: true,
   },
   {
@@ -121,14 +132,14 @@ export const LAYER_REGISTRY = [
     file: 'data/digital/dig_telecom.geojson',
     type: 'mixed',  // points (landings) + lines (routes) in same file
     markerClass: 'mg-cable',
-    color: '#da7101',
-    lineColor: '#da7101',
+    color: '#2DD4BF',
+    lineColor: '#2DD4BF',
     defaultOn: true,
     paintLine: {
-      'line-color': '#da7101',
+      'line-color': '#2DD4BF',
       'line-width': 1.5,
-      'line-opacity': 0.25,
-      'line-dasharray': [4, 3],
+      'line-opacity': 0.55,
+      'line-dasharray': [5, 4],
     },
   },
 ];

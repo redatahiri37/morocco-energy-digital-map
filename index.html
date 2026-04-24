@@ -9,8 +9,8 @@
 <meta property="og:title" content="MoroccoGrid — Electricity & Digital Infrastructure Intelligence">
 <meta property="og:description" content="Interactive map of Morocco's power grid, renewable energy sites, data center pipeline, and submarine cable landings. A thought-leadership tool for the Energy × Digital nexus in Africa.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://redatahiri.github.io/morocco-grid/">
-<meta property="og:image" content="https://redatahiri.github.io/morocco-grid/og-image.png">
+<meta property="og:url" content="https://redatahiri37.github.io/morocco-energy-digital-map/">
+<meta property="og:image" content="https://redatahiri37.github.io/morocco-energy-digital-map/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MoroccoGrid — Energy × Digital Infrastructure">
 <meta name="twitter:description" content="Interactive infrastructure intelligence map for Morocco. Generation, grid, data centers, submarine cables.">
@@ -107,6 +107,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
   color:var(--teal);margin-bottom:10px;
 }
+.sec-toggle{ cursor:pointer;user-select:none }
+.sec-toggle:hover{ opacity:.75 }
 
 /* Layer toggles */
 .layer-toggle{
@@ -294,10 +296,65 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   background:#a78bfa;border-radius:2px;
   box-shadow:0 0 0 2px #a78bfa33;
 }
-.mg-wind{ background:#06b6d4 }
-.mg-solar{ background:#d19900 }
-.mg-thermal{ background:#9ca3af }
-.mg-hydro{ background:#60a5fa }
+.mg-wind{
+  background:#10B981;
+  position:relative;
+}
+/* Wind crosshair — evokes a wind rose */
+.mg-wind::before,.mg-wind::after{
+  content:'';position:absolute;background:rgba(0,0,0,0.32);border-radius:1px;
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+.mg-wind::before{ width:1.5px;height:8px }
+.mg-wind::after { width:8px;height:1.5px }
+
+.mg-solar{ background:#F5B800 }
+
+/* Thermal → rounded square (fossil = industrial feel) */
+.mg-thermal{
+  background:#C2783A;
+  border-radius:3px;  /* overrides the 50% from .mg-gen */
+}
+
+/* Hydro → circle with horizontal rule (evokes a dam wall) */
+.mg-hydro{
+  background:#38BDF8;
+  position:relative;
+}
+.mg-hydro::after{
+  content:'';position:absolute;
+  width:8px;height:1.5px;background:rgba(0,0,0,0.30);border-radius:1px;
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+
+/* Cable landing — teal (was orange, now distinct from industrial) */
+.mg-cable{ background:#2DD4BF;box-shadow:0 0 0 2px #2DD4BF33 }
+
+/* ── SELECTED STATE ──────────────────────── */
+.mg-marker.selected > div{
+  box-shadow:0 0 0 3px rgba(255,255,255,0.9),0 0 0 5px rgba(255,255,255,0.3)!important;
+  transform:scale(1.2);
+  transition:transform .12s,box-shadow .12s;
+}
+.light .mg-marker.selected > div{
+  box-shadow:0 0 0 3px rgba(15,23,42,0.85),0 0 0 5px rgba(15,23,42,0.2)!important;
+}
+
+/* ── LIGHT MODE — marker color overrides ─── */
+/* Values are darker to hold against the cream light-v11 basemap */
+.light .mg-solar  { background:#B45309 }
+.light .mg-wind   { background:#047857 }
+.light .mg-thermal{ background:#78350F }
+.light .mg-hydro  { background:#0369A1 }
+.light .mg-ocp    { background:#C2410C }
+.light .mg-cement { background:#4338CA }
+.light .mg-dc     { background:#7C3AED }
+.light .mg-cable  { background:#0F766E;box-shadow:0 0 0 2px #0F766E33 }
+/* Border contrast against light basemap */
+.light .mg-gen,
+.light .mg-ind,
+.light .mg-dc,
+.light .mg-cable  { border-color:#ffffff }
 
 /* Confidence modifiers */
 .conf-approx .mg-gen,
@@ -382,10 +439,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       </div>
     </div>
 
-    <!-- Attribution -->
+    <!-- Attribution — collapsible -->
     <div class="sec">
-      <div class="attr">
-        Sources: <a href="#">ONEE</a>, <a href="#">IEA Energy &amp; AI (2025)</a>, <a href="#">Reuters</a>, <a href="#">DCD</a><br>
+      <div class="sec-label sec-toggle" id="attr-toggle" onclick="toggleAttr()" title="Toggle sources">
+        Data Sources <span id="attr-chevron" style="float:right;font-size:10px;font-style:normal">▸</span>
+      </div>
+      <div id="attr-body" class="attr" style="display:none">
+        ONEE · <a href="#">IEA Energy &amp; AI (2025)</a> · <a href="#">Reuters</a> · <a href="#">DCD</a><br>
         Built for thought leadership on Energy &times; Digital in Africa.
       </div>
     </div>
@@ -419,6 +479,15 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   </div>
 </div>
 
+<script>
+function toggleAttr() {
+  const body = document.getElementById('attr-body');
+  const chev = document.getElementById('attr-chevron');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  chev.textContent   = open ? '▾' : '▸';
+}
+</script>
 <script type="module" src="js/map.js"></script>
 </body>
 </html>

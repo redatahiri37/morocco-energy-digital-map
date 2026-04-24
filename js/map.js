@@ -92,7 +92,10 @@ function initMap() {
       renderAllLayers();
     });
     map.on('click', e => {
-      if (!e.originalEvent.target.closest('.mg-marker')) closeInfo();
+      if (!e.originalEvent.target.closest('.mg-marker')) {
+        document.querySelectorAll('.mg-marker.selected').forEach(m => m.classList.remove('selected'));
+        closeInfo();
+      }
     });
     map.on('error', e => {
       console.error(e);
@@ -151,6 +154,7 @@ function clearAll() {
   LAYER_REGISTRY.forEach(layer => {
     const ids = [
       `${layer.id}-line`,
+      `${layer.id}-line-casing`,
       `${layer.id}-line-op`,
       `${layer.id}-line-planned`,
       `${layer.id}-routes`,
@@ -160,8 +164,10 @@ function clearAll() {
     // Fill layers per feature
     if (layer.type === 'fill' && loadedData[layer.id]) {
       loadedData[layer.id].features.forEach(f => {
-        const id = `${layer.id}-${f.properties.id}-fill`;
-        if (map.getLayer(id)) map.removeLayer(id);
+        const fillId    = `${layer.id}-${f.properties.id}-fill`;
+        const outlineId = `${layer.id}-${f.properties.id}-outline`;
+        if (map.getLayer(outlineId)) map.removeLayer(outlineId);
+        if (map.getLayer(fillId))    map.removeLayer(fillId);
         if (map.getSource(`${layer.id}-${f.properties.id}`)) {
           map.removeSource(`${layer.id}-${f.properties.id}`);
         }
@@ -196,7 +202,12 @@ function renderPointLayer(layer, fc) {
 
       el.appendChild(inner);
       el.appendChild(tooltip);
-      el.addEventListener('click', e => { e.stopPropagation(); openInfo(props); });
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('.mg-marker.selected').forEach(m => m.classList.remove('selected'));
+        el.classList.add('selected');
+        openInfo(props);
+      });
 
       const m = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([lng, lat])
@@ -240,19 +251,38 @@ function renderLineLayerSplit(layer, fc) {
   }
 
   if (opFeats.length) {
+    // White casing lifts the line off pale light-mode basemaps
+    if (!darkMode) {
+      map.addLayer({
+        id: `${layer.id}-line-casing`, type: 'line', source: layer.id,
+        filter: ['==', ['get', 'status'], 'operational'],
+        paint: {
+          'line-color': '#FFFFFF',
+          'line-width': ['match', ['get', 'voltage'], 'HVDC', 8, 7],
+          'line-opacity': 0.7,
+          'line-blur': 1,
+        },
+      });
+    }
+    const opPaint = (!darkMode && layer.paintOperationalLight)
+      ? layer.paintOperationalLight
+      : (layer.paintOperational || { 'line-color': layer.color, 'line-width': 2.5, 'line-opacity': 0.9 });
     map.addLayer({
       id: `${layer.id}-line-op`, type: 'line', source: layer.id,
       filter: ['==', ['get', 'status'], 'operational'],
-      paint: layer.paintOperational || { 'line-color': layer.color, 'line-width': 2, 'line-opacity': 0.65 },
+      paint: opPaint,
     });
     addLineInteraction(`${layer.id}-line-op`, lines);
   }
 
   if (planFeats.length) {
+    const planPaint = (!darkMode && layer.paintPlannedLight)
+      ? layer.paintPlannedLight
+      : (layer.paintPlanned || { 'line-color': layer.color, 'line-width': 1.5, 'line-opacity': 0.55, 'line-dasharray': [8, 5] });
     map.addLayer({
       id: `${layer.id}-line-planned`, type: 'line', source: layer.id,
       filter: ['==', ['get', 'status'], 'planned'],
-      paint: layer.paintPlanned || { 'line-color': layer.color, 'line-width': 2, 'line-opacity': 0.4, 'line-dasharray': [6, 4] },
+      paint: planPaint,
     });
     addLineInteraction(`${layer.id}-line-planned`, lines);
   }
@@ -274,9 +304,14 @@ function renderFillLayer(layer, fc) {
     const srcId = `${layer.id}-${feat.properties.id}`;
     if (map.getSource(srcId)) return;
     map.addSource(srcId, { type: 'geojson', data: feat });
+    const zoneColor = feat.properties.color || layer.color;
     map.addLayer({
       id: `${srcId}-fill`, type: 'fill', source: srcId,
-      paint: { 'fill-color': feat.properties.color || layer.color, 'fill-opacity': 0.06 },
+      paint: { 'fill-color': zoneColor, 'fill-opacity': 0.08 },
+    });
+    map.addLayer({
+      id: `${srcId}-outline`, type: 'line', source: srcId,
+      paint: { 'line-color': zoneColor, 'line-width': 0.8, 'line-opacity': 0.3, 'line-dasharray': [3, 4] },
     });
     map.on('click', `${srcId}-fill`, () => openInfo(feat.properties));
   });
