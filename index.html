@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MoroccoGrid — Electricity &amp; Digital Infrastructure Intelligence</title>
+<title>AI Atlas — Electricity &amp; Digital Infrastructure Intelligence</title>
 
 <!-- Open Graph / Social -->
-<meta property="og:title" content="MoroccoGrid — Electricity & Digital Infrastructure Intelligence">
-<meta property="og:description" content="Interactive map of Morocco's power grid, renewable energy sites, data center pipeline, and submarine cable landings. A thought-leadership tool for the Energy × Digital nexus in Africa.">
+<meta property="og:title" content="AI Atlas — Energy & Digital Infrastructure Intelligence">
+<meta property="og:description" content="Interactive intelligence map of Morocco's power grid, renewable generation, data center pipeline, and digital infrastructure. AI-driven analysis of the Energy × Digital nexus in Africa.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://redatahiri.github.io/morocco-grid/">
 <meta property="og:image" content="https://redatahiri.github.io/morocco-grid/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MoroccoGrid — Energy × Digital Infrastructure">
-<meta name="twitter:description" content="Interactive infrastructure intelligence map for Morocco. Generation, grid, data centers, submarine cables.">
-<meta name="description" content="MoroccoGrid: Interactive map of Morocco's electricity infrastructure and digital project pipeline. Built for thought leadership on the Energy × Digital nexus in Africa.">
+<meta name="twitter:title" content="AI Atlas — Intelligent Infrastructure Mapping">
+<meta name="twitter:description" content="AI-powered infrastructure intelligence for Morocco's energy and digital systems. Generation, transmission grid, data centers, submarine cables.">
+<meta name="description" content="AI Atlas: Intelligent infrastructure platform mapping Morocco's power grid, renewable generation, data center pipeline, and digital ecosystem. Built for the Energy × Digital nexus in Africa.">
 <meta name="author" content="Reda Tahiri">
 <link rel="canonical" href="https://redatahiri.github.io/morocco-grid/">
 
@@ -32,11 +32,12 @@
   --bg-0:#0a0a09;--bg-1:#131312;--bg-2:#1a1a18;--bg-3:#232320;
   --border:#2a2a27;--border-hi:#3a3a36;
   --text-0:#f2f0ec;--text-1:#c4c1b8;--text-2:#8a877e;--text-3:#5a5850;
-  --teal:#01696f;--teal-dim:#01696f44;--teal-glow:#01696f22;
-  --yellow:#d19900;--yellow-dim:#d1990033;
-  --blue:#3b82f6;--blue-dim:#3b82f633;
+  /* Brand — Energy × Digital */
+  --teal:#01a4b5;--teal-dim:#01a4b544;--teal-glow:#01a4b522;
+  --yellow:#FF6B35;--yellow-dim:#FF6B3533;
+  --blue:#00D4FF;--blue-dim:#00D4FF33;
   --purple:#7a39bb;--purple-dim:#7a39bb44;--purple-glow:#7a39bb22;
-  --orange:#da7101;--orange-dim:#da710133;
+  --orange:#FF6B35;--orange-dim:#FF6B3533;
   --green-zone:#2d6a2e22;
   --red:#ef4444;
   --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -46,22 +47,24 @@
   --ease:cubic-bezier(.22,1,.36,1);
 }
 .light{
-  --bg-0:#f5f4f1;--bg-1:#eceae5;--bg-2:#e3e1dc;--bg-3:#d9d7d2;
-  --border:#ccc9c2;--border-hi:#b8b5ae;
+  --bg-0:#f9f7f5;--bg-1:#f0ede9;--bg-2:#e8e5e0;--bg-3:#dedad4;
+  --border:#d0ccc6;--border-hi:#bfbaad;
   --text-0:#1a1a18;--text-1:#3a3a36;--text-2:#6a6860;--text-3:#9a9890;
+  --navy-primary:#001F4D;--energy-orange:#FF6B35;--digital-cyan:#00D4FF;
 }
 html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(--bg-0);color:var(--text-1)}
 
 /* ── TOP BAR ─────────────────────────────────── */
 #topbar{
   position:fixed;top:0;left:0;right:0;height:var(--top-h);
-  background:var(--bg-1);border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg, var(--bg-1), var(--bg-1) 80%, var(--navy-primary)08);
+  border-bottom:1px solid var(--border);
   display:flex;align-items:center;padding:0 16px;gap:12px;z-index:900;
 }
-#topbar .logo{display:flex;align-items:center;gap:8px;}
-#topbar .logo svg{width:26px;height:26px;}
-#topbar .logo-text{font-size:14px;font-weight:700;color:var(--text-0);letter-spacing:-0.3px}
-#topbar .tagline{font-size:11px;color:var(--text-2);white-space:nowrap}
+#topbar .logo{display:flex;align-items:center;gap:10px;}
+#topbar .logo svg{width:28px;height:28px;stroke:var(--navy-primary)}
+#topbar .logo-text{font-family:var(--font-serif);font-size:15px;font-weight:400;color:var(--navy-primary);letter-spacing:0.5px;text-transform:uppercase}
+#topbar .tagline{font-size:10px;color:var(--text-3);white-space:nowrap;letter-spacing:0.8px}
 #topbar .spacer{flex:1}
 #topbar .ts{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px}
 .top-btn{
@@ -69,7 +72,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   width:30px;height:30px;display:flex;align-items:center;justify-content:center;
   color:var(--text-2);cursor:pointer;transition:all .15s;flex-shrink:0;
 }
-.top-btn:hover{border-color:var(--teal);color:var(--teal)}
+.top-btn:hover{border-color:var(--navy-primary);color:var(--navy-primary)}
 
 /* Token bar */
 #token-bar{
@@ -85,9 +88,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   background:var(--bg-0);border:1px solid var(--border);border-radius:5px;
   color:var(--text-0);font-size:12px;padding:0 8px;font-family:monospace;
 }
-#token-input:focus{outline:none;border-color:var(--teal)}
+#token-input:focus{outline:none;border-color:var(--navy-primary)}
 #token-btn{
-  height:28px;padding:0 12px;background:var(--teal);border:none;border-radius:5px;
+  height:28px;padding:0 12px;background:var(--navy-primary);border:none;border-radius:5px;
   color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;
 }
 #token-dismiss{background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
@@ -104,8 +107,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 #sidebar-inner::-webkit-scrollbar-thumb{background:var(--border)}
 .sec{margin-bottom:18px}
 .sec-label{
-  font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
-  color:var(--teal);margin-bottom:10px;
+  font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--navy-primary);margin-bottom:10px;
 }
 
 /* Layer toggles */
@@ -127,9 +130,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 
 /* KPI cards */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.kpi{background:var(--bg-2);border:1px solid var(--border);border-radius:7px;padding:10px}
-.kpi-val{font-size:18px;font-weight:800;color:var(--text-0);line-height:1}
-.kpi-lbl{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-top:4px}
+.kpi{background:var(--charcoal);border:1px solid var(--border);border-radius:7px;padding:10px;transition:all .2s}
+.kpi:hover{border-color:var(--navy-primary);background:var(--bg-2)}
+.kpi-val{font-size:18px;font-weight:800;line-height:1}
+.kpi-lbl{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-top:4px}
 
 /* Chart */
 #mix-chart-wrap{background:var(--bg-2);border:1px solid var(--border);border-radius:7px;padding:12px}
@@ -137,7 +141,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 
 /* Attribution */
 .attr{font-size:9px;color:var(--text-3);line-height:1.6}
-.attr a{color:var(--teal);text-decoration:none}
+.attr a{color:var(--navy-primary);text-decoration:none}
 
 /* ── MAP ─────────────────────────────────────── */
 #map-wrap{
@@ -157,7 +161,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   color:var(--text-1);font-size:11px;font-weight:600;cursor:pointer;
   z-index:10;transition:all .15s;
 }
-#fit-btn:hover{border-color:var(--teal);color:var(--teal)}
+#fit-btn:hover{border-color:var(--navy-primary);color:var(--navy-primary)}
 
 /* No-token overlay */
 #map-placeholder{
@@ -252,7 +256,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .ip-cell-val{font-size:13px;font-weight:600;color:var(--text-0)}
 .ip-desc{font-size:12.5px;color:var(--text-2);line-height:1.65;margin-bottom:14px}
 .ip-link{
-  font-size:11px;font-weight:600;color:var(--teal);text-decoration:none;
+  font-size:11px;font-weight:600;color:var(--navy-primary);text-decoration:none;
   display:inline-flex;align-items:center;gap:4px;
 }
 .ip-link:hover{text-decoration:underline}
@@ -325,6 +329,55 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 
 /* ── ANIMATED DASH ───────────────────────────── */
 @keyframes dash-flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-24}}
+
+/* ── ATLAS NEXUS — ENERGY × DIGITAL BRANDING ──── */
+/* Layer group styling */
+.sec[data-group="energy"] .sec-label::before{
+  content:'⚡ ';color:var(--energy-orange);font-weight:bold;
+}
+.sec[data-group="digital"] .sec-label::before{
+  content:'◆ ';color:var(--digital-cyan);font-weight:bold;
+}
+.sec[data-group="industrial"] .sec-label::before{
+  content:'◼ ';color:var(--energy-orange);font-weight:bold;
+}
+
+/* Energy layer color accent */
+.layer-toggle[data-group="energy"] .lt-dot{background:var(--energy-orange)}
+.layer-toggle[data-group="energy"]:hover{background:var(--energy-glow)}
+
+/* Digital layer color accent */
+.layer-toggle[data-group="digital"] .lt-dot{background:var(--digital-cyan)}
+.layer-toggle[data-group="digital"]:hover{background:var(--digital-glow)}
+
+/* Grid/Infrastructure accent */
+.layer-toggle[data-group="grid"] .lt-dot{background:var(--navy-primary)}
+.layer-toggle[data-group="grid"]:hover{background:var(--navy-glow)}
+
+/* Serif typography for section headings */
+.sec-label{font-family:var(--font-serif)}
+
+/* Energy × Digital split card (for future KPI redesign) */
+.kpi.energy{border-left:3px solid var(--energy-orange)}
+.kpi.digital{border-left:3px solid var(--digital-cyan)}
+.kpi-val.energy{color:var(--energy-orange)}
+.kpi-val.digital{color:var(--digital-cyan)}
+
+/* Info panel — brand-aware badges */
+.ip-badge.gen{background:var(--energy-dim);color:var(--energy-orange)}
+.ip-badge.tx{background:var(--navy-dim);color:var(--navy-primary)}
+.ip-badge.cable{background:var(--energy-dim);color:var(--energy-orange)}
+.ip-badge.dc{background:var(--digital-dim);color:var(--digital-cyan)}
+.ip-badge.zone{background:var(--digital-dim);color:var(--digital-cyan)}
+
+/* Header — Dual domain split (energy left, digital right positioning) */
+#topbar{background:linear-gradient(90deg, #0a0a0988 0%, #0a0a09 50%, #00D4FF0f 100%)}
+
+/* Button states with brand colors */
+.top-btn:hover{
+  background:var(--navy-glow);
+}
+
 </style>
 </head>
 <body>
@@ -338,9 +391,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       <line x1="3" y1="14" x2="23" y2="14" stroke="var(--teal)" stroke-width=".6" opacity=".35"/>
       <line x1="3" y1="18" x2="23" y2="18" stroke="var(--teal)" stroke-width=".6" opacity=".2"/>
     </svg>
-    <span class="logo-text">MoroccoGrid</span>
+    <span class="logo-text">AI Atlas</span>
   </div>
-  <span class="tagline">Electricity &amp; Digital Infrastructure Intelligence</span>
+  <span class="tagline">Intelligent Infrastructure Mapping for Africa</span>
   <div class="spacer"></div>
   <span class="ts">April 2026</span>
   <button class="top-btn" id="theme-toggle" title="Toggle light/dark"><i data-lucide="sun" style="width:15px;height:15px"></i></button>

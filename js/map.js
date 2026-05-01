@@ -8,13 +8,21 @@ let mapLoaded = false;
 let darkMode = true;
 let chartInstance = null;
 
-const layerState = {};       // id → bool
-const loadedData = {};       // id → GeoJSON FeatureCollection
-const htmlMarkers = [];      // Mapbox Marker instances
+const layerState = {};    // id → bool (parent layers)
+const sublayerState = {}; // id → bool (sublayers)
+const loadedData = {};    // id → GeoJSON FeatureCollection
+const htmlMarkers = [];   // Mapbox Marker instances
 
 // ── State init ───────────────────────────────────
 function initState() {
-  LAYER_REGISTRY.forEach(l => { layerState[l.id] = l.defaultOn; });
+  LAYER_REGISTRY.forEach(l => {
+    layerState[l.id] = l.defaultOn;
+    if (l.sublayers) {
+      l.sublayers.forEach(sl => {
+        sublayerState[sl.id] = sl.defaultOn !== false;
+      });
+    }
+  });
 }
 
 // ── Sidebar ──────────────────────────────────────
@@ -29,15 +37,21 @@ function buildSidebar() {
   });
 
   container.innerHTML = '';
-  Object.entries(groups).forEach(([, group]) => {
+  Object.entries(groups).forEach(([groupKey, group]) => {
+    // Create wrapper section with data-group
+    const sec = document.createElement('div');
+    sec.className = 'sec';
+    sec.setAttribute('data-group', groupKey);
+
     const secLabel = document.createElement('div');
     secLabel.className = 'sec-label';
     secLabel.textContent = group.label;
-    container.appendChild(secLabel);
+    sec.appendChild(secLabel);
 
     group.layers.forEach(layer => {
       const row = document.createElement('div');
       row.className = 'layer-toggle';
+      row.setAttribute('data-group', layer.group);
       row.innerHTML = `
         <div class="lt-check ${layer.defaultOn ? 'on' : ''}" id="ck-${layer.id}" style="color:${layer.color}"></div>
         <div class="lt-dot" style="background:${layer.color}"></div>
@@ -45,8 +59,37 @@ function buildSidebar() {
         <span class="lt-count" id="ct-${layer.id}">—</span>
       `;
       row.addEventListener('click', () => toggleLayer(layer.id));
-      container.appendChild(row);
+      sec.appendChild(row);
+
+      // Render sublayers if present
+      if (layer.sublayers) {
+        const sublayerContainer = document.createElement('div');
+        sublayerContainer.id = `sublayers-${layer.id}`;
+        sublayerContainer.style.marginLeft = '18px';
+        sublayerContainer.style.marginTop = '-8px';
+
+        layer.sublayers.forEach(sl => {
+          const slRow = document.createElement('div');
+          slRow.className = 'layer-toggle';
+          slRow.innerHTML = `
+            <div class="lt-check ${sl.defaultOn !== false ? 'on' : ''}" id="ck-${sl.id}" style="color:${layer.color};width:11px;height:11px"></div>
+            <div class="lt-dot" style="background:${layer.color};width:5px;height:5px;${!sl.defaultOn ? 'opacity:0.5' : ''}"></div>
+            <span class="lt-name" style="font-size:11px">${sl.label}</span>
+            <span class="lt-count" id="ct-${sl.id}" style="font-size:9px">—</span>
+          `;
+          slRow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSublayer(sl.id);
+          });
+          sublayerContainer.appendChild(slRow);
+        });
+
+        sec.appendChild(sublayerContainer);
+      }
     });
+
+    // Append completed section to container
+    container.appendChild(sec);
   });
 }
 
@@ -134,7 +177,8 @@ function renderAllLayers() {
     if (layer.type === 'point') {
       renderPointLayer(layer, fc);
     } else if (layer.type === 'line') {
-      if (layer.splitByStatus) renderLineLayerSplit(layer, fc);
+      if (layer.sublayers) renderLineLayerSublayers(layer, fc);
+      else if (layer.splitByStatus) renderLineLayerSplit(layer, fc);
       else renderLineLayer(layer, fc);
     } else if (layer.type === 'fill') {
       renderFillLayer(layer, fc);
@@ -155,6 +199,10 @@ function clearAll() {
       `${layer.id}-line-planned`,
       `${layer.id}-routes`,
     ];
+    // Add sublayer IDs if present
+    if (layer.sublayers) {
+      layer.sublayers.forEach(sl => ids.push(sl.id));
+    }
     ids.forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
 
     // Fill layers per feature
@@ -258,6 +306,38 @@ function renderLineLayerSplit(layer, fc) {
   }
 }
 
+// Line layer — sublayers with filters (e.g., voltage classes, grid types)
+function renderLineLayerSublayers(layer, fc) {
+  const lines = fc.features.filter(f => f.geometry.type === 'LineString');
+  if (!lines.length) return;
+
+  if (!map.getSource(layer.id)) {
+    map.addSource(layer.id, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: lines },
+    });
+  }
+
+  layer.sublayers.forEach(sl => {
+    if (!sublayerState[sl.id]) return; // Skip if sublayer is off
+
+    const sublayerId = sl.id;
+    const filter = sl.filter;
+
+    if (map.getLayer(sublayerId)) return; // Already added
+
+    map.addLayer({
+      id: sublayerId,
+      type: 'line',
+      source: layer.id,
+      filter: filter,
+      paint: sl.paint || { 'line-color': layer.color, 'line-width': 2, 'line-opacity': 0.65 },
+    });
+
+    addLineInteraction(sublayerId, lines);
+  });
+}
+
 function addLineInteraction(layerId, features) {
   map.on('click', layerId, e => {
     const f = e.features[0];
@@ -306,6 +386,14 @@ function toggleLayer(id) {
   layerState[id] = !layerState[id];
   const ck = document.getElementById(`ck-${id}`);
   if (ck) ck.classList.toggle('on', layerState[id]);
+  if (!mapLoaded) return;
+  renderAllLayers();
+}
+
+function toggleSublayer(id) {
+  sublayerState[id] = !sublayerState[id];
+  const ck = document.getElementById(`ck-${id}`);
+  if (ck) ck.classList.toggle('on', sublayerState[id]);
   if (!mapLoaded) return;
   renderAllLayers();
 }

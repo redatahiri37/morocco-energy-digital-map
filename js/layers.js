@@ -56,18 +56,42 @@ export const LAYER_REGISTRY = [
     type: 'line',
     color: '#3b82f6',
     defaultOn: true,
-    splitByStatus: true,  // renders operational and planned as separate layers
-    paintOperational: {
-      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#06b6d4', '#3b82f6'],
-      'line-width': ['match', ['get', 'voltage'], 'HVDC', 3, 2],
-      'line-opacity': 0.65,
-    },
-    paintPlanned: {
-      'line-color': ['match', ['get', 'voltage'], 'HVDC', '#06b6d4', '#3b82f6'],
-      'line-width': ['match', ['get', 'voltage'], 'HVDC', 3, 2],
-      'line-opacity': 0.4,
-      'line-dasharray': [6, 4],
-    },
+    sublayers: [
+      {
+        id: 'grid_hv_backbone',
+        label: '400kV Backbone',
+        filter: ['==', ['get', 'grid_class'], 'backbone'],
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': 2.5,
+          'line-opacity': 0.7,
+        },
+        defaultOn: true,
+      },
+      {
+        id: 'grid_hv_regional',
+        label: '225kV Corridors',
+        filter: ['==', ['get', 'grid_class'], 'regional'],
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': 1.8,
+          'line-opacity': 0.55,
+        },
+        defaultOn: true,
+      },
+      {
+        id: 'grid_hv_planned',
+        label: 'Planned / Upgrades',
+        filter: ['==', ['get', 'grid_class'], 'planned'],
+        paint: {
+          'line-color': '#06b6d4',
+          'line-width': 2,
+          'line-opacity': 0.45,
+          'line-dasharray': [6, 4],
+        },
+        defaultOn: true,
+      },
+    ],
   },
   {
     id: 're_zones',
