@@ -462,6 +462,10 @@ buildSidebar();
 initInfoPanel();
 lucide.createIcons();
 
+// Inject live date into topbar
+const _dateEl = document.getElementById('topbar-date');
+if (_dateEl) _dateEl.textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
 const tk = localStorage.getItem('mg-token') || MAPBOX_TOKEN;
 document.getElementById('token-input').value = tk;
 mapboxgl.accessToken = tk;
