@@ -3,23 +3,82 @@
   "features": [
     {
       "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-6.85, 31.0] },
+      "geometry": { "type": "Point", "coordinates": [-6.852, 30.974] },
       "properties": {
-        "id": "gen-noor",
-        "name": "Noor Ouarzazate Solar Complex",
+        "id": "gen-noor-i",
+        "name": "Noor I (Ouarzazate CSP)",
         "layer": "gen_solar",
         "sector": "energy",
         "subsector": "solar_csp",
-        "technology": "CSP parabolic + tower + PV",
-        "operator": "MASEN / ONEE",
-        "capacity_mw": 580,
+        "technology": "CSP parabolic trough",
+        "operator": "MASEN / ACWA Power",
+        "capacity_mw": 160,
         "status": "operational",
         "year_operational": 2016,
-        "source": "MASEN / ONEE",
-        "source_url": "",
+        "source": "Wikipedia / MASEN",
         "coord_confidence": "exact",
         "coord_method": "satellite_verified",
-        "description": "Africa's largest concentrated solar power complex. Noor I–IV combine CSP parabolic trough, CSP tower, and PV technologies across 3,000 hectares in the Draa-Tafilalet region. The complex provides 3 hours of thermal storage, enabling dispatchable solar power after sunset — a critical capability for grid stability."
+        "description": "160 MW CSP parabolic trough with 3 hours of molten-salt thermal storage. First phase of the Ouarzazate complex. Demonstrated utility-scale CSP with storage in Africa."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.867, 30.965] },
+      "properties": {
+        "id": "gen-noor-ii",
+        "name": "Noor II (Ouarzazate CSP)",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_csp",
+        "technology": "CSP parabolic trough",
+        "operator": "MASEN / ACWA Power",
+        "capacity_mw": 200,
+        "status": "operational",
+        "year_operational": 2018,
+        "source": "Wikipedia / MASEN",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "200 MW CSP parabolic trough with 7 hours of molten-salt storage. Enables dispatchable solar after sunset — critical for peak evening demand."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.88, 30.97] },
+      "properties": {
+        "id": "gen-noor-iii",
+        "name": "Noor III (Ouarzazate CSP Tower)",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_csp",
+        "technology": "CSP central tower",
+        "operator": "MASEN / ACWA Power / Sener",
+        "capacity_mw": 150,
+        "status": "operational",
+        "year_operational": 2018,
+        "source": "Wikipedia / MASEN",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "150 MW CSP tower with 7.5 hours of storage. Africa's first utility-scale CSP tower. The 243m tower and 7,400 heliostats are a landmark of Morocco's clean energy transition."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.842, 30.982] },
+      "properties": {
+        "id": "gen-noor-iv",
+        "name": "Noor IV (Ouarzazate PV)",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_pv",
+        "technology": "PV",
+        "operator": "MASEN",
+        "capacity_mw": 72,
+        "status": "operational",
+        "year_operational": 2018,
+        "source": "Wikipedia / MASEN",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "72 MW PV plant adjacent to the Noor CSP complex. Completes the Ouarzazate site with total installed capacity of 582 MW across four technologies."
       }
     },
     {
@@ -31,16 +90,75 @@
         "layer": "gen_solar",
         "sector": "energy",
         "subsector": "solar_csp",
-        "technology": "Hybrid CSP + PV",
-        "operator": "MASEN / Consortium ACWA–Nareva",
+        "technology": "Hybrid CSP + PV with storage",
+        "operator": "MASEN / ACWA Power / Nareva",
         "capacity_mw": 800,
         "status": "under_construction",
         "year_operational": 2026,
         "source": "MASEN / World Bank",
-        "source_url": "",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Morocco's most ambitious solar project — a hybrid CSP+PV plant with 5 hours of molten-salt storage. Located on the Moulouya plain at 1,500 m altitude. When complete, it will be the world's first utility-scale hybrid with this storage depth, delivering firm renewable power to ONEE around the clock."
+        "description": "World's first utility-scale hybrid CSP+PV with 5 hours of molten-salt storage (800 MW combined). Located on the Moulouya plateau at 1,500 m. Will deliver firm renewable power around the clock."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-13.18, 27.15] },
+      "properties": {
+        "id": "gen-noor-laayoune",
+        "name": "Noor Laâyoune I",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_pv",
+        "technology": "PV",
+        "operator": "MASEN",
+        "capacity_mw": 80,
+        "status": "operational",
+        "year_operational": 2018,
+        "source": "MASEN",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "80 MW PV plant near Laâyoune in the southern provinces. Part of MASEN's program to electrify the Saharan regions from domestic renewable sources."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-14.49, 26.13] },
+      "properties": {
+        "id": "gen-noor-boujdour",
+        "name": "Noor Boujdour I",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_pv",
+        "technology": "PV",
+        "operator": "MASEN",
+        "capacity_mw": 20,
+        "status": "operational",
+        "year_operational": 2016,
+        "source": "MASEN",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "20 MW PV plant near Boujdour. One of Morocco's early utility-scale PV projects in the southern provinces."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-2.07, 33.97] },
+      "properties": {
+        "id": "gen-abm-solar",
+        "name": "Ain Beni Mathar ISCC (Solar Component)",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_csp",
+        "technology": "CSP parabolic trough (ISCC hybrid)",
+        "operator": "ONEE",
+        "capacity_mw": 20,
+        "status": "operational",
+        "year_operational": 2011,
+        "source": "ONEE / AfDB",
+        "coord_confidence": "exact",
+        "coord_method": "satellite_verified",
+        "description": "20 MW parabolic trough solar field integrated into the 472 MW Ain Beni Mathar ISCC combined cycle plant — Africa's first utility-scale solar-thermal hybrid."
       }
     },
     {
@@ -48,7 +166,7 @@
       "geometry": { "type": "Point", "coordinates": [-8.0, 29.8] },
       "properties": {
         "id": "gen-noor-atlas",
-        "name": "Noor Atlas (Tata) Solar PV",
+        "name": "Noor Atlas / Noor Argane (Tata)",
         "layer": "gen_solar",
         "sector": "energy",
         "subsector": "solar_pv",
@@ -57,11 +175,30 @@
         "capacity_mw": 200,
         "status": "planned",
         "year_operational": 2027,
-        "source": "MASEN pipeline",
-        "source_url": "",
+        "source": "MASEN pipeline / Wikipedia",
         "coord_confidence": "centroid",
         "coord_method": "manual_estimate",
-        "description": "Part of MASEN's rolling pipeline of utility-scale PV projects in the Souss-Draa corridor. The site benefits from among the highest GHI in Morocco (>2,400 kWh/m²/yr) with minimal grid upgrade requirements, sitting close to existing 225 kV infrastructure."
+        "description": "Part of MASEN's rolling pipeline of utility-scale PV projects in the Souss-Draa corridor (Noor Atlas 800 MW + Noor Argane 200 MW programme). GHI >2,400 kWh/m²/yr."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-12.9, 27.98] },
+      "properties": {
+        "id": "gen-sebkhate-tah",
+        "name": "Sebkhate Tah Solar PV",
+        "layer": "gen_solar",
+        "sector": "energy",
+        "subsector": "solar_pv",
+        "technology": "PV",
+        "operator": "MASEN",
+        "capacity_mw": 500,
+        "status": "planned",
+        "year_operational": null,
+        "source": "Wikipedia / MASEN",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "500 MW planned PV project near Foum Al-Oued in the southern provinces. Part of Morocco's long-term green hydrogen and electricity export strategy."
       }
     }
   ]
