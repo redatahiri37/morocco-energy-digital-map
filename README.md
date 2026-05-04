@@ -125,6 +125,35 @@ See bottom of [ASSUMPTIONS.md](./ASSUMPTIONS.md).
 - Grid-suitability index (Pawel-style 1–5 score for DC siting)
 - Egypt / Senegal / Namibia
 
+## Related tools & resources
+
+| Tool | What it covers | Notes |
+|---|---|---|
+| [OpenInfraMap](https://openinframap.org) | Global grid, telco, oil & gas via OSM | Primary grid tile source for this project |
+| [Africa Electricity Grids Explorer](https://africagrid.energydata.info) | Africa regional transmission | World Bank / ESMAP — cross-validation source |
+| [Gridfinder](https://gridfinder.rdrn.me) | Predicted global distribution network | Arderne et al. 2020, CC BY 4.0 — gap diagnostics |
+| [OpenGridWorks](https://opengridworks.com) | Global power plants + transmission + substations | New 2026, US-agency data primary; monitor for MENA |
+| [TeleGeography Cable Map](https://www.submarinecablemap.com) | Submarine cables — 597 systems, 1 712 landings | Used for cable landing source data |
+| [PeeringDB](https://www.peeringdb.com) | Internet exchange points (~1 300 IXPs) | Maroc IX (Casablanca) planned for v1.1 |
+| [Electricity Maps](https://app.electricitymaps.com) | Live grid carbon intensity + cross-border flows | v1.2 candidate for live mix chart |
+
+### Contributing grid data
+
+The transmission layer's quality depends directly on OpenStreetMap
+coverage. If you notice missing or mis-tagged lines in Morocco, the
+fastest path to fixing them on this map is to edit OSM — changes
+propagate to OpenInfraMap within hours.
+
+→ [MapYourGrid](https://github.com/open-energy-transition/MapYourGrid) —
+  OET's campaign to improve global OSM grid coverage from ~70 % to 98 %,
+  with tooling guides and a task manager for mapping sprints.
+
+→ [Awesome-Electrical-Grid-Mapping](https://github.com/open-energy-transition/Awesome-Electrical-Grid-Mapping) —
+  curated list of every open dataset, tool, and paper for energy
+  infrastructure mapping, including an Africa-specific section.
+
+---
+
 ## Credits
 
 Built by **Reda Tahiri** — Energy × Digital Nexus.
