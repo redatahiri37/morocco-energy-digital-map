@@ -16,10 +16,49 @@
         "status": "operational",
         "year_operational": 1994,
         "source": "TAQA / ONEE",
-        "source_url": "",
         "coord_confidence": "exact",
         "coord_method": "satellite_verified",
-        "description": "Morocco's single largest power station and the backbone of its baseload capacity. Units 1–4 (1,356 MW) are operated by JLEC (TAQA); units 5–6 (700 MW) by ONEE. The plant burns imported coal and is a primary candidate for phased retirement under Morocco's NDC commitments. It shares the Jorf Lasfar industrial port with OCP's phosphate processing complex."
+        "description": "Morocco's single largest power station (2,056 MW, Units 1–6). Backbone of national baseload. Shares Jorf Lasfar industrial port with OCP phosphate complex. Primary candidate for phased coal retirement under Morocco's NDC."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.28, 32.28] },
+      "properties": {
+        "id": "gen-safi",
+        "name": "Safi Coal Power Plant",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Coal steam",
+        "operator": "Nareva / EDF / ONEE",
+        "capacity_mw": 1386,
+        "status": "operational",
+        "year_operational": 2017,
+        "source": "Wikipedia / Nareva",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "1,386 MW coal IPP near Safi, developed by Nareva/EDF. Morocco's newest and largest coal plant. Commissioned 2017 under a 25-year PPA with ONEE."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-2.93, 35.17] },
+      "properties": {
+        "id": "gen-nador",
+        "name": "Nador West Med Coal Plant",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Coal steam",
+        "operator": "ONEE",
+        "capacity_mw": 1320,
+        "status": "under_construction",
+        "year_operational": 2025,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "1,320 MW coal plant under construction at Nador West Med industrial port. Controversial given Morocco's RE targets. When complete will add significant baseload capacity in the northeastern grid."
       }
     },
     {
@@ -31,21 +70,20 @@
         "layer": "gen_thermal",
         "sector": "energy",
         "subsector": "thermal",
-        "technology": "Integrated Solar Combined Cycle",
+        "technology": "Integrated Solar Combined Cycle (ISCC)",
         "operator": "ONEE",
         "capacity_mw": 472,
         "status": "operational",
-        "year_operational": 2010,
+        "year_operational": 2011,
         "source": "ONEE / AfDB",
-        "source_url": "",
         "coord_confidence": "exact",
         "coord_method": "satellite_verified",
-        "description": "Africa's first Integrated Solar Combined Cycle plant: a 20 MW parabolic trough solar field paired with a 452 MW gas combined cycle. Located in the Oriental region near the Algerian border. The solar component displaces ~12,000 t CO₂/yr and proved the viability of hybrid solar-thermal at utility scale in North Africa."
+        "description": "Africa's first ISCC plant: 20 MW parabolic trough + 452 MW gas CCGT. Located in the Oriental region. The solar component displaces ~12,000 t CO₂/yr."
       }
     },
     {
       "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-5.44, 35.7] },
+      "geometry": { "type": "Point", "coordinates": [-5.44, 35.70] },
       "properties": {
         "id": "gen-tahaddart",
         "name": "Tahaddart CCGT",
@@ -58,10 +96,9 @@
         "status": "operational",
         "year_operational": 2005,
         "source": "ONEE",
-        "source_url": "",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Morocco's first independent power producer (IPP) under a BOT contract. Located near Tangier, it receives natural gas via the Maghreb–Europe Gas Pipeline from Algeria. The plant serves as peaking and mid-merit capacity for the northern grid and the Spain interconnect."
+        "description": "Morocco's first IPP under a BOT contract (384 MW). Receives Algerian gas via the Maghreb–Europe Pipeline. Serves as mid-merit capacity for the northern grid and Spain interconnect."
       }
     },
     {
@@ -79,10 +116,49 @@
         "status": "operational",
         "year_operational": 1983,
         "source": "ONEE",
-        "source_url": "",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Aging heavy fuel oil plant near Mohammedia, between Casablanca and Rabat. Increasingly used as a strategic reserve rather than baseload, given its high operating costs relative to renewables. A candidate for decommissioning or repowering as grid flexibility assets are added."
+        "description": "600 MW aging HFO plant near Mohammedia. Increasingly operated as strategic reserve given high marginal costs vs renewables. Candidate for decommissioning or flexibility conversion."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-2.16, 34.31] },
+      "properties": {
+        "id": "gen-jerada",
+        "name": "Jerada Coal Plant",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Coal steam",
+        "operator": "ONEE",
+        "capacity_mw": 515,
+        "status": "operational",
+        "year_operational": 2017,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "515 MW coal plant at Jerada in the Oriental region. Located near Morocco's historic coal mining basin. Subject to social pressure from local communities following a 2017–2018 protest movement."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.57, 34.26] },
+      "properties": {
+        "id": "gen-kenitra",
+        "name": "Kenitra Thermal Plant",
+        "layer": "gen_thermal",
+        "sector": "energy",
+        "subsector": "thermal",
+        "technology": "Coal / Gas",
+        "operator": "ONEE",
+        "capacity_mw": 615,
+        "status": "operational",
+        "year_operational": 1978,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "615 MW mixed coal/gas plant at Kenitra (300 MW coal + 315 MW gas units). Serves the Rabat–Kenitra industrial corridor."
       }
     }
   ]

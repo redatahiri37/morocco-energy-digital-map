@@ -94,6 +94,50 @@ export const LAYER_REGISTRY = [
     ],
   },
   {
+    id: 'grid_hv_real',
+    label: 'ONEE Grid (Real)',
+    group: 'grid',
+    file: 'data/energy/grid_hv_real.geojson',
+    type: 'line',
+    color: '#3b82f6',
+    defaultOn: false,
+    sublayers: [
+      {
+        id: 'grid_hv_real_backbone',
+        label: '400 kV Backbone',
+        filter: ['==', ['get', 'grid_class'], 'backbone'],
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': 2,
+          'line-opacity': 0.8,
+        },
+        defaultOn: true,
+      },
+      {
+        id: 'grid_hv_real_regional',
+        label: '225 / 150 kV',
+        filter: ['==', ['get', 'grid_class'], 'regional'],
+        paint: {
+          'line-color': '#60a5fa',
+          'line-width': 1.2,
+          'line-opacity': 0.6,
+        },
+        defaultOn: true,
+      },
+      {
+        id: 'grid_hv_real_distribution',
+        label: '60 kV Distribution',
+        filter: ['==', ['get', 'grid_class'], 'distribution'],
+        paint: {
+          'line-color': '#93c5fd',
+          'line-width': 0.8,
+          'line-opacity': 0.4,
+        },
+        defaultOn: false,
+      },
+    ],
+  },
+  {
     id: 're_zones',
     label: 'RE Resource Zones',
     group: 'grid',

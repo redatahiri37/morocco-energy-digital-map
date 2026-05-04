@@ -11,44 +11,22 @@
         "sector": "energy",
         "subsector": "wind",
         "technology": "Onshore wind",
-        "operator": "Nareva / ENGIE",
-        "capacity_mw": 300,
+        "operator": "Nareva / ENGIE (Tarec JV)",
+        "capacity_mw": 301,
         "status": "operational",
         "year_operational": 2014,
-        "source": "ONEE / Nareva",
-        "source_url": "",
+        "source": "Wikipedia / Nareva",
         "coord_confidence": "exact",
         "coord_method": "satellite_verified",
-        "description": "Africa's largest wind farm at commissioning. Located on the Atlantic coast near Tarfaya, it exploits capacity factors exceeding 40% on consistently strong trade winds. Operated under a 20-year PPA with ONEE."
+        "description": "Africa's largest wind farm at commissioning (301 MW, 131 turbines × 2.3 MW). Located on the Atlantic coast near Tarfaya with capacity factors exceeding 40%. Operated under a 20-year PPA with ONEE."
       }
     },
     {
       "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-9.8, 31.5] },
+      "geometry": { "type": "Point", "coordinates": [-12.81, 28.97] },
       "properties": {
-        "id": "gen-tensift",
-        "name": "Tensift Wind Farm (Essaouira)",
-        "layer": "gen_wind",
-        "sector": "energy",
-        "subsector": "wind",
-        "technology": "Onshore wind",
-        "operator": "MASEN / Nareva",
-        "capacity_mw": 100,
-        "status": "operational",
-        "year_operational": 2019,
-        "source": "MASEN",
-        "source_url": "",
-        "coord_confidence": "approximate",
-        "coord_method": "osm_derived",
-        "description": "Part of Morocco's Integrated Wind Programme. The Essaouira coastline benefits from strong Alizé trade winds with speeds exceeding 9 m/s at hub height. The site coexists with local tourism and agriculture in one of Morocco's most culturally significant regions."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-12.8, 29.0] },
-      "properties": {
-        "id": "gen-akhfennir",
-        "name": "Akhfennir Wind Farm",
+        "id": "gen-akhfennir-1",
+        "name": "Akhfennir Wind Farm (Phase 1)",
         "layer": "gen_wind",
         "sector": "energy",
         "subsector": "wind",
@@ -57,16 +35,115 @@
         "capacity_mw": 100,
         "status": "operational",
         "year_operational": 2013,
-        "source": "ONEE",
-        "source_url": "",
+        "source": "Wikipedia / ONEE",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Located in the Guelmim-Oued Noun region on the southern Atlantic coast. Part of the first phase of Morocco's Integrated Wind Programme. The site anchors the southern half of the Atlantic wind corridor."
+        "description": "Phase 1 of the Akhfennir wind cluster on the southern Atlantic coast. Anchors the southern end of Morocco's Atlantic wind corridor with excellent trade wind resources."
       }
     },
     {
       "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-4.02, 34.2] },
+      "geometry": { "type": "Point", "coordinates": [-12.84, 28.94] },
+      "properties": {
+        "id": "gen-akhfennir-2",
+        "name": "Akhfennir Wind Farm (Phase 2)",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE",
+        "capacity_mw": 100,
+        "status": "operational",
+        "year_operational": 2017,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Phase 2 expansion of the Akhfennir complex, bringing total site capacity to 200 MW. Part of Morocco's Integrated Wind Programme."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.79, 31.48] },
+      "properties": {
+        "id": "gen-cape-sim",
+        "name": "Amogdoul Wind Farm (Cape Sim)",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE",
+        "capacity_mw": 60,
+        "status": "operational",
+        "year_operational": 2006,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "Morocco's first large wind farm, commissioned 2006 near Essaouira. Exploits the Alizé trade winds along the Atlantic coast. Preceded the large-scale Integrated Wind Programme."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.65, 35.75] },
+      "properties": {
+        "id": "gen-tangier-1",
+        "name": "Tangier I Wind Farm (Dhar Saadane)",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE",
+        "capacity_mw": 140,
+        "status": "operational",
+        "year_operational": 2007,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "140 MW wind farm in the Tangier peninsula, commissioned 2007. One of Morocco's earliest utility-scale wind projects, benefiting from strong Strait of Gibraltar wind acceleration."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.42, 35.84] },
+      "properties": {
+        "id": "gen-khalladi",
+        "name": "Khalladi Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "Nareva",
+        "capacity_mw": 120,
+        "status": "operational",
+        "year_operational": 2018,
+        "source": "Wikipedia / Nareva",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "120 MW IPP wind farm near Tangier, developed by Nareva. Sells under a long-term PPA."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.57, 35.82] },
+      "properties": {
+        "id": "gen-haouma",
+        "name": "Haouma Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "Nareva",
+        "capacity_mw": 50,
+        "status": "operational",
+        "year_operational": 2014,
+        "source": "Wikipedia / Nareva",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "50.6 MW wind farm near Ksar es-Seghir in the Strait of Gibraltar corridor, commissioned 2014 by Nareva."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-4.02, 34.18] },
       "properties": {
         "id": "gen-taza",
         "name": "Taza Wind Farm",
@@ -74,15 +151,74 @@
         "sector": "energy",
         "subsector": "wind",
         "technology": "Onshore wind",
-        "operator": "MASEN / Nareva",
+        "operator": "Nareva / EDF Renouvelables / Mitsui",
         "capacity_mw": 150,
         "status": "operational",
-        "year_operational": 2021,
-        "source": "MASEN",
-        "source_url": "",
+        "year_operational": 2024,
+        "source": "Wikipedia / Nareva",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Located in the Rif mountain foothills near Taza, this project exploits a topographic wind acceleration corridor. The first wind farm in Morocco's interior, demonstrating that viable wind resources extend beyond the Atlantic coast."
+        "description": "150 MW in the Rif mountain foothills near Taza. First major wind farm in Morocco's interior, demonstrating viable resources beyond the Atlantic coast."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-4.75, 32.69] },
+      "properties": {
+        "id": "gen-midelt-wind",
+        "name": "Midelt Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "MASEN / Nareva",
+        "capacity_mw": 210,
+        "status": "operational",
+        "year_operational": 2021,
+        "source": "Wikipedia / MASEN",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "210 MW wind farm on the Moulouya plateau near Midelt, co-located in the same region as the Noor Midelt solar project. Part of Morocco's integrated renewable energy zone strategy."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-14.32, 26.05] },
+      "properties": {
+        "id": "gen-aftissat",
+        "name": "Aftissat Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE / MASEN",
+        "capacity_mw": 201,
+        "status": "operational",
+        "year_operational": 2018,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "201 MW wind farm near Boujdour in the southern provinces, commissioned 2018. Demonstrates the exceptional wind resources of the Saharan Atlantic coast, with some of the highest capacity factors in Africa."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-13.52, 27.12] },
+      "properties": {
+        "id": "gen-foum-el-oued",
+        "name": "Foum el Oued Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "ONEE",
+        "capacity_mw": 50,
+        "status": "operational",
+        "year_operational": 2013,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "50.1 MW wind farm near Laayoune commissioned 2013. Part of the first tranche of Morocco's Integrated Wind Programme in the southern provinces."
       }
     },
     {
@@ -99,11 +235,70 @@
         "capacity_mw": 100,
         "status": "operational",
         "year_operational": 2015,
-        "source": "ONEE",
-        "source_url": "",
+        "source": "Wikipedia / ONEE",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Commissioned in the southern provinces near Boujdour. This site demonstrates the exceptional wind resources of the Saharan Atlantic coast, with capacity factors among the highest in Africa. A precursor to much larger planned developments in the region."
+        "description": "100 MW near Boujdour. Precursor to larger planned developments in the Saharan Atlantic corridor."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-5.78, 35.78] },
+      "properties": {
+        "id": "gen-tanger2",
+        "name": "Tanger 2 Wind Farm",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "Enel / Nareva",
+        "capacity_mw": 150,
+        "status": "planned",
+        "year_operational": null,
+        "source": "Wikipedia / MASEN pipeline",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "150 MW planned wind farm in northern Morocco, part of MASEN's Integrated Wind Programme Phase 2 developed by Enel/Nareva consortium."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.45, 31.62] },
+      "properties": {
+        "id": "gen-jbel-lahdid",
+        "name": "Jbel Lahdid Wind Farm (Essaouira)",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "Enel / Nareva",
+        "capacity_mw": 200,
+        "status": "planned",
+        "year_operational": null,
+        "source": "Wikipedia / MASEN pipeline",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "200 MW planned wind farm south of Essaouira, part of MASEN's Integrated Wind Programme Phase 2."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-13.1, 27.15] },
+      "properties": {
+        "id": "gen-tiskrad",
+        "name": "Tiskrad Wind Farm (Laayoune)",
+        "layer": "gen_wind",
+        "sector": "energy",
+        "subsector": "wind",
+        "technology": "Onshore wind",
+        "operator": "Enel / Nareva",
+        "capacity_mw": 300,
+        "status": "planned",
+        "year_operational": null,
+        "source": "Wikipedia / MASEN pipeline",
+        "coord_confidence": "centroid",
+        "coord_method": "manual_estimate",
+        "description": "300 MW planned wind farm near Laayoune, part of Morocco's large-scale renewable buildout in the southern provinces targeting green hydrogen export potential."
       }
     }
   ]

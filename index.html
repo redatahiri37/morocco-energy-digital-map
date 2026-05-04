@@ -33,13 +33,16 @@
   --border:#2a2a27;--border-hi:#3a3a36;
   --text-0:#f2f0ec;--text-1:#c4c1b8;--text-2:#8a877e;--text-3:#5a5850;
   /* Brand — Energy × Digital */
-  --teal:#01a4b5;--teal-dim:#01a4b544;--teal-glow:#01a4b522;
-  --yellow:#FF6B35;--yellow-dim:#FF6B3533;
+  --teal:#00D4FF;--teal-dim:#00D4FF33;--teal-glow:#00D4FF22;
+  --yellow:#e6b800;--yellow-dim:#e6b80033;
   --blue:#00D4FF;--blue-dim:#00D4FF33;
   --purple:#7a39bb;--purple-dim:#7a39bb44;--purple-glow:#7a39bb22;
   --orange:#FF6B35;--orange-dim:#FF6B3533;
   --green-zone:#2d6a2e22;
   --red:#ef4444;
+  --navy-primary:#3b82f6;--navy-dim:#3b82f633;--navy-glow:#3b82f622;
+  --energy-orange:#FF6B35;--energy-dim:#FF6B3533;--energy-glow:#FF6B3522;
+  --digital-cyan:#00D4FF;--digital-dim:#00D4FF33;--digital-glow:#00D4FF22;
   --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --font-serif:"Instrument Serif",Georgia,serif;
   --sidebar-w:320px;--info-w:380px;
@@ -395,7 +398,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   </div>
   <span class="tagline">Intelligent Infrastructure Mapping for Africa</span>
   <div class="spacer"></div>
-  <span class="ts">April 2026</span>
+  <span class="ts" id="topbar-date"></span>
   <button class="top-btn" id="theme-toggle" title="Toggle light/dark"><i data-lucide="sun" style="width:15px;height:15px"></i></button>
   <button class="top-btn" id="token-toggle" title="Mapbox token"><i data-lucide="key" style="width:15px;height:15px"></i></button>
 </header>

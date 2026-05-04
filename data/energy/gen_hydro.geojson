@@ -3,6 +3,26 @@
   "features": [
     {
       "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.51, 32.22] },
+      "properties": {
+        "id": "gen-afourer",
+        "name": "Afourer Pumped Storage (STEP)",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Pumped storage hydro",
+        "operator": "ONEE",
+        "capacity_mw": 465,
+        "status": "operational",
+        "year_operational": 2004,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "465 MW pumped storage facility (STEP Afourer) in the High Atlas, operational since 2004. Morocco's largest grid flexibility asset — stores surplus overnight generation and dispatches during morning/evening peaks."
+      }
+    },
+    {
+      "type": "Feature",
       "geometry": { "type": "Point", "coordinates": [-9.0, 30.37] },
       "properties": {
         "id": "gen-abdel",
@@ -16,10 +36,9 @@
         "status": "under_construction",
         "year_operational": 2027,
         "source": "ONEE / World Bank",
-        "source_url": "",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Morocco's first large-scale pumped hydro energy storage (STEP) project, in the Souss-Massa region. It will store surplus renewable energy during off-peak hours and dispatch during demand spikes — critical flexibility as Morocco targets 52% RE by 2030. The project is part of a broader STEP program that could add 2–3 GW of storage nationally."
+        "description": "350 MW STEP in the Souss-Massa region. Morocco's next major pumped storage project, critical for absorbing variable RE as the country targets 52% renewable by 2030."
       }
     },
     {
@@ -31,16 +50,15 @@
         "layer": "gen_hydro",
         "sector": "energy",
         "subsector": "hydro",
-        "technology": "Run-of-river / reservoir hydro",
+        "technology": "Reservoir hydro",
         "operator": "ONEE",
         "capacity_mw": 135,
         "status": "operational",
         "year_operational": 1953,
-        "source": "ONEE",
-        "source_url": "",
+        "source": "ONEE / Wikipedia",
         "coord_confidence": "exact",
         "coord_method": "satellite_verified",
-        "description": "One of Morocco's oldest large hydroelectric facilities, on the Oued El Abid in the High Atlas. The reservoir is a major water resource for the Tadla agricultural region. Output is highly variable with precipitation, underlining Morocco's dependence on imported fossil fuels during drought years."
+        "description": "135 MW on the Oued El Abid in the High Atlas. One of Morocco's oldest hydroelectric facilities; output highly variable with precipitation."
       }
     },
     {
@@ -57,11 +75,50 @@
         "capacity_mw": 240,
         "status": "operational",
         "year_operational": 1996,
-        "source": "ONEE",
-        "source_url": "",
+        "source": "ONEE / Wikipedia",
         "coord_confidence": "exact",
         "coord_method": "satellite_verified",
-        "description": "Africa's second-largest dam by storage volume. Located on the Oued Ouerrha in the Rif, it provides both power generation and irrigation for the Gharb plain. With a catchment area of ~7,200 km², its output is sensitive to inter-annual precipitation variability."
+        "description": "240 MW on the Oued Ouerrha in the Rif. Africa's second-largest dam by storage volume. Provides both power and irrigation for the Gharb plain."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-6.41, 31.97] },
+      "properties": {
+        "id": "gen-allal-fassi",
+        "name": "Allal al Fassi Dam",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Reservoir hydro",
+        "operator": "ONEE",
+        "capacity_mw": 240,
+        "status": "operational",
+        "year_operational": 1994,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "240 MW reservoir plant on the Oued Ouerrha, commissioned 1994."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-7.48, 32.52] },
+      "properties": {
+        "id": "gen-al-massira",
+        "name": "Al Massira Dam",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Reservoir hydro",
+        "operator": "ONEE",
+        "capacity_mw": 128,
+        "status": "operational",
+        "year_operational": 1979,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "128 MW on the Oued Oum er-Rbia near Settat. Major water supply reservoir for the Doukkala-Abda region."
       }
     },
     {
@@ -69,7 +126,7 @@
       "geometry": { "type": "Point", "coordinates": [-5.6, 33.1] },
       "properties": {
         "id": "gen-hassan-ii",
-        "name": "Hassan II Dam STEP",
+        "name": "Hassan II Dam (STEP)",
         "layer": "gen_hydro",
         "sector": "energy",
         "subsector": "hydro",
@@ -79,10 +136,49 @@
         "status": "operational",
         "year_operational": 1994,
         "source": "ONEE",
-        "source_url": "",
         "coord_confidence": "approximate",
         "coord_method": "osm_derived",
-        "description": "Morocco's first pumped storage facility, providing peaking capacity and frequency regulation on the national grid. Located in the Middle Atlas range on the Oued El Abid headwaters. As the share of variable renewables rises, its flexibility role becomes increasingly strategic."
+        "description": "180 MW STEP in the Middle Atlas. Morocco's first pumped storage facility, providing peaking capacity and frequency regulation."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-4.95, 33.53] },
+      "properties": {
+        "id": "gen-idriss-i",
+        "name": "Idriss I Dam",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Reservoir hydro",
+        "operator": "ONEE",
+        "capacity_mw": 40,
+        "status": "operational",
+        "year_operational": 1978,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "40 MW on the Oued Inaouène. Part of Morocco's historic hydroelectric network in the Middle Atlas."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-4.92, 32.02] },
+      "properties": {
+        "id": "gen-hassan-i",
+        "name": "Hassan I Dam",
+        "layer": "gen_hydro",
+        "sector": "energy",
+        "subsector": "hydro",
+        "technology": "Reservoir hydro",
+        "operator": "ONEE",
+        "capacity_mw": 67,
+        "status": "operational",
+        "year_operational": 1991,
+        "source": "Wikipedia / ONEE",
+        "coord_confidence": "approximate",
+        "coord_method": "osm_derived",
+        "description": "67 MW on the Oued El Abid near Demnate in the High Atlas."
       }
     }
   ]
