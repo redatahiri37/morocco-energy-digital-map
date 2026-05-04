@@ -42,12 +42,26 @@ commissioning year, capacity).
 | REE — Spain/Morocco interconnection | https://www.ree.es/en/activities/operation-of-the-electricity-system/international-interconnections | Public disclosure |
 | Xlinks — Morocco-UK Power Project | https://xlinks.co/morocco-uk-power-project/ | Company press material |
 | MIICEN announcements (Dakhla-Agadir HVDC) | https://www.mem.gov.ma/ | Government press material |
+| **Gridfinder** — predictive distribution network (cross-validation) | https://gridfinder.rdrn.me · Dataset: https://zenodo.org/records/3628142 | CC BY 4.0 |
+| **Africa Electricity Grids Explorer** — regional transmission (cross-validation) | https://africagrid.energydata.info/ | World Bank / ESMAP open data |
 
 **Attribution:** `OpenInfraMap · © OpenStreetMap contributors, ODbL 1.0`
 
 **Note on precision:** The OIM overlay is as accurate as OSM — survey-grade
 in populated areas, patchy in remote ones. The editorial interconnector
 geometries are indicative great-circle routes, not actual cable paths.
+
+**Cross-validation:** OIM coverage for Morocco's HV network is dense in
+the north (Casablanca–Rabat–Fès corridor) and thinner in the south and
+east. The [Gridfinder dataset](https://zenodo.org/records/3628142)
+(Arderne, Nicolas, Zorn & Koks, *Scientific Data* 7, 19, 2020 —
+[doi:10.1038/s41597-019-0347-4](https://doi.org/10.1038/s41597-019-0347-4))
+uses nighttime satellite imagery + OSM roads to *predict* distribution
+line locations globally (CC BY 4.0). It is used here as a diagnostic
+tool to identify OIM coverage gaps, not as a displayed geometry source.
+The [Africa Electricity Grids Explorer](https://africagrid.energydata.info/)
+(World Bank / ESMAP) provides Africa-specific regional transmission
+topology, used to cross-check strategic corridor routing.
 
 ## Layer 3 — Industrial Consumers
 **File:** `docs/data/morocco/industrial.geojson`
@@ -77,10 +91,16 @@ audited figure. Treat as order-of-magnitude.
 | Reuters / press announcements | https://www.reuters.com/ | Editorial reference |
 | MIICEN announcements | https://www.mcinet.gov.ma/ | Government press |
 | ADD (Agence de Développement du Digital) | https://www.add.gov.ma/ | Government press |
-| TeleGeography — Submarine Cable Map | https://www.submarinecablemap.com/ | Public reference |
+| TeleGeography — Submarine Cable Map | https://www.submarinecablemap.com/ (Morocco landings: filter by country) | Public reference — 597 systems, 1 712 landings, rolling updates |
+| **PeeringDB** — internet exchange points (planned v1.1) | https://www.peeringdb.com · Maroc IX: https://www.peeringdb.com/ix/2274 | Community-maintained, free API with attribution |
 
 **Note:** `capacity_estimate_mw` for announced projects is the headline
 figure from press releases, not energised capacity.
+
+**PeeringDB note:** Maroc IX (Casablanca) is Morocco's primary Internet
+Exchange Point. It is not yet a rendered feature in v1.0 — adding it as
+a point in the digital layer is a v1.1 backlog item. PeeringDB provides
+a free JSON API at `https://www.peeringdb.com/api/ixlan/?id=<id>`.
 
 ## Layer 5 — Renewable Potential (v1.1)
 Not shipped in v1.0. Intended sources for v1.1:
@@ -110,12 +130,35 @@ No account, token, or API key is required.
   project and is not drawn.
 
 ## Known gaps (as of 2026-04-17)
-- No sub-60 kV distribution network.
-- No substation dataset — only line endpoints.
+- No sub-60 kV distribution network — [Gridfinder](https://zenodo.org/records/3628142)
+  (Arderne et al. 2020, CC BY 4.0) provides a predictive global estimate
+  that could fill this gap in v1.1 for remote regions where OSM is sparse.
+- No substation dataset — only line endpoints. (OIM renders substations
+  as polygons/points at zoom ≥ 5; no ingest needed.)
 - No demand time-series — demand is a single annual estimate.
 - No cross-border interconnection capacities with Spain/Algeria (to be
   added in v1.1).
 - No renewable potential raster (Layer 5).
+- No Internet Exchange Point feature (Maroc IX, Casablanca) — intended
+  for v1.1 using PeeringDB API.
+
+---
+
+## Related platforms & peer tools
+
+These are not data sources for this project but comparable or
+complementary tools worth knowing.
+
+| Platform | Focus | Geographic strength | License | Used here |
+|---|---|---|---|---|
+| [OpenInfraMap](https://openinframap.org) | Power + telco + oil & gas via OSM | Global, continuous | ODbL 1.0 | ✅ Primary grid tiles |
+| [Gridfinder](https://gridfinder.rdrn.me) | Predictive distribution network | Global; strong in data-scarce Africa / Asia | CC BY 4.0 | Cross-validation only |
+| [Africa Electricity Grids Explorer](https://africagrid.energydata.info) | Africa regional transmission | Africa | World Bank open data | Cross-validation only |
+| [OpenGridWorks](https://opengridworks.com) | Power plants + transmission + substations | Global (US-agency data primary) | Free | No — monitor for MENA expansion |
+| [MapYourGrid](https://mapyourgrid.org) | OSM grid-coverage improvement campaign | Global | CC BY 4.0 | No — improves OIM upstream |
+| [Electricity Maps](https://app.electricitymaps.com) | Live grid carbon intensity + flow | Global, 15-min updates | API (key required) | No — v1.2 candidate for live mix chart |
+| [TeleGeography Submarine Cable Map](https://www.submarinecablemap.com) | Submarine cables, 597 systems | Global, rolling | Public reference | ✅ Cable layer source |
+| [PeeringDB](https://www.peeringdb.com) | Internet exchange points | Global, ~1 300 IXPs | Free API | Planned v1.1 (Maroc IX) |
 
 ---
 

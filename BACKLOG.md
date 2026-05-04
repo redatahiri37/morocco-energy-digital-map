@@ -111,6 +111,39 @@ Last reshuffle: **2026-04-19**.
   `initTimeline()` + `applyYearFilter()` in `app.js`. Git history has
   the full diff under the pre-reverted commit.
 
+## 🔵 Later — data source enhancements
+
+- **OpenGridWorks** — monitor for MENA transmission coverage expansion.
+  Currently US-agency data (EIA, HIFLD, EPA); global power plant layer
+  (~120 K entries) is worth a one-off cross-check against Layer 1.
+  https://opengridworks.com
+
+- **Electricity Maps API** — replace the static electricity-mix chart
+  with a live Morocco feed (15-min updates, Morocco available). Requires
+  a free-tier API key; check rate limits before wiring into boot path.
+  https://app.electricitymaps.com
+
+- **PeeringDB — Maroc IX IXP point** — add Casablanca Internet Exchange
+  as a point feature in the digital layer using the PeeringDB JSON API
+  (`GET /api/ixlan/?id=2274`). Low lift: one feature, one source.
+  https://www.peeringdb.com/ix/2274
+
+- **Gridfinder distribution layer** — import predictive distribution
+  lines for remote Morocco regions (southern Atlas, Saharan zones) where
+  OSM/OIM coverage is sparse. Arderne et al. 2020, CC BY 4.0. The
+  GeoPackage is ~1 GB; crop to a Morocco bounding box before ingest.
+  https://zenodo.org/records/3628142
+
+- **Global Transmission Database** (MIT) — cross-validate planned
+  corridor geometries against this independent MIT-licensed dataset.
+  Useful as a second opinion on the WBG 2018 corridor routing.
+  https://github.com/Electricity-Transmission-Database/electricity-transmission-database
+
+- **ITU Interactive Transmission Maps** — terrestrial backbone and
+  broadband connectivity for Morocco; strong for developing-region
+  policy context. Useful if a "connectivity" layer is ever added.
+  https://www.itu.int/en/ITU-D/Technology/Pages/InteractiveTransmissionMaps.aspx
+
 ## 🔵 Later — v1.2+ scope
 - **Grid-suitability index (Pawel-style 1–5 score)** — per 0.1° cell,
   blend: nearest HV line (km), available generation within 50 km,
