@@ -35,14 +35,6 @@ window.COUNTRIES = {
         source: "Xlinks · MIICEN · World Bank Group 2018 masterplan",
         sourceUrl: "https://datacatalog.worldbank.org/",
         updated: "2026-04" },
-<<<<<<< HEAD
-      { id: "national-hv", file: "national-hv.geojson", kind: "lines",
-        title: "Grid — National HV (ONEE 60 / 225 / 400 kV)",
-        source: "ONEE shapefile · derived 2026 (947 lines)",
-        sourceUrl: "https://www.one.org.ma/",
-        updated: "2026-05" },
-=======
->>>>>>> origin/main
       { id: "industrial", file: "industrial.geojson", kind: "points",
         title: "Industrial consumers",
         source: "OCP · Holcim · SONASID · Renault · public disclosures",

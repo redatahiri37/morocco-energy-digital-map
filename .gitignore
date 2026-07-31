@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-.DS_Store
-.claude/
-__pycache__/
-*.pyc
-=======
-# Secrets — never commit the Mapbox token
+# Secrets — never commit tokens or per-machine config
 docs/config.js
 
 # OS / editor
@@ -15,14 +9,16 @@ Thumbs.db
 *.swp
 *.swo
 
+# Claude Code local state
+.claude/
+
 # Node (if tooling is added later)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 
-# Python (if data-fetch scripts are added later)
+# Python (data-fetch scripts)
 __pycache__/
 *.pyc
 .venv/
 venv/
->>>>>>> origin/main

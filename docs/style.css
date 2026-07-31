@@ -16,11 +16,7 @@
   --c-grid:    #E5E4E0;  /* warm white — transmission */
   --c-industrial: #EA580C;  /* orange */
   --c-digital: #7C3AED;  /* purple */
-<<<<<<< HEAD
-  --c-cable:   #F97316;  /* submarine cable landing */
-=======
   --c-cable:   #2DD4BF;  /* submarine cable landing — teal, distinct from industrial orange */
->>>>>>> origin/main
 
   /* Surfaces — dark default */
   --bg-0:#0e0e0d;
@@ -209,15 +205,6 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layer-meta a:hover{color:var(--c-wind)}
 .layer-row.muted{opacity:.45}
 .layer-row.muted .layer-name{color:var(--text-2)}
-<<<<<<< HEAD
-.layer-error{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:14px;height:14px;font-size:11px;line-height:1;
-  color:#F59E0B;cursor:help;
-}
-.layer-row.has-error .layer-name{color:#F59E0B}
-=======
->>>>>>> origin/main
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
