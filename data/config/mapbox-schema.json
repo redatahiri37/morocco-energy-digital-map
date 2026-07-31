@@ -1,0 +1,197 @@
+{
+  "project": "Morocco Energy × Digital Map",
+  "version": "1.0",
+  "mapbox_config": {
+    "center": {
+      "lng": -5.0,
+      "lat": 31.9
+    },
+    "zoom": 6,
+    "style": "mapbox://styles/mapbox/light-v11"
+  },
+  "layers": [
+    {
+      "id": "transmission-lines",
+      "type": "line",
+      "source": {
+        "type": "geojson",
+        "data": "./processed/transmission-lines.geojson"
+      },
+      "paint": {
+        "line-color": "#FF6B6B",
+        "line-width": 2,
+        "line-opacity": 0.8
+      },
+      "filter": [
+        "==",
+        ["geometry-type"],
+        "LineString"
+      ],
+      "metadata": {
+        "name": "Transmission Lines",
+        "description": "400kV, 225kV, and lower voltage transmission network",
+        "sources": ["mapyourgrid", "osm"],
+        "zIndex": 2
+      }
+    },
+    {
+      "id": "substations",
+      "type": "circle",
+      "source": {
+        "type": "geojson",
+        "data": "./processed/substations.geojson"
+      },
+      "paint": {
+        "circle-radius": 6,
+        "circle-color": "#FFA500",
+        "circle-opacity": 0.8,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#FFFFFF"
+      },
+      "metadata": {
+        "name": "Substations",
+        "description": "Transformer stations and power conversion points",
+        "sources": ["mapyourgrid", "osm"],
+        "zIndex": 3
+      }
+    },
+    {
+      "id": "power-plants",
+      "type": "circle",
+      "source": {
+        "type": "geojson",
+        "data": "./processed/power-plants.geojson"
+      },
+      "paint": {
+        "circle-radius": 8,
+        "circle-color": [
+          "match",
+          ["get", "metadata", "fuel_type"],
+          "solar", "#FDB462",
+          "wind", "#80B1D3",
+          "hydro", "#FB8072",
+          "coal", "#bebada",
+          "gas", "#8DD3C7",
+          "#CCCCCC"
+        ],
+        "circle-opacity": 0.85,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#FFFFFF"
+      },
+      "metadata": {
+        "name": "Power Plants",
+        "description": "All generation facilities (thermal, hydro, solar, wind)",
+        "sources": ["gem", "osm"],
+        "zIndex": 4
+      }
+    },
+    {
+      "id": "admin-boundaries",
+      "type": "fill",
+      "source": {
+        "type": "geojson",
+        "data": "./processed/admin-boundaries.geojson"
+      },
+      "paint": {
+        "fill-color": "#E8E8E8",
+        "fill-opacity": 0.1,
+        "fill-outline-color": "#999999"
+      },
+      "metadata": {
+        "name": "Admin Boundaries",
+        "description": "Regional and provincial boundaries",
+        "sources": ["hdx"],
+        "zIndex": 1
+      }
+    }
+  ],
+  "layer_order": [
+    "admin-boundaries",
+    "transmission-lines",
+    "substations",
+    "power-plants"
+  ],
+  "interactions": {
+    "transmission-lines": {
+      "hover": {
+        "paint": {
+          "line-width": 3,
+          "line-opacity": 1.0
+        }
+      },
+      "popup": {
+        "fields": ["name", "metadata.voltage_kv", "metadata.operator", "source", "confidence"]
+      }
+    },
+    "substations": {
+      "hover": {
+        "paint": {
+          "circle-radius": 8,
+          "circle-opacity": 1.0
+        }
+      },
+      "popup": {
+        "fields": ["name", "metadata.voltage_kv", "source", "confidence"]
+      }
+    },
+    "power-plants": {
+      "hover": {
+        "paint": {
+          "circle-radius": 10,
+          "circle-opacity": 1.0
+        }
+      },
+      "popup": {
+        "fields": [
+          "name",
+          "metadata.fuel_type",
+          "metadata.capacity_mw",
+          "metadata.status",
+          "metadata.operator",
+          "source",
+          "confidence"
+        ]
+      }
+    }
+  },
+  "legend": {
+    "title": "Morocco Energy Infrastructure",
+    "items": [
+      {
+        "name": "Transmission Lines",
+        "symbol": "line",
+        "color": "#FF6B6B"
+      },
+      {
+        "name": "Substations",
+        "symbol": "circle",
+        "color": "#FFA500"
+      },
+      {
+        "name": "Solar",
+        "symbol": "circle",
+        "color": "#FDB462"
+      },
+      {
+        "name": "Wind",
+        "symbol": "circle",
+        "color": "#80B1D3"
+      },
+      {
+        "name": "Hydro",
+        "symbol": "circle",
+        "color": "#FB8072"
+      },
+      {
+        "name": "Coal",
+        "symbol": "circle",
+        "color": "#bebada"
+      },
+      {
+        "name": "Gas",
+        "symbol": "circle",
+        "color": "#8DD3C7"
+      }
+    ]
+  }
+}

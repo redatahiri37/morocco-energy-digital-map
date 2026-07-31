@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MoroccoGrid — Energy × Digital Infrastructure Map
 
 Interactive intelligence map of Morocco's power grid, renewable generation,
@@ -63,3 +64,173 @@ Local dev:
 python3 -m http.server 8080
 # → http://localhost:8080
 ```
+=======
+# Energy × Digital Nexus — Morocco Infrastructure Map
+
+Interactive multi-layer map of Morocco's electricity generation,
+transmission grid, industrial load and data-center pipeline.
+
+v1.0 · Morocco only. Structured to scale to MENA by dropping one
+GeoJSON folder and one config entry per country.
+
+---
+
+## Layers (v1.0)
+
+| # | Layer | Type | Source |
+|---|---|---|---|
+| 1 | Power generation | points | Global Energy Monitor · ONEE · MASEN |
+| 2 | Transmission grid | lines (400 / 225 / 60 kV + HVDC planned) | OSM · ONEE |
+| 3 | Industrial consumers | points | OCP · Holcim · SONASID · operator disclosures |
+| 4 | Digital infrastructure | points | Datacentermap.com · OSM · DCD · press |
+| 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas  EU Commission PHOTOVOLTAIC GEOGRAPHICAL INFORMATION SYSTEM | 
+
+All source URLs are in [DATA_SOURCES.md](./DATA_SOURCES.md). Every
+feature carries a `source` and `source_url` property so provenance is
+inspectable from the map tooltip.
+
+## Quick start — run locally
+
+This is a static site. **No token, no account, no signup.** The basemap
+uses MapLibre GL + CARTO dark-matter / positron + OpenStreetMap tiles
+— all public.
+
+```bash
+cd docs
+python3 -m http.server 8000
+# open http://localhost:8000
+```
+
+## Reporting a bug
+
+See [DEBUGGING.md](./DEBUGGING.md) — paste a 4-field template and the
+`map-debugger` agent triages it.
+
+## Project structure
+
+```
+morocco-map/
+├── docs/                          ← GitHub Pages root (main branch, /docs)
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   ├── config.example.js          ← committed template
+│   ├── config.js                  ← your token — gitignored
+│   ├── countries.config.js        ← add a country here
+│   └── data/
+│       └── morocco/
+│           ├── power-plants.geojson
+│           ├── grid-lines.geojson
+│           ├── industrial.geojson
+│           └── digital.geojson
+├── .gitignore
+├── ASSUMPTIONS.md                 ← what was assumed, what is approximate
+├── DATA_SOURCES.md                ← every source, URL, license
+└── README.md
+```
+
+## How to contribute data
+
+1. Fork the repo.
+2. Edit the relevant GeoJSON in `docs/data/morocco/`.
+3. Every feature must carry a `source`, `source_url`, `precision`
+   (`exact` or `approximate`), and an `updated` date in
+   `countries.config.js`.
+4. **Unsourced edits will be closed.** Provide a public URL.
+5. Open a PR. Describe what you changed and why.
+
+### Adding a country (Middle-East and Africa expansion)
+
+```js
+// docs/countries.config.js
+window.COUNTRIES = {
+  morocco: { /* … */ },
+  egypt: {
+    label: "Egypt", iso: "EG",
+    center: [30.8, 26.8], zoom: 5.2,
+    dataPath: "./data/egypt/",
+    layers: [ /* same shape as morocco.layers */ ]
+  }
+};
+window.COUNTRIES_ENABLED = ["morocco", "egypt"];
+```
+
+Drop the four GeoJSONs into `docs/data/egypt/`. No JS or CSS change
+required — the app reads the manifest at boot.
+
+## Security — token hygiene
+
+- `docs/config.js` is in `.gitignore`. **Verify** before pushing:
+  ```bash
+  git status    # config.js must NOT appear
+  ```
+- If you accidentally commit a token: rotate it immediately in the
+  [Mapbox dashboard](https://account.mapbox.com/access-tokens).
+- In production, restrict the token to the GitHub Pages URL:
+  *Mapbox dashboard → Tokens → URL restrictions → add your Pages URL.*
+
+## Definition of Done — v1.0
+
+- [x] Four layers, toggle independently
+- [x] Hover tooltip on every feature (name, metric, source link)
+- [x] Click popup with stats, status, raw JSON, "Report an error" mailto
+- [x] Methodology panel + known-gaps panel (transparency-first)
+- [x] Bottom bar with source attribution + GitHub link
+- [x] Mobile responsive down to 375 px
+- [x] `DATA_SOURCES.md` lists every source
+- [x] `config.js` gitignored
+- [ ] Token domain-restricted in Mapbox dashboard *(manual step after deploy)*
+- [ ] Live on GitHub Pages *(manual step — owner-driven)*
+
+## v1.1 backlog
+
+See bottom of [ASSUMPTIONS.md](./ASSUMPTIONS.md).
+
+- Data-fetch scripts (`tools/fetch_gem.py`, `tools/fetch_overpass.sh`)
+- Layer 5 — renewable potential raster
+- MapLibre + OpenFreeMap engine fallback
+- Grid-suitability index (Pawel-style 1–5 score for DC siting)
+- Egypt / Senegal / Namibia
+
+## Related tools & resources
+
+| Tool | What it covers | Notes |
+|---|---|---|
+| [OpenInfraMap](https://openinframap.org) | Global grid, telco, oil & gas via OSM | Primary grid tile source for this project |
+| [Africa Electricity Grids Explorer](https://africagrid.energydata.info) | Africa regional transmission | World Bank / ESMAP — cross-validation source |
+| [Gridfinder](https://gridfinder.rdrn.me) | Predicted global distribution network | Arderne et al. 2020, CC BY 4.0 — gap diagnostics |
+| [OpenGridWorks](https://opengridworks.com) | Global power plants + transmission + substations | New 2026, US-agency data primary; monitor for MENA |
+| [TeleGeography Cable Map](https://www.submarinecablemap.com) | Submarine cables — 597 systems, 1 712 landings | Used for cable landing source data |
+| [PeeringDB](https://www.peeringdb.com) | Internet exchange points (~1 300 IXPs) | Maroc IX (Casablanca) planned for v1.1 |
+| [Electricity Maps](https://app.electricitymaps.com) | Live grid carbon intensity + cross-border flows | v1.2 candidate for live mix chart |
+
+### Contributing grid data
+
+The transmission layer's quality depends directly on OpenStreetMap
+coverage. If you notice missing or mis-tagged lines in Morocco, the
+fastest path to fixing them on this map is to edit OSM — changes
+propagate to OpenInfraMap within hours.
+
+→ [MapYourGrid](https://github.com/open-energy-transition/MapYourGrid) —
+  OET's campaign to improve global OSM grid coverage from ~70 % to 98 %,
+  with tooling guides and a task manager for mapping sprints.
+
+→ [Awesome-Electrical-Grid-Mapping](https://github.com/open-energy-transition/Awesome-Electrical-Grid-Mapping) —
+  curated list of every open dataset, tool, and paper for energy
+  infrastructure mapping, including an Africa-specific section.
+
+---
+
+## Credits
+
+Built by **Reda Tahiri** — Energy × Digital Nexus.
+Not affiliated with any of the operators, ministries, or consultancies
+referenced in the data. All opinions are the author's.
+
+## License
+
+Code: MIT & Reda.
+Data: aggregated from public sources — see `DATA_SOURCES.md` for the
+license of each upstream dataset. OpenStreetMap-derived data is under
+ODbL 1.0 and must retain attribution on redistribution.
+>>>>>>> origin/main

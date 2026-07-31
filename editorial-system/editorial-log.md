@@ -19,4 +19,19 @@ CADENCE.md, queue/raw-signals.md, editorial-log.md.
 **Next meeting:** First real Monday Scout run — say "Run the Scout."
 
 ---
+
+## 2026-05-22 — Article 2 published (W20)
+**Action:** "The cost of storage just crossed the line in Morocco."
+final version filed to `published/substack/2026-W20-storage-cost-crossover.md`.
+**Status:** live on Substack. Linked from this entry once the slug is
+known.
+**Editorial note:** final cut leaner than the W20 draft — dropped
+the BNEF/Lazard chart caption, the standalone ONEE 1.6 GWh section,
+the explicit honest-counter section, and the closing sources block.
+Added personal voice ("son of a former importer") and an Iran-war
+demand-side claim for 2026 battery prices. Series cadence shifts
+one week: A3 now W21, bait piece (paraboles → PV) now W22.
+**Next:** A3 Substack + LinkedIn for Friday May 29.
+
+---
 <!-- Append new entries above this line -->

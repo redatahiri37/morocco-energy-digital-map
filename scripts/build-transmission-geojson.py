@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Convert Morocco transmission shapefiles to WGS84 GeoJSON.
 
 Drops 60 kV distribution and keeps 150 / 225 / 400 kV lines.
@@ -17,6 +18,28 @@ from pyproj import Transformer
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "transmission-lines.geojson"
+=======
+"""Convert WBG 2018 transmission-line shapefiles (Merchich Nord Maroc) to WGS84
+GeoJSON for the Morocco infrastructure map. Drops 60 kV distribution; keeps
+150 / 225 / 400 kV (HV + EHV) as per the Pawel Czyzak / Ember convention.
+
+Usage:
+    WBG_DIR=/path/containing/shapefile-folders python3 scripts/build-transmission-geojson.py
+
+WBG_DIR must contain:
+    existingtransmissionlines/Existing_transmission_lines.{shp,dbf,shx,prj}
+    futuretransmissionlines/Future_transmission_lines.{shp,dbf,shx,prj}
+
+Writes docs/data/morocco/transmission-lines.geojson (relative to repo root).
+"""
+import json, os, shapefile
+from pyproj import Transformer
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+WBG  = Path(os.environ.get("WBG_DIR", REPO.parent)).resolve()
+OUT  = REPO / "docs/data/morocco/transmission-lines.geojson"
+>>>>>>> origin/main
 
 MERCHICH = (
     "+proj=lcc +lat_1=33.3 +lat_0=33.3 +lon_0=-5.4 +k_0=0.999625769 "
@@ -29,6 +52,7 @@ VOLTAGE_KV = {"150 kV": 150, "225 kV": 225, "400 kV": 400}
 
 features = []
 
+<<<<<<< HEAD
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -40,6 +64,8 @@ def parse_args():
     )
     return parser.parse_args()
 
+=======
+>>>>>>> origin/main
 def ingest(path, status):
     r = shapefile.Reader(str(path))
     kept = dropped = 0
@@ -72,6 +98,7 @@ def ingest(path, status):
         kept += 1
     print(f"  {path.name}: kept {kept}, dropped {dropped}")
 
+<<<<<<< HEAD
 def main():
     args = parse_args()
 
@@ -87,3 +114,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+=======
+ingest(WBG / "existingtransmissionlines/Existing_transmission_lines", "existing")
+ingest(WBG / "futuretransmissionlines/Future_transmission_lines", "planned")
+
+fc = {"type": "FeatureCollection", "features": features}
+OUT.parent.mkdir(parents=True, exist_ok=True)
+OUT.write_text(json.dumps(fc, ensure_ascii=False, separators=(",", ":")))
+print(f"wrote {len(features)} features → {OUT.relative_to(REPO)}")
+>>>>>>> origin/main

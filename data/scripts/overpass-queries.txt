@@ -1,0 +1,210 @@
+# Overpass Turbo Queries for Morocco Power Infrastructure
+# These queries extract power data from OpenStreetMap
+# Run each at: https://overpass-turbo.eu/
+
+# ============================================
+# QUERY 1: Power Transmission Lines (all voltages)
+# ============================================
+# Use this to get transmission lines, distribution lines, local lines
+# Export as GeoJSON and save to data/raw/osm-power/transmission-lines.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  way["power"="line"];
+  way["power"="cable"];
+);
+out geom;
+
+# Notes:
+# - This includes ALL power lines (transmission, distribution, local)
+# - Filter by voltage in post-processing if needed
+# - Expected: 37,000+ km of lines in Morocco
+
+
+# ============================================
+# QUERY 2: Power Substations (all types)
+# ============================================
+# Use this to get transformer stations, substations, converters
+# Export as GeoJSON and save to data/raw/osm-power/substations.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  node["power"="substation"];
+  way["power"="substation"];
+  node["power"="transformer"];
+  node["power"="converter"];
+  node["power"="pole"];
+);
+out center;
+
+# Notes:
+# - Includes all types of substations/nodes
+# - node with [out:center] returns the point geometry
+# - Expected: 300+ substations across Morocco
+
+
+# ============================================
+# QUERY 3: Power Generation Plants
+# ============================================
+# Use this to get power plants (thermal, hydro, wind, solar)
+# Export as GeoJSON and save to data/raw/osm-power/plants.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  node["power"="plant"];
+  way["power"="plant"];
+  relation["power"="plant"];
+);
+out center;
+
+# Notes:
+# - Includes all power plants regardless of fuel type
+# - Filter by operator/fuel type in post-processing
+# - Expected: 120+ plants mapped on OSM
+# - CAUTION: Some major plants may not be on OSM yet (manually add later)
+
+
+# ============================================
+# QUERY 4: Power Plants with Detailed Tags
+# ============================================
+# More detailed query that includes generator info
+# Export as GeoJSON and save to data/raw/osm-power/plants-detailed.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  node["power"="plant"];
+  way["power"="plant"];
+  relation["power"="plant"];
+);
+out center;
+>>;
+out geom;
+
+# Notes:
+# - Includes related nodes and ways for plants
+# - Better for extracting generator capacity, fuel type
+# - Larger dataset, may take 2-3 seconds
+
+
+# ============================================
+# QUERY 5: Transmission Lines by Voltage
+# ============================================
+# Extract ONLY high-voltage transmission lines (≥220 kV)
+# Typical pattern for major transmission backbone
+# Export as GeoJSON and save to data/raw/osm-power/transmission-backbone.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  way["power"="line"]["voltage"~"^(220|225|330|400|500|700)"];
+);
+out geom;
+
+# Notes:
+# - Filters to major transmission voltages only
+# - Morocco grid backbone: typically 400 kV and 225 kV
+# - Expected: ~2,000-3,000 km of major transmission lines
+# - Some lines may not have voltage tags (use Query 1 and check manually)
+
+
+# ============================================
+# QUERY 6: Hydroelectric Plants
+# ============================================
+# Extract hydroelectric dams and run-of-river plants
+# Export as GeoJSON and save to data/raw/osm-power/hydro-plants.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  node["power"="plant"]["power:source"="hydro"];
+  way["power"="plant"]["power:source"="hydro"];
+  relation["power"="plant"]["power:source"="hydro"];
+  node["waterway"="dam"]["power"="plant"];
+);
+out center;
+
+# Notes:
+# - Captures hydro plants by power:source tag
+# - Also includes dams tagged as power plants
+# - Morocco has ~20 major hydro plants (check against GEM for completeness)
+
+
+# ============================================
+# QUERY 7: Wind Farms
+# ============================================
+# Extract wind turbines and wind farm areas
+# Export as GeoJSON and save to data/raw/osm-power/wind-farms.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  node["power"="plant"]["power:source"="wind"];
+  way["power"="plant"]["power:source"="wind"];
+  relation["power"="plant"]["power:source"="wind"];
+  node["power"="generator"]["generator:source"="wind"];
+);
+out center;
+
+# Notes:
+# - Wind farms in Morocco: mostly in Tarfaya, Akhfennir, Tanger
+# - Some wind turbines may be tagged individually, some as a plant
+# - Cross-reference with GEM for completeness
+
+
+# ============================================
+# QUERY 8: Solar Plants
+# ============================================
+# Extract solar power installations
+# Export as GeoJSON and save to data/raw/osm-power/solar-plants.geojson
+
+[bbox:26.93,−13.17,35.94,6.10];
+(
+  node["power"="plant"]["power:source"="solar"];
+  way["power"="plant"]["power:source"="solar"];
+  relation["power"="plant"]["power:source"="solar"];
+  node["power"="generator"]["generator:source"="solar"];
+);
+out center;
+
+# Notes:
+# - Morocco's major solar: Noor complex (Ouarzazate), Noor 4, Noor 5 (Midelt)
+# - Many small rooftop installations exist but OSM coverage varies
+# - Noor plants are major (580 MW+), should be well-mapped
+
+
+# ============================================
+# USAGE INSTRUCTIONS
+# ============================================
+#
+# 1. Open https://overpass-turbo.eu/
+# 2. Paste one query above (without comments)
+# 3. Click "Run"
+# 4. Adjust bbox if needed:
+#    [bbox: south, west, north, east]
+#    Morocco: [bbox:26.93,-13.17,35.94,6.10] (S, W, N, E in decimal degrees)
+# 5. Click "Export" → GeoJSON
+# 6. Save to data/raw/osm-power/{layer-name}.geojson
+#
+# EXAMPLE CLEAN QUERY:
+# [bbox:26.93,-13.17,35.94,6.10];
+# (way["power"="line"];);
+# out geom;
+#
+# ============================================
+# REFERENCE
+# ============================================
+# OpenStreetMap Power Tagging: https://wiki.openstreetmap.org/wiki/Key:power
+# Overpass QL Tutorial: https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
+# Overpass Turbo: https://overpass-turbo.eu/
+#
+# Power Tags:
+#   power=line         (transmission/distribution line)
+#   power=cable        (underground cable)
+#   power=substation   (transformer station)
+#   power=plant        (power generation plant)
+#   power=generator    (individual generator)
+#   power:source=hydro|wind|solar|coal|gas|nuclear|biomass
+#   voltage=XXX        (in kV, e.g., 400, 225, 110, 30)
+#   operator=NAME      (e.g., ONEE, OCP, Masen)
+#
+# Bounding Box:
+#   Morocco coordinates: [26.93, -13.17, 35.94, 6.10]
+#   Format: [south, west, north, east] in decimal degrees
+# ============================================

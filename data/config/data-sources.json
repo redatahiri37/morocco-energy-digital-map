@@ -1,0 +1,242 @@
+{
+  "sources": {
+    "mapyourgrid": {
+      "name": "MapYourGrid",
+      "url": "https://mapyourgrid.org/global-grid-data/",
+      "license": "CC-BY 4.0",
+      "data_types": ["transmission-lines", "substations"],
+      "coverage": "Morocco",
+      "quality": "High",
+      "update_frequency": "Quarterly",
+      "contact": "contact@mapyourgrid.org",
+      "notes": "Manual download via web interface required. Best source for transmission backbone.",
+      "expected_records": {
+        "transmission-lines": 37000,
+        "substations": 300
+      }
+    },
+    "osm": {
+      "name": "OpenStreetMap (via Overpass Turbo)",
+      "url": "https://overpass-turbo.eu/",
+      "wiki": "https://wiki.openstreetmap.org/wiki/Power_networks/Morocco",
+      "license": "ODbL (Open Data Commons Open Database License)",
+      "data_types": ["transmission-lines", "substations", "power-plants"],
+      "coverage": "Morocco (variable by feature type)",
+      "quality": "Medium-High",
+      "update_frequency": "Weekly (OSM community-maintained)",
+      "notes": "Free, automated extraction via Overpass API. Community-maintained, gaps may exist.",
+      "expected_records": {
+        "transmission-lines": 37000,
+        "substations": 300,
+        "power-plants": 120
+      }
+    },
+    "gem": {
+      "name": "Global Energy Monitor",
+      "url": "https://www.gem.wiki/Power_Sector_Transition_in_Morocco",
+      "tracker": "https://globalenergymonitor.org/projects/global-integrated-power-tracker/",
+      "license": "CC-BY 4.0",
+      "data_types": ["power-plants"],
+      "coverage": "Morocco (complete generator list)",
+      "quality": "High",
+      "update_frequency": "Monthly",
+      "contact": "data@globalenergymonitor.org",
+      "notes": "Best source for plant metadata (capacity, fuel, owner, status). CSV export required.",
+      "expected_records": {
+        "power-plants": 80
+      }
+    },
+    "hdx": {
+      "name": "Humanitarian Data Exchange (geoBoundaries)",
+      "url": "https://data.humdata.org/dataset/cod-ab-mar",
+      "data_provider": "geoBoundaries",
+      "geoboundaries_url": "https://www.geoboundaries.org/",
+      "license": "CC-BY 4.0",
+      "data_types": ["admin-boundaries"],
+      "coverage": "Morocco (ADM0-ADM4)",
+      "quality": "Very High",
+      "update_frequency": "Quarterly",
+      "notes": "Official administrative divisions. Most reliable source for regional/provincial boundaries.",
+      "expected_records": {
+        "admin-boundaries": 2400
+      }
+    },
+    "energydata": {
+      "name": "ENERGYDATA.INFO",
+      "url": "https://energydata.info/dataset?vocab_country_names=MAR",
+      "license": "Multiple (check per dataset)",
+      "data_types": ["renewable-plants", "grid-demand"],
+      "coverage": "Morocco + Africa",
+      "quality": "High",
+      "update_frequency": "Annual",
+      "notes": "Secondary source for renewable projects and regional analysis.",
+      "tier": "2-later"
+    },
+    "gem_renewable_trackers": {
+      "name": "Global Energy Monitor Renewable Trackers",
+      "solar_url": "https://globalenergymonitor.org/projects/global-solar-power-tracker/",
+      "wind_url": "https://globalenergymonitor.org/projects/global-wind-power-tracker/",
+      "hydro_url": "https://globalenergymonitor.org/projects/global-hydropower-tracker/",
+      "license": "CC-BY 4.0",
+      "data_types": ["solar-plants", "wind-plants", "hydro-plants"],
+      "coverage": "Morocco",
+      "quality": "High",
+      "update_frequency": "Monthly",
+      "notes": "Specializedrenewal energy plant databases. Track projects from planning to operation.",
+      "tier": "2-later"
+    },
+    "datacentermap": {
+      "name": "Datacentermap.com",
+      "url": "https://www.datacentermap.com/morocco/",
+      "license": "Proprietary (free web access)",
+      "data_types": ["data-centers"],
+      "coverage": "Morocco (14 known facilities)",
+      "quality": "Medium",
+      "update_frequency": "Ad-hoc",
+      "notes": "Only consolidated source for data center locations. Requires web scraping or manual collection.",
+      "expected_records": {
+        "data-centers": 14
+      },
+      "tier": "2-later"
+    },
+    "iea_africa_gis": {
+      "name": "IEA Africa GIS Catalogue for Energy Planning",
+      "url": "https://www.iea.org/data-and-statistics/data-tools/africa-gis-catalogue-for-energy-planning",
+      "license": "IEA (check terms)",
+      "data_types": ["demand-projections", "renewable-potential", "regional-context"],
+      "coverage": "Africa (Morocco subset)",
+      "quality": "High",
+      "update_frequency": "Annual",
+      "notes": "Authoritative for regional energy planning context and demand side.",
+      "tier": "2-later"
+    },
+    "geofabrik_osm": {
+      "name": "Geofabrik OSM Extract",
+      "url": "https://download.geofabrik.de/africa/morocco.html",
+      "license": "ODbL",
+      "data_types": ["all (raw OSM)"],
+      "coverage": "Morocco (complete OSM)",
+      "quality": "Medium (requires filtering)",
+      "update_frequency": "Weekly",
+      "notes": "Raw OSM extract. Useful for completeness checks and local infrastructure.",
+      "format": "OSM PBF, GeoJSON",
+      "tier": "3-for-qa"
+    },
+    "onee": {
+      "name": "ONEE (Office National de l'Électricité)",
+      "url": "https://www.onee.ma",
+      "coverage": "Morocco (authoritative)",
+      "quality": "Highest",
+      "update_frequency": "Real-time",
+      "notes": "National electricity utility. No public GIS API; requires official partnership or FOIA request.",
+      "tier": "4-contact-required",
+      "contact_required": true
+    }
+  },
+  "workflow": {
+    "phase_1_week_1": {
+      "priority": "Critical",
+      "steps": [
+        {
+          "step": 1,
+          "source": "hdx",
+          "data": "admin-boundaries",
+          "action": "Download shapefile",
+          "effort": "Low",
+          "time_minutes": 5
+        },
+        {
+          "step": 2,
+          "source": "mapyourgrid",
+          "data": "transmission-lines, substations",
+          "action": "Manual download GeoJSON",
+          "effort": "Low",
+          "time_minutes": 10
+        },
+        {
+          "step": 3,
+          "source": "osm",
+          "data": "power-plants, transmission, substations",
+          "action": "Run Overpass Turbo queries",
+          "effort": "Low",
+          "time_minutes": 15
+        },
+        {
+          "step": 4,
+          "source": "gem",
+          "data": "power-plants (metadata)",
+          "action": "Download CSV export",
+          "effort": "Medium",
+          "time_minutes": 10
+        }
+      ]
+    },
+    "phase_2_week_2-3": {
+      "priority": "Secondary",
+      "steps": [
+        {
+          "source": "energydata",
+          "data": "renewable-projects",
+          "action": "Extract Morocco subset"
+        },
+        {
+          "source": "datacentermap",
+          "data": "data-centers",
+          "action": "Web scrape or manual collection"
+        },
+        {
+          "source": "gem_renewable_trackers",
+          "data": "solar, wind, hydro",
+          "action": "Download detailed project lists"
+        }
+      ]
+    },
+    "phase_3_week_3-4": {
+      "priority": "Tertiary",
+      "steps": [
+        {
+          "source": "manual",
+          "data": "OCP-industrial-zones",
+          "action": "Digitize from reports + satellite"
+        },
+        {
+          "source": "manual",
+          "data": "desalination-plants",
+          "action": "Compile from publications"
+        },
+        {
+          "source": "manual",
+          "data": "interconnectors",
+          "action": "Manual GeoJSON from schematics"
+        }
+      ]
+    }
+  },
+  "quality_checks": {
+    "geometry_validation": {
+      "description": "Ensure valid GeoJSON geometry",
+      "check": "All features must have valid geometry (Point/LineString/Polygon)",
+      "pass_rate": 100
+    },
+    "coordinate_system": {
+      "description": "WGS84 (EPSG:4326)",
+      "check": "All coordinates in [lng, lat] format",
+      "pass_rate": 100
+    },
+    "duplicate_detection": {
+      "description": "No duplicate features",
+      "check": "Check by feature ID + geometry hash",
+      "acceptable_duplicates": 0
+    },
+    "coverage": {
+      "description": "Morocco mainland coverage",
+      "check": "Bounding box [26.93, -13.17, 35.94, 6.10]",
+      "acceptable_missing_pct": 5
+    },
+    "attribute_completeness": {
+      "description": "Key fields populated",
+      "required_fields": ["name", "source", "confidence"],
+      "acceptable_missing_pct": 20
+    }
+  }
+}
