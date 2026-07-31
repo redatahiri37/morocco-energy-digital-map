@@ -54,7 +54,7 @@ const CONFIG = {
   // Paste the URL printed by `wrangler deploy` here. While the placeholder
   // is unchanged, the client falls back to the corsproxy.io shim so the
   // page keeps working pre-deploy.
-  PVGIS_WORKER_URL: "https://solar-pvgis.<subdomain>.workers.dev/pvcalc",
+  PVGIS_WORKER_URL: "https://solar-pvgis.redatahiri.workers.dev/pvcalc",
   PVGIS_FALLBACK_ORIGIN: "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc",
   PVGIS_FALLBACK_PROXY: "https://corsproxy.io/?url=",
   PVGIS_LOSS: 14,              // system losses %
@@ -349,13 +349,23 @@ const MapView = {
     if (!this.map) {
       this.map = L.map("map", { zoomControl: true, attributionControl: true })
         .setView([lat, lon], 18);
-      // Esri World Imagery — free satellite tiles, no token
-      L.tileLayer(
+      // Fully open default: OSM standard tiles. No token, no account, ODbL data.
+      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(this.map);
+      // Optional satellite view (Esri World Imagery — token-free, not open data).
+      const satellite = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
           maxZoom: 19,
           attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics",
         }
+      );
+      L.control.layers(
+        { "Plan (OSM)": osm, "Satellite": satellite },
+        null,
+        { position: "topright" }
       ).addTo(this.map);
     } else {
       this.map.setView([lat, lon], 18);

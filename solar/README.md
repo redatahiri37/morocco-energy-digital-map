@@ -14,12 +14,12 @@ solar/
 └── README.md
 ```
 
-### External dependencies (all CDN, no build step)
+### External dependencies (all CDN, no build step, no tokens)
 - **Leaflet 1.9.4** — mini-map
 - **Chart.js 4.4.1** — monthly production + 25-yr cashflow
-- **OpenStreetMap tiles** — Leaflet basemap
+- **OpenStreetMap tiles** — default basemap (open data, ODbL). Esri World Imagery available as an optional satellite toggle (token-free, not open data).
 - **Nominatim** — address geocoding (`countrycodes=ma`, French locale)
-- **PVGIS v5.2** (EU JRC) — annual + monthly kWh per (lat, lon, kWp, tilt, azimuth)
+- **PVGIS v5.2** (EU JRC) — annual + monthly kWh per (lat, lon, kWp, tilt, azimuth), via our Cloudflare Worker proxy
 
 ### Data sources
 - **ONEE stepped tariff** (2025, TTC) — hardcoded in `CONFIG.ONEE_TRANCHES`. Source: [kherba.com/tarifs](https://kherba.com/tarifs).
@@ -55,7 +55,9 @@ Deploy (from `solar/proxy/`):
 cd solar/proxy && wrangler deploy
 ```
 
-The deploy output prints the live URL (`https://solar-pvgis.<subdomain>.workers.dev`). Paste it — with the `/pvcalc` path — into `CONFIG.PVGIS_WORKER_URL` in `app.js`.
+The deploy output prints the live URL. Currently deployed at
+**`https://solar-pvgis.redatahiri.workers.dev/pvcalc`** — already wired into
+`CONFIG.PVGIS_WORKER_URL` in `app.js`. Redeploys keep the same URL.
 
 - **Logs (live):** `wrangler tail` from `solar/proxy/`
 - **Verify cache:** `curl -sI "<worker-url>/pvcalc?lat=33.57&lon=-7.59&peakpower=3&angle=30&aspect=0"` twice — second response has `cf-cache-status: HIT`
