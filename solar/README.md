@@ -27,45 +27,40 @@ solar/
 - **Installed cost** — 8–15 MAD/Wc range, 11 MAD/Wc central. Source: [lechantier.ma](https://lechantier.ma/en/prix/solaire), May 2026.
 - **Law 82-21** — décret n° 2.25.100 (5 mars 2026). Surplus injection capped at 20% of annual production; feed-in ~0.18 MAD/kWh (MV off-peak, upper bound for LV pending official publication).
 
-## PVGIS proxy — TODO
+## PVGIS proxy — Cloudflare Worker
 
-PVGIS explicitly rejects browser AJAX (no CORS headers). The current v1 routes calls through `corsproxy.io`, which is fine for a demo but not durable:
-- Public rate limits, no SLA
-- Third-party sees every user's coordinates
-- Could disappear or throttle at any time
+PVGIS explicitly rejects browser AJAX (no CORS headers), so all calls route through a dedicated Cloudflare Worker. Source lives in [`proxy/worker.js`](proxy/worker.js), config in [`proxy/wrangler.toml`](proxy/wrangler.toml).
 
-**Migration path (~15 min):** deploy a Cloudflare Worker as a dedicated PVGIS proxy.
+What the Worker does:
+- **Whitelists** query params and bounds-checks them (lat/lon/kWp/tilt/azimuth) — rejects anything else with a French 400.
+- **Edge-caches** JRC responses 24 h, keyed on the sorted param tuple. Repeat lookups never hit JRC.
+- **Rate-limits** 60 req/min/IP (degrades gracefully if the beta binding is unavailable).
+- **Maps errors** to `{ "error": "<message fr>", "status": <code> }` — the client shows the message inline.
+- **Scopes CORS** to `https://redatahiri37.github.io` and `http://localhost:8765`.
 
-```javascript
-// solar-pvgis-proxy Worker
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    if (url.pathname !== "/pvcalc") {
-      return new Response("Not found", { status: 404 });
-    }
-    const upstream = new URL("https://re.jrc.ec.europa.eu/api/v5_2/PVcalc");
-    for (const [k, v] of url.searchParams) upstream.searchParams.set(k, v);
-    const r = await fetch(upstream, { cf: { cacheTtl: 3600, cacheEverything: true } });
-    return new Response(r.body, {
-      status: r.status,
-      headers: {
-        "content-type": "application/json",
-        "access-control-allow-origin": "https://redatahiri37.github.io",
-        "cache-control": "public, max-age=3600",
-      },
-    });
-  },
-};
+Until the Worker URL is pasted into `CONFIG.PVGIS_WORKER_URL` in `app.js`, the client falls back to the `corsproxy.io` shim so the page keeps working pre-deploy.
+
+### Proxy operations
+
+First-time setup (Cloudflare account via GitHub OAuth, no card needed):
+
+```bash
+npm install -g wrangler
+wrangler login
 ```
 
-Then in `app.js`:
-```javascript
-PVGIS_ORIGIN: "https://solar-pvgis.<your-subdomain>.workers.dev/pvcalc",
-PVGIS_PROXY: "",   // no external proxy needed
+Deploy (from `solar/proxy/`):
+
+```bash
+cd solar/proxy && wrangler deploy
 ```
 
-Cloudflare free tier = 100k requests/day, ample for this. Edge caching by (lat,lon,params) tuple cuts JRC hits ~90%.
+The deploy output prints the live URL (`https://solar-pvgis.<subdomain>.workers.dev`). Paste it — with the `/pvcalc` path — into `CONFIG.PVGIS_WORKER_URL` in `app.js`.
+
+- **Logs (live):** `wrangler tail` from `solar/proxy/`
+- **Verify cache:** `curl -sI "<worker-url>/pvcalc?lat=33.57&lon=-7.59&peakpower=3&angle=30&aspect=0"` twice — second response has `cf-cache-status: HIT`
+- **Rename/rotate subdomain:** change `name` in `wrangler.toml`, redeploy, update `CONFIG.PVGIS_WORKER_URL`
+- **If deploy rejects the rate-limit binding** (open beta): delete the `[[unsafe.bindings]]` block in `wrangler.toml` and redeploy — the worker runs without rate limiting.
 
 ## Long-term architecture
 

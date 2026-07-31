@@ -49,11 +49,14 @@ const CONFIG = {
   EXPORT_CAP_PCT: 0.20,
   EXPORT_PRICE_MAD_PER_KWH: 0.18,
 
-  // PVGIS v5.2 endpoint. Not CORS-enabled — proxied.
-  // TODO(prod): replace corsproxy.io with a dedicated Cloudflare Worker
-  //             (see /solar/README.md for the 15-min migration path).
-  PVGIS_ORIGIN: "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc",
-  PVGIS_PROXY: "https://corsproxy.io/?url=",
+  // PVGIS v5.2 is not CORS-enabled — calls go through our Cloudflare Worker
+  // (source: solar/proxy/worker.js, ops: solar/README.md "Proxy operations").
+  // Paste the URL printed by `wrangler deploy` here. While the placeholder
+  // is unchanged, the client falls back to the corsproxy.io shim so the
+  // page keeps working pre-deploy.
+  PVGIS_WORKER_URL: "https://solar-pvgis.<subdomain>.workers.dev/pvcalc",
+  PVGIS_FALLBACK_ORIGIN: "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc",
+  PVGIS_FALLBACK_PROXY: "https://corsproxy.io/?url=",
   PVGIS_LOSS: 14,              // system losses %
   PVGIS_MOUNTING: "building",  // "building" = rooftop, "free" = ground
 
@@ -113,10 +116,26 @@ const PVGIS = {
       mountingplace: CONFIG.PVGIS_MOUNTING,
       outputformat: "json",
     });
-    const target = `${CONFIG.PVGIS_ORIGIN}?${params.toString()}`;
-    const url = CONFIG.PVGIS_PROXY + encodeURIComponent(target);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`PVGIS ${res.status}`);
+    const workerConfigured = !CONFIG.PVGIS_WORKER_URL.includes("<");
+    const url = workerConfigured
+      ? `${CONFIG.PVGIS_WORKER_URL}?${params.toString()}`
+      : CONFIG.PVGIS_FALLBACK_PROXY +
+        encodeURIComponent(`${CONFIG.PVGIS_FALLBACK_ORIGIN}?${params.toString()}`);
+    let res;
+    try {
+      res = await fetch(url);
+    } catch (_) {
+      throw new Error("Connexion au service PVGIS impossible — vérifiez votre réseau et réessayez.");
+    }
+    if (!res.ok) {
+      // Worker errors carry { error: "<message fr>", status } — surface the message.
+      let message = `PVGIS indisponible (HTTP ${res.status})`;
+      try {
+        const body = await res.json();
+        if (body && body.error) message = body.error;
+      } catch (_) { /* non-JSON body — keep generic message */ }
+      throw new Error(message);
+    }
     const data = await res.json();
     const totals = data?.outputs?.totals?.fixed;
     const monthly = data?.outputs?.monthly?.fixed;
@@ -502,8 +521,12 @@ const UI = {
         });
         State.lastPvKey = key;
         State.lastPv = pv;
+        $("step2-error").hidden = true;
       } catch (e) {
         console.error(e);
+        const el = $("step2-error");
+        el.textContent = e.message || "Erreur de calcul — réessayez.";
+        el.hidden = false;
         return;
       }
     }

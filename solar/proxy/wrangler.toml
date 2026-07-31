@@ -1,0 +1,17 @@
+name = "solar-pvgis"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+# Workers Free plan is sufficient (100k req/day).
+# Deploy from this directory: `wrangler deploy`
+# Logs: `wrangler tail`
+
+# Per-IP rate limit used by env.RATE_LIMITER in worker.js (60 req/min).
+# Rate-limiting bindings are in open beta; if `wrangler deploy` rejects this
+# block, delete it — the worker degrades gracefully (no rate limit) when the
+# binding is absent.
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
