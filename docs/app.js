@@ -47,9 +47,18 @@
   const REPO_URL  = "https://github.com/redatahiri37/morocco-energy-digital-map";
 
   const FUEL_COLOR = {
-    solar:"#F59E0B", wind:"#0D9488", hydro:"#3B82F6",
-    coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A"
+    solar:"#F59E0B", solar_pv:"#F59E0B", solar_csp:"#E85D04",
+    wind:"#0D9488",
+    hydro:"#3B82F6", pumped_storage:"#1D4ED8",
+    coal:"#8B7F72",
+    gas:"#C77B3A", gas_ccgt:"#C77B3A", gas_iscc:"#D97706",
+    oil:"#A55A2A", hfo:"#7F1D1D",
+    thermal:"#8B7F72"
   };
+  // Set of fuel_type values that count as renewable for KPI purposes
+  const RENEWABLE_FUELS = new Set([
+    "solar","solar_pv","solar_csp","wind","hydro","pumped_storage","gas_iscc"
+  ]);
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
   const CABLE_COLOR      = "#F97316";
@@ -80,7 +89,6 @@
     "oim-grid":"oim",
     "interconnectors":"grid",
     "planned-corridors":"grid",
-    "grid-lines":"grid",        // legacy fallback
     "national-hv":"national-grid",
     "industrial":"industrial",
     "digital":"digital"
@@ -109,6 +117,7 @@
   let map = null;
   let currentCountry = null;
   let layerData      = {};   // id -> GeoJSON
+  let layerLoadError = {};   // id -> Error string (empty on success)
   let visibility     = {};   // id -> bool
   let hoveredLayer   = null; // {layerId, featureId}
   let boundaryData   = null;
@@ -215,6 +224,18 @@
       map.addControl(new maplibregl.AttributionControl({ compact:true }), "bottom-left");
 
       map.on("load", ()=>{ mapReady = true; tryBuild(); });
+
+      // v1.7 fix: MapLibre sizes its canvas from the container at init time.
+      // In this app the CSS grid (.layout) can finish laying out AFTER the
+      // synchronous map init, leaving a tiny (~56x600) canvas that shows as
+      // a black rectangle. Force a resize once the container has its real
+      // size, and again whenever it changes (sidebar collapse, viewport).
+      const mapEl = document.getElementById("map");
+      requestAnimationFrame(()=>map.resize());
+      window.addEventListener("load", ()=>map.resize());
+      if(typeof ResizeObserver !== "undefined"){
+        new ResizeObserver(()=>map.resize()).observe(mapEl);
+      }
       map.on("click", (e)=>{
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
@@ -232,6 +253,12 @@
   async function loadAllData(countryKey){
     const c = COUNTRIES[countryKey];
     layerData = {};
+    // v1.7 fix: prune visibility state for layers not in this country so
+    // stale toggles from a previous country don't leak into rendering.
+    const validIds = new Set(c.layers.map(L=>L.id));
+    Object.keys(visibility).forEach(id=>{
+      if(!validIds.has(id)) delete visibility[id];
+    });
     // Load boundary (if the file exists)
     try{
       const r = await fetch(c.dataPath + "boundary.geojson");
@@ -250,9 +277,11 @@
         // Ensure each feature has a stable numeric id — required for feature-state
         fc.features.forEach((f,i)=>{ if(f.id == null) f.id = idx*10000 + i; });
         layerData[L.id] = fc;
+        layerLoadError[L.id] = "";
       } catch(e){
         console.warn("[MoroccoMap] failed to load", L.file, e);
         layerData[L.id] = { type:"FeatureCollection", features:[] };
+        layerLoadError[L.id] = String(e.message || e);
       }
       if(visibility[L.id] === undefined) visibility[L.id] = true;
     });
@@ -274,8 +303,12 @@
         kind==="industrial" ? INDUSTRIAL_COLOR :
         kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
+      const err = layerLoadError[L.id];
+      const errBadge = err
+        ? `<span class="layer-error" title="${escapeHtml(err)}" aria-label="Load failed">⚠</span>`
+        : "";
       const row = document.createElement("label");
-      row.className = "layer-row";
+      row.className = "layer-row" + (err ? " has-error" : "");
       row.dataset.layer = L.id;
       row.innerHTML = `
         <input type="checkbox" ${visibility[L.id]!==false?"checked":""}>
@@ -284,6 +317,7 @@
           <div class="layer-head">
             <span class="layer-dot" style="background:${dotColor}"></span>
             <span class="layer-name">${escapeHtml(L.title)}</span>
+            ${errBadge}
             <span class="layer-count">${kind==="oim" ? "OSM live" : fc.features.length}</span>
           </div>
           <div class="layer-meta">
@@ -324,7 +358,7 @@
     const fcPower = layerData["power-plants"] || { features:[] };
     const fcDC    = layerData["digital"]      || { features:[] };
     const totalMW = fcPower.features.reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
-    const renewMW = fcPower.features.filter(f=>["solar","wind","hydro"].includes(f.properties.fuel_type))
+    const renewMW = fcPower.features.filter(f=>RENEWABLE_FUELS.has(f.properties.fuel_type))
                     .reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
     const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
     const dcMW = fcDC.features.reduce((s,f)=>s + (f.properties.capacity_estimate_mw || 0), 0);
@@ -361,8 +395,11 @@
               "lyr-oim-substation-poly","lyr-oim-substation-pt"];
     }
     if(kind === "grid"){
+      // Line layers are now scoped per dataLayerId (v1.7 fix)
+      const s = dataLayerId;
       return [
-        "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
+        `lyr-grid-${s}-hv`, `lyr-grid-${s}-mv`, `lyr-grid-${s}-lv`,
+        `lyr-grid-${s}-planned`, `lyr-grid-${s}-idle`
       ];
     }
     if(kind === "national-grid"){
@@ -381,20 +418,27 @@
   }
 
   function queryableLayers(){
-    // Only interactive (non-cluster, non-halo) layers
+    // Only interactive (non-cluster, non-halo) layers.
+    // Derive from LAYER_KIND + current country so we don't hard-code layer IDs.
+    if(!map) return [];
     const ids = [];
-    if(map && map.getLayer("lyr-grid-hv"))      ids.push("lyr-grid-hv");
-    if(map && map.getLayer("lyr-grid-mv"))      ids.push("lyr-grid-mv");
-    if(map && map.getLayer("lyr-grid-lv"))      ids.push("lyr-grid-lv");
-    if(map && map.getLayer("lyr-grid-planned")) ids.push("lyr-grid-planned");
-    if(map && map.getLayer("lyr-grid-idle"))    ids.push("lyr-grid-idle");
-    if(map && map.getLayer("lyr-nhv-backbone"))     ids.push("lyr-nhv-backbone");
-    if(map && map.getLayer("lyr-nhv-regional"))     ids.push("lyr-nhv-regional");
-    if(map && map.getLayer("lyr-nhv-distribution")) ids.push("lyr-nhv-distribution");
-    if(map && map.getLayer("lyr-power-points")) ids.push("lyr-power-points");
-    if(map && map.getLayer("lyr-ind-points"))   ids.push("lyr-ind-points");
-    if(map && map.getLayer("lyr-dig-points"))   ids.push("lyr-dig-points");
-    if(map && map.getLayer("lyr-dig-cables"))   ids.push("lyr-dig-cables");
+    const c = COUNTRIES[currentCountry] || { layers: [] };
+    c.layers.forEach(L=>{
+      const kind = layerKind(L.id);
+      if(kind === "grid"){
+        [`lyr-grid-${L.id}-hv`, `lyr-grid-${L.id}-mv`, `lyr-grid-${L.id}-lv`,
+         `lyr-grid-${L.id}-planned`, `lyr-grid-${L.id}-idle`].forEach(id=>{
+          if(map.getLayer(id)) ids.push(id);
+        });
+      } else if(kind === "national-grid"){
+        ["lyr-nhv-backbone","lyr-nhv-regional","lyr-nhv-distribution"].forEach(id=>{
+          if(map.getLayer(id)) ids.push(id);
+        });
+      }
+    });
+    ["lyr-power-points","lyr-ind-points","lyr-dig-points","lyr-dig-cables"].forEach(id=>{
+      if(map.getLayer(id)) ids.push(id);
+    });
     return ids;
   }
 
@@ -458,27 +502,29 @@
     // Boundary: dissolved single polygon (Morocco + Southern Provinces as
     // one territory — no internal border). The geojson was pre-dissolved
     // by scripts/build-transmission-geojson.py companion pass.
+    //
+    // v1.7 fix: unconditionally remove-then-add so theme toggle and country
+    // switch don't leak stale boundary layers from the previous style/country.
+    ["lyr-boundary-fill","lyr-boundary-line"].forEach(id=>{
+      if(map.getLayer(id)) map.removeLayer(id);
+    });
     if(boundaryData){
       addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
-      if(!map.getLayer("lyr-boundary-fill")){
-        map.addLayer({
-          id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
-          paint:{
-            "fill-color":"rgba(255,255,255,0.03)",
-            "fill-outline-color":"rgba(0,0,0,0)"
-          }
-        });
-      }
-      if(!map.getLayer("lyr-boundary-line")){
-        map.addLayer({
-          id:"lyr-boundary-line", type:"line", source:"src-boundary",
-          paint:{
-            "line-color":"rgba(255,255,255,0.28)",
-            "line-width":1.0,
-            "line-dasharray":[3,2]
-          }
-        });
-      }
+      map.addLayer({
+        id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
+        paint:{
+          "fill-color":"rgba(255,255,255,0.03)",
+          "fill-outline-color":"rgba(0,0,0,0)"
+        }
+      });
+      map.addLayer({
+        id:"lyr-boundary-line", type:"line", source:"src-boundary",
+        paint:{
+          "line-color":"rgba(255,255,255,0.28)",
+          "line-width":1.0,
+          "line-dasharray":[3,2]
+        }
+      });
     }
 
     // Each build*Layer call is isolated: if one throws (bad MapLibre
@@ -533,28 +579,36 @@
     map.addSource(id, spec);
   }
 
+  // Editorial overlay — interconnectors, HVDC corridors, planned/idle
+  // strategic links. Rendered bold/colored on top of OIM's grey OSM grid
+  // so the strategic story pops.
+  //
+  // v1.7 fix: each dataLayerId gets its own source AND layer suffix, so
+  // two calls (interconnectors + planned-corridors) no longer clobber each
+  // other via the shared src-grid source that v1.6 had.
   function buildLineLayer(dataLayerId, fc){
-    const srcId = "src-grid";
-    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"];
+    const srcId = "src-" + dataLayerId;
+    const suffix = dataLayerId; // used in layer IDs
+    const ids = [
+      `lyr-grid-${suffix}-hv`, `lyr-grid-${suffix}-mv`, `lyr-grid-${suffix}-lv`,
+      `lyr-grid-${suffix}-planned`, `lyr-grid-${suffix}-idle`
+    ];
     ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
-    // Editorial overlay — interconnectors, HVDC corridors, planned/idle
-    // strategic links. Rendered bold/colored on top of OIM's grey OSM grid
-    // so the strategic story pops.
-    map.addLayer({ id:"lyr-grid-hv", type:"line", source:srcId,
+    map.addLayer({ id:`lyr-grid-${suffix}-hv`, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
       paint:{ "line-color":"#0D9488", "line-width":2.6, "line-opacity":0.95 }});
-    map.addLayer({ id:"lyr-grid-mv", type:"line", source:srcId,
+    map.addLayer({ id:`lyr-grid-${suffix}-mv`, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
       paint:{ "line-color":"#0D9488", "line-width":1.6, "line-opacity":0.85 }});
-    map.addLayer({ id:"lyr-grid-lv", type:"line", source:srcId,
+    map.addLayer({ id:`lyr-grid-${suffix}-lv`, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
       paint:{ "line-color":"#0D9488", "line-width":1.0, "line-opacity":0.6 }});
-    map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
+    map.addLayer({ id:`lyr-grid-${suffix}-planned`, type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
       paint:{ "line-color":"#a37df0", "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
-    map.addLayer({ id:"lyr-grid-idle", type:"line", source:srcId,
+    map.addLayer({ id:`lyr-grid-${suffix}-idle`, type:"line", source:srcId,
       filter:["==",["get","status"],"idle"],
       paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }});
   }
@@ -583,7 +637,7 @@
 
   function buildPowerLayer(fc){
     const srcId = "src-power";
-    const toRemove = ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
+    const toRemove = ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-confidence-ring","lyr-power-labels"];
     toRemove.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
 
     addOrReplace(srcId, {
@@ -633,12 +687,19 @@
       paint:{
         "circle-color":[
           "match",["get","fuel_type"],
-          "solar", FUEL_COLOR.solar,
-          "wind",  FUEL_COLOR.wind,
-          "hydro", FUEL_COLOR.hydro,
-          "coal",  FUEL_COLOR.coal,
-          "gas",   FUEL_COLOR.gas,
-          "oil",   FUEL_COLOR.oil,
+          "solar",           FUEL_COLOR.solar,
+          "solar_pv",        FUEL_COLOR.solar_pv,
+          "solar_csp",       FUEL_COLOR.solar_csp,
+          "wind",            FUEL_COLOR.wind,
+          "hydro",           FUEL_COLOR.hydro,
+          "pumped_storage",  FUEL_COLOR.pumped_storage,
+          "coal",            FUEL_COLOR.coal,
+          "gas",             FUEL_COLOR.gas,
+          "gas_ccgt",        FUEL_COLOR.gas_ccgt,
+          "gas_iscc",        FUEL_COLOR.gas_iscc,
+          "oil",             FUEL_COLOR.oil,
+          "hfo",             FUEL_COLOR.hfo,
+          "thermal",         FUEL_COLOR.thermal,
           "#888"
         ],
         "circle-radius":[
@@ -654,6 +715,23 @@
           ["boolean",["feature-state","dim"],false], 0.3,
           1
         ]
+      }
+    });
+
+    // Confidence indicator: white ring for approximate/centroid coordinates
+    map.addLayer({
+      id:"lyr-power-confidence-ring", type:"circle", source:srcId,
+      filter:["all",["!",["has","point_count"]],["!=",["get","precision"],"exact"]],
+      paint:{
+        "circle-color":"rgba(0,0,0,0)",
+        "circle-radius":[
+          "interpolate",["linear"],["zoom"],
+          4, 5.5,
+          7, 7.5,
+          10, 9.5
+        ],
+        "circle-stroke-color":"rgba(255,255,255,0.8)",
+        "circle-stroke-width":2.5
       }
     });
 
@@ -822,18 +900,27 @@
   // ---------- Layer interactions (hover dim + tooltip + click) ----------
   function wireLayerInteractions(){
     const pointLayers = [
-      { id:"lyr-power-points", src:"src-power",    dataLayer:"power-plants" },
+      { id:"lyr-power-points", src:"src-power",     dataLayer:"power-plants" },
       { id:"lyr-ind-points",   src:"src-industrial", dataLayer:"industrial" },
-      { id:"lyr-dig-points",   src:"src-digital",  dataLayer:"digital" },
-      { id:"lyr-dig-cables",   src:"src-digital",  dataLayer:"digital" }
+      { id:"lyr-dig-points",   src:"src-digital",   dataLayer:"digital" },
+      { id:"lyr-dig-cables",   src:"src-digital",   dataLayer:"digital" }
     ];
-    const lineLayers = [
-      { id:"lyr-grid-hv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-mv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-lv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-idle",    src:"src-grid", dataLayer:"grid-lines" }
-    ];
+    // Line layers — derived from current country's registered layers so
+    // new grid layers auto-wire without touching this list. (v1.7 fix)
+    const lineLayers = [];
+    const c = COUNTRIES[currentCountry] || { layers: [] };
+    c.layers.forEach(L=>{
+      const kind = layerKind(L.id);
+      if(kind === "grid"){
+        ["hv","mv","lv","planned","idle"].forEach(sub=>{
+          lineLayers.push({ id: `lyr-grid-${L.id}-${sub}`, src: `src-${L.id}`, dataLayer: L.id });
+        });
+      } else if(kind === "national-grid"){
+        ["backbone","regional","distribution"].forEach(sub=>{
+          lineLayers.push({ id: `lyr-nhv-${sub}`, src: "src-national-hv", dataLayer: L.id });
+        });
+      }
+    });
 
     pointLayers.forEach(({id, src, dataLayer})=>{
       if(!map.getLayer(id)) return;
@@ -925,9 +1012,10 @@
   }
   function showLineTooltip(f, point){
     const p = f.properties || {};
+    const voltage = p.voltage_kv != null ? p.voltage_kv : (p.voltage || "");
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
-      <div class="tt-metric">${p.voltage_kv} kV · ${escapeHtml(p.status || "")}</div>
+      <div class="tt-metric">${escapeHtml(voltage)} ${voltage ? "kV" : ""} · ${escapeHtml(p.status || "")}</div>
       <div class="tt-meta">${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
@@ -1002,15 +1090,16 @@
 
   function openLinePopup(f){
     const p = f.properties || {};
+    const voltage = p.voltage_kv != null ? p.voltage_kv : (p.voltage || "—");
     $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" style="background:${GRID_COLOR}"></span>Transmission line</span>`;
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
-      <div class="pop-sub">${p.voltage_kv} kV</div>
-      <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
+      <div class="pop-sub">${escapeHtml(voltage)} kV</div>
+      <span class="status-pill ${escapeHtml(p.status || 'operational')}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">
-        <div class="cell"><div class="k">Voltage</div><div class="v">${p.voltage_kv} kV</div></div>
+        <div class="cell"><div class="k">Voltage</div><div class="v">${escapeHtml(voltage)} kV</div></div>
         <div class="cell"><div class="k">Status</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.status)}</div></div>
-        <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || "approximate")}</div></div>
+        <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || p.coord_confidence || "approximate")}</div></div>
         <div class="cell"><div class="k">Kind</div><div class="v">${p.kind === "hvdc_planned" ? "HVDC (planned)" : "AC"}</div></div>
       </div>
       <div class="source-row">
