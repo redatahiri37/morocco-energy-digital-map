@@ -1,0 +1,180 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Solar — Estimateur PV Maroc</title>
+<meta name="description" content="Estimez la production solaire et le retour sur investissement d'une installation photovoltaïque résidentielle au Maroc.">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
+<link rel="stylesheet" href="style.css">
+
+<header class="topbar">
+  <a class="brand" href="../">
+    <span class="brand-dot"></span>
+    <span>Atlas Solar</span>
+    <span class="brand-sub">Estimateur PV Maroc</span>
+  </a>
+  <nav class="topnav">
+    <a href="../">Map</a>
+    <a href="#about">À propos</a>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- STEP 1: address + instant estimate -->
+  <section id="step1" class="step active">
+    <div class="hero">
+      <h1>Combien produit un toit solaire chez vous ?</h1>
+      <p class="lede">Entrez votre adresse. Estimation en 5 secondes. Basé sur les données solaires officielles de la Commission Européenne (PVGIS) et les tarifs ONEE.</p>
+
+      <form id="address-form" class="address-form" autocomplete="off">
+        <div class="input-wrap">
+          <input
+            id="address-input"
+            type="text"
+            placeholder="Ex : Rue de la Liberté, Casablanca"
+            aria-label="Adresse"
+            required>
+          <ul id="address-suggestions" class="suggestions" hidden></ul>
+        </div>
+        <button type="submit" id="estimate-btn">Estimer</button>
+      </form>
+
+      <p class="hint">Ou <button type="button" class="linkbtn" id="use-location">utiliser ma position</button></p>
+
+      <div id="step1-error" class="error" hidden></div>
+    </div>
+
+    <div class="samples">
+      <span>Essayez :</span>
+      <button class="chip" data-lat="33.5731" data-lon="-7.5898" data-label="Casablanca">Casablanca</button>
+      <button class="chip" data-lat="31.6295" data-lon="-7.9811" data-label="Marrakech">Marrakech</button>
+      <button class="chip" data-lat="30.9335" data-lon="-6.9370" data-label="Ouarzazate">Ouarzazate</button>
+      <button class="chip" data-lat="34.0209" data-lon="-6.8416" data-label="Rabat">Rabat</button>
+      <button class="chip" data-lat="35.7595" data-lon="-5.8340" data-label="Tanger">Tanger</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: results + tuning -->
+  <section id="step2" class="step">
+    <div class="results-grid">
+
+      <aside class="params-panel">
+        <div class="location-line">
+          <button class="linkbtn" id="back-btn">← Changer d'adresse</button>
+          <div id="location-label" class="location-label"></div>
+        </div>
+
+        <h2>Paramètres</h2>
+
+        <div class="param">
+          <label for="peakpower">Puissance installée <span class="pval" id="peakpower-val">3.0 kWc</span></label>
+          <input type="range" id="peakpower" min="1" max="10" step="0.5" value="3">
+          <div class="param-hint" id="peakpower-hint">≈ 15 m² de panneaux</div>
+        </div>
+
+        <div class="param">
+          <label for="angle">Inclinaison du toit <span class="pval" id="angle-val">30°</span></label>
+          <input type="range" id="angle" min="0" max="45" step="1" value="30">
+        </div>
+
+        <div class="param">
+          <label for="aspect">Orientation <span class="pval" id="aspect-val">Sud</span></label>
+          <input type="range" id="aspect" min="-90" max="90" step="5" value="0">
+          <div class="param-hint">Est ← Sud → Ouest</div>
+        </div>
+
+        <div class="param">
+          <label for="consumption">Consommation mensuelle <span class="pval" id="consumption-val">300 kWh</span></label>
+          <input type="range" id="consumption" min="50" max="1500" step="25" value="300">
+          <div class="param-hint" id="tranche-hint"></div>
+        </div>
+
+        <div class="param">
+          <label for="cost">Coût installé <span class="pval" id="cost-val">11.0 MAD/Wc</span></label>
+          <input type="range" id="cost" min="8" max="15" step="0.5" value="11">
+          <div class="param-hint" id="capex-hint"></div>
+        </div>
+
+        <div class="param param-toggle">
+          <label class="toggle">
+            <input type="checkbox" id="export-toggle">
+            <span>Injection réseau autorisée</span>
+          </label>
+          <div class="param-hint">Loi 82-21 (décret 2.25.100 · mars 2026) : surplus plafonné à 20 %/an, ≈ 0,18 MAD/kWh injecté. Éligibilité &lt; 11 kW sur simple déclaration.</div>
+        </div>
+
+      </aside>
+
+      <div class="main-panel">
+
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="kpi-label">Production annuelle</div>
+            <div class="kpi-value" id="kpi-production">— <span class="unit">kWh</span></div>
+            <div class="kpi-sub" id="kpi-yield"></div>
+          </div>
+          <div class="kpi highlight">
+            <div class="kpi-label">Économies / an</div>
+            <div class="kpi-value" id="kpi-savings">— <span class="unit">MAD</span></div>
+            <div class="kpi-sub" id="kpi-selfratio"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Retour sur investissement</div>
+            <div class="kpi-value" id="kpi-payback">— <span class="unit">ans</span></div>
+            <div class="kpi-sub" id="kpi-capex"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">CO₂ évité / an</div>
+            <div class="kpi-value" id="kpi-co2">— <span class="unit">t</span></div>
+            <div class="kpi-sub">vs mix ONEE 0,71 kg/kWh</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Production mensuelle</h3>
+            <span class="chart-sub">kWh / mois — moyenne long terme</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="monthly-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Cash flow cumulé sur 25 ans</h3>
+            <span class="chart-sub">Dégradation 0,5 %/an — inflation tarif 2 %/an</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="cashflow-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="map-card" class="chart-card">
+          <div class="chart-header">
+            <h3>Localisation</h3>
+            <span class="chart-sub" id="coords-label"></span>
+          </div>
+          <div id="map"></div>
+        </div>
+
+        <div class="disclaimer">
+          <strong>Méthodologie.</strong> Production : PVGIS v5.2 (Commission Européenne, base horaire ERA5 1990–2020). Tarifs : grille ONEE résidentielle BT indexée sur les tranches mensuelles.
+          Autoconsommation calculée avec un ratio typique dépendant du dimensionnement vs consommation. Ce n'est pas un devis — consultez un installateur agréé.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="about">
+    <h2>Pourquoi cet outil</h2>
+    <p>Moins de 1 % des toits résidentiels marocains sont équipés en solaire, malgré un gisement parmi les meilleurs au monde (1 800–2 200 kWh/kWc/an). Le premier frein est l'incertitude : combien ça produit, combien ça rapporte, en combien de temps c'est amorti. Atlas Solar répond à ces trois questions en 30 secondes.</p>
+    <p>Fait partie de <a href="../">Atlas Nexus</a> — cartographie des infrastructures énergie × digital au Maroc.</p>
+  </section>
+
+</main>
+
+<script src="app.js" defer></script>
