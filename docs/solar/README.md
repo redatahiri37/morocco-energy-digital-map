@@ -7,7 +7,7 @@ Live: https://redatahiri37.github.io/morocco-energy-digital-map/solar/
 ## Architecture
 
 ```
-solar/
+docs/solar/          (served at /solar/ — GitHub Pages root is docs/)
 ├── index.html       Page shell — two <section class="step"> views
 ├── style.css        Atlas Nexus brand (navy #001F4D / orange #FF6B35)
 ├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
@@ -49,17 +49,17 @@ npm install -g wrangler
 wrangler login
 ```
 
-Deploy (from `solar/proxy/`):
+Deploy (from `docs/solar/proxy/`):
 
 ```bash
-cd solar/proxy && wrangler deploy
+cd docs/solar/proxy && wrangler deploy
 ```
 
 The deploy output prints the live URL. Currently deployed at
 **`https://solar-pvgis.redatahiri.workers.dev/pvcalc`** — already wired into
 `CONFIG.PVGIS_WORKER_URL` in `app.js`. Redeploys keep the same URL.
 
-- **Logs (live):** `wrangler tail` from `solar/proxy/`
+- **Logs (live):** `wrangler tail` from `docs/solar/proxy/`
 - **Verify cache:** `curl -sI "<worker-url>/pvcalc?lat=33.57&lon=-7.59&peakpower=3&angle=30&aspect=0"` twice — second response has `cf-cache-status: HIT`
 - **Rename/rotate subdomain:** change `name` in `wrangler.toml`, redeploy, update `CONFIG.PVGIS_WORKER_URL`
 - **If deploy rejects the rate-limit binding** (open beta): delete the `[[unsafe.bindings]]` block in `wrangler.toml` and redeploy — the worker runs without rate limiting.
