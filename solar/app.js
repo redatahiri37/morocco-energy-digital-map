@@ -36,6 +36,10 @@ const CONFIG = {
   LIFETIME_YR: 25,
   OPEX_PCT_CAPEX_YR: 0.01,     // 1%/yr O&M as % of capex
 
+  // Consumer financing (indicative — Moroccan bank residential green loan)
+  LOAN_APR: 0.06,              // 6% annual
+  LOAN_YEARS: 10,
+
   // Panel physical assumption (for area hint only)
   M2_PER_KWP: 5,               // ~5 m² per kWc
 
@@ -325,13 +329,17 @@ const MapView = {
   set(lat, lon, label) {
     if (!this.map) {
       this.map = L.map("map", { zoomControl: true, attributionControl: true })
-        .setView([lat, lon], 15);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "© OpenStreetMap",
-      }).addTo(this.map);
+        .setView([lat, lon], 18);
+      // Esri World Imagery — free satellite tiles, no token
+      L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          maxZoom: 19,
+          attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics",
+        }
+      ).addTo(this.map);
     } else {
-      this.map.setView([lat, lon], 15);
+      this.map.setView([lat, lon], 18);
     }
     if (this.marker) this.marker.remove();
     this.marker = L.marker([lat, lon]).addTo(this.map);
@@ -365,7 +373,6 @@ const UI = {
       e.preventDefault();
       this.handleAddressSubmit();
     });
-    $("use-location").addEventListener("click", () => this.useGeolocation());
     $("address-input").addEventListener("input", debounce(() => this.showSuggestions(), 300));
 
     document.querySelectorAll(".chip").forEach(chip => {
@@ -445,22 +452,6 @@ const UI = {
     }
   },
 
-  useGeolocation() {
-    if (!navigator.geolocation) {
-      this.showStep1Error("Géolocalisation indisponible sur ce navigateur.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => this.setLocationAndGo({
-        lat: pos.coords.latitude,
-        lon: pos.coords.longitude,
-        label: "Ma position",
-      }),
-      () => this.showStep1Error("Géolocalisation refusée."),
-      { timeout: 8000 }
-    );
-  },
-
   async setLocationAndGo(loc) {
     State.location = loc;
     this.goToStep(2);
@@ -537,8 +528,40 @@ const UI = {
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
     $("kpi-co2").innerHTML = `${co2Tons.toFixed(2)} <span class="unit">t</span>`;
 
+    // Financing card
+    const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
+    const pvMonthlySavings = roi.annualSavingsMAD / 12;
+    const cashflowY1 = roi.annualSavingsMAD - capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
+    $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">MAD</span>`;
+    $("fin-cash-net").textContent = `Économie an 1 : ${fmtMAD(cashflowY1)}`;
+    $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
+      ? `Amorti en ${roi.paybackYr.toFixed(1)} ans`
+      : `Non amorti sur 25 ans`;
+
+    $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">MAD/mois</span>`;
+    $("fin-loan-savings").textContent = `Économies PV : ${fmtNum(pvMonthlySavings)} MAD/mois`;
+    const balance = pvMonthlySavings - loanMonthly;
+    if (balance >= 0) {
+      $("fin-loan-note").textContent = `Cash-flow positif dès le 1er mois : +${fmtNum(balance)} MAD/mois`;
+    } else {
+      const after = CONFIG.LOAN_YEARS;
+      $("fin-loan-note").textContent = `Effort net ${fmtNum(-balance)} MAD/mois pendant ${after} ans, puis +${fmtNum(pvMonthlySavings)} MAD/mois`;
+    }
+    $("fin-rate-note").textContent = `TAEG ${(CONFIG.LOAN_APR*100).toFixed(1)} % · ${CONFIG.LOAN_YEARS*12} mensualités`;
+
     Chart_.renderMonthly(pv.monthlyKwh);
     Chart_.renderCashflow(roi.cashflow, roi.paybackYr);
+  },
+};
+
+// ── Finance helper ─────────────────────────────────
+const Finance = {
+  // Standard annuity payment
+  monthlyPayment(principal, apr, years) {
+    const n = years * 12;
+    const r = apr / 12;
+    if (r === 0) return principal / n;
+    return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
   },
 };
 

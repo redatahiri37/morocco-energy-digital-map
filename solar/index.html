@@ -42,8 +42,6 @@
         <button type="submit" id="estimate-btn">Estimer</button>
       </form>
 
-      <p class="hint">Ou <button type="button" class="linkbtn" id="use-location">utiliser ma position</button></p>
-
       <div id="step1-error" class="error" hidden></div>
     </div>
 
@@ -131,6 +129,28 @@
             <div class="kpi-value" id="kpi-co2">— <span class="unit">t</span></div>
             <div class="kpi-sub">vs mix ONEE 0,71 kg/kWh</div>
           </div>
+        </div>
+
+        <div class="finance-card">
+          <div class="chart-header">
+            <h3>Modes de financement</h3>
+            <span class="chart-sub">Comparaison achat comptant vs crédit</span>
+          </div>
+          <div class="finance-grid">
+            <div class="finance-col">
+              <div class="finance-tag">Achat comptant</div>
+              <div class="finance-value" id="fin-cash-capex">— <span class="unit">MAD</span></div>
+              <div class="finance-line" id="fin-cash-net">—</div>
+              <div class="finance-line finance-muted" id="fin-cash-payback">—</div>
+            </div>
+            <div class="finance-col finance-highlight">
+              <div class="finance-tag">Crédit 10 ans</div>
+              <div class="finance-value" id="fin-loan-monthly">— <span class="unit">MAD/mois</span></div>
+              <div class="finance-line" id="fin-loan-savings">—</div>
+              <div class="finance-line finance-muted" id="fin-loan-note">—</div>
+            </div>
+          </div>
+          <div class="finance-hint">Hypothèse crédit : <span id="fin-rate-note">TAEG 6,0 % · 120 mensualités</span>. Ajustable via <code>CONFIG.LOAN_APR</code> / <code>LOAN_YEARS</code>.</div>
         </div>
 
         <div class="chart-card">
