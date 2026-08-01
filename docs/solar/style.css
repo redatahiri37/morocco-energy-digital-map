@@ -449,7 +449,7 @@ a:hover { text-decoration: underline; }
   position: relative;
   transition: background .15s;
 }
-.help:hover, .help:focus-visible {
+.help:hover, .help:focus-visible, .help.open {
   background: var(--orange);
   color: white;
   outline: none;
@@ -493,17 +493,29 @@ a:hover { text-decoration: underline; }
 }
 .help:hover .tip,
 .help:focus-visible .tip,
-.help:focus .tip {
+.help.open .tip {
   opacity: 1; visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
-/* Keep tooltips inside the viewport near the right edge */
+/* On phones an anchored tooltip always runs off one edge, so present it as a
+   fixed bottom sheet instead — never clipped, and comfortable to read. */
 @media (max-width: 620px) {
-  .help .tip { max-width: 200px; }
-  .chip-stat .help .tip { left: auto; right: -8px; transform: translateY(4px); }
-  .chip-stat .help:hover .tip,
-  .chip-stat .help:focus .tip { transform: translateY(0); }
-  .chip-stat .help .tip::after { left: auto; right: 12px; transform: none; }
+  .help .tip {
+    position: fixed;
+    left: 12px; right: 12px; bottom: 16px;
+    width: auto; max-width: none;
+    transform: translateY(8px);
+    font-size: 13px;
+    padding: 13px 15px;
+  }
+  .help .tip::after { display: none; }
+  .help:hover .tip,
+  .help:focus-visible .tip,
+  .help.open .tip { transform: translateY(0); }
+
+  /* Touch target: keep the badge small but give it ~40px of hit area. */
+  .help { width: 18px; height: 18px; font-size: 11px; }
+  .help::before { content: ""; position: absolute; inset: -11px; }
 }
 
 /* Finance card */
@@ -596,4 +608,27 @@ a:hover { text-decoration: underline; }
   .advanced-grid { grid-template-columns: 1fr; }
   .address-form { flex-direction: column; }
   #estimate-btn { width: 100%; }
+}
+
+/* Phone refinements */
+@media (max-width: 620px) {
+  /* Header: drop the subtitle so the brand never wraps */
+  .brand-sub { display: none; }
+  .topbar { padding: 12px 16px; }
+  .topnav { gap: 16px; }
+  .topnav a { font-size: 13px; }
+
+  .results-wrap, .hero, .about { padding-left: 16px; padding-right: 16px; }
+  .location-line { flex-direction: column; gap: 4px; align-items: flex-start; }
+
+  /* Even 2x2 grid instead of a stranded fourth chip */
+  .bill-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bill-chip { min-width: 0; }
+  .bill-block > label { font-size: 13px; gap: 10px; }
+  .bill-block .pval { white-space: nowrap; }
+
+  /* Keep the accordion label on one line */
+  .summary-hint { display: none; }
+
+  #map { height: 200px; }
 }

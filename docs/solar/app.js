@@ -714,6 +714,30 @@ const Finance = {
   },
 };
 
+// ── Help tooltips ──────────────────────────────────
+// Hover handles desktop. Touch needs an explicit toggle: :focus behaviour on
+// buttons is inconsistent across mobile browsers, so tapping must not depend
+// on it. Tap opens, tapping again / elsewhere / Escape closes.
+const Tooltips = {
+  init() {
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".help");
+      document.querySelectorAll(".help.open").forEach(h => {
+        if (h !== btn) h.classList.remove("open");
+      });
+      if (btn) {
+        e.preventDefault();
+        btn.classList.toggle("open");
+      }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document.querySelectorAll(".help.open").forEach(h => h.classList.remove("open"));
+      }
+    });
+  },
+};
+
 // ── Helpers ────────────────────────────────────────
 function debounce(fn, ms) {
   let t;
@@ -770,4 +794,4 @@ function escapeHtml(s) {
 }
 
 // Boot when DOM + libs ready
-window.addEventListener("load", () => UI.init());
+window.addEventListener("load", () => { UI.init(); Tooltips.init(); });
