@@ -74,7 +74,10 @@ export function openInfo(props) {
   }
 
   document.getElementById('ip-desc').textContent = props.description || '';
-  document.getElementById('ip-src').textContent = props.source ? 'Source: ' + props.source : '';
+  const srcEl = document.getElementById('ip-src');
+  srcEl.innerHTML = props.source
+    ? `<span class="ip-src-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg><span>${props.source}</span></span>`
+    : '';
 
   panel.classList.add('open');
 }

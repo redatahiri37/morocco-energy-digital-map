@@ -263,7 +263,16 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   display:inline-flex;align-items:center;gap:4px;
 }
 .ip-link:hover{text-decoration:underline}
-.ip-src{font-size:9px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.ip-src{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.ip-src-chip{
+  display:inline-flex;align-items:center;gap:5px;max-width:100%;
+  font-size:9px;font-family:monospace;color:var(--text-2);
+  background:var(--bg-2);border:1px solid var(--border);border-radius:999px;
+  padding:3px 10px 3px 7px;transition:border-color .15s var(--ease),color .15s var(--ease);
+}
+.ip-src-chip:hover{border-color:var(--border-hi);color:var(--text-0)}
+.ip-src-chip svg{width:10px;height:10px;flex-shrink:0;color:var(--text-3)}
+.ip-src-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── MOBILE ──────────────────────────────────── */
 @media(max-width:900px){
