@@ -26,8 +26,8 @@
   <!-- STEP 1: address + instant estimate -->
   <section id="step1" class="step active">
     <div class="hero">
-      <h1>Combien produit un toit solaire chez vous ?</h1>
-      <p class="lede">Entrez votre adresse. Estimation en 5 secondes. Basé sur les données solaires officielles de la Commission Européenne (PVGIS) et les tarifs ONEE.</p>
+      <h1>Combien vous rapporterait un toit solaire ?</h1>
+      <p class="lede">Entrez votre adresse et obtenez une estimation en quelques secondes. Gratuit, sans inscription.</p>
 
       <form id="address-form" class="address-form" autocomplete="off">
         <div class="input-wrap">
@@ -79,9 +79,9 @@
             <span class="hero-unit">MAD économisés / an</span>
           </div>
           <div class="hero-chips">
-            <div class="chip-stat"><span id="chip-size">—</span><small>installation recommandée</small></div>
+            <div class="chip-stat"><span id="chip-size">—</span><small>taille conseillée<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Dimensionnée pour couvrir environ 80 % de votre consommation annuelle. Modifiable dans les paramètres.</span></button></small></div>
             <div class="chip-stat"><span id="chip-production">—</span><small>production / an</small></div>
-            <div class="chip-stat"><span id="chip-payback">—</span><small>amortissement</small></div>
+            <div class="chip-stat"><span id="chip-payback">—</span><small>amortissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Temps nécessaire pour que les économies remboursent l'investissement de départ.</span></button></small></div>
             <div class="chip-stat"><span id="chip-co2">—</span><small>CO₂ évité / an</small></div>
           </div>
 
@@ -98,7 +98,7 @@
             <div class="param-hint" id="bill-consumption-hint"></div>
           </div>
 
-          <div class="hero-source">Calcul : PVGIS v5.2 (Commission européenne) · grille tarifaire ONEE 2025 · Loi 82-21</div>
+          <div class="hero-source">Données PVGIS (Commission européenne) et tarifs ONEE<button type="button" class="help light" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production estimée par PVGIS v5.2 à vos coordonnées exactes. Économies calculées sur la grille tarifaire résidentielle ONEE 2025.</span></button></div>
         </div>
       </div>
 
@@ -135,9 +135,9 @@
         <div class="param param-toggle">
           <label class="toggle">
             <input type="checkbox" id="export-toggle">
-            <span>Injection réseau autorisée</span>
+            <span>Revendre le surplus au réseau</span>
           </label>
-          <div class="param-hint">Loi 82-21 (décret 2.25.100 · mars 2026) : surplus plafonné à 20 %/an, ≈ 0,18 MAD/kWh injecté. Éligibilité &lt; 11 kW sur simple déclaration.</div>
+          <div class="param-hint">Ajoute peu : le gain vient surtout de l'autoconsommation.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Loi 82-21 (décret 2.25.100, mars 2026) : installations sous 11 kW autorisées sur simple déclaration. Le surplus revendu est plafonné à 20 % de la production et payé environ 0,18 MAD/kWh, soit près de neuf fois moins que le tarif que vous évitez en consommant votre propre électricité.</span></button></div>
         </div>
 
         </div>
@@ -172,7 +172,7 @@
               <div class="finance-line finance-muted" id="fin-loan-note">—</div>
             </div>
           </div>
-          <div class="finance-hint">Hypothèse crédit : <span id="fin-rate-note">TAEG 6,0 % · 120 mensualités</span>. Ajustable via <code>CONFIG.LOAN_APR</code> / <code>LOAN_YEARS</code>.</div>
+          <div class="finance-hint">Crédit simulé à <span id="fin-rate-note">6 % sur 10 ans</span><button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Taux indicatif d'un crédit bancaire résidentiel au Maroc. Le montant réel dépend de votre banque et de votre dossier.</span></button></div>
         </div>
 
         <div class="chart-card">
@@ -187,8 +187,8 @@
 
         <div class="chart-card">
           <div class="chart-header">
-            <h3>Cash flow cumulé sur 25 ans</h3>
-            <span class="chart-sub">Dégradation 0,5 %/an — inflation tarif 2 %/an</span>
+            <h3>Gains cumulés sur 25 ans</h3>
+            <span class="chart-sub">après remboursement de l'investissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">La courbe part du coût de l'installation et remonte avec les économies annuelles. Elle tient compte d'une baisse de rendement des panneaux de 0,5 % par an et d'une hausse des tarifs de 2 % par an.</span></button></span>
           </div>
           <div class="chart-wrap">
             <canvas id="cashflow-chart"></canvas>
@@ -196,8 +196,7 @@
         </div>
 
         <div class="disclaimer">
-          <strong>Méthodologie.</strong> Production : PVGIS v5.2 (Commission Européenne, base horaire ERA5 1990–2020). Tarifs : grille ONEE résidentielle BT indexée sur les tranches mensuelles.
-          Autoconsommation calculée avec un ratio typique dépendant du dimensionnement vs consommation. Ce n'est pas un devis — consultez un installateur agréé.
+          <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs ONEE résidentiels 2025. La part d'électricité que vous consommez directement est estimée à partir d'un profil de foyer type. L'ombrage, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
         </div>
       </div>
     </div>
@@ -205,7 +204,7 @@
 
   <section id="about" class="about">
     <h2>Pourquoi cet outil</h2>
-    <p>Moins de 1 % des toits résidentiels marocains sont équipés en solaire, malgré un gisement parmi les meilleurs au monde (1 800–2 200 kWh/kWc/an). Le premier frein est l'incertitude : combien ça produit, combien ça rapporte, en combien de temps c'est amorti. Atlas Solar répond à ces trois questions en 30 secondes.</p>
+    <p>Le Maroc a l'un des meilleurs ensoleillements au monde, mais moins de 1 % des toits sont équipés. La raison principale : personne ne sait combien ça rapporte réellement chez soi. Cet outil répond à cette question, gratuitement et sans inscription.</p>
     <p>Fait partie de <a href="../">Atlas Nexus</a> — cartographie des infrastructures énergie × digital au Maroc.</p>
   </section>
 

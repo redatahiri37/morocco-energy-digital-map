@@ -604,7 +604,7 @@ const UI = {
     const consumption = Tariff.kwhFromBill(p.bill);
     $("bill-val").textContent = fmtNum(p.bill) + " MAD";
     $("bill-consumption-hint").textContent =
-      `≈ ${Math.round(consumption)} kWh/mois · ${Tariff.activeTrancheLabel(consumption)}`;
+      `soit environ ${Math.round(consumption)} kWh par mois`;
     $("peakpower-val").textContent = p.peakpower.toFixed(1) + " kWc";
     $("peakpower-hint").textContent = `≈ ${Math.round(p.peakpower * CONFIG.M2_PER_KWP)} m² de panneaux`;
     $("angle-val").textContent = p.angle + "°";
@@ -695,7 +695,8 @@ const UI = {
       const after = CONFIG.LOAN_YEARS;
       $("fin-loan-note").textContent = `Effort net ${fmtNum(-balance)} MAD/mois pendant ${after} ans, puis +${fmtNum(pvMonthlySavings)} MAD/mois`;
     }
-    $("fin-rate-note").textContent = `TAEG ${(CONFIG.LOAN_APR*100).toFixed(1)} % · ${CONFIG.LOAN_YEARS*12} mensualités`;
+    $("fin-rate-note").textContent =
+      `${(CONFIG.LOAN_APR * 100).toFixed(0)} % sur ${CONFIG.LOAN_YEARS} ans`;
 
     Chart_.renderMonthly(pv.monthlyKwh);
     Chart_.renderCashflow(roi.cashflow, roi.paybackYr);
