@@ -1,0 +1,48 @@
+/* =========================================================
+   Atlas Nexus — shared brand tokens and chrome
+   Single source of truth for both apps (map and /solar/).
+   Loaded AFTER each app's own stylesheet so chrome rules win.
+
+   Scope: brand palette + the top bar only. Data colors
+   (map layers) and app layouts stay in each app's own CSS.
+   ========================================================= */
+
+:root {
+  --an-navy:     #001F4D;
+  --an-navy-2:   #0A2E6B;
+  --an-orange:   #FF6B35;
+  --an-orange-2: #E85A24;
+  --an-cyan:     #00D4FF;
+  --an-silver:   #E8E8E8;
+  --an-charcoal: #2D2D2D;
+}
+
+/* Unified top bar — same navy band + orange rule on every app,
+   in both light and dark themes. */
+.topbar {
+  background: var(--an-navy) !important;
+  border-bottom: 3px solid var(--an-orange) !important;
+  color: #fff;
+}
+.topbar .brand strong,
+.topbar .brand-text strong { color: #fff; }
+.topbar .brand-text small { color: rgba(255, 255, 255, 0.65); }
+
+/* Map app chrome recolors (no effect on solar, which has no these ids) */
+.topbar .ghost-btn,
+.topbar .icon-btn {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.topbar .ghost-btn:hover,
+.topbar .icon-btn:hover {
+  color: #fff;
+  border-color: var(--an-orange);
+  background: rgba(255, 107, 53, 0.15);
+}
+.topbar .country-switch label { color: rgba(255, 255, 255, 0.65); }
+.topbar .country-switch select {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}

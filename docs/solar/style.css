@@ -1,11 +1,13 @@
+/* Palette aliases — canonical values live in ../brand.css (--an-*).
+   Fallbacks keep the page correct if brand.css ever fails to load. */
 :root {
-  --navy: #001F4D;
-  --navy-2: #0A2E6B;
-  --orange: #FF6B35;
-  --orange-2: #E85A24;
-  --cyan: #00D4FF;
-  --silver: #E8E8E8;
-  --charcoal: #2D2D2D;
+  --navy: var(--an-navy, #001F4D);
+  --navy-2: var(--an-navy-2, #0A2E6B);
+  --orange: var(--an-orange, #FF6B35);
+  --orange-2: var(--an-orange-2, #E85A24);
+  --cyan: var(--an-cyan, #00D4FF);
+  --silver: var(--an-silver, #E8E8E8);
+  --charcoal: var(--an-charcoal, #2D2D2D);
   --bg: #F7F8FA;
   --card: #FFFFFF;
   --text: #0A1628;

@@ -161,6 +161,40 @@ const PVGIS = {
       radiationAnnual: perKw.radiationAnnual,
     };
   },
+
+  // Offline fallback — nearest-city annual yields (kWh/kWc/an, PVGIS values
+  // observed at 30° south) so the tool still answers if the proxy or JRC is
+  // down. Clearly flagged as approximate in the UI.
+  FALLBACK_CITIES: [
+    { name: "Casablanca",  lat: 33.57, lon: -7.59, y: 1646 },
+    { name: "Rabat",       lat: 34.02, lon: -6.84, y: 1630 },
+    { name: "Marrakech",   lat: 31.63, lon: -7.98, y: 1651 },
+    { name: "Ouarzazate",  lat: 30.93, lon: -6.94, y: 1818 },
+    { name: "Tanger",      lat: 35.76, lon: -5.83, y: 1632 },
+    { name: "Agadir",      lat: 30.42, lon: -9.60, y: 1750 },
+    { name: "Fès",         lat: 34.03, lon: -5.00, y: 1620 },
+    { name: "Oujda",       lat: 34.68, lon: -1.91, y: 1650 },
+    { name: "Laâyoune",    lat: 27.15, lon: -13.20, y: 1800 },
+    { name: "Errachidia",  lat: 31.93, lon: -4.42, y: 1780 },
+  ],
+  // Typical Morocco monthly production shape (fractions of the year)
+  FALLBACK_SHAPE: [0.072, 0.071, 0.086, 0.089, 0.092, 0.090, 0.096, 0.095, 0.087, 0.081, 0.068, 0.070],
+
+  fallbackPerKw(lat, lon) {
+    let best = this.FALLBACK_CITIES[0], bestD = Infinity;
+    for (const c of this.FALLBACK_CITIES) {
+      const d = (c.lat - lat) ** 2 + (c.lon - lon) ** 2;
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    const total = this.FALLBACK_SHAPE.reduce((a, b) => a + b, 0);
+    return {
+      yieldPerKw: best.y,
+      monthlyPerKw: this.FALLBACK_SHAPE.map(f => (f / total) * best.y),
+      radiationAnnual: null,
+      approximate: true,
+      referenceCity: best.name,
+    };
+  },
 };
 
 // ── Tariff (ONEE stepped) ──────────────────────────
@@ -638,15 +672,19 @@ const UI = {
         $("step2-error").hidden = true;
       } catch (e) {
         console.error(e);
-        const el = $("step2-error");
-        el.textContent = e.message || "Erreur de calcul — réessayez.";
-        el.hidden = false;
-        this.setHeroLoading(false);
-        return;
+        // Degrade to the nearest-city estimate rather than a dead end.
+        State.lastPerKw = PVGIS.fallbackPerKw(State.location.lat, State.location.lon);
+        State.lastPvKey = key;
       }
       this.setHeroLoading(false);
     }
     if (!State.lastPerKw) return;
+
+    // Approximate-mode notice (fallback data in use)
+    const srcEl = document.querySelector(".hero-source");
+    if (State.lastPerKw.approximate && srcEl) {
+      srcEl.innerHTML = `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${escapeHtml(State.lastPerKw.referenceCity)}.`;
+    }
 
     // Derive consumption from the bill; auto-size the system if not overridden
     const consumption = Tariff.kwhFromBill(p.bill);
