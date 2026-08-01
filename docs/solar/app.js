@@ -394,21 +394,21 @@ const MapView = {
     if (!this.map) {
       this.map = L.map("map", { zoomControl: true, attributionControl: true })
         .setView([lat, lon], 18);
-      // Fully open default: OSM standard tiles. No token, no account, ODbL data.
-      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "© OpenStreetMap contributors",
-      }).addTo(this.map);
-      // Optional satellite view (Esri World Imagery — token-free, not open data).
+      // Default: satellite (Esri World Imagery — token-free, roof-level detail
+      // so the user recognises their own house). OSM plan as the alternative.
       const satellite = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
           maxZoom: 19,
           attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics",
         }
-      );
+      ).addTo(this.map);
+      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors",
+      });
       L.control.layers(
-        { "Plan (OSM)": osm, "Satellite": satellite },
+        { "Satellite": satellite, "Plan (OSM)": osm },
         null,
         { position: "topright" }
       ).addTo(this.map);
@@ -722,7 +722,17 @@ function countUp(el, target, ms) {
   // Cancel any in-flight animation so a newer value can never be overwritten
   // by a stale animation frame.
   if (el._raf) cancelAnimationFrame(el._raf);
-  if (!ms) { el._raf = null; el.textContent = fmtNum(target); return; }
+  if (el._timer) clearTimeout(el._timer);
+  el._raf = null;
+
+  // rAF does not fire in background tabs, and animation is unwanted when the
+  // user asks for reduced motion — in both cases land the value directly.
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!ms || reduceMotion || document.hidden) {
+    el.textContent = fmtNum(target);
+    return;
+  }
+
   const t0 = performance.now();
   const ease = x => 1 - Math.pow(1 - x, 3);   // ease-out cubic
   const tick = (now) => {
@@ -731,6 +741,13 @@ function countUp(el, target, ms) {
     el._raf = x < 1 ? requestAnimationFrame(tick) : null;
   };
   el._raf = requestAnimationFrame(tick);
+
+  // Safety net: if rAF is throttled or suspended mid-flight, the headline
+  // number must still end on the real value rather than a partial one.
+  el._timer = setTimeout(() => {
+    if (el._raf) { cancelAnimationFrame(el._raf); el._raf = null; }
+    el.textContent = fmtNum(target);
+  }, ms + 150);
 }
 function fmtNum(n) {
   return Math.round(n).toLocaleString("fr-FR");
