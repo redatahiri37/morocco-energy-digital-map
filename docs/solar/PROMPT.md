@@ -10,7 +10,7 @@ Turn a Moroccan homeowner's question — *"is a solar roof worth it for me?"* �
 
 ## 2. Why this exists
 
-- **Under 1 %** of Moroccan residential roofs are equipped, on **one of the world's best solar resources** (1 800–2 200 kWh/kWc/yr).
+- Residential rooftop solar is **so marginal it isn't broken out as its own segment** in national capacity statistics (utility-scale ~1 285 MW is tracked separately; C&I + pumping + residential are lumped into one ~3 GW estimate — [REGlobal](https://reglobal.org/is-morocco-ready-for-small-scale-solar-capacity/)) — on **one of the world's best solar resources** (1 800–2 200 kWh/kWc/yr). No verified household-adoption percentage exists; do not invent one.
 - The gap is not physics or hardware cost — it is **information asymmetry**. Households cannot get a trustworthy production + ROI number without paying an installer for a bespoke quote.
 - Loi 82-21 (décret 2.25.100, mars 2026) has just unlocked LV self-consumption + limited export. Demand for a numbers-first tool is opening up now.
 - Reference: **Otovo** (Nordics/France/Spain) — same job-to-be-done, market-tested UX. Do not clone; adapt to MA constraints.

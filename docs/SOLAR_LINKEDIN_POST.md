@@ -4,8 +4,9 @@
 
 ---
 
-Morocco has one of the world's best solar resources. Fewer than 1 % of
-homes have a panel.
+Morocco has one of the world's best solar resources. Residential rooftop
+solar is so marginal it doesn't even show up as its own line in national
+capacity statistics.
 
 The blocker isn't sunlight or cost — it's that nobody tells homeowners
 what a roof would actually save them.
