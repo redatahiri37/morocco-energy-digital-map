@@ -4,10 +4,14 @@ Two live tools at the energy × digital intersection in Morocco:
 
 | Tool | URL | Code |
 |---|---|---|
-| **Infrastructure map** — generation, grid, industrial load, data centers | [/morocco-energy-digital-map/](https://redatahiri37.github.io/morocco-energy-digital-map/) | `docs/` |
-| **Atlas Solar** — residential PV production + ROI estimator | [/morocco-energy-digital-map/solar/](https://redatahiri37.github.io/morocco-energy-digital-map/solar/) | `docs/solar/` ([docs](docs/solar/README.md)) |
+| **Infrastructure map** — generation, grid, industrial load, data centers | [atlas-nexus-69o.pages.dev](https://atlas-nexus-69o.pages.dev/) | `docs/` |
+| **Atlas Solar** — residential PV production + ROI estimator | [atlas-nexus-69o.pages.dev/solar/](https://atlas-nexus-69o.pages.dev/solar/) | `docs/solar/` ([docs](docs/solar/README.md)) |
 
-Both are static, token-free, and served by GitHub Pages from `docs/`.
+Primary hosting: Cloudflare Pages (`wrangler pages deploy docs --project-name=atlas-nexus`).
+GitHub Pages mirrors the same `docs/` folder at
+[redatahiri37.github.io/morocco-energy-digital-map/](https://redatahiri37.github.io/morocco-energy-digital-map/).
+Both are static and token-free. A custom domain (e.g. `.ma`) can be attached
+to the Cloudflare Pages project without redeploying.
 Root-level `index.html`/`js/`/`data/` are an earlier standalone iteration
 (AI Atlas) kept for reference — not published.
 

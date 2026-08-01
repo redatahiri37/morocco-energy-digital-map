@@ -60,6 +60,9 @@ const CONFIG = {
   PVGIS_LOSS: 14,              // system losses %
   PVGIS_MOUNTING: "building",  // "building" = rooftop, "free" = ground
 
+  // Auto-sizing: recommend a system covering this share of annual consumption
+  AUTOSIZE_COVER: 0.80,
+
   // Self-consumption ratio heuristic — fraction of PV production consumed on-site
   // Function of (annual_production / annual_consumption). Empirical residential curve.
   selfConsumptionRatio(sizingRatio) {
@@ -104,12 +107,14 @@ const Geocoder = {
 };
 
 // ── PVGIS ──────────────────────────────────────────
+// Fetched once per (lat, lon, angle, aspect) at 1 kWc — PVcalc output is
+// linear in peakpower, so any system size scales locally with zero network.
 const PVGIS = {
-  async fetch({ lat, lon, peakpower, angle, aspect }) {
+  async fetchPerKw({ lat, lon, angle, aspect }) {
     const params = new URLSearchParams({
       lat: lat.toFixed(4),
       lon: lon.toFixed(4),
-      peakpower: String(peakpower),
+      peakpower: "1",
       loss: String(CONFIG.PVGIS_LOSS),
       angle: String(angle),
       aspect: String(aspect),
@@ -141,10 +146,19 @@ const PVGIS = {
     const monthly = data?.outputs?.monthly?.fixed;
     if (!totals || !monthly) throw new Error("PVGIS: unexpected response");
     return {
-      annualKwh: totals.E_y,                       // kWh/year
-      specificYield: totals.E_y / peakpower,       // kWh/kWc/year
-      monthlyKwh: monthly.map(m => m.E_m),         // 12 values, kWh/month
+      yieldPerKw: totals.E_y,                      // kWh/kWc/year
+      monthlyPerKw: monthly.map(m => m.E_m),       // 12 values, kWh/kWc/month
       radiationAnnual: totals["H(i)_y"],           // kWh/m²/year
+    };
+  },
+
+  // Scale the 1 kWc response to an arbitrary system size
+  scale(perKw, peakpower) {
+    return {
+      annualKwh: perKw.yieldPerKw * peakpower,
+      specificYield: perKw.yieldPerKw,
+      monthlyKwh: perKw.monthlyPerKw.map(m => m * peakpower),
+      radiationAnnual: perKw.radiationAnnual,
     };
   },
 };
@@ -187,6 +201,37 @@ const Tariff = {
       if (upper >= monthlyConsumptionKwh) break;
     }
     return monthlyConsumptionKwh > 0 ? sumMAD / monthlyConsumptionKwh : 0;
+  },
+
+  // Monthly bill (MAD TTC) for a given consumption — progressive tranches,
+  // same model as avoidedCostPerKwh (block-rate quirk below 150 kWh ignored
+  // for consistency and monotonicity).
+  costOf(monthlyConsumptionKwh) {
+    let low = 0, sum = 0;
+    for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
+      const span = Math.max(0, Math.min(upper, monthlyConsumptionKwh) - low);
+      sum += span * price;
+      low = upper;
+      if (upper >= monthlyConsumptionKwh) break;
+    }
+    return sum;
+  },
+
+  // Inverse: monthly consumption (kWh) from a monthly bill (MAD).
+  // Piecewise-linear, solved segment by segment.
+  kwhFromBill(billMAD) {
+    let low = 0, costAtLow = 0;
+    for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
+      const costAtUpper = upper === Infinity
+        ? Infinity
+        : costAtLow + (upper - low) * price;
+      if (billMAD <= costAtUpper) {
+        return low + (billMAD - costAtLow) / price;
+      }
+      low = upper;
+      costAtLow = costAtUpper;
+    }
+    return low;
   },
 
   activeTrancheLabel(monthlyConsumptionKwh) {
@@ -382,15 +427,17 @@ const MapView = {
 const State = {
   location: null,   // { lat, lon, label }
   params: {
+    bill: 400,      // MAD/month — the primary user input
     peakpower: 3,
     angle: 30,
     aspect: 0,
-    consumption: 300,
     cost: 11,
     exportAllowed: false,
   },
+  sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
   lastPvKey: null,
-  lastPv: null,
+  lastPerKw: null,  // cached 1 kWc PVGIS response for current (loc, angle, aspect)
+  heroAnimated: false,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -413,17 +460,45 @@ const UI = {
     });
 
     // Step 2 params
-    ["peakpower", "angle", "aspect", "consumption", "cost"].forEach(id => {
+    ["peakpower", "angle", "aspect", "cost"].forEach(id => {
       const input = $(id);
       input.addEventListener("input", () => {
         State.params[id] = parseFloat(input.value);
+        if (id === "peakpower") {
+          State.sizeAuto = false;
+          $("size-auto-badge").hidden = true;
+          $("size-auto-reset").hidden = false;
+        }
         this.renderParamLabels();
         this.recalc();
       });
     });
+    $("size-auto-reset").addEventListener("click", () => {
+      State.sizeAuto = true;
+      $("size-auto-badge").hidden = false;
+      $("size-auto-reset").hidden = true;
+      this.recalc();
+    });
     $("export-toggle").addEventListener("change", (e) => {
       State.params.exportAllowed = e.target.checked;
       this.recalc();
+    });
+
+    // Bill — slider + presets
+    $("bill").addEventListener("input", () => {
+      State.params.bill = parseFloat($("bill").value);
+      this.syncBillPresets();
+      this.renderParamLabels();
+      this.recalc();
+    });
+    document.querySelectorAll(".bill-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        State.params.bill = parseFloat(chip.dataset.bill);
+        $("bill").value = State.params.bill;
+        this.syncBillPresets();
+        this.renderParamLabels();
+        this.recalc();
+      });
     });
 
     $("back-btn").addEventListener("click", () => this.goToStep(1));
@@ -483,11 +558,34 @@ const UI = {
 
   async setLocationAndGo(loc) {
     State.location = loc;
+    State.heroAnimated = false;   // replay the count-up for a new address
     this.goToStep(2);
     $("location-label").textContent = loc.label || `${loc.lat.toFixed(3)}, ${loc.lon.toFixed(3)}`;
     $("coords-label").textContent = `${loc.lat.toFixed(4)}°N, ${Math.abs(loc.lon).toFixed(4)}°${loc.lon < 0 ? "W" : "E"}`;
     MapView.set(loc.lat, loc.lon, loc.label);
     await this.recalc({ force: true });
+  },
+
+  setHeroLoading(on) {
+    $("hero-loading").hidden = !on;
+    $("hero-content").hidden = on;
+    if (on) {
+      const msgs = [
+        "Analyse du gisement solaire…",
+        "Interrogation de PVGIS (Commission européenne)…",
+        "Calcul de votre rentabilité…",
+      ];
+      let i = 0;
+      $("hero-loading-msg").textContent = msgs[0];
+      clearInterval(this._loadingTicker);
+      this._loadingTicker = setInterval(() => {
+        i = (i + 1) % msgs.length;
+        const el = $("hero-loading-msg");
+        if (el) el.textContent = msgs[i];
+      }, 1100);
+    } else {
+      clearInterval(this._loadingTicker);
+    }
   },
 
   goToStep(n) {
@@ -496,14 +594,21 @@ const UI = {
     if (n === 1) window.scrollTo({ top: 0, behavior: "smooth" });
   },
 
+  syncBillPresets() {
+    document.querySelectorAll(".bill-chip").forEach(c =>
+      c.classList.toggle("active", parseFloat(c.dataset.bill) === State.params.bill));
+  },
+
   renderParamLabels() {
     const p = State.params;
+    const consumption = Tariff.kwhFromBill(p.bill);
+    $("bill-val").textContent = fmtNum(p.bill) + " MAD";
+    $("bill-consumption-hint").textContent =
+      `≈ ${Math.round(consumption)} kWh/mois · ${Tariff.activeTrancheLabel(consumption)}`;
     $("peakpower-val").textContent = p.peakpower.toFixed(1) + " kWc";
     $("peakpower-hint").textContent = `≈ ${Math.round(p.peakpower * CONFIG.M2_PER_KWP)} m² de panneaux`;
     $("angle-val").textContent = p.angle + "°";
     $("aspect-val").textContent = aspectLabel(p.aspect);
-    $("consumption-val").textContent = p.consumption + " kWh";
-    $("tranche-hint").textContent = Tariff.activeTrancheLabel(p.consumption);
     $("cost-val").textContent = p.cost.toFixed(1) + " MAD/Wc";
     const capex = p.peakpower * 1000 * p.cost;
     $("capex-hint").textContent = `Investissement total : ${fmtMAD(capex)}`;
@@ -512,54 +617,64 @@ const UI = {
   async recalc({ force = false } = {}) {
     if (!State.location) return;
     const p = State.params;
-    // Only re-hit PVGIS if lat/lon/size/angle/aspect changed
+    // PVGIS is fetched at 1 kWc per (lat, lon, angle, aspect); size and bill
+    // changes scale locally with zero network.
     const key = [
       State.location.lat.toFixed(4),
       State.location.lon.toFixed(4),
-      p.peakpower, p.angle, p.aspect,
+      p.angle, p.aspect,
     ].join("|");
 
-    let pv = State.lastPv;
     if (force || key !== State.lastPvKey) {
+      this.setHeroLoading(true);
       try {
-        pv = await PVGIS.fetch({
+        State.lastPerKw = await PVGIS.fetchPerKw({
           lat: State.location.lat,
           lon: State.location.lon,
-          peakpower: p.peakpower,
           angle: p.angle,
           aspect: p.aspect,
         });
         State.lastPvKey = key;
-        State.lastPv = pv;
         $("step2-error").hidden = true;
       } catch (e) {
         console.error(e);
         const el = $("step2-error");
         el.textContent = e.message || "Erreur de calcul — réessayez.";
         el.hidden = false;
+        this.setHeroLoading(false);
         return;
       }
+      this.setHeroLoading(false);
+    }
+    if (!State.lastPerKw) return;
+
+    // Derive consumption from the bill; auto-size the system if not overridden
+    const consumption = Tariff.kwhFromBill(p.bill);
+    if (State.sizeAuto) {
+      const targetKw = (consumption * 12 * CONFIG.AUTOSIZE_COVER) / State.lastPerKw.yieldPerKw;
+      p.peakpower = Math.min(10, Math.max(1, Math.round(targetKw * 2) / 2));
+      $("peakpower").value = p.peakpower;
+      this.renderParamLabels();
     }
 
+    const pv = PVGIS.scale(State.lastPerKw, p.peakpower);
     const capexMAD = p.peakpower * 1000 * p.cost;
     const roi = ROI.compute({
       pv,
-      monthlyConsumption: p.consumption,
+      monthlyConsumption: consumption,
       capexMAD,
       exportAllowed: p.exportAllowed,
     });
 
-    // KPIs
-    $("kpi-production").innerHTML = `${fmtNum(pv.annualKwh)} <span class="unit">kWh</span>`;
-    $("kpi-yield").textContent = `${Math.round(pv.specificYield)} kWh/kWc/an`;
-    $("kpi-savings").innerHTML = `${fmtNum(roi.annualSavingsMAD)} <span class="unit">MAD</span>`;
-    $("kpi-selfratio").textContent = `Autoconsommation ${Math.round(roi.selfRatio*100)} %`;
-    $("kpi-payback").innerHTML = isFinite(roi.paybackYr)
-      ? `${roi.paybackYr.toFixed(1)} <span class="unit">ans</span>`
-      : `— <span class="unit">n/a</span>`;
-    $("kpi-capex").textContent = `Sur 25 ans : ${fmtMAD(roi.lifetimeSavingsMAD)} nets`;
+    // Hero
+    const savings = Math.round(roi.annualSavingsMAD);
+    countUp($("hero-savings"), savings, State.heroAnimated ? 0 : 900);
+    State.heroAnimated = true;
+    $("chip-size").textContent = p.peakpower.toFixed(1).replace(".0", "") + " kWc";
+    $("chip-production").textContent = fmtNum(pv.annualKwh) + " kWh";
+    $("chip-payback").textContent = isFinite(roi.paybackYr) ? roi.paybackYr.toFixed(1) + " ans" : "—";
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
-    $("kpi-co2").innerHTML = `${co2Tons.toFixed(2)} <span class="unit">t</span>`;
+    $("chip-co2").textContent = co2Tons.toFixed(1) + " t";
 
     // Financing card
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
@@ -602,6 +717,20 @@ const Finance = {
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+function countUp(el, target, ms) {
+  // Cancel any in-flight animation so a newer value can never be overwritten
+  // by a stale animation frame.
+  if (el._raf) cancelAnimationFrame(el._raf);
+  if (!ms) { el._raf = null; el.textContent = fmtNum(target); return; }
+  const t0 = performance.now();
+  const ease = x => 1 - Math.pow(1 - x, 3);   // ease-out cubic
+  const tick = (now) => {
+    const x = Math.min(1, (now - t0) / ms);
+    el.textContent = fmtNum(target * ease(x));
+    el._raf = x < 1 ? requestAnimationFrame(tick) : null;
+  };
+  el._raf = requestAnimationFrame(tick);
 }
 function fmtNum(n) {
   return Math.round(n).toLocaleString("fr-FR");

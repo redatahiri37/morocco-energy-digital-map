@@ -55,22 +55,64 @@
     </div>
   </section>
 
-  <!-- STEP 2: results + tuning -->
+  <!-- STEP 2: hero result first, tuning behind an accordion -->
   <section id="step2" class="step">
-    <div class="results-grid">
+    <div class="results-wrap">
 
-      <aside class="params-panel">
-        <div class="location-line">
-          <button class="linkbtn" id="back-btn">← Changer d'adresse</button>
-          <div id="location-label" class="location-label"></div>
+      <div class="location-line">
+        <button class="linkbtn" id="back-btn">← Changer d'adresse</button>
+        <div id="location-label" class="location-label"></div>
+      </div>
+
+      <div id="step2-error" class="error" hidden></div>
+
+      <!-- Hero result -->
+      <div class="hero-result">
+        <div id="hero-loading" class="hero-loading">
+          <div class="shimmer-bar"></div>
+          <div class="hero-loading-msg" id="hero-loading-msg">Analyse du gisement solaire…</div>
         </div>
+        <div id="hero-content" hidden>
+          <div class="hero-kicker">Potentiel solaire de votre toit</div>
+          <div class="hero-headline">
+            <span id="hero-savings" class="hero-number">0</span>
+            <span class="hero-unit">MAD économisés / an</span>
+          </div>
+          <div class="hero-chips">
+            <div class="chip-stat"><span id="chip-size">—</span><small>installation recommandée</small></div>
+            <div class="chip-stat"><span id="chip-production">—</span><small>production / an</small></div>
+            <div class="chip-stat"><span id="chip-payback">—</span><small>amortissement</small></div>
+            <div class="chip-stat"><span id="chip-co2">—</span><small>CO₂ évité / an</small></div>
+          </div>
 
-        <h2>Paramètres</h2>
+          <div class="bill-block">
+            <label for="bill">Votre facture d'électricité mensuelle
+              <span class="pval" id="bill-val">400 MAD</span></label>
+            <div class="bill-presets">
+              <button type="button" class="bill-chip" data-bill="200">200 MAD</button>
+              <button type="button" class="bill-chip active" data-bill="400">400 MAD</button>
+              <button type="button" class="bill-chip" data-bill="700">700 MAD</button>
+              <button type="button" class="bill-chip" data-bill="1200">1 200 MAD</button>
+            </div>
+            <input type="range" id="bill" min="100" max="3000" step="25" value="400">
+            <div class="param-hint" id="bill-consumption-hint"></div>
+          </div>
+
+          <div class="hero-source">Calcul : PVGIS v5.2 (Commission européenne) · grille tarifaire ONEE 2025 · Loi 82-21</div>
+        </div>
+      </div>
+
+      <!-- Advanced parameters, collapsed by default -->
+      <details class="advanced" id="advanced">
+        <summary>Ajuster les paramètres <span class="summary-hint">taille, toit, coût, injection réseau</span></summary>
+        <div class="advanced-grid">
 
         <div class="param">
-          <label for="peakpower">Puissance installée <span class="pval" id="peakpower-val">3.0 kWc</span></label>
+          <label for="peakpower">Puissance installée
+            <span class="pval"><span id="size-auto-badge" class="auto-badge">auto</span> <span id="peakpower-val">3.0 kWc</span></span></label>
           <input type="range" id="peakpower" min="1" max="10" step="0.5" value="3">
           <div class="param-hint" id="peakpower-hint">≈ 15 m² de panneaux</div>
+          <button type="button" class="linkbtn small" id="size-auto-reset" hidden>↺ revenir au dimensionnement auto</button>
         </div>
 
         <div class="param">
@@ -85,14 +127,8 @@
         </div>
 
         <div class="param">
-          <label for="consumption">Consommation mensuelle <span class="pval" id="consumption-val">300 kWh</span></label>
-          <input type="range" id="consumption" min="50" max="1500" step="25" value="300">
-          <div class="param-hint" id="tranche-hint"></div>
-        </div>
-
-        <div class="param">
           <label for="cost">Coût installé <span class="pval" id="cost-val">11.0 MAD/Wc</span></label>
-          <input type="range" id="cost" min="8" max="15" step="0.5" value="11">
+          <input type="range" id="cost" min="8" max="16" step="0.5" value="11">
           <div class="param-hint" id="capex-hint"></div>
         </div>
 
@@ -104,34 +140,10 @@
           <div class="param-hint">Loi 82-21 (décret 2.25.100 · mars 2026) : surplus plafonné à 20 %/an, ≈ 0,18 MAD/kWh injecté. Éligibilité &lt; 11 kW sur simple déclaration.</div>
         </div>
 
-      </aside>
+        </div>
+      </details>
 
       <div class="main-panel">
-
-        <div id="step2-error" class="error" hidden></div>
-
-        <div class="kpi-row">
-          <div class="kpi">
-            <div class="kpi-label">Production annuelle</div>
-            <div class="kpi-value" id="kpi-production">— <span class="unit">kWh</span></div>
-            <div class="kpi-sub" id="kpi-yield"></div>
-          </div>
-          <div class="kpi highlight">
-            <div class="kpi-label">Économies / an</div>
-            <div class="kpi-value" id="kpi-savings">— <span class="unit">MAD</span></div>
-            <div class="kpi-sub" id="kpi-selfratio"></div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Retour sur investissement</div>
-            <div class="kpi-value" id="kpi-payback">— <span class="unit">ans</span></div>
-            <div class="kpi-sub" id="kpi-capex"></div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">CO₂ évité / an</div>
-            <div class="kpi-value" id="kpi-co2">— <span class="unit">t</span></div>
-            <div class="kpi-sub">vs mix ONEE 0,71 kg/kWh</div>
-          </div>
-        </div>
 
         <div class="finance-card">
           <div class="chart-header">

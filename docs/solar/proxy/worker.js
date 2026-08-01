@@ -11,9 +11,14 @@
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 
 const ALLOWED_ORIGINS = [
+  "https://atlas-nexus-69o.pages.dev",
   "https://redatahiri37.github.io",
   "http://localhost:8765",
+  "http://localhost:8766",
 ];
+
+// Cloudflare Pages per-deployment preview URLs (e.g. https://4090bafd.atlas-nexus-69o.pages.dev)
+const ALLOWED_ORIGIN_SUFFIX = ".atlas-nexus-69o.pages.dev";
 
 // Whitelist of query params PVGIS.fetch() sends — anything else is rejected.
 const ALLOWED_PARAMS = new Set([
@@ -36,7 +41,9 @@ const UPSTREAM_TIMEOUT_MS = 15000;
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin");
-  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  const ok = ALLOWED_ORIGINS.includes(origin) ||
+    (origin && origin.startsWith("https://") && origin.endsWith(ALLOWED_ORIGIN_SUFFIX));
+  const allowed = ok ? origin : ALLOWED_ORIGINS[0];
   return {
     "access-control-allow-origin": allowed,
     "access-control-allow-methods": "GET, OPTIONS",
