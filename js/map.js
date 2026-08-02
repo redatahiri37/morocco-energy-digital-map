@@ -51,7 +51,12 @@ function buildSidebar() {
     group.layers.forEach(layer => {
       const row = document.createElement('div');
       row.className = 'layer-toggle';
+      row.id = `lt-${layer.id}`;
       row.setAttribute('data-group', layer.group);
+      row.setAttribute('role', 'checkbox');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-checked', String(layer.defaultOn));
+      row.setAttribute('aria-label', layer.label);
       row.innerHTML = `
         <div class="lt-check ${layer.defaultOn ? 'on' : ''}" id="ck-${layer.id}" style="color:${layer.color}"></div>
         <div class="lt-dot" style="background:${layer.color}"></div>
@@ -59,6 +64,9 @@ function buildSidebar() {
         <span class="lt-count" id="ct-${layer.id}">—</span>
       `;
       row.addEventListener('click', () => toggleLayer(layer.id));
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLayer(layer.id); }
+      });
       sec.appendChild(row);
 
       // Render sublayers if present
@@ -71,6 +79,11 @@ function buildSidebar() {
         layer.sublayers.forEach(sl => {
           const slRow = document.createElement('div');
           slRow.className = 'layer-toggle';
+          slRow.id = `lt-${sl.id}`;
+          slRow.setAttribute('role', 'checkbox');
+          slRow.setAttribute('tabindex', '0');
+          slRow.setAttribute('aria-checked', String(sl.defaultOn !== false));
+          slRow.setAttribute('aria-label', sl.label);
           slRow.innerHTML = `
             <div class="lt-check ${sl.defaultOn !== false ? 'on' : ''}" id="ck-${sl.id}" style="color:${layer.color};width:11px;height:11px"></div>
             <div class="lt-dot" style="background:${layer.color};width:5px;height:5px;${!sl.defaultOn ? 'opacity:0.5' : ''}"></div>
@@ -80,6 +93,12 @@ function buildSidebar() {
           slRow.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleSublayer(sl.id);
+          });
+          slRow.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault(); e.stopPropagation();
+              toggleSublayer(sl.id);
+            }
           });
           sublayerContainer.appendChild(slRow);
         });
@@ -386,6 +405,8 @@ function toggleLayer(id) {
   layerState[id] = !layerState[id];
   const ck = document.getElementById(`ck-${id}`);
   if (ck) ck.classList.toggle('on', layerState[id]);
+  const row = document.getElementById(`lt-${id}`);
+  if (row) row.setAttribute('aria-checked', String(layerState[id]));
   if (!mapLoaded) return;
   renderAllLayers();
 }
@@ -394,6 +415,8 @@ function toggleSublayer(id) {
   sublayerState[id] = !sublayerState[id];
   const ck = document.getElementById(`ck-${id}`);
   if (ck) ck.classList.toggle('on', sublayerState[id]);
+  const row = document.getElementById(`lt-${id}`);
+  if (row) row.setAttribute('aria-checked', String(sublayerState[id]));
   if (!mapLoaded) return;
   renderAllLayers();
 }
