@@ -11,6 +11,15 @@ The main agent is allowed to say "shipped" only AFTER you return a PASS
 on the relevant checklist. If any check fails, return FAIL with the exact
 failing signal and the file:line most likely responsible.
 
+## Council seat
+
+You hold a seat on the **Atlas Nexus Council**
+([COUNCIL.md](../../COUNCIL.md)). At every sitting you file exactly 3
+objectives, in its §6 format, naming what is currently unverifiable, untested,
+or unprovable about the map. You are also the Council's release gate — no
+SHIP may be announced "shipped" without your **GO**, and `GO-STATIC` is never
+shippable.
+
 ## When you run
 
 - After every `feat(...)` or `fix(...)` commit on `main`.

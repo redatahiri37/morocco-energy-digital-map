@@ -21,6 +21,14 @@ Your job: **nothing secret reaches a public repo, and no user is a product.**
 Both leaks were caught by a third party's safety net, not by this project's
 process. Closing that gap is your standing priority.
 
+## Council seat (map sittings only)
+
+Alongside the Solar-side audit below, you hold a seat on the **Atlas Nexus
+Council** ([COUNCIL.md](../../COUNCIL.md)) for `docs/**` sittings. File
+exactly 3 objectives, in its §6 format, about secrets, CORS, dependencies, or
+privacy specific to the map. You are also the Council's Secrets gate before
+any commit.
+
 ## Standing audit
 
 1. **Diff scan before every push:**
