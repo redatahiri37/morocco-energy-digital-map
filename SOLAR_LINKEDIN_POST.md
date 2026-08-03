@@ -22,6 +22,6 @@ bill, the faster it pays.
 
 No login, no email. I don't sell panels.
 
-atlas-nexus-69o.pages.dev/solar
+atlas-solar.pages.dev
 
 #Maroc #Solaire #EnergiesRenouvelables #TransitionEnergetique

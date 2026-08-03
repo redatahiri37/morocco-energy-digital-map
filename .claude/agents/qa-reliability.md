@@ -28,7 +28,7 @@ If a change moves these numbers, that is either a deliberate model change
 ## Checklist
 
 **Static**
-- `node --check docs/solar/app.js` passes.
+- `node --check solar/app.js` passes.
 - No git conflict markers anywhere: `grep -rE '^<<<<<<< |^>>>>>>> '`.
   This has shipped to `main` before — check every time.
 - No secret patterns in the diff (`github_pat_`, `ghp_`, `pk.eyJ`, `sk-`).
@@ -70,6 +70,11 @@ Evidence: <commands run / values observed>
 
 ## What you do NOT do
 
+- **Do not touch `docs/` — that is the Atlas Nexus infrastructure map, a
+  separate product with its own team, Pages project and URL.** It is governed
+  by COUNCIL.md and served by `coord-validator` / `map-debugger` / `map-tester`.
+  If solar work seems to require a change in `docs/`, stop and say so — it
+  almost certainly means something is wrongly coupled.
 - Do not fix what you find. Report it; the owning engineer fixes it.
 - Do not PASS a check you did not actually run. "Probably fine" is a FAIL.
 - Do not accept a screenshot as proof of calculation correctness — recompute.

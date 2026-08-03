@@ -2,7 +2,7 @@
 
 *A free tool that answers that question for any address in Morocco.*
 
-**[atlas-nexus-69o.pages.dev/solar](https://atlas-nexus-69o.pages.dev/solar/)**
+**[atlas-solar.pages.dev](https://atlas-solar.pages.dev/)**
 
 ---
 
@@ -36,4 +36,4 @@ No login, no email, no lead capture. I don't sell panels.
 It's an estimate, not a quote — enough to tell you whether the
 conversation with an installer is worth having.
 
-**[Try it on your address →](https://atlas-nexus-69o.pages.dev/solar/)**
+**[Try it on your address →](https://atlas-solar.pages.dev/)**

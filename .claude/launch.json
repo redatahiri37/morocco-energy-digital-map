@@ -6,6 +6,18 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "5173", "--directory", "docs"],
       "port": 5173
+    },
+    {
+      "name": "docs-site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-p", "8766", "-L", "docs"],
+      "port": 8766
+    },
+    {
+      "name": "root-map",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-p", "8000", "-L", "."],
+      "port": 8000
     }
   ]
 }

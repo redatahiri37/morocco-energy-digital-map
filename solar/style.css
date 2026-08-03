@@ -1,4 +1,4 @@
-/* Palette aliases — canonical values live in ../brand.css (--an-*).
+/* Palette aliases — canonical values live in ./brand.css (--an-*).
    Fallbacks keep the page correct if brand.css ever fails to load. */
 :root {
   --navy: var(--an-navy, #001F4D);

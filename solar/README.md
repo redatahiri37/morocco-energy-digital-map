@@ -1,13 +1,35 @@
 # Atlas Solar — Morocco residential PV estimator
 
-Two-step web tool: user enters an address → gets instant production + ROI estimate → refines with sliders. Static site, no backend runtime, deploys with the rest of Atlas Nexus.
+Two-step web tool: user enters an address → gets instant production + ROI estimate → refines with sliders. Static site, no backend runtime.
 
-Live: https://redatahiri37.github.io/morocco-energy-digital-map/solar/
+**Live: https://atlas-solar.pages.dev**
+
+## Deployment independence
+
+This tool is **infrastructurally independent** from the Atlas Nexus
+infrastructure map, even though both live in this repo:
+
+| | Atlas Solar | Infrastructure map |
+|---|---|---|
+| Source | `solar/` | `docs/` |
+| Pages project | `atlas-solar` | `atlas-nexus` |
+| URL | atlas-solar.pages.dev | atlas-nexus-69o.pages.dev |
+| Deploy | `wrangler pages deploy solar --project-name=atlas-solar` | `wrangler pages deploy docs --project-name=atlas-nexus` |
+
+A broken deploy on one **cannot** take the other down. They share no CSS
+(`brand.css` is duplicated deliberately, not imported across the boundary),
+no JS, and no sitemap. The only shared infrastructure is the `solar-pvgis`
+Worker, the Cloudflare account, and DNS.
+
+The map links to this tool and vice versa, but only by absolute URL. The old
+`/solar/` path on the map's domain 301-redirects here via `docs/_redirects`.
+
+**If you are changing this tool, you never need to touch `docs/`.**
 
 ## Architecture
 
 ```
-docs/solar/          (served at /solar/ — GitHub Pages root is docs/)
+solar/          (repo root — its own Cloudflare Pages project)
 ├── index.html       Page shell — two <section class="step"> views
 ├── style.css        Atlas Nexus brand (navy #001F4D / orange #FF6B35)
 ├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
@@ -49,17 +71,17 @@ npm install -g wrangler
 wrangler login
 ```
 
-Deploy (from `docs/solar/proxy/`):
+Deploy (from `solar/proxy/`):
 
 ```bash
-cd docs/solar/proxy && wrangler deploy
+cd solar/proxy && wrangler deploy
 ```
 
 The deploy output prints the live URL. Currently deployed at
 **`https://solar-pvgis.redatahiri.workers.dev/pvcalc`** — already wired into
 `CONFIG.PVGIS_WORKER_URL` in `app.js`. Redeploys keep the same URL.
 
-- **Logs (live):** `wrangler tail` from `docs/solar/proxy/`
+- **Logs (live):** `wrangler tail` from `solar/proxy/`
 - **Verify cache:** `curl -sI "<worker-url>/pvcalc?lat=33.57&lon=-7.59&peakpower=3&angle=30&aspect=0"` twice — second response has `cf-cache-status: HIT`
 - **Rename/rotate subdomain:** change `name` in `wrangler.toml`, redeploy, update `CONFIG.PVGIS_WORKER_URL`
 - **If deploy rejects the rate-limit binding** (open beta): delete the `[[unsafe.bindings]]` block in `wrangler.toml` and redeploy — the worker runs without rate limiting.

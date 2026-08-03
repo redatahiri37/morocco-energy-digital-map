@@ -68,7 +68,7 @@ The user should be able to say all of these after using the tool:
 - **Source.** PVGIS v5.2, endpoint `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc`.
 - **Radiation DB.** PVGIS-SARAH3 (default, covers MA).
 - **Default losses.** 14 % (soiling + inverter + wiring + mismatch + LID).
-- **Constraint.** PVGIS is **not CORS-enabled**. Calls route through our Cloudflare Worker (`docs/solar/proxy/worker.js`) — edge-cached 24 h, rate-limited, French error mapping. Ops guide in `docs/solar/README.md`. The client falls back to `corsproxy.io` only while `CONFIG.PVGIS_WORKER_URL` is still the placeholder.
+- **Constraint.** PVGIS is **not CORS-enabled**. Calls route through our Cloudflare Worker (`solar/proxy/worker.js`) — edge-cached 24 h, rate-limited, French error mapping. Ops guide in `solar/README.md`. The client falls back to `corsproxy.io` only while `CONFIG.PVGIS_WORKER_URL` is still the placeholder.
 
 ### Tariff (ONEE residential LV, 2025, TTC incl. 18 % VAT)
 | Tranche (kWh/mo) | Prix (MAD/kWh) |
@@ -141,7 +141,7 @@ Design v1 so these v2 additions are additive, not rewrites:
 3. **PDF export.** Server-less print stylesheet + `window.print()`. Zero deps.
 4. **Arabic / English.** Wrap user-facing strings in a `t("key")` function backed by a JSON dictionary. Do not adopt a i18n framework.
 5. **Installer marketplace.** Separate module; the estimator remains vendor-neutral. Estimator link to marketplace, never the reverse.
-6. ~~**Cloudflare Worker proxy.**~~ **Done (2026-07-31).** `docs/solar/proxy/worker.js` — edge cache 24 h, 60 req/min/IP, French error contract. Ops in `docs/solar/README.md`.
+6. ~~**Cloudflare Worker proxy.**~~ **Done (2026-07-31).** `solar/proxy/worker.js` — edge cache 24 h, 60 req/min/IP, French error contract. Ops in `solar/README.md`.
 
 ## 12. Success metrics
 

@@ -37,10 +37,13 @@ process. Closing that gap is your standing priority.
 4. **Highest-value unbuilt control:** a pre-commit hook running the diff scan.
    Keep proposing it until it exists.
 
-## Worker exposure (`docs/solar/proxy/worker.js`)
+## Worker exposure (`solar/proxy/worker.js`)
 
-- CORS is an explicit allowlist plus a `*.atlas-nexus-69o.pages.dev` suffix
-  match. **Never widen to `*`.** If a legitimate origin fails, add that origin.
+- CORS is an explicit allowlist plus suffix matches for both Pages projects
+  (`*.atlas-solar.pages.dev`, `*.atlas-nexus-69o.pages.dev`). **Never widen to
+  `*`.** If a legitimate origin fails, add that origin. Suffix matching must
+  stay anchored to `https://` — `http://atlas-solar.pages.dev.evil.com` must
+  not pass.
 - Param whitelist + numeric bounds are what stop the Worker being an open
   proxy to arbitrary PVGIS traffic. Do not relax them.
 - Rate limit 60 req/min/IP. If the binding is removed, say so loudly — the

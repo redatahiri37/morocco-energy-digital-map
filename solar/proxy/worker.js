@@ -11,14 +11,19 @@
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 
 const ALLOWED_ORIGINS = [
-  "https://atlas-nexus-69o.pages.dev",
+  "https://atlas-solar.pages.dev",       // solar tool — its own Pages project
+  "https://atlas-nexus-69o.pages.dev",   // map (kept: /solar/ 301s from here)
   "https://redatahiri37.github.io",
   "http://localhost:8765",
   "http://localhost:8766",
 ];
 
-// Cloudflare Pages per-deployment preview URLs (e.g. https://4090bafd.atlas-nexus-69o.pages.dev)
-const ALLOWED_ORIGIN_SUFFIX = ".atlas-nexus-69o.pages.dev";
+// Cloudflare Pages per-deployment preview URLs
+// (e.g. https://4090bafd.atlas-solar.pages.dev)
+const ALLOWED_ORIGIN_SUFFIXES = [
+  ".atlas-solar.pages.dev",
+  ".atlas-nexus-69o.pages.dev",
+];
 
 // Whitelist of query params PVGIS.fetch() sends — anything else is rejected.
 const ALLOWED_PARAMS = new Set([
@@ -42,7 +47,8 @@ const UPSTREAM_TIMEOUT_MS = 15000;
 function corsHeaders(request) {
   const origin = request.headers.get("Origin");
   const ok = ALLOWED_ORIGINS.includes(origin) ||
-    (origin && origin.startsWith("https://") && origin.endsWith(ALLOWED_ORIGIN_SUFFIX));
+    (origin && origin.startsWith("https://") &&
+     ALLOWED_ORIGIN_SUFFIXES.some(s => origin.endsWith(s)));
   const allowed = ok ? origin : ALLOWED_ORIGINS[0];
   return {
     "access-control-allow-origin": allowed,
