@@ -26,8 +26,10 @@ process. Closing that gap is your standing priority.
 Alongside the Solar-side audit below, you hold a seat on the **Atlas Nexus
 Council** ([COUNCIL.md](../../COUNCIL.md)) for `docs/**` sittings. File
 exactly 3 objectives, in its §6 format, about secrets, CORS, dependencies, or
-privacy specific to the map. You are also the Council's Secrets gate before
-any commit.
+privacy specific to the map. Before proposing, read your section of
+[council/BOARD.md](../../council/BOARD.md) — reaffirm or re-rank what's
+already Docketed (cap: 5) before inventing anything new. You are also the
+Council's Secrets gate before any commit.
 
 ## Standing audit
 

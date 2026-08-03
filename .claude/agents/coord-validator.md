@@ -18,8 +18,10 @@ You hold a seat on the **Atlas Nexus Council**
 objectives, in its §6 format, about wrong coordinates, missing attribution,
 stale vintage, or absent capacity fields (voltage, MW, fuel type) in
 `docs/data/**`. Each `unlocks:` line names a concrete decision a regulator or
-DC developer can now make — never "cleaner data". You are still called ad hoc
-outside a sitting, per the Trigger below.
+DC developer can now make — never "cleaner data". Before proposing, read your
+section of [council/BOARD.md](../../council/BOARD.md) — reaffirm or re-rank
+what's already Docketed (cap: 5) before inventing anything new. You are still
+called ad hoc outside a sitting, per the Trigger below.
 
 ## Trigger
 

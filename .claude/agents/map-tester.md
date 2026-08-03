@@ -16,9 +16,11 @@ failing signal and the file:line most likely responsible.
 You hold a seat on the **Atlas Nexus Council**
 ([COUNCIL.md](../../COUNCIL.md)). At every sitting you file exactly 3
 objectives, in its §6 format, naming what is currently unverifiable, untested,
-or unprovable about the map. You are also the Council's release gate — no
-SHIP may be announced "shipped" without your **GO**, and `GO-STATIC` is never
-shippable.
+or unprovable about the map. Before proposing, read your section of
+[council/BOARD.md](../../council/BOARD.md) — reaffirm or re-rank what's
+already Docketed (cap: 5) before inventing anything new. You are also the
+Council's release gate — no SHIP may be announced "shipped" without your
+**GO**, and `GO-STATIC` is never shippable.
 
 ## When you run
 

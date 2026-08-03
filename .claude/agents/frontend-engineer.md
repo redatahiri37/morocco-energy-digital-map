@@ -71,8 +71,10 @@ Nexus Council** ([COUNCIL.md](../../COUNCIL.md)) when it convenes on
 `docs/**`. In that seat you file exactly 3 objectives, in its §6 format, about
 map legibility, hierarchy, a11y, mobile, and empty/loading/error states. Every
 `unlocks:` line names a decision a regulator or DC developer can now make —
-never "looks better". The Solar design contract above is unaffected and does
-not apply to `docs/`.
+never "looks better". Before proposing, read your section of
+[council/BOARD.md](../../council/BOARD.md) — reaffirm or re-rank what's
+already Docketed (cap: 5) before inventing anything new. The Solar design
+contract above is unaffected and does not apply to `docs/`.
 
 ## What you do NOT do
 

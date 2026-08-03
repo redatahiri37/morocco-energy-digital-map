@@ -227,7 +227,7 @@ Every sitting appends to `council/YYYY-MM-DD.md` (one file per day, one
 SHIP:    OBJ-<id> — <why this one, in North Star terms>
 REPORT:  OBJ-<id>, OBJ-<id>
 Vetoed:  OBJ-<id> — <seat> — <reason>
-Docketed to BACKLOG.md: <ids>
+Docketed to council/BOARD.md: <ids>
 
 ## Outcome
 Commit:  <sha, or "none — gate failed">
@@ -235,6 +235,49 @@ Gates:   desktop ✓ | light ✓ | 375px ✓ | data n/a | secrets ✓ | map-test
 Carried: <what tomorrow's docket must revisit>
 ```
 
-Minutes are the memory. A sitting that does not read yesterday's minutes will
-re-propose yesterday's objectives — the single most likely failure mode of a
-daily routine.
+Minutes are the journal — append-only, never edited after the fact. §8
+covers the Board, which is the actual standing memory the Chair reads first.
+
+---
+
+## 8. Standing memory — the Board
+
+`council/BOARD.md` is the Council's working memory. Minutes (§7) are an
+append-only log of what happened; the Board is the current state of what is
+true right now. An objective vetoed three sittings ago is still on the Board
+with its reason, so it is never silently re-proposed from zero.
+
+Lean rules, not aspiration:
+
+- **Pull, don't regenerate.** Before filing 3 objectives, each seat first
+  reads its own section of the Board. Reaffirming or re-ranking what's
+  already there costs nothing. A new objective is only for something
+  observed since the Board was last read. Filing 3 fresh ideas every sitting
+  when 2 of them already exist on the Board is pure overproduction.
+- **WIP limits.** At most 1 objective **In Progress** at a time — the
+  standing SHIP budget already enforces this. At most **5 objectives
+  Docketed per seat** — a full queue means ship, split, or drop one before
+  adding a sixth. An unbounded backlog is not a safety net; it's undone work
+  pretending to be a plan.
+- **Nothing is silently dropped.** A vetoed objective stays on the Board
+  under Vetoed, with its reason and the sitting it happened at. This is what
+  stops the same idea being re-litigated from scratch every few hours.
+- **Vetoed three times = structural, not transient.** If an objective (or an
+  obvious restatement of it) is vetoed on three separate sittings, the Chair
+  moves it to **Blocked — structural** and it may not be re-proposed until
+  the Chair notes what actually changed. Recurrence without change is the
+  clearest sign a seat is proposing against a constraint it hasn't accepted.
+- **Aging forces a decision, not a shrug.** An objective Docketed for more
+  than 10 sittings (~2 days at the 5-hourly cadence) must be resolved the
+  next time it's raised: shipped, split into an S that can actually ship,
+  explicitly vetoed, or moved to Icebox with a stated revisit trigger. It may
+  not simply keep sitting.
+- **IDs are minted once.** The Board carries a per-seat ID ledger (next free
+  number). An objective keeps its `OBJ-<seat>-<n>` for its entire life —
+  proposed, docketed, reaffirmed, shipped, or vetoed. Never renumber; a
+  stable ID is what makes "still on the Board" a fact instead of a guess.
+
+The Chair updates the Board after every ruling — moves cards between
+sections, appends new proposals with freshly-minted IDs, updates the
+Shipped/Vetoed tables. The Board is edited in place; the minutes file never
+is.

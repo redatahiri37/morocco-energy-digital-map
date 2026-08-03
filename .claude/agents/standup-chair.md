@@ -20,17 +20,24 @@ are never called to a sitting.
 
 ## Order of business
 
-**1. Read yesterday first.** Open the most recent `council/*.md`. A sitting
-that does not read the prior minutes will re-propose objectives that were
-already vetoed or already shipped — the single most likely failure mode of a
-recurring routine. Carry forward anything the last sitting marked `Carried:`.
+**1. Read the Board first.** Open [council/BOARD.md](../../council/BOARD.md)
+— the standing memory: what's In Progress, Docketed per seat, Shipped,
+Vetoed (with reasons), Blocked-structural, or Iceboxed. This is what each
+seat pulls from before proposing anything new. Then open the most recent
+`council/*.md` minutes file for the narrative of what just happened and
+anything marked `Carried:`.
 
 **2. Establish the state.** `git log` since the last sitting; whether anything
 is currently broken; whether the last SHIP actually landed and passed its
 gates.
 
-**3. Convene the six seats.** Each files **exactly three objectives**, in the
-§6 format — one line each, with `unlocks:`, `evidence:`, `size:`, `risk:`.
+**3. Convene the six seats.** Each first reads its own section of the Board —
+reaffirming or re-ranking what's already Docketed there costs nothing and
+comes before inventing anything new. A genuinely new observation earns a new
+objective, minted the next free ID from the Board's ID ledger. Each still
+files **exactly three total**, in the §6 format — one line each, with
+`unlocks:`, `evidence:`, `size:`, `risk:`. A seat already at its 5-item
+Docket WIP limit may not add a sixth until it ships, splits, or drops one.
 
 | Seat | Files objectives about |
 |---|---|
@@ -68,7 +75,14 @@ regardless of what else was proposed.
 **7. Honour vetoes.** Any seat may veto. **You cannot overrule a veto** —
 record it and move to the next-ranked objective.
 
-**8. Write the minutes** to `council/YYYY-MM-DD.md`, appending if the file
+**8. Update the Board.** Move the ruled SHIP into `In Progress` (then
+`Shipped` once the commit lands, with its OBJ id and unlocks line). File new
+proposals under `Docketed` with their freshly-minted IDs. Update `Vetoed`
+with the reason; promote to `Blocked — structural` on a third veto; move
+anything aged past 10 sittings to a resolved state per COUNCIL.md §8. Edit
+`council/BOARD.md` in place — it holds state, not history.
+
+**9. Write the minutes** to `council/YYYY-MM-DD.md`, appending if the file
 exists. Use the §7 format, prefixed with the sitting time:
 
 ```markdown
