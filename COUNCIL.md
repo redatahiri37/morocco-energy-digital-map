@@ -120,13 +120,21 @@ regardless of what else was proposed.
 
 ### Autonomous budget
 
-When the Council sits **unattended** (the scheduled daily run, no human in the
-loop) it may authorise:
+*Amended 2026-08-03 when the sitting cadence moved from daily to 5-hourly.
+The original text granted the budget per sitting; at ~5 sittings a day that
+would have authorised 5 unattended ships a day, which §4 already forbade in
+spirit. The budget is therefore per rolling day, not per sitting.*
+
+When the Council sits **unattended** (a scheduled run, no human in the loop)
+it may authorise:
 
 | Slot | Count | Rules |
 |---|---|---|
-| SHIP | exactly 1 | S-sized, one PR, must clear every gate in §5 |
-| REPORT | up to 2 | read-only, no edits; output feeds tomorrow's docket |
+| SHIP | **at most 1 per rolling 24 h, across all sittings** | S-sized, one PR, must clear every gate in §5 |
+| REPORT | up to 2 **per sitting** | read-only, no edits; output feeds the next docket |
+
+**Before approving a SHIP the Chair must read today's minutes.** If an earlier
+sitting today already shipped, the current sitting is REPORT-only and says so.
 
 Not negotiable upward inside a sitting. If the Chair believes a day warrants
 more, it records the argument in the minutes and the user decides out of band.
@@ -134,7 +142,9 @@ The standup's five hour-slots describe **Reda's** working day; they are not a
 licence for agents to ship five changes unattended.
 
 A sitting that approves nothing is a valid sitting. "No objective passed the
-North Star Test today" beats shipping filler.
+North Star Test today" beats shipping filler — and at five sittings a day,
+**most sittings should approve nothing.** A Chair that finds something to ship
+every five hours is manufacturing work, not governing.
 
 ---
 
@@ -204,7 +214,8 @@ OBJ-coord-validator-1 | Add `vintage` and `source_url` to every substation in do
 
 ## 7. Minutes
 
-Every sitting appends to `council/YYYY-MM-DD.md`:
+Every sitting appends to `council/YYYY-MM-DD.md` (one file per day, one
+`## Sitting — HH:MM` section per sitting):
 
 ```markdown
 # Council sitting — YYYY-MM-DD

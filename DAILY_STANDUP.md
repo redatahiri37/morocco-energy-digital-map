@@ -1,13 +1,32 @@
 # Daily Standup — Atlas Nexus engineering team
 
-## Goal
+> **[COUNCIL.md](./COUNCIL.md) is the constitution. Where this file and the
+> Council disagree, the Council wins.**
 
-Every working day, five engineering agents each propose **3 priorities**.
-The chair scores them and allocates the day's **5 one-hour slots**.
-Ten of the fifteen get deferred, with a reason. That refusal is the point.
+## Two tracks, deliberately separate
+
+| | Governs | Cadence | Runs under |
+|---|---|---|---|
+| **Council sitting** | the map — `docs/**` | **every 5 hours**, automated | [COUNCIL.md](./COUNCIL.md) |
+| **Solar standup** | Atlas Solar — `solar/**` | as needed, human-led | this file |
+
+The Council has six seats (`frontend-engineer`, `coord-validator`,
+`map-debugger`, `map-tester`, `platform-engineer`, `security-engineer`),
+chaired by `standup-chair`, and files objectives against the North Star Test.
+It authorises **at most 1 SHIP per rolling 24 h** across all sittings, plus up
+to 2 read-only REPORTs per sitting. Minutes land in `council/YYYY-MM-DD.md`.
+
+`calc-engine-engineer` and `qa-reliability` are **off-council** — they serve
+Atlas Solar only and are never called to a map sitting.
+
+## Goal (Solar track)
+
+Solar engineering agents each propose **3 priorities**; the day is allocated
+across **5 one-hour slots**. Most proposals get deferred, with a reason.
+That refusal is the point.
 
 Complements [ARCHITECTURE_KANBAN.md](./ARCHITECTURE_KANBAN.md), which picks
-one architecture card per day. The standup allocates the whole day.
+one architecture card per day.
 
 ## The team
 
