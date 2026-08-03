@@ -9,8 +9,12 @@ Thumbs.db
 *.swp
 *.swo
 
-# Claude Code local state
-.claude/
+# Claude Code — version the shared team config, ignore per-machine state.
+# Must be `.claude/*` not `.claude/`: git cannot re-include a path whose
+# parent directory is excluded.
+.claude/*
+!.claude/agents/
+!.claude/launch.json
 
 # Node (if tooling is added later)
 node_modules/
@@ -22,3 +26,4 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.wrangler/
