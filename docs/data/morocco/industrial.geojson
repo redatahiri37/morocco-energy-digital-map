@@ -201,8 +201,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -5.684,
-          35.695
+          -5.469,
+          35.784
         ]
       },
       "properties": {
@@ -212,7 +212,7 @@
         "estimated_demand_mw": 35,
         "grid_connection": "60 kV Tanger-Med free-zone",
         "status": "operational",
-        "precision": "approximate",
+        "precision": "exact",
         "source": "Renault press",
         "source_url": "https://www.media.renault.com/"
       }
