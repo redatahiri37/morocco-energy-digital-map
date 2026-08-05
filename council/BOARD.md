@@ -27,6 +27,12 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+3. **OBJ-frontend-engineer-4** | Distinguish a failed per-layer fetch from a legitimately empty layer in `docs/app.js`'s `loadAllData()`/`renderLayerList()`
+   unlocks:  a DC developer checking whether transmission infrastructure exists near a candidate site can tell "this layer has zero features" apart from "this layer's data file failed to load," instead of both rendering as an identical `0` (confirmed: `docs/app.js:255-257` swallows any fetch failure to `console.warn` only and substitutes `{features:[]}`, which `renderLayerList()` at `app.js:289` renders identically to a real zero)
+   evidence: a simulated 404 on one layer file shows a distinct visible marker (e.g. "failed to load") in that layer's row, not a bare "0"
+   size:     S
+   risk:     low — additive flag threaded through `layerData`/`renderLayerList`; no change to the successful-load path
+   (filed 2026-08-05 10:15 sitting)
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -152,7 +158,7 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
+| frontend-engineer | 5 |
 | coord-validator | 4 |
 | map-debugger | 5 |
 | map-tester | 4 |
