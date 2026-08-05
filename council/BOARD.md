@@ -10,7 +10,12 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 ## In Progress (WIP limit: 1)
 
-_none_
+- **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
+  unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations
+  evidence: mailto target is a real, monitored address in all 3 locations
+  size:     S
+  risk:     none — string replacement in 2 files, no logic change
+  ruled:    SHIP, 2026-08-05 22:53 sitting — the underlying fix (the mailto target is dead) is approved. Execution is **held**, not dispatched: the Chair's ruling named a specific replacement address (`reda.tahiri1@gmail.com`) with no in-repo basis for it — it is not published anywhere else in this repository, and "confirmed as the site owner's real, monitored mailbox" was an unverified assertion, not a fact established from any source the Chair actually read. Publishing a real person's personal email address on a live public site is a one-way disclosure the Council's remit does not cover (COUNCIL.md hard rules bar the Chair from handling credentials; a personal contact address to be published site-wide sits in the same category — it needs the site owner's explicit sign-off, not an inference from ambient session context). Held pending that sign-off; see `council/2026-08-05.md` follow-up note. Not vetoed by any seat — this is an orchestration-layer hold, separate from the Council's seat-vetoes.
 
 ---
 
@@ -27,6 +32,8 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+
+_Note (2026-08-05 22:53 sitting): frontend-engineer's Board section holds 2, not the standing 3 — OBJ-frontend-engineer-1 shipped 2026-08-04 and no genuinely new frontend observation surfaced this sitting (no commits landed under `docs/**` since the last sitting to re-derive anything from). The Chair declined to manufacture a third filler objective; see minutes for the reasoning. Next sitting should re-check with fresh eyes rather than carry this note forward unexamined._
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -46,26 +53,21 @@ _none_
    risk:     none — file is unreferenced by any live code path
 
 ### map-debugger
-1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
-   unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations
-   evidence: mailto target is a real, monitored address in all 3 locations
-   size:     S
-   risk:     none — string replacement in 2 files, no logic change
-2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
-   unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
-   evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
-   size:     L
-   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
-3. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
+1. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
    unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not, since brand.css's later, unconditional rule wins the cascade at equal specificity. Reproduced via `document.body.dataset.theme="light"` in a live browser (screenshot: all four topbar buttons render blank/unreadable) and confirmed present on the pre-edit file too (git-stash comparison), so it predates and is unrelated to OBJ-frontend-engineer-1.
    evidence: in light theme, all four topbar buttons show visible, sufficient-contrast text against their background
    size:     S
    risk:     low — brand.css is shared with Atlas Solar's chrome per its own header ("Single source of truth for both apps"); a fix must add a light-theme-conditional rule there without breaking Solar's topbar, which platform-engineer/security-engineer should confirm since they're dual-hatted across both apps
-4. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
+2. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
    unlocks:  a regulator whose basemap tiles fail mid-session (CARTO rate-limit or outage after a successful load) sees a message explaining the map is degraded, instead of an unexplained frozen/blank canvas — confirmed: `#noTokenCard` is only ever shown from the `initMap()` try/catch (construction-time failure); the runtime `map.on("error", ...)` handler only `console.warn`s
    evidence: a simulated tile failure after successful init surfaces a visible in-page message, not just a console warning
    size:     S
    risk:     low — must not fire on benign/recoverable MapLibre warnings (e.g. missing icon) or it will falsely alarm users on a healthy map
+3. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
+   unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
+   evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
+   size:     L
+   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
 
 ### map-tester
 1. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
