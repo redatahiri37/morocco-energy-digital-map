@@ -27,6 +27,11 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+3. **OBJ-frontend-engineer-4** | Add Escape-key close and focus management (trap + return-focus) to `#methodologyModal` in `docs/app.js`
+   unlocks:  a regulator or DC developer navigating by keyboard who opens Methodology can close it and get focus back where they were, instead of being stuck needing a mouse click on the X or backdrop — confirmed zero `keydown`/`Escape` handling anywhere in `docs/app.js`, and no focus-in-on-open / focus-return-on-close
+   evidence: opening Methodology via keyboard, pressing Escape closes it and focus returns to `#methodologyBtn`; Tab cycles only within the modal while open
+   size:     S
+   risk:     low — additive event listeners on the existing open/close functions, no markup restructuring
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -47,6 +52,7 @@ _none_
 
 ### map-debugger
 1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
+   _(re-ranked to next-ranked SHIP candidate 2026-08-06 07:57 — OBJ-map-debugger-4 shipped ahead of it this sitting)_
    unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
@@ -56,12 +62,7 @@ _none_
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
    size:     L
    risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
-3. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
-   unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not, since brand.css's later, unconditional rule wins the cascade at equal specificity. Reproduced via `document.body.dataset.theme="light"` in a live browser (screenshot: all four topbar buttons render blank/unreadable) and confirmed present on the pre-edit file too (git-stash comparison), so it predates and is unrelated to OBJ-frontend-engineer-1.
-   evidence: in light theme, all four topbar buttons show visible, sufficient-contrast text against their background
-   size:     S
-   risk:     low — brand.css is shared with Atlas Solar's chrome per its own header ("Single source of truth for both apps"); a fix must add a light-theme-conditional rule there without breaking Solar's topbar, which platform-engineer/security-engineer should confirm since they're dual-hatted across both apps
-4. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
+3. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
    unlocks:  a regulator whose basemap tiles fail mid-session (CARTO rate-limit or outage after a successful load) sees a message explaining the map is degraded, instead of an unexplained frozen/blank canvas — confirmed: `#noTokenCard` is only ever shown from the `initMap()` try/catch (construction-time failure); the runtime `map.on("error", ...)` handler only `console.warn`s
    evidence: a simulated tile failure after successful init surfaces a visible in-page message, not just a console warning
    size:     S
@@ -125,6 +126,7 @@ _none_
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
 | 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-06 | 07:57 | OBJ-map-debugger-4 | `f29beca` | a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text |
 
 ---
 
@@ -152,7 +154,7 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
+| frontend-engineer | 5 |
 | coord-validator | 4 |
 | map-debugger | 5 |
 | map-tester | 4 |
