@@ -154,6 +154,10 @@
   $("#panelExpand").addEventListener("click",   ()=>layout.classList.remove("panel-collapsed"));
 
   ["githubLink","githubContribute","githubFooter"].forEach(id=>{ const el = $("#"+id); if(el) el.href = REPO_URL; });
+  (function(){
+    const el = $("#reportErrorFooter");
+    if(el) el.href = REPO_URL + "/issues/new?title=" + encodeURIComponent("MoroccoMap data correction");
+  })();
 
   // ---------- Methodology modal ----------
   const methModal = $("#methodologyModal");
@@ -965,7 +969,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
       </div>`;
     popup.classList.add("open");
@@ -994,7 +998,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}" target="_blank" rel="noopener">Report an error</a>
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
