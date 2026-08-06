@@ -40,6 +40,7 @@ _none_
    size:     S
    risk:     none to the render path — additive property, no schema field renamed; ~1 KB file growth
 2. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
+   _(REPORT delivered 2026-08-06 12:59: exhaustive bbox/structural scan, 0/1,488 FAIL, 0 out-of-Morocco, 0 degenerate; 26-endpoint topology sample geographically plausible; 5/13 per file UNVERIFIED only because Nominatim is blocked by this session's own egress policy, not a data issue. Stays M pending real named-lookup access — see `council/2026-08-06.md` 12:59 sitting for full report.)_
    unlocks:  a regulator who directly fetches either public file (both cite ONEE/WBG as authoritative) can trust the routing, or the map withdraws the citation — instead of the map silently hosting 1,488 "ONEE/WBG-sourced" line segments that have never been checked, because neither file is loaded by `docs/app.js`/`docs/countries.config.js` (confirmed: zero references anywhere in the load path)
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
@@ -49,6 +50,11 @@ _none_
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
    size:     S
    risk:     none — file is unreferenced by any live code path
+4. **OBJ-coord-validator-4** | *(new, 2026-08-06 12:59)* Dedupe `docs/data/morocco/transmission-lines.geojson`'s WBG "planned corridor" segments against the already-live `docs/data/morocco/planned-corridors.geojson` before OBJ-map-debugger-2 wires it in
+   unlocks:  a DC developer toggling the grid layer sees each real corridor once, not a duplicate rendering of the same ~15 planned 225kV/400kV segments the map already shows via `planned-corridors.geojson` — confirmed via 2026-08-06 12:59 REPORT: 5 of 8 live `planned-corridors.geojson` features have a vertex at exact (0.0 km) coordinate match in the orphaned `transmission-lines.geojson`; `national-hv.geojson` shows no such duplication and is clear to proceed
+   evidence: no feature in `transmission-lines.geojson` shares an exact-match vertex with any feature in `planned-corridors.geojson` after the fix; coord-validator re-check confirms zero remaining overlaps
+   size:     S
+   risk:     low — read/compare + feature removal in one data file; must not touch `national-hv.geojson` (unaffected) or `planned-corridors.geojson` (the file being deduped against, stays canonical)
 
 ### map-debugger
 1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
@@ -86,21 +92,21 @@ _none_
    risk:     none — audit only; the fix belongs to whichever objective wires those layers in (OBJ-map-debugger-2)
 
 ### platform-engineer
-1. **OBJ-platform-engineer-1** | Add a minimal CI check on push to `main` (no build step, no bundler — pure validation)
-   unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page, because a check runs automatically instead of depending on a human remembering to run map-tester first — confirmed: no `.github/workflows/` directory exists anywhere in the repo
-   evidence: a CI config exists (e.g. GitHub Action) that JSON-validates every `docs/data/*.geojson` and checks `docs/index.html`/`docs/app.js` reference only files that exist; fails the check on a deliberately broken test commit
-   size:     M
-   risk:     must stay pure shell/validation steps — a careless implementation could itself introduce the build-step/bundler the structural veto forbids
-2. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
+1. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
    unlocks:  a regulator or DC developer trying to reach the map during a real outage is not left assuming the map simply doesn't exist for however long it takes someone to notice by hand — confirmed: no scheduled liveness check exists anywhere in the repo
    evidence: a scheduled check exists and something (log/notification) proves it fired at least once
    size:     S
    risk:     low — read-only external HTTP check; must not require a new secret beyond what platform-engineer already holds
-3. **OBJ-platform-engineer-3** | Add `docs/_headers` with an explicit cache-control policy for `docs/data/*.geojson`
+2. **OBJ-platform-engineer-3** | Add `docs/_headers` with an explicit cache-control policy for `docs/data/*.geojson`
    unlocks:  a regulator or DC developer who reloads the map right after a data correction ships actually sees the corrected figure, instead of a stale cached copy with no defined expiry — confirmed: no `docs/_headers` file or equivalent exists, so caching behavior for the data files is entirely undefined
    evidence: `docs/_headers` sets an explicit, short max-age (or must-revalidate) on `docs/data/*.geojson`; a fetch immediately after a data commit is confirmed to bypass/refresh the cache
    size:     S
    risk:     low — too short raises origin load, too long reintroduces the stale-data problem; value must be deliberate, not just "0"
+3. **OBJ-platform-engineer-4** | *(new, 2026-08-06 12:59, supersedes OBJ-platform-engineer-1)* Add `.github/workflows/validate.yml`: JSON-validate every `docs/data/morocco/*.geojson`, `node --check` on `docs/app.js`/`docs/countries.config.js`, grep-verify every `file:` reference in `docs/countries.config.js` resolves to a real file
+   unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page, because a check runs automatically instead of depending on a human remembering to run map-tester first — confirmed: no `.github/workflows/` directory exists anywhere in the repo. 2026-08-06 12:59 REPORT split the old M-sized `OBJ-platform-engineer-1` into this genuinely S-sized first slice: one workflow file, three pure-shell steps, zero `npm install`/`package.json`/marketplace actions beyond `actions/checkout@v4` — full YAML sketch in `council/2026-08-06.md`. `OBJ-platform-engineer-1` is retired; its full stated scope is this file.
+   evidence: the workflow exists on `main`, fails on a deliberately broken test commit (bad JSON / broken JS syntax / dangling file reference), passes on a clean one
+   size:     S
+   risk:     low — pure shell/validation only; must not grow into `npm ci`/a linter package or it trips the COUNCIL.md §5 build-step veto it was scoped to avoid
 
 ### security-engineer
 1. **OBJ-security-engineer-1** | Add Subresource Integrity (`integrity=`) hashes to the MapLibre `<script>`/`<link>` tags in `docs/index.html`
@@ -155,8 +161,8 @@ _none yet_
 | Seat | Next OBJ number |
 |---|---|
 | frontend-engineer | 5 |
-| coord-validator | 4 |
+| coord-validator | 5 |
 | map-debugger | 5 |
 | map-tester | 4 |
-| platform-engineer | 4 |
+| platform-engineer | 5 |
 | security-engineer | 4 |
