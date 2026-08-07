@@ -40,6 +40,21 @@
   border-color: var(--an-orange);
   background: rgba(255, 107, 53, 0.15);
 }
+
+/* Light theme: base rule above sets near-white text, but style.css
+   gives these buttons a white background in light theme — restore
+   dark, readable text/border to match style.css's light-theme intent. */
+[data-theme="light"] .topbar .ghost-btn,
+[data-theme="light"] .topbar .icon-btn {
+  color: #18181a;
+  border-color: #b3b0a8;
+}
+[data-theme="light"] .topbar .ghost-btn:hover,
+[data-theme="light"] .topbar .icon-btn:hover {
+  color: #18181a;
+  border-color: var(--an-orange);
+  background: rgba(255, 107, 53, 0.15);
+}
 .topbar .country-switch label { color: rgba(255, 255, 255, 0.65); }
 .topbar .country-switch select {
   background: rgba(255, 255, 255, 0.08);
