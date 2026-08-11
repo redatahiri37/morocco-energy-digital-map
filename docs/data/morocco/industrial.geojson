@@ -25,7 +25,8 @@
         "status": "operational",
         "precision": "exact",
         "source": "OCP annual report · GEM",
-        "source_url": "https://www.ocpgroup.ma/en"
+        "source_url": "https://www.ocpgroup.ma/en",
+        "vintage": "2026"
       }
     },
     {
@@ -46,7 +47,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "OCP annual report",
-        "source_url": "https://www.ocpgroup.ma/en/activities/mining"
+        "source_url": "https://www.ocpgroup.ma/en/activities/mining",
+        "vintage": "2026"
       }
     },
     {
@@ -67,7 +69,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "OCP",
-        "source_url": "https://www.ocpgroup.ma/en"
+        "source_url": "https://www.ocpgroup.ma/en",
+        "vintage": "2026"
       }
     },
     {
@@ -88,7 +91,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "OCP",
-        "source_url": "https://www.ocpgroup.ma/en"
+        "source_url": "https://www.ocpgroup.ma/en",
+        "vintage": "2026"
       }
     },
     {
@@ -109,7 +113,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "Holcim Morocco disclosures",
-        "source_url": "https://www.lafargeholcim.ma/"
+        "source_url": "https://www.lafargeholcim.ma/",
+        "vintage": "2026"
       }
     },
     {
@@ -130,7 +135,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "Holcim Morocco",
-        "source_url": "https://www.lafargeholcim.ma/"
+        "source_url": "https://www.lafargeholcim.ma/",
+        "vintage": "2026"
       }
     },
     {
@@ -151,7 +157,8 @@
         "status": "operational",
         "precision": "exact",
         "source": "SONASID annual report",
-        "source_url": "https://www.sonasid.ma/"
+        "source_url": "https://www.sonasid.ma/",
+        "vintage": "2026"
       }
     },
     {
@@ -172,7 +179,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "SONASID",
-        "source_url": "https://www.sonasid.ma/"
+        "source_url": "https://www.sonasid.ma/",
+        "vintage": "2026"
       }
     },
     {
@@ -193,7 +201,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "company disclosures",
-        "source_url": "https://www.maghrebsteel.ma/"
+        "source_url": "https://www.maghrebsteel.ma/",
+        "vintage": "2026"
       }
     },
     {
@@ -214,7 +223,8 @@
         "status": "operational",
         "precision": "exact",
         "source": "Renault press",
-        "source_url": "https://www.media.renault.com/"
+        "source_url": "https://www.media.renault.com/",
+        "vintage": "2026"
       }
     },
     {
@@ -235,7 +245,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "Stellantis press",
-        "source_url": "https://www.stellantis.com/"
+        "source_url": "https://www.stellantis.com/",
+        "vintage": "2026"
       }
     },
     {
@@ -256,7 +267,8 @@
         "status": "idle",
         "precision": "exact",
         "source": "company filings",
-        "source_url": "https://www.samir.ma/"
+        "source_url": "https://www.samir.ma/",
+        "vintage": "2026"
       }
     },
     {
@@ -277,7 +289,8 @@
         "status": "operational",
         "precision": "approximate",
         "source": "Managem",
-        "source_url": "https://www.managemgroup.com/"
+        "source_url": "https://www.managemgroup.com/",
+        "vintage": "2026"
       }
     }
   ]

@@ -957,7 +957,7 @@
       <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
-        <span class="src">${escapeHtml(p.source || "—")}</span>
+        <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
