@@ -39,11 +39,17 @@ _none_
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
+   **REPORT delivered 2026-08-11 12:55** (full population, not sample — boundary-containment + malformed-geometry check on all 1,488 features, since it's cheap without a network call; Nominatim itself was blocked by sandbox egress). national-hv: PASS 931 / WARN 8 / FAIL 8. transmission-lines: PASS 524 / WARN 9 / FAIL 8. FAIL set = 8 unique real-world lines duplicated across both files: 6 short 2–3-vertex 225/400 kV stubs sit 28–69 km inside Algeria near Oujda with no plausible justification (spun off as **OBJ-coord-validator-4**, below); 2 long smooth 51–130-vertex lines trace a path consistent with the real Morocco–Spain HVDC interconnector but extend outside the boundary polygon and remain **UNVERIFIED** pending real Nominatim/OSM access (blocked in this sandbox, not resolved). Recommendation: the ~98.9% passing bulk is structurally plausible for `OBJ-map-debugger-2`, but do not wire wholesale until OBJ-coord-validator-4 ships and the 2 interconnector candidates get a real geocoding pass outside this sandbox.
 3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
    size:     S
    risk:     none — file is unreferenced by any live code path
+4. **OBJ-coord-validator-4** | Fix or remove the 6 line-segment features in `national-hv.geojson`/`transmission-lines.geojson` that sit 28–69 km inside Algeria near Oujda
+   unlocks:  a regulator or DC developer who fetches either file directly (both cite ONEE/WBG as authoritative) doesn't get grid infrastructure placed in the wrong country — confirmed via full-population boundary-containment check (OBJ-coord-validator-2 REPORT, 2026-08-11): 6 short 2–3-vertex 225/400 kV stubs, disconnected from the rest of the network, with no plausible real ONEE/WBG line matching their location
+   evidence: all 6 features corrected to fall within the Morocco boundary or removed; a follow-up coord-validator pass shows 0 FAIL in the boundary-containment check
+   size:     S
+   risk:     none to ship (data-only, 6 known features, files are not yet wired into any rendered layer)
 
 ### map-debugger
 1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
@@ -90,6 +96,12 @@ _none_
    evidence: a CI config exists (e.g. GitHub Action) that JSON-validates every `docs/data/*.geojson` and checks `docs/index.html`/`docs/app.js` reference only files that exist; fails the check on a deliberately broken test commit
    size:     M
    risk:     must stay pure shell/validation steps — a careless implementation could itself introduce the build-step/bundler the structural veto forbids
+   **REPORT delivered 2026-08-11 12:55**: confirmed no `.github/` or any CI exists anywhere in the repo, and no `package.json` exists. Design: one `.github/workflows/validate.yml`, `ubuntu-latest`, no `setup-node` needed (runner ships Node preinstalled), two independent `node -e`/checked-in-`.js` steps (JSON-validity, then orphan-reference check) — plain `.js` invoked with bare Node, no `npm install`, no bundler, so the structural veto is avoided by construction. Split off as **OBJ-platform-engineer-4** (S), below; the orphan-reference half is deferred as a follow-up that should be scoped jointly with `OBJ-map-tester-1` rather than duplicated.
+4. **OBJ-platform-engineer-4** | Add a GitHub Action that JSON-validates every `docs/data/*.geojson` on push to `main`
+   unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a page built on malformed data, because a check runs automatically instead of depending on a human remembering to run map-tester first
+   evidence: `.github/workflows/validate.yml` + a small checked-in `.js` script exist; `JSON.parse`s every `docs/data/*.geojson` and checks `type` is `Feature`/`FeatureCollection`; fails on a deliberately broken test commit
+   size:     S
+   risk:     none — pure validation, no `package.json`, no bundler, runs only in GitHub's ephemeral runner; reversible by deleting the workflow file
 2. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
    unlocks:  a regulator or DC developer trying to reach the map during a real outage is not left assuming the map simply doesn't exist for however long it takes someone to notice by hand — confirmed: no scheduled liveness check exists anywhere in the repo
    evidence: a scheduled check exists and something (log/notification) proves it fired at least once
@@ -107,11 +119,6 @@ _none_
    evidence: script/link tags carry a correct `integrity` hash matching the pinned 4.7.1 build; a deliberately wrong test hash causes the browser to block the resource
    size:     S
    risk:     low — hash must be regenerated if the pinned CDN version ever changes, or the resource silently fails to load
-2. **OBJ-security-engineer-2** | Disclose the third-party requests the page makes on every load (Google Fonts, unpkg, CARTO/OSM tiles)
-   unlocks:  a regulator evaluating whether the map meets the data-protection bar they'd apply to their own agency's tools can see the third-party data flow disclosed on the page, instead of finding it themselves via devtools — confirmed: 3 third-party origins are contacted on every load with zero disclosure anywhere in the existing "About this tool"/Methodology text
-   evidence: the page states which third parties receive a request on load
-   size:     S
-   risk:     none — documentation-only addition, doesn't change which requests fire
 3. **OBJ-security-engineer-3** | Add a Content-Security-Policy via `docs/_headers`
    unlocks:  a regulator's or DC developer's browser blocks/reports any unexpected script origin the moment one is injected (e.g. a compromised dependency or a future accidental tracker), instead of it running silently until someone greps the source by hand — confirmed: no CSP exists anywhere (`docs/index.html` has no CSP meta tag, and no `docs/_headers` file exists at all)
    evidence: a CSP restricts `script-src`/`style-src`/`connect-src` to the known-good origins (unpkg, fonts.googleapis/gstatic, carto/openstreetmap tile domains); the live page shows zero CSP console violations
@@ -125,6 +132,7 @@ _none_
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
 | 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-11 | 12:55 | OBJ-security-engineer-2 | `fc3a5e5` | a regulator evaluating the map against the data-protection bar they'd apply to their own agency's tools can see the third-party data flow (Google Fonts, unpkg, CARTO, OpenInfraMap, MapLibre demo glyph tiles) disclosed on the page, instead of finding it themselves via devtools |
 
 ---
 
@@ -153,8 +161,8 @@ _none yet_
 | Seat | Next OBJ number |
 |---|---|
 | frontend-engineer | 4 |
-| coord-validator | 4 |
+| coord-validator | 5 |
 | map-debugger | 5 |
 | map-tester | 4 |
-| platform-engineer | 4 |
+| platform-engineer | 5 |
 | security-engineer | 4 |
