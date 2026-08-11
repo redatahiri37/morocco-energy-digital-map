@@ -51,6 +51,19 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   Attempted 2026-08-11 04:10 sitting: ruled SHIP, drafted by map-debugger
+   (`reda.tahiri@example.com` → `reda.tahiri1@gmail.com`, all 3 locations,
+   verified as a pure string substitution — `node --check` clean, zero
+   `example.com` remaining). map-tester returned **GO-STATIC only** — no
+   browser tool was available in that session and this sandbox's proxy
+   currently blocks all outbound HTTPS (403 on CONNECT to every host
+   tried, including unpkg.com, so MapLibre cannot even initialize
+   locally), so live-DOM/console evidence could not be gathered for the
+   2 popup-link locations. GO-STATIC is non-shippable per COUNCIL.md §5 —
+   commit `1eba927` was reverted (`390384d`) on `council/2026-08-11-0410`
+   rather than landed. Still top-ranked for the SHIP slot; next execution
+   attempt needs a session with real browser access (Claude-in-Chrome /
+   Preview MCP, or human verification) to actually clear the release gate.
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
@@ -68,16 +81,21 @@ _none_
    risk:     low — must not fire on benign/recoverable MapLibre warnings (e.g. missing icon) or it will falsely alarm users on a healthy map
 
 ### map-tester
-1. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
-   unlocks:  the next time a data file is added or a `layers[]` entry is edited, a regulator or DC developer relying on "the map shows what's in `docs/data/`" doesn't silently lose a layer — this sitting only caught 3 orphans (`grid-lines`, `national-hv`, `transmission-lines`) by manual grep
-   evidence: a script/checklist step reports the orphan list; currently returns 3 (see OBJ-map-debugger-2, OBJ-coord-validator-3)
-   size:     S
-   risk:     none — read-only verification script, no product code changed
-2. **OBJ-map-tester-2** | Write down what "browser-level evidence" must contain for a release-gate GO (desktop/light/375px console + screenshot requirements)
+1. **OBJ-map-tester-2** | Write down what "browser-level evidence" must contain for a release-gate GO (desktop/light/375px console + screenshot requirements)
    unlocks:  a Chair ruling a future SHIP can check a submitted GO against a fixed, written bar instead of a judgment call — closing the gap between `GO-STATIC` ("not shippable"; COUNCIL.md §5) and a real GO
    evidence: a short written checklist enumerating required evidence items, referenced by OBJ id the next time something ships
    size:     S
    risk:     none — documentation-only
+   Re-ranked to #1 in the 2026-08-11 04:10 sitting: this exact gap is what
+   capped OBJ-map-debugger-1 at GO-STATIC this sitting — no written bar
+   existed for "no browser tool was available" versus "the fix is
+   unverified," so map-tester defaulted to the stricter non-shippable
+   reading.
+2. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
+   unlocks:  the next time a data file is added or a `layers[]` entry is edited, a regulator or DC developer relying on "the map shows what's in `docs/data/`" doesn't silently lose a layer — this sitting only caught 3 orphans (`grid-lines`, `national-hv`, `transmission-lines`) by manual grep
+   evidence: a script/checklist step reports the orphan list; currently returns 3 (see OBJ-map-debugger-2, OBJ-coord-validator-3)
+   size:     S
+   risk:     none — read-only verification script, no product code changed
 3. **OBJ-map-tester-3** | Audit popup field-name mapping against each source file's actual property keys
    unlocks:  a DC developer reading a line's popup can trust that "Precision: approximate" reflects that specific line's real value, not a hardcoded fallback masking a wrong/missing field — confirmed live mismatch: `openLinePopup()` (`docs/app.js`) reads `p.precision`, but `national-hv.geojson` only has `coord_confidence` and `transmission-lines.geojson` has neither key at all, so the popup would silently show the hardcoded default "approximate" for both once rendered
    evidence: a per-layer field-mapping audit confirming every property the popup reads exists under that exact key in every file that layer draws from
