@@ -193,6 +193,16 @@
       <p>Every layer on this map is a static GeoJSON under <code>/docs/data/morocco/</code>. Features include <code>source</code>, <code>source_url</code>, and <code>precision</code> so provenance is inspectable from the tooltip.</p>
       <h3>Sources by layer</h3>
       <ul id="methodologySources"></ul>
+      <h3>Third-party requests on load</h3>
+      <p>Loading this page contacts these external services. No login, account or personal data is involved — this is standard web-asset loading, disclosed here for transparency.</p>
+      <ul class="bullets">
+        <li><strong>Google Fonts</strong> (<code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>) — serves the page typefaces (Inter, JetBrains Mono).</li>
+        <li><strong>unpkg.com</strong> — serves the MapLibre GL JS library and stylesheet that render the map.</li>
+        <li><strong>CARTO</strong> (<code>basemaps.cartocdn.com</code>) — serves basemap raster tiles, requested continuously as you pan and zoom.</li>
+        <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
+        <li><strong>MapLibre demo tiles</strong> (<code>demotiles.maplibre.org</code>) — serves the font glyphs used to render map labels (place names, layer text).</li>
+      </ul>
+      <p class="micro">OpenStreetMap.org is credited above for data attribution only — this page does not request tiles directly from openstreetmap.org; that data reaches you via CARTO and OpenInfraMap.</p>
       <h3>Limits</h3>
       <ul class="bullets">
         <li>Transmission-line routing is indicative, not survey-grade.</li>
