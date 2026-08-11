@@ -965,7 +965,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri1@gmail.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}">Report an error</a>
+        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
       </div>`;
     popup.classList.add("open");
@@ -994,7 +994,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri1@gmail.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}">Report an error</a>
+        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}">Report an error</a>
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
