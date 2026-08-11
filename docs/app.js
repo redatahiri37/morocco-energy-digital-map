@@ -83,7 +83,7 @@
     "oim-grid":"oim",
     "interconnectors":"grid",
     "planned-corridors":"grid",
-    "grid-lines":"grid",        // legacy fallback
+    "grid-lines":"grid",
     "industrial":"industrial",
     "digital":"digital"
   };

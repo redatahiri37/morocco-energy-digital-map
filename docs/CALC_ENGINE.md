@@ -66,5 +66,5 @@ Same mental model, lighter weight, fully open-source inputs.
 Rendering is **OpenInfraMap** (OSM, ODbL, fresh). The WBG 2018 shapefile
 is kept on disk only for the calc engine — it's a frozen snapshot but
 useful as a cross-check when OSM is incomplete in the south.
-Interconnectors, HVDC corridors and 5 planned WBG-2018 lines are in
-`grid-lines.geojson` as the editorial overlay.
+Interconnectors, HVDC corridors and 5 planned WBG-2018 lines are the
+editorial overlay in `interconnectors.geojson` and `planned-corridors.geojson`.
