@@ -27,19 +27,20 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+3. **OBJ-frontend-engineer-4** | Distinguish a failed per-layer fetch from a genuinely empty layer in `docs/app.js`/`#layerList`
+   unlocks:  a DC developer checking whether a specific infrastructure layer (e.g. digital or industrial) has data near their candidate site doesn't mistake "this layer failed to load" for "this layer genuinely has zero features here" — confirmed: `docs/app.js:248-258` catches any fetch failure (network error or non-200) and silently sets `layerData[L.id]` to an empty `FeatureCollection`, identical in the panel to a real empty result; only a `console.warn` records the actual failure
+   evidence: a simulated fetch failure (e.g. 404 one layer file) renders visibly differently in `#layerList` than a legitimately empty layer (e.g. "failed to load" vs "0")
+   size:     S
+   risk:     low — additive: needs a flag distinguishing fetch-failure from true-empty in `layerData`/`renderLayerList`; no change to the fetch-success path
+   New this sitting (2026-08-11) — found by direct code read, not previously on the Board; distinct from OBJ-frontend-engineer-2 (slow-load spinner) and OBJ-map-debugger-3 (mid-session MapLibre runtime errors), which is why it earns its own S rather than folding in.
 
 ### coord-validator
-1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
-   unlocks:  a regulator citing OCP's, Renault's or another site's estimated demand can state which year the estimate is from, instead of it being presented as implicitly current (confirmed: file has `source`/`source_url` on every feature but no date field at all)
-   evidence: all 13 features carry a `vintage` property; the popup source-row surfaces it
-   size:     S
-   risk:     none to the render path — additive property, no schema field renamed; ~1 KB file growth
-2. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
+1. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
    unlocks:  a regulator who directly fetches either public file (both cite ONEE/WBG as authoritative) can trust the routing, or the map withdraws the citation — instead of the map silently hosting 1,488 "ONEE/WBG-sourced" line segments that have never been checked, because neither file is loaded by `docs/app.js`/`docs/countries.config.js` (confirmed: zero references anywhere in the load path)
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
-3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
+2. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
    size:     S
@@ -47,25 +48,27 @@ _none_
 
 ### map-debugger
 1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
-   unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations
+   unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations (re-verified live this sitting — still present, unchanged)
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
-2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
-   unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
-   evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
-   size:     L
-   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
-3. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
-   unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not, since brand.css's later, unconditional rule wins the cascade at equal specificity. Reproduced via `document.body.dataset.theme="light"` in a live browser (screenshot: all four topbar buttons render blank/unreadable) and confirmed present on the pre-edit file too (git-stash comparison), so it predates and is unrelated to OBJ-frontend-engineer-1.
+2. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
+   unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not. Re-verified this sitting: `docs/brand.css:32-38` still has no light-theme conditional rule.
    evidence: in light theme, all four topbar buttons show visible, sufficient-contrast text against their background
    size:     S
    risk:     low — brand.css is shared with Atlas Solar's chrome per its own header ("Single source of truth for both apps"); a fix must add a light-theme-conditional rule there without breaking Solar's topbar, which platform-engineer/security-engineer should confirm since they're dual-hatted across both apps
-4. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
+3. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
    unlocks:  a regulator whose basemap tiles fail mid-session (CARTO rate-limit or outage after a successful load) sees a message explaining the map is degraded, instead of an unexplained frozen/blank canvas — confirmed: `#noTokenCard` is only ever shown from the `initMap()` try/catch (construction-time failure); the runtime `map.on("error", ...)` handler only `console.warn`s
    evidence: a simulated tile failure after successful init surfaces a visible in-page message, not just a console warning
    size:     S
    risk:     low — must not fire on benign/recoverable MapLibre warnings (e.g. missing icon) or it will falsely alarm users on a healthy map
+
+Parked this sitting (still Docketed, not among the 3 actively filed — see minutes 2026-08-11 17:57):
+4. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
+   unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
+   evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
+   size:     L
+   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
 
 ### map-tester
 1. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
@@ -78,6 +81,7 @@ _none_
    evidence: a short written checklist enumerating required evidence items, referenced by OBJ id the next time something ships
    size:     S
    risk:     none — documentation-only
+   Chair note (2026-08-11 17:57): `unlocks:` names "a Chair" — this is the Council, which COUNCIL.md §6 forbids ("unlocks: may not name the Council, the codebase, or code quality"). Not eligible for SHIP/REPORT until map-tester rewords `unlocks:` to name a regulator or DC developer's decision (e.g. what a published GO lets *them* trust about a shipped change), not the Chair's internal process. Left Docketed rather than vetoed — this is a wording defect, not a rejected idea.
 3. **OBJ-map-tester-3** | Audit popup field-name mapping against each source file's actual property keys
    unlocks:  a DC developer reading a line's popup can trust that "Precision: approximate" reflects that specific line's real value, not a hardcoded fallback masking a wrong/missing field — confirmed live mismatch: `openLinePopup()` (`docs/app.js`) reads `p.precision`, but `national-hv.geojson` only has `coord_confidence` and `transmission-lines.geojson` has neither key at all, so the popup would silently show the hardcoded default "approximate" for both once rendered
    evidence: a per-layer field-mapping audit confirming every property the popup reads exists under that exact key in every file that layer draws from
@@ -125,6 +129,7 @@ _none_
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
 | 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-11 | 17:57 | OBJ-coord-validator-1 | `29fe8df` | a regulator citing OCP's, Renault's or another industrial site's estimated demand can state which year the estimate is from, instead of it reading as implicitly current |
 
 ---
 
@@ -152,7 +157,7 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
+| frontend-engineer | 5 |
 | coord-validator | 4 |
 | map-debugger | 5 |
 | map-tester | 4 |
