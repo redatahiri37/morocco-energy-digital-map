@@ -34,6 +34,21 @@
   color: rgba(255, 255, 255, 0.85);
   border-color: rgba(255, 255, 255, 0.25);
 }
+/* Light theme: style.css gives these buttons a white background;
+   without this override the near-white text above (needed for
+   legibility on the permanently-navy .topbar band) makes them
+   unreadable (white-on-white). Confirmed live via headless-browser
+   getComputedStyle: color rgba(255,255,255,.85) on background
+   rgb(255,255,255) before this rule existed. OBJ-map-debugger-4.
+   Placed BEFORE the :hover rule below (same specificity, 0-3-0) so
+   hover's white-on-orange-tint state still wins on interaction —
+   verified live; without this ordering hover regresses to
+   dark-on-dark instead. */
+[data-theme="light"] .topbar .ghost-btn,
+[data-theme="light"] .topbar .icon-btn {
+  color: #18181a;
+  border-color: #b3b0a8;
+}
 .topbar .ghost-btn:hover,
 .topbar .icon-btn:hover {
   color: #fff;
