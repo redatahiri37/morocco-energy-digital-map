@@ -10,7 +10,20 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 ## In Progress (WIP limit: 1)
 
-_none_
+- **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
+  Attempted 2026-08-12 13:12 sitting: data-side edit executed and cleared the
+  coord-validator gate (0 FAILs; all 13 features carry a non-fabricated
+  `vintage` — 12× `"unknown"`, 1× `"unknown (refinery idled since 2015)"`
+  for `samir-mohammedia`), and `docs/app.js`'s point-popup source-row was
+  wired to surface it conditionally. **Blocked on the release gate**:
+  map-tester returned GO-STATIC, not GO — this execution sandbox cannot
+  reach the live URL or required CDNs (`redatahiri37.github.io`,
+  `unpkg.com`, `cartocdn.com`, `openinframap.org` all return
+  `403`/`EGRESS_BLOCKED`), so no live-browser evidence could be produced
+  and the change was not committed (working tree reverted). The exact edit
+  is fully specified in `council/2026-08-12.md` — next attempt can re-apply
+  it directly and just needs a live-browser GO (human DevTools paste, or a
+  future run with working egress) to close it out.
 
 ---
 
@@ -29,17 +42,12 @@ _none_
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
 
 ### coord-validator
-1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
-   unlocks:  a regulator citing OCP's, Renault's or another site's estimated demand can state which year the estimate is from, instead of it being presented as implicitly current (confirmed: file has `source`/`source_url` on every feature but no date field at all)
-   evidence: all 13 features carry a `vintage` property; the popup source-row surfaces it
-   size:     S
-   risk:     none to the render path — additive property, no schema field renamed; ~1 KB file growth
-2. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
+1. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
    unlocks:  a regulator who directly fetches either public file (both cite ONEE/WBG as authoritative) can trust the routing, or the map withdraws the citation — instead of the map silently hosting 1,488 "ONEE/WBG-sourced" line segments that have never been checked, because neither file is loaded by `docs/app.js`/`docs/countries.config.js` (confirmed: zero references anywhere in the load path)
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
-3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
+2. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
    size:     S
@@ -68,18 +76,23 @@ _none_
    risk:     low — must not fire on benign/recoverable MapLibre warnings (e.g. missing icon) or it will falsely alarm users on a healthy map
 
 ### map-tester
-1. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
+1. **OBJ-map-tester-2** | Write down what "browser-level evidence" must contain for a release-gate GO (desktop/light/375px console + screenshot requirements)
+   unlocks:  a Chair ruling a future SHIP can check a submitted GO against a fixed, written bar instead of a judgment call — closing the gap between `GO-STATIC` ("not shippable"; COUNCIL.md §5) and a real GO. Re-ranked to top 2026-08-12: this sitting is the concrete case it exists to resolve — map-tester produced a local network-mocked Chromium DOM harness as strong supplementary evidence for OBJ-coord-validator-1's release gate, but the written bar doesn't yet say whether that counts, forcing a from-scratch judgment call.
+   evidence: a short written checklist enumerating required evidence items, referenced by OBJ id the next time something ships; must explicitly say whether a network-mocked local-DOM harness (real Chromium, real app.js, only unreachable CDN calls stubbed) is admissible supplementary evidence or must always defer to GO-STATIC
+   size:     S
+   risk:     none — documentation-only
+2. **OBJ-map-tester-4** | Document that this execution sandbox cannot reach the live URL or required CDNs, and define the fallback evidence path for GO
+   unlocks:  a Chair who reads a future map-tester report showing GO-STATIC understands it is a structural sandbox limitation (confirmed 2026-08-12: `WebFetch` → `EGRESS_BLOCKED` on `redatahiri37.github.io`; direct `curl` via the agent proxy → `403` `CONNECT tunnel failed` on `unpkg.com`/`cartocdn.com`/`openinframap.org`/`nominatim.openstreetmap.org`), not a sign the seat skipped work — and knows the only legitimate path to GO is a human-in-the-loop browser check or a Preview MCP with real network access
+   evidence: a note in COUNCIL.md or BOARD.md stating the sandbox constraint and the accepted fallback (manual DevTools paste from the user, or Claude-in-Chrome/Preview MCP), so every future sitting isn't rediscovering this from zero. Filed 2026-08-12 after OBJ-coord-validator-1's release gate hit exactly this wall.
+   size:     S
+   risk:     none — documentation-only; does not change the GO/GO-STATIC gate itself
+3. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
    unlocks:  the next time a data file is added or a `layers[]` entry is edited, a regulator or DC developer relying on "the map shows what's in `docs/data/`" doesn't silently lose a layer — this sitting only caught 3 orphans (`grid-lines`, `national-hv`, `transmission-lines`) by manual grep
    evidence: a script/checklist step reports the orphan list; currently returns 3 (see OBJ-map-debugger-2, OBJ-coord-validator-3)
    size:     S
    risk:     none — read-only verification script, no product code changed
-2. **OBJ-map-tester-2** | Write down what "browser-level evidence" must contain for a release-gate GO (desktop/light/375px console + screenshot requirements)
-   unlocks:  a Chair ruling a future SHIP can check a submitted GO against a fixed, written bar instead of a judgment call — closing the gap between `GO-STATIC` ("not shippable"; COUNCIL.md §5) and a real GO
-   evidence: a short written checklist enumerating required evidence items, referenced by OBJ id the next time something ships
-   size:     S
-   risk:     none — documentation-only
-3. **OBJ-map-tester-3** | Audit popup field-name mapping against each source file's actual property keys
-   unlocks:  a DC developer reading a line's popup can trust that "Precision: approximate" reflects that specific line's real value, not a hardcoded fallback masking a wrong/missing field — confirmed live mismatch: `openLinePopup()` (`docs/app.js`) reads `p.precision`, but `national-hv.geojson` only has `coord_confidence` and `transmission-lines.geojson` has neither key at all, so the popup would silently show the hardcoded default "approximate" for both once rendered
+4. **OBJ-map-tester-3** | Audit popup field-name mapping against each source file's actual property keys
+   unlocks:  a DC developer reading a line's popup can trust that "Precision: approximate" reflects that specific line's real value, not a hardcoded fallback masking a wrong/missing field — confirmed live mismatch: `openLinePopup()` (`docs/app.js`) reads `p.precision`, but `national-hv.geojson` only has `coord_confidence` and `transmission-lines.geojson` has neither key at all, so the popup would silently show the hardcoded default "approximate" for both once rendered. Scope note added 2026-08-12: should now also cover the newly-added `vintage` key on `industrial.geojson` once OBJ-coord-validator-1 lands, so it isn't missed if a future non-industrial layer needs the same field.
    evidence: a per-layer field-mapping audit confirming every property the popup reads exists under that exact key in every file that layer draws from
    size:     S
    risk:     none — audit only; the fix belongs to whichever objective wires those layers in (OBJ-map-debugger-2)
@@ -155,6 +168,6 @@ _none yet_
 | frontend-engineer | 4 |
 | coord-validator | 4 |
 | map-debugger | 5 |
-| map-tester | 4 |
+| map-tester | 5 |
 | platform-engineer | 4 |
 | security-engineer | 4 |
