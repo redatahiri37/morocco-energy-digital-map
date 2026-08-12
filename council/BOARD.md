@@ -10,7 +10,7 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 ## In Progress (WIP limit: 1)
 
-_none_
+_none_ — OBJ-map-debugger-5 shipped this sitting (2026-08-12 18:00); see Shipped below.
 
 ---
 
@@ -27,6 +27,11 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+3. **OBJ-frontend-engineer-4** | Add Escape-to-close and focus handling to the Methodology modal (`role="dialog" aria-modal="true"`) in `docs/app.js`/`docs/index.html`
+   unlocks:  a regulator or DC developer navigating by keyboard can close the Methodology modal via Escape, standard modal behavior, instead of being forced to visually locate and click `#methodologyClose` — costlier because `aria-modal="true"` is declared but focus isn't trapped, so Tab can silently leave the "modal" into the page behind it
+   evidence: confirmed via grep — zero `keydown`/`Escape` listeners anywhere in `docs/app.js`; modal only closes via click on `#methodologyClose` (`app.js:161`) or click-outside (`app.js:162`)
+   size:     S
+   risk:     low — additive keydown listener scoped to the modal's open state; must not interfere with existing click-to-close-on-backdrop behavior or map keyboard interactions elsewhere
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -125,6 +130,7 @@ _none_
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
 | 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-12 | 18:00 | OBJ-map-debugger-5 | see PR `council/2026-08-12-1800` | a DC developer assessing cross-border interconnection capacity can see which interconnector lines are operational (ES-MA I/II) vs idle (DZ-MA) and toggle that layer independently of planned corridors, instead of the "Interconnectors" sidebar entry silently rendering zero of its own features |
 
 ---
 
@@ -152,9 +158,9 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
+| frontend-engineer | 5 |
 | coord-validator | 4 |
-| map-debugger | 5 |
+| map-debugger | 6 |
 | map-tester | 4 |
 | platform-engineer | 4 |
 | security-engineer | 4 |
