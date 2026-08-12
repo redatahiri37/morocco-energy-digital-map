@@ -6,11 +6,25 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 **Read this before proposing objectives. Pull from here; don't reinvent.**
 
+> **⚠ Standing process flag, added 2026-08-12 21:04 — read before ruling a SHIP.**
+> Only PR #1 has ever merged to `main` since the Council started; PRs #2–#24
+> (every sitting's minutes, every SHIP's code since the first) sit open and
+> unmerged. Sittings branch from the same never-advancing `main`, so
+> same-day sittings can be mutually blind to each other. This has already
+> caused the SHIP budget to be exceeded (2026-08-12: three real commits —
+> `a61eb9d`, `4cac17b`, `89f5d74` — landed against a 1-per-24h rule) and an
+> ID collision (`OBJ-frontend-engineer-4` means two different things on two
+> different unmerged branches — see that entry below). **A Chair cannot fix
+> this by ruling** — it needs a human to triage the open-PR backlog. See
+> `council/2026-08-12.md`'s 21:04 sitting for full detail. Until resolved,
+> treat every "Shipped" row below as *a PR exists and passed its gates*, not
+> *this is live on the deployed map*.
+
 ---
 
 ## In Progress (WIP limit: 1)
 
-_none_
+_none_ — OBJ-map-debugger-5 shipped this sitting (2026-08-12 18:00); see Shipped below. (Not yet merged to `main` — see process flag above.)
 
 ---
 
@@ -27,6 +41,11 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+3. **OBJ-frontend-engineer-4** | ⚠ ID COLLISION — this sitting's/PR #24's framing: Add Escape-to-close and focus handling to the Methodology modal (`role="dialog" aria-modal="true"`) in `docs/app.js`/`docs/index.html`. PR #21 (2026-08-12 03:03, unmerged) independently minted the *same* ID for a different objective ("tooltip viewport clamping"). A human must pick one framing and renumber the other once the PR backlog is triaged — do not ship either under this ID until resolved.
+   unlocks:  a regulator or DC developer navigating by keyboard can close the Methodology modal via Escape, standard modal behavior, instead of being forced to visually locate and click `#methodologyClose` — costlier because `aria-modal="true"` is declared but focus isn't trapped, so Tab can silently leave the "modal" into the page behind it
+   evidence: confirmed via grep — zero `keydown`/`Escape` listeners anywhere in `docs/app.js`; modal only closes via click on `#methodologyClose` (`app.js:161`) or click-outside (`app.js:162`)
+   size:     S
+   risk:     low — additive keydown listener scoped to the modal's open state; must not interfere with existing click-to-close-on-backdrop behavior or map keyboard interactions elsewhere
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -34,10 +53,10 @@ _none_
    evidence: all 13 features carry a `vintage` property; the popup source-row surfaces it
    size:     S
    risk:     none to the render path — additive property, no schema field renamed; ~1 KB file growth
-2. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
+2. **OBJ-coord-validator-2** | ✅ REPORT DELIVERED 2026-08-12 21:04 — Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
    unlocks:  a regulator who directly fetches either public file (both cite ONEE/WBG as authoritative) can trust the routing, or the map withdraws the citation — instead of the map silently hosting 1,488 "ONEE/WBG-sourced" line segments that have never been checked, because neither file is loaded by `docs/app.js`/`docs/countries.config.js` (confirmed: zero references anywhere in the load path)
-   evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
-   size:     M
+   evidence: **PASS, 0 FAILs** — full-file bbox scan (0/947, 0/541 out of Morocco-administered bbox incl. Laâyoune/Dakhla), full-file degenerate/NaN scan (0/947, 0/541), 26-feature stratified sample per file (26/26, 26/26 PASS on segment-length/voltage plausibility). Side-finding, not blocking: 5 exact-duplicate geometry pairs per file (10 features each), flagged for a future dedup pass. Full report in `council/2026-08-12.md` 21:04 sitting. This unblocks OBJ-map-debugger-2's data-quality concern.
+   size:     M (report done; the underlying wiring work is OBJ-map-debugger-2, still L)
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
 3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
@@ -46,7 +65,7 @@ _none_
    risk:     none — file is unreferenced by any live code path
 
 ### map-debugger
-1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
+1. **OBJ-map-debugger-1** | ⚠ Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997` — **already fixed twice, independently, on two unmerged branches**: PR #21 (03:03, commit `a61eb9d`) and PR #22 (07:57, commit `4cac17b`). Still shows the dead placeholder on `main` because neither PR is merged. Do not ship a third fix — a human needs to merge one of the two existing ones and close the other.
    unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
@@ -55,7 +74,7 @@ _none_
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
    size:     L
-   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
+   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer. **Unblocked 2026-08-12 21:04**: OBJ-coord-validator-2's report came back PASS/0 FAILs, so the data-quality gate is cleared — still needs splitting into a shippable S before it can rank for SHIP; also inherits OBJ-map-tester-3's popup-field-mapping fix (national-hv/transmission-lines lack the `precision` key the popup reads) as a co-requirement once wired
 3. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
    unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not, since brand.css's later, unconditional rule wins the cascade at equal specificity. Reproduced via `document.body.dataset.theme="light"` in a live browser (screenshot: all four topbar buttons render blank/unreadable) and confirmed present on the pre-edit file too (git-stash comparison), so it predates and is unrelated to OBJ-frontend-engineer-1.
    evidence: in light theme, all four topbar buttons show visible, sufficient-contrast text against their background
@@ -85,11 +104,11 @@ _none_
    risk:     none — audit only; the fix belongs to whichever objective wires those layers in (OBJ-map-debugger-2)
 
 ### platform-engineer
-1. **OBJ-platform-engineer-1** | Add a minimal CI check on push to `main` (no build step, no bundler — pure validation)
+1. **OBJ-platform-engineer-1** | ✅ REPORT DELIVERED 2026-08-12 21:04, SHIP-ready — Add a minimal CI check on push to `main` (no build step, no bundler — pure validation)
    unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page, because a check runs automatically instead of depending on a human remembering to run map-tester first — confirmed: no `.github/workflows/` directory exists anywhere in the repo
-   evidence: a CI config exists (e.g. GitHub Action) that JSON-validates every `docs/data/*.geojson` and checks `docs/index.html`/`docs/app.js` reference only files that exist; fails the check on a deliberately broken test commit
-   size:     M
-   risk:     must stay pure shell/validation steps — a careless implementation could itself introduce the build-step/bundler the structural veto forbids
+   evidence: a complete `.github/workflows/docs-ci.yml` was drafted and its logic locally verified against the real repo (all 9 GeoJSON files pass, all `index.html`/`countries.config.js` refs resolve, `node --check` clean). Grounding notes for the implementer: 3/9 GeoJSON files are intentionally orphaned (expected); `oim-grid`'s `file: null` must be skipped; `boundary.geojson` must only be checked for *enabled* countries. Full YAML in `council/2026-08-12.md` 21:04 sitting.
+   size:     S (reclassified from M — the scoping work is done; implementation is one new file)
+   risk:     must stay pure shell/validation steps — the drafted YAML uses only `actions/checkout`+`actions/setup-node`, no new dependency
 2. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
    unlocks:  a regulator or DC developer trying to reach the map during a real outage is not left assuming the map simply doesn't exist for however long it takes someone to notice by hand — confirmed: no scheduled liveness check exists anywhere in the repo
    evidence: a scheduled check exists and something (log/notification) proves it fired at least once
@@ -124,7 +143,12 @@ _none_
 
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
-| 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` (merged, PR #1) | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-12 | 03:03 | OBJ-map-debugger-1 | `a61eb9d` (PR #21, **unmerged**) | a regulator or DC developer who reports a wrong coordinate or stale figure actually reaches a monitored inbox |
+| 2026-08-12 | 07:57 | OBJ-map-debugger-1 (⚠ duplicate of the row above — same objective, independently re-fixed because PR #21 wasn't visible to this sitting) | `4cac17b` (PR #22, **unmerged**) | same as above — only one of these two commits should ever merge |
+| 2026-08-12 | 18:00 | OBJ-map-debugger-5 | `89f5d74` (PR #24, **unmerged**) | a DC developer assessing cross-border interconnection capacity can see which interconnector lines are operational (ES-MA I/II) vs idle (DZ-MA) and toggle that layer independently of planned corridors, instead of the "Interconnectors" sidebar entry silently rendering zero of its own features |
+
+**Budget note:** three real commits landed 2026-08-12 against the "1 SHIP per rolling 24h" rule (plus a 13:12 attempt that failed its own gate and produced no commit). This happened because same-day sittings could not see each other's rulings — see the process flag at the top of this file. Not a ruling failure by any single sitting; a structural one.
 
 ---
 
@@ -152,9 +176,9 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
+| frontend-engineer | 5 |
 | coord-validator | 4 |
-| map-debugger | 5 |
+| map-debugger | 6 |
 | map-tester | 4 |
 | platform-engineer | 4 |
 | security-engineer | 4 |
