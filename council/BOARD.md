@@ -23,10 +23,17 @@ _none_
    size:     S
    risk:     low — additive UI only, no change to fetch logic
 2. **OBJ-frontend-engineer-3** | Give `.topbar` explicit overflow handling at ≤375px in `docs/style.css`
-   unlocks:  a DC developer checking the map on a phone can reach every topbar control (country switch, Methodology, GitHub, theme toggle) without one being clipped off-screen
+   unlocks:  a DC developer checking the map on a phone can reach every topbar control (country switch, Solaire, Methodology, GitHub, theme toggle) without one being clipped off-screen
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
-   risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+   risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today
+   note:     independently reconfirmed 2026-08-13 by map-tester during an unrelated gate check — live `.topbar.scrollWidth` (600) vs `.clientWidth` (375) at 375px, `#githubLink`/`#themeToggle` render past the right edge with no scroll affordance, unreachable. Confirmed present on the pre-fix commit too (not a regression). This is now the strongest-evidenced item on this seat's board.
+3. **OBJ-frontend-engineer-4** | Add Escape-to-close and focus management to `#methodologyModal` in `docs/app.js`
+   unlocks:  a regulator or DC developer navigating by keyboard/screen reader can actually close the Methodology dialog and stay oriented, instead of tabbing past hidden topbar/map controls behind a dialog that declares `aria-modal="true"` but traps nothing
+   evidence: Escape closes `#methodologyModal`; opening it moves focus into the dialog and Tab/Shift+Tab cycle only within it while open; closing it (Escape or the close button) returns focus to `#methodologyBtn`
+   size:     S
+   risk:     low — additive keydown/focus-management scoped to one modal; must not interfere with the existing click handlers or the popup panel's separate show/hide logic
+   filed:    2026-08-13 sitting — `docs/index.html:186` marks the dialog `aria-modal="true"` but `docs/app.js:159-161` wires only `click` listeners; zero `keydown`/focus-management calls anywhere in the file
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -51,17 +58,13 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   note:     next-ranked for the SHIP slot — re-verified unchanged at the 2026-08-13 sitting (all 3 instances still `example.com`)
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
    size:     L
-   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
-3. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
-   unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not, since brand.css's later, unconditional rule wins the cascade at equal specificity. Reproduced via `document.body.dataset.theme="light"` in a live browser (screenshot: all four topbar buttons render blank/unreadable) and confirmed present on the pre-edit file too (git-stash comparison), so it predates and is unrelated to OBJ-frontend-engineer-1.
-   evidence: in light theme, all four topbar buttons show visible, sufficient-contrast text against their background
-   size:     S
-   risk:     low — brand.css is shared with Atlas Solar's chrome per its own header ("Single source of truth for both apps"); a fix must add a light-theme-conditional rule there without breaking Solar's topbar, which platform-engineer/security-engineer should confirm since they're dual-hatted across both apps
-4. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
+   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; also now blocked on OBJ-map-tester-3's sharpened finding (national-hv/transmission-lines popup fields don't match what `openLinePopup()` reads — would render wrong/blank Voltage+Precision on ~1,488 features if wired in first)
+3. **OBJ-map-debugger-3** | Surface a visible error state for mid-session MapLibre runtime failures (`docs/app.js:224`, `map.on("error", ...)`)
    unlocks:  a regulator whose basemap tiles fail mid-session (CARTO rate-limit or outage after a successful load) sees a message explaining the map is degraded, instead of an unexplained frozen/blank canvas — confirmed: `#noTokenCard` is only ever shown from the `initMap()` try/catch (construction-time failure); the runtime `map.on("error", ...)` handler only `console.warn`s
    evidence: a simulated tile failure after successful init surfaces a visible in-page message, not just a console warning
    size:     S
@@ -78,11 +81,11 @@ _none_
    evidence: a short written checklist enumerating required evidence items, referenced by OBJ id the next time something ships
    size:     S
    risk:     none — documentation-only
-3. **OBJ-map-tester-3** | Audit popup field-name mapping against each source file's actual property keys
-   unlocks:  a DC developer reading a line's popup can trust that "Precision: approximate" reflects that specific line's real value, not a hardcoded fallback masking a wrong/missing field — confirmed live mismatch: `openLinePopup()` (`docs/app.js`) reads `p.precision`, but `national-hv.geojson` only has `coord_confidence` and `transmission-lines.geojson` has neither key at all, so the popup would silently show the hardcoded default "approximate" for both once rendered
-   evidence: a per-layer field-mapping audit confirming every property the popup reads exists under that exact key in every file that layer draws from
+3. **OBJ-map-tester-3** | Audit popup field-name mapping against each source file's actual property keys, before OBJ-map-debugger-2 wires national-hv/transmission-lines in
+   unlocks:  a DC developer reading a wired-in line's popup can trust that "Voltage" and "Precision" reflect that line's real value, not a silently-wrong or hardcoded fallback — sharpened 2026-08-13: `openLinePopup()` (`docs/app.js`) reads `p.voltage_kv`/`p.precision`; `national-hv.geojson` has neither key (has `voltage`/`coord_confidence` instead — 2 mismatches), `transmission-lines.geojson` has none of the 4 keys under any name. The currently-live path (`interconnectors.geojson`, `planned-corridors.geojson`) is clean — no live popup lies today.
+   evidence: a per-layer field-mapping audit confirming every property the popup reads (`voltage_kv`, `precision`, `status`, `source`, `source_url`) exists under that exact key in every file that layer draws from; this sitting's spot-check already found the 2 mismatches above
    size:     S
-   risk:     none — audit only; the fix belongs to whichever objective wires those layers in (OBJ-map-debugger-2)
+   risk:     none — audit only; the fix belongs to OBJ-map-debugger-2, which must not ship ahead of this landing
 
 ### platform-engineer
 1. **OBJ-platform-engineer-1** | Add a minimal CI check on push to `main` (no build step, no bundler — pure validation)
@@ -107,16 +110,16 @@ _none_
    evidence: script/link tags carry a correct `integrity` hash matching the pinned 4.7.1 build; a deliberately wrong test hash causes the browser to block the resource
    size:     S
    risk:     low — hash must be regenerated if the pinned CDN version ever changes, or the resource silently fails to load
-2. **OBJ-security-engineer-2** | Disclose the third-party requests the page makes on every load (Google Fonts, unpkg, CARTO/OSM tiles)
-   unlocks:  a regulator evaluating whether the map meets the data-protection bar they'd apply to their own agency's tools can see the third-party data flow disclosed on the page, instead of finding it themselves via devtools — confirmed: 3 third-party origins are contacted on every load with zero disclosure anywhere in the existing "About this tool"/Methodology text
+2. **OBJ-security-engineer-2** | Disclose the third-party requests the page makes on every load
+   unlocks:  a regulator evaluating whether the map meets the data-protection bar they'd apply to their own agency's tools can see the third-party data flow disclosed on the page, instead of finding it themselves via devtools — sharpened 2026-08-13: the real origin count is 7, not 3 — `fonts.googleapis.com`, `fonts.gstatic.com`, `unpkg.com`, CARTO basemap tiles, OpenStreetMap (via CARTO attribution), OpenInfraMap vector tiles, and MapLibre demo glyphs (`demotiles.maplibre.org`) — none disclosed anywhere in the existing "About this tool"/Methodology text, which covers data provenance but zero network/privacy disclosure
    evidence: the page states which third parties receive a request on load
    size:     S
    risk:     none — documentation-only addition, doesn't change which requests fire
 3. **OBJ-security-engineer-3** | Add a Content-Security-Policy via `docs/_headers`
    unlocks:  a regulator's or DC developer's browser blocks/reports any unexpected script origin the moment one is injected (e.g. a compromised dependency or a future accidental tracker), instead of it running silently until someone greps the source by hand — confirmed: no CSP exists anywhere (`docs/index.html` has no CSP meta tag, and no `docs/_headers` file exists at all)
-   evidence: a CSP restricts `script-src`/`style-src`/`connect-src` to the known-good origins (unpkg, fonts.googleapis/gstatic, carto/openstreetmap tile domains); the live page shows zero CSP console violations
+   evidence: a CSP restricts `script-src`/`style-src`/`connect-src` to the known-good origins — corrected 2026-08-13, the allowlist must include OpenInfraMap and `demotiles.maplibre.org` (glyphs) as well as unpkg/fonts/carto/openstreetmap, or the CSP itself would cause a rung-2 outage on ship; the live page shows zero CSP console violations
    size:     S
-   risk:     medium — an overly strict CSP silently breaks the map (blocked tile requests = blank map); must be tested at all three gates before ship, or it causes the exact rung-2 "site down" failure it exists to prevent
+   risk:     medium — an overly strict CSP silently breaks the map (blocked tile/glyph requests = blank map); must be tested at all three gates before ship, or it causes the exact rung-2 "site down" failure it exists to prevent
 
 ---
 
@@ -125,6 +128,7 @@ _none_
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
 | 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-13 | 04:15 | OBJ-map-debugger-4 | `5022749` | a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle topbar buttons, instead of near-white-on-white text |
 
 ---
 
@@ -152,7 +156,7 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
+| frontend-engineer | 5 |
 | coord-validator | 4 |
 | map-debugger | 5 |
 | map-tester | 4 |
