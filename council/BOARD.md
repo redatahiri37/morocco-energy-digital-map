@@ -6,6 +6,17 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 **Read this before proposing objectives. Pull from here; don't reinvent.**
 
+> **Operational note (2026-08-13 22:53 sitting):** `main` has not received a
+> merged commit since 2026-08-04 (`9a4d5a4`). 27 sittings' worth of work
+> since then — including real, finished results for `OBJ-coord-validator-2`
+> and `OBJ-platform-engineer-1`, and working fixes for `OBJ-map-debugger-1`
+> and `OBJ-map-debugger-4` — sits unmerged across open PRs #2–#28 on
+> `origin`. This copy of the Board reflects `main`'s actual state (nothing
+> shipped beyond the single 2026-08-04 row below); it does **not** reflect
+> unlanded work sitting on other branches. See `council/2026-08-13.md`,
+> 22:53 sitting, for the full finding. This needs a human to reconcile the
+> branches — not something a future sitting can fix by itself.
+
 ---
 
 ## In Progress (WIP limit: 1)
@@ -66,6 +77,12 @@ _none_
    evidence: a simulated tile failure after successful init surfaces a visible in-page message, not just a console warning
    size:     S
    risk:     low — must not fire on benign/recoverable MapLibre warnings (e.g. missing icon) or it will falsely alarm users on a healthy map
+5. **OBJ-map-debugger-5** | Give `"interconnectors"` and `"planned-corridors"` their own MapLibre source ids in `buildLineLayer()` (`docs/app.js:527-553`)
+   unlocks:  a DC developer checking whether Morocco already has operational cross-border interconnection capacity (the 2×400 kV Spain–Morocco links) sees them on the map, instead of nothing — confirmed by direct source read and cross-check against both GeoJSON files: `buildMapLayers()` calls `buildLineLayer("interconnectors", …)` then `buildLineLayer("planned-corridors", …)` (`app.js:488-494`); both hardcode `srcId = "src-grid"` (`app.js:528`) and `addOrReplace()` (`app.js:522-525`) removes-and-replaces the *source*, so the second call overwrites the first's data before any paint occurs — `src-grid` ends up holding only `planned-corridors.geojson`'s 8 features (all `status:"planned"`); `interconnectors.geojson`'s 3 real features (2 `status:"operational"` 400 kV links + 1 `status:"idle"` link) are never in the source at all. `lyr-grid-hv/mv/lv` filter on `status:"operational"`, so those layers always render zero features — the "Interconnectors" checkbox visibly does nothing, in either theme, at any zoom
+   evidence: after the fix, toggling "Interconnectors" renders the 2 operational Spain–Morocco lines and the 1 idle Algeria–Morocco line; toggling "Planned corridors" independently renders its own 8 features; both can be on simultaneously without either overwriting the other's source
+   size:     S
+   risk:     low — give each call its own `srcId` (e.g. derived from `dataLayerId`) and register both sets of layer ids in `layersFor()`'s `"grid"` branch instead of one shared list; no schema change, no new dependency
+   note:     minted 2026-08-13 22:53. At least one other unmerged branch (`council/2026-08-12-2104`) independently found the same root cause under a different draft framing before abandoning it — treat as the same bug, not two, once branches are reconciled
 
 ### map-tester
 1. **OBJ-map-tester-1** | Add an orphan-data check: list every `docs/data/morocco/*.geojson` file and flag any with zero references in `docs/countries.config.js`/`docs/app.js`
@@ -154,7 +171,7 @@ _none yet_
 |---|---|
 | frontend-engineer | 4 |
 | coord-validator | 4 |
-| map-debugger | 5 |
+| map-debugger | 6 |
 | map-tester | 4 |
 | platform-engineer | 4 |
 | security-engineer | 4 |
