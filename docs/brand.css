@@ -40,6 +40,15 @@
   border-color: var(--an-orange);
   background: rgba(255, 107, 53, 0.15);
 }
+/* Light theme: docs/style.css flips the button background to white but this
+   file loads after it, so the rule above would otherwise leave near-white
+   text on a white button. Matches docs/style.css's light-theme resting
+   color/border exactly. */
+[data-theme="light"] .topbar .ghost-btn,
+[data-theme="light"] .topbar .icon-btn {
+  color: #18181a;
+  border-color: #b3b0a8;
+}
 .topbar .country-switch label { color: rgba(255, 255, 255, 0.65); }
 .topbar .country-switch select {
   background: rgba(255, 255, 255, 0.08);
