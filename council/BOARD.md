@@ -27,6 +27,11 @@ _none_
    evidence: at 375px width no topbar control is clipped or unreachable and the page has no horizontal scrollbar
    size:     S
    risk:     low — layout-only change scoped to the existing 375px media query; `.topbar` is `display:flex` with `gap` and no `flex-wrap`/`overflow-x` today (confirmed by reading `docs/style.css:77-84,546-548`)
+3. **OBJ-frontend-engineer-4** | Add an Escape-key handler that closes the open feature popup in `docs/app.js` — filed 2026-08-13
+   unlocks:  a keyboard-only regulator or DC developer can dismiss an open feature popup without a mouse, instead of being stuck tabbing to a single small close button (confirmed: zero `keydown`/`keypress`/`Escape` handling anywhere in `docs/app.js`, whole-file grep, 1026 lines)
+   evidence: pressing Escape while `#popup` has class `open` closes it and `aria-hidden` flips to `"true"`; no regression to click-to-close or click-outside-to-close behavior
+   size:     S
+   risk:     low — a single global keydown listener; must scope to "only when popup is open" so it doesn't also swallow Escape inside `#methodologyModal`, which also has no Escape handling today (`index.html:186`) and is out of scope for this objective
 
 ### coord-validator
 1. **OBJ-coord-validator-1** | Add a `vintage` field to all 13 features in `docs/data/morocco/industrial.geojson`
@@ -39,11 +44,17 @@ _none_
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
+   **[REPORT complete 2026-08-13]** Full-population bbox/NaN/degenerate scan on all 1,488 features: 0 FAIL. Endpoint plausibility spot-check (n=30, haversine against `power-plants.geojson`/`industrial.geojson`): 30/30 PASS. Outlier-length review: longest line (502 km) matches the known Agadir–Laâyoune 400kV corridor, not a slipped digit. Absolute position remains UNVERIFIED for all 1,488 (generic names, no independent geocoder applies) — structurally sound but not individually confirmable. Found 10 exact-geometry duplicate features (5 pairs each file) — see new OBJ-coord-validator-4. Still blocks OBJ-map-debugger-2 only on the wiring/perf work, not on data trust.
 3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
    size:     S
    risk:     none — file is unreferenced by any live code path
+4. **OBJ-coord-validator-4** | Deduplicate 10 exact-geometry duplicate line features across `national-hv.geojson` and `transmission-lines.geojson` — filed 2026-08-13, surfaced during OBJ-coord-validator-2's REPORT
+   unlocks:  a DC developer assessing grid density near 5 specific corridors doesn't see the same physical line counted twice, inflating perceived network redundancy — confirmed: 5 matching exact-geometry pairs in `national-hv.geojson`, 5 in `transmission-lines.geojson`, at coordinate clusters near lon −6.64…−6.55/lat 34.3…34.35 and near −8.42,32.76
+   evidence: zero exact-geometry duplicates remain across both files; feature counts drop by 10 total
+   size:     S
+   risk:     low — must confirm each "duplicate" isn't actually two real parallel circuits sharing a corridor before deleting (WBG/ONEE double-circuit lines are common); if genuinely parallel, mark instead of delete
 
 ### map-debugger
 1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
@@ -51,6 +62,7 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   **[Ruled SHIP, gate failed 2026-08-13]** Fix executed (→ `reda.tahiri1@gmail.com`, all 3 sites), diff cleared secrets gate, but map-tester's release-gate verdict was **GO-STATIC** not GO: this sandbox's outbound proxy returns 403 on `unpkg.com`, blocking MapLibre GL from loading, so the two dynamic-popup mailtos (`app.js:968,997`) could not be click-tested live (only source-grep-verified). Not shippable per COUNCIL.md §5. Diff reverted, nothing committed. Re-attempt from an environment where `unpkg.com` is reachable, or with MapLibre vendored locally.
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
@@ -85,11 +97,12 @@ _none_
    risk:     none — audit only; the fix belongs to whichever objective wires those layers in (OBJ-map-debugger-2)
 
 ### platform-engineer
-1. **OBJ-platform-engineer-1** | Add a minimal CI check on push to `main` (no build step, no bundler — pure validation)
+1. **OBJ-platform-engineer-1** | Add a minimal CI check on push to `main` (no build step, no bundler — pure validation) — **split 2026-08-13, see OBJ-platform-engineer-4/5 below**
    unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page, because a check runs automatically instead of depending on a human remembering to run map-tester first — confirmed: no `.github/workflows/` directory exists anywhere in the repo
    evidence: a CI config exists (e.g. GitHub Action) that JSON-validates every `docs/data/*.geojson` and checks `docs/index.html`/`docs/app.js` reference only files that exist; fails the check on a deliberately broken test commit
    size:     M
    risk:     must stay pure shell/validation steps — a careless implementation could itself introduce the build-step/bundler the structural veto forbids
+   **[REPORT complete 2026-08-13]** Split into two independent, additive S-slices — see OBJ-platform-engineer-4 (ship first) and OBJ-platform-engineer-5 (deferred) below. This M entry is superseded by the split; kept here for history per COUNCIL.md §8 (IDs never renumbered).
 2. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
    unlocks:  a regulator or DC developer trying to reach the map during a real outage is not left assuming the map simply doesn't exist for however long it takes someone to notice by hand — confirmed: no scheduled liveness check exists anywhere in the repo
    evidence: a scheduled check exists and something (log/notification) proves it fired at least once
@@ -100,6 +113,16 @@ _none_
    evidence: `docs/_headers` sets an explicit, short max-age (or must-revalidate) on `docs/data/*.geojson`; a fetch immediately after a data commit is confirmed to bypass/refresh the cache
    size:     S
    risk:     low — too short raises origin load, too long reintroduces the stale-data problem; value must be deliberate, not just "0"
+4. **OBJ-platform-engineer-4** | Add `.github/workflows/validate-data.yml`: a GitHub Actions check that JSON-validates every `docs/data/morocco/*.geojson` on push/PR to `main` — filed 2026-08-13, split from OBJ-platform-engineer-1
+   unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page from malformed data, without depending on a human remembering to run map-tester first
+   evidence: a deliberately malformed `.geojson` in a test commit fails the check; a valid tree passes; the workflow is the only new file (`python3` preinstalled on `ubuntu-latest`, no `npm install`/lockfile/bundler)
+   size:     S
+   risk:     none — read-only CI check, pure `python3 -c "import json,glob..."` validation, no build step introduced
+5. **OBJ-platform-engineer-5** | Extend the CI check to verify every `layers[].file` referenced in `docs/countries.config.js` actually exists under `docs/data/` — filed 2026-08-13, split from OBJ-platform-engineer-1, deferred behind OBJ-platform-engineer-4
+   unlocks:  a regulator or DC developer doesn't lose a layer silently because a config entry points at a renamed/deleted file — the inverse check of OBJ-map-tester-1's orphan-file scan
+   evidence: a deliberately broken `layers[].file` reference in a test commit fails the check; must correctly skip `file: null` placeholder entries (e.g. `oim-grid`) and handle multi-country config
+   size:     S
+   risk:     low — requires parsing `countries.config.js` (regex or small script, not just glob+load), more surface than OBJ-platform-engineer-4; kept separate to avoid scope creep past "minimal"
 
 ### security-engineer
 1. **OBJ-security-engineer-1** | Add Subresource Integrity (`integrity=`) hashes to the MapLibre `<script>`/`<link>` tags in `docs/index.html`
@@ -152,9 +175,9 @@ _none yet_
 
 | Seat | Next OBJ number |
 |---|---|
-| frontend-engineer | 4 |
-| coord-validator | 4 |
+| frontend-engineer | 5 |
+| coord-validator | 5 |
 | map-debugger | 5 |
 | map-tester | 4 |
-| platform-engineer | 4 |
+| platform-engineer | 6 |
 | security-engineer | 4 |
