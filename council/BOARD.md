@@ -8,6 +8,62 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 ---
 
+## Standing environment constraint (found 2026-08-18)
+
+This unattended-sitting environment's egress proxy blocks `unpkg.com`
+(MapLibre's CDN), `basemaps.cartocdn.com` (the basemap tiles), and
+`nominatim.openstreetmap.org` at the CONNECT layer (403) — confirmed via
+`curl "$HTTPS_PROXY/__agentproxy/status"` and reproduced identically
+against unmodified files. **MapLibre cannot initialize at all in this
+sandbox — not for this diff, not transiently, structurally, for any
+page.** Any objective whose evidence bar requires a live map render or a
+live named-coordinate lookup (OBJ-map-debugger-1's two popup-embedded
+links, OBJ-map-debugger-2, OBJ-map-debugger-3, OBJ-map-tester-3, the
+un-obtainable half of OBJ-coord-validator-2) can only reach `GO-STATIC`
+from this environment, which COUNCIL.md §5 rules non-shippable. Prefer
+S-sized objectives verifiable by `node --check`, JSON parsing, or DOM/CSS
+inspection alone (e.g. OBJ-platform-engineer-4) for the autonomous SHIP
+slot until this is resolved. Flagged to the user directly — this needs a
+network-policy change or a human's own browser check, not more sitting
+time.
+
+**2026-08-18 07:56 re-check**: still blocked, freshly reproduced (not
+assumed from the 04:02 finding) — `unpkg.com`, `basemaps.cartocdn.com`,
+`nominatim.openstreetmap.org` all returned `CONNECT tunnel failed,
+response 403` on direct `curl`, logged live in
+`$HTTPS_PROXY/__agentproxy/status`. Confirmed structural, not transient.
+
+## Standing backlog escalation (2026-08-18 07:56)
+
+**29 open PRs** (`#2`–`#30`) on `redatahiri37/morocco-energy-digital-map`,
+zero merged since PR #1 (2026-08-04). `main` has not moved in 14 days
+despite a sitting firing roughly every 5 hours throughout. **15 of the 29
+carry real, non-minutes diffs to `docs/**`**, confirmed via `git diff
+main origin/<branch> --name-only -- docs solar` across all 29 branches:
+
+| File(s) touched | Branches | Likely cause |
+|---|---|---|
+| `docs/brand.css` | `2026-08-06-0757`, `-1259`, `-1800`, `-07-1753`, `-11-2253`, `-13-0415` (6) | independent attempts at the light-theme topbar contrast fix (OBJ-map-debugger-4) |
+| `docs/app.js` + `docs/index.html` | `2026-08-06-0004`, `-12-0303`, `-12-0757`, `-12-1800`, `-13-1805` (5) | independent mailto-fix / popup attempts (OBJ-map-debugger-1 and neighbours) |
+| `docs/data/morocco/*` | `2026-08-11-0800`, `-11-1757` | real unlanded data edits (grid-lines, industrial vintage field) |
+| `docs/style.css` | `2026-08-04-1303` | earliest unmerged attempt |
+| `docs/index.html` (solo) | `2026-08-11-1255` | separate from the mailto-fix cluster above |
+
+The CI-workflow idea (OBJ-platform-engineer-1 → OBJ-platform-engineer-4)
+has been independently drafted at least 3 times
+(`2026-08-12-2104`, referenced again `2026-08-13-2253`, `2026-08-18-0402`)
+and **committed as a real file zero times** — every prior "SHIP" of it
+was prose-only or reverted on gate failure before commit.
+
+This sitting deliberately shipped nothing (see `council/2026-08-18.md`,
+07:56 entry) specifically to avoid becoming PR #31 on top of this pile.
+**No further autonomous sitting can meaningfully progress the docket
+until a human reconciles or closes the existing PRs** — every sitting
+that correctly follows "pull, don't regenerate" will keep re-finding the
+same unlanded work. Flagged to the user directly.
+
+---
+
 ## In Progress (WIP limit: 1)
 
 _none_
@@ -39,6 +95,7 @@ _none_
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
+   **2026-08-18 04:02**: Executed (REPORT, read-only). Full-population (1,488/1,488, not sampled) bbox + adjacent-vertex-jump check: 0 FAIL, 314 (21%) WARN on 20–157km single-segment jumps, 4 UNVERIFIED (endpoints reaching Spanish waters — plausibly the real Morocco–Spain link). Live named-anchor verification via Nominatim blocked by this environment's egress proxy (same structural finding as OBJ-map-debugger-1 — `nominatim.openstreetmap.org` 403s at CONNECT) — not yet resolvable from this environment. **New finding**: the 314 WARN features in both files share near-identical vertex counts/coordinates/jump distances despite independently-cited provenance (ONEE-via-OSM vs. WBG 2018) — suggests undisclosed shared upstream sourcing. Must resolve before OBJ-map-debugger-2 wires either file in.
 3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
@@ -48,9 +105,10 @@ _none_
 ### map-debugger
 1. **OBJ-map-debugger-1** | Fix the "Report an error" / "Report a data error" mailto targets in `docs/index.html:122` and `docs/app.js:968,997`
    unlocks:  a regulator or DC developer who spots a wrong coordinate or stale figure can actually get the correction to land, instead of every "Report an error" click going to `reda.tahiri@example.com` — `example.com` is IANA-reserved for documentation (RFC 2606) and is not a deliverable mailbox, confirmed identical placeholder in all 3 locations
-   evidence: mailto target is a real, monitored address in all 3 locations
+   evidence: link target is a real, working destination in all 3 locations (not a personal email — see 2026-08-18 note) that a correction can actually reach
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   **2026-08-18 04:02**: Ruled SHIP, executed by map-debugger, then **not committed — release gate failed**. Fix retargets all 3 links to the repo's GitHub "new issue" page (reusing `REPO_URL`, `docs/app.js:47`) rather than a hardcoded personal email — Chair's explicit privacy constraint, to avoid publishing a real inbox into public unauthenticated page source. security-engineer: SAFE-TO-PUSH. map-tester: **GO-STATIC, not GO** — the static link (`docs/index.html:122`) was live-DOM-verified across desktop/light/375px, but the 2 dynamic links (`docs/app.js:968,997`) only render inside a map-feature popup, and MapLibre cannot initialize in this remote execution environment at all (`unpkg.com` + `basemaps.cartocdn.com` both 403 at the egress proxy's CONNECT layer, confirmed structural via `git stash` re-test producing byte-identical failure on the unmodified file). Working tree reverted; the fix is fully specified in `council/2026-08-18.md` and reproducible in minutes when a real GO is obtainable — either from an environment with unblocked egress, or a human's own browser check.
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
@@ -90,12 +148,52 @@ _none_
    evidence: a CI config exists (e.g. GitHub Action) that JSON-validates every `docs/data/*.geojson` and checks `docs/index.html`/`docs/app.js` reference only files that exist; fails the check on a deliberately broken test commit
    size:     M
    risk:     must stay pure shell/validation steps — a careless implementation could itself introduce the build-step/bundler the structural veto forbids
+   **2026-08-18 04:02**: Scoped (REPORT, read-only, no file created) — full first-slice YAML drafted, see OBJ-platform-engineer-4 below, which carries the actual shippable S. This parent item now covers only what didn't fit the S slice: broken-link/anchor checks and orphan-data detection (already tracked separately under OBJ-map-tester-1).
 2. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
    unlocks:  a regulator or DC developer trying to reach the map during a real outage is not left assuming the map simply doesn't exist for however long it takes someone to notice by hand — confirmed: no scheduled liveness check exists anywhere in the repo
    evidence: a scheduled check exists and something (log/notification) proves it fired at least once
    size:     S
    risk:     low — read-only external HTTP check; must not require a new secret beyond what platform-engineer already holds
-3. **OBJ-platform-engineer-3** | Add `docs/_headers` with an explicit cache-control policy for `docs/data/*.geojson`
+3. **OBJ-platform-engineer-4** | Add `.github/workflows/validate.yml`: pure-validation CI on push to `main` — no conflict markers, `node --check` on both JS entry files, JSON-valid GeoJSON, every `countries.config.js` `file:` reference resolves on disk
+   unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page — a check runs automatically instead of depending on a human remembering to run map-tester first (same unlock as parent OBJ-platform-engineer-1, scoped to what actually fits an S)
+   evidence: `.github/workflows/validate.yml` exists with exactly these 4 steps (draft below); fails on a deliberately broken test commit, passes on a clean one
+   size:     S
+   risk:     none to the render path — `node`/`grep` only, no install step, no bundler, no `package.json`; non-blocking by construction (no branch-protection rule proposed), one-commit revert if it misbehaves
+   requires no live browser/map evidence at all — unaffected by the 2026-08-18 egress-proxy finding (see OBJ-map-debugger-1), making it the safest next unattended-SHIP candidate in this environment
+   draft:
+   ```yaml
+   name: validate-map
+   on:
+     push:
+       branches: [main]
+   jobs:
+     validate:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - name: No conflict markers
+           run: '! grep -rE "^(<{7}|={7}|>{7})" docs/app.js docs/countries.config.js'
+         - name: JS syntax check
+           run: |
+             node --check docs/app.js
+             node --check docs/countries.config.js
+         - name: GeoJSON is valid JSON
+           run: |
+             for f in docs/data/morocco/*.geojson; do
+               node -e "JSON.parse(require('fs').readFileSync('$f'))" || exit 1
+             done
+         - name: Referenced data files exist
+           run: |
+             node -e "
+               const cfg = require('fs').readFileSync('docs/countries.config.js','utf8');
+               const files = [...cfg.matchAll(/file:\s*\"([^\"]+)\"/g)].map(m=>m[1]);
+               const fs = require('fs');
+               for (const f of files) {
+                 if (!fs.existsSync('docs/data/morocco/'+f)) { console.error('missing: '+f); process.exit(1); }
+               }
+             "
+   ```
+4. **OBJ-platform-engineer-3** | Add `docs/_headers` with an explicit cache-control policy for `docs/data/*.geojson`
    unlocks:  a regulator or DC developer who reloads the map right after a data correction ships actually sees the corrected figure, instead of a stale cached copy with no defined expiry — confirmed: no `docs/_headers` file or equivalent exists, so caching behavior for the data files is entirely undefined
    evidence: `docs/_headers` sets an explicit, short max-age (or must-revalidate) on `docs/data/*.geojson`; a fetch immediately after a data commit is confirmed to bypass/refresh the cache
    size:     S
@@ -156,5 +254,5 @@ _none yet_
 | coord-validator | 4 |
 | map-debugger | 5 |
 | map-tester | 4 |
-| platform-engineer | 4 |
+| platform-engineer | 5 |
 | security-engineer | 4 |
