@@ -34,11 +34,13 @@ _none_
    evidence: all 13 features carry a `vintage` property; the popup source-row surfaces it
    size:     S
    risk:     none to the render path — additive property, no schema field renamed; ~1 KB file growth
+   **2026-08-18 17:55: implemented and dispatched to gates; `security-engineer` PASSed, `coord-validator` refused to certify — see below. Reverted, unshipped.**
 2. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
    unlocks:  a regulator who directly fetches either public file (both cite ONEE/WBG as authoritative) can trust the routing, or the map withdraws the citation — instead of the map silently hosting 1,488 "ONEE/WBG-sourced" line segments that have never been checked, because neither file is loaded by `docs/app.js`/`docs/countries.config.js` (confirmed: zero references anywhere in the load path)
    evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
    size:     M
    risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
+   **BLOCKED — structural (environment, not the objective): 2026-08-18 sitting found this session's network egress proxy 403s every geocoding source `coord-validator` needs (Nominatim, Wikipedia, OSM, Google Maps, OpenCage — 5/5 tested via OBJ-coord-validator-1). Any `docs/data/**` verification, this one included, cannot clear the §5 Data gate from an environment with this same egress policy. Do not re-run against the same blocked domains until Reda allow-lists them or the gate check runs elsewhere — see council/2026-08-18.md.**
 3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
@@ -51,6 +53,7 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   **Top-ranked SHIP candidate as of 2026-08-18 17:55, deliberately not shipped: the Chair does not have standing authority to choose which real mailbox to publish on a live public page. Needs Reda to supply the address; ships the next sitting after that's known.**
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
