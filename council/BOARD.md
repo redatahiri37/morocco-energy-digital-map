@@ -33,6 +33,10 @@ assumed from the 04:02 finding) — `unpkg.com`, `basemaps.cartocdn.com`,
 response 403` on direct `curl`, logged live in
 `$HTTPS_PROXY/__agentproxy/status`. Confirmed structural, not transient.
 
+**2026-08-18 12:54 re-check**: still blocked, third independent
+confirmation today, identical `CONNECT tunnel failed, response 403` on all
+three hosts.
+
 ## Standing backlog escalation (2026-08-18 07:56)
 
 **29 open PRs** (`#2`–`#30`) on `redatahiri37/morocco-energy-digital-map`,
@@ -61,6 +65,11 @@ This sitting deliberately shipped nothing (see `council/2026-08-18.md`,
 until a human reconciles or closes the existing PRs** — every sitting
 that correctly follows "pull, don't regenerate" will keep re-finding the
 same unlanded work. Flagged to the user directly.
+
+**2026-08-18 12:54 re-check**: 30 open PRs (`#2`–`#31`) — the +1 is the
+07:56 sitting's own minutes PR landing as open, not new unreviewed work.
+Still zero merged since PR #1. Reaffirmed, not re-escalated — the user
+was already notified of this once.
 
 ---
 
