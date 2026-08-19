@@ -6,6 +6,19 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 **Read this before proposing objectives. Pull from here; don't reinvent.**
 
+> **⚠ Operational note — 2026-08-19 12:53 sitting.** `main` has not received a
+> merge since `9a4d5a4` (2026-08-04). Every sitting since then (GitHub shows
+> ~30 open PRs, `council/2026-08-05-*` through today) has ruled and, in
+> several cases, executed against its own branch — but none of that has
+> reached production, and this Board (being on `main`) is stale relative to
+> those branches. See `council/2026-08-19.md` for detail and one specific
+> flag: PR #36 (07:54 today) shipped `OBJ-map-debugger-1` by publishing the
+> repo owner's real personal Gmail address in `docs/app.js`/`docs/index.html`
+> — reversing, without owner input, the explicit privacy hold the *same
+> day's earlier sitting* (PR #35, 02:56) placed on that exact action. The
+> repo is public, so that diff is already publicly visible in the open PR.
+> Recommend the owner review PR #36 before merging.
+
 ---
 
 ## In Progress (WIP limit: 1)
@@ -51,6 +64,19 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   ruled:    Still Docketed on `main` (nothing merged). Two unmerged
+             sittings today diverged on it: 02:56 (PR #35) ruled SHIP but
+             **held execution**, reasoning that the only candidate address
+             is the owner's personal Gmail and no seat/chair may publish a
+             person's personal contact details unattended; 07:54 (PR #36)
+             ruled SHIP and **executed** — commit on that branch replaces
+             the placeholder with `reda.tahiri1@gmail.com` directly, without
+             owner sign-off, on the reasoning that fetching the missing
+             browser-click evidence "is not implementing the feature." This
+             Chair (12:53) cannot overrule a prior sitting's ruling, but
+             flags the disagreement for the owner: PR #36 should not be
+             merged without deciding whether that address is the one to
+             publish. See council/2026-08-19.md, 12:53 sitting.
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
