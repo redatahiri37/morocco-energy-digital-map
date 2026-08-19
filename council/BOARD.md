@@ -51,6 +51,12 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   ruled:    SHIP at the 2026-08-19 02:56 sitting; execution held — the fix
+             needs a real monitored mailbox and the only candidate on file is
+             the owner's personal Gmail, which no seat/chair may publish
+             unattended. Held for the owner to supply an address (or approve
+             the personal one). Not counted against the SHIP budget since
+             nothing was committed. See council/2026-08-19.md.
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
