@@ -8,6 +8,22 @@ files, and [COUNCIL.md](../COUNCIL.md) §8 for the rules that govern it.
 
 ---
 
+## ⚠ Process note (added 2026-08-21 02:55 — read before trusting "Shipped" below)
+
+`main` has not moved since `c808b1e` (2026-08-04). Every sitting since
+then has branched fresh off that same stale `main` rather than off any
+prior sitting's branch, so **41 council PRs (#2–#42) are open and
+unmerged** and this file, as committed on `main`, was itself frozen at
+2026-08-04 until this sitting pulled forward the more current state
+recorded on unmerged branch `council/2026-08-20-2100`. A "Shipped" row
+below with no commit sha on `main` means: *a sitting ruled and executed
+it, gated it, and opened a PR — a human has not merged it yet.* Treat
+those rows as "ready to merge," not "live." See `council/2026-08-21.md`
+for the full finding and recommendation. This note should be removed by
+whichever sitting or human action actually clears the backlog.
+
+---
+
 ## In Progress (WIP limit: 1)
 
 _none_
@@ -34,11 +50,13 @@ _none_
    evidence: all 13 features carry a `vintage` property; the popup source-row surfaces it
    size:     S
    risk:     none to the render path — additive property, no schema field renamed; ~1 KB file growth
+   note:     needs real external research (actual report years) before an unattended sitting should fill this in — a wrong vintage is itself a rung-1 violation
 2. **OBJ-coord-validator-2** | Sample-verify `docs/data/morocco/national-hv.geojson` (947 ONEE 60 kV line features, `coord_method: osm_derived`) and `docs/data/morocco/transmission-lines.geojson` (541 WBG line features)
    unlocks:  a regulator who directly fetches either public file (both cite ONEE/WBG as authoritative) can trust the routing, or the map withdraws the citation — instead of the map silently hosting 1,488 "ONEE/WBG-sourced" line segments that have never been checked, because neither file is loaded by `docs/app.js`/`docs/countries.config.js` (confirmed: zero references anywhere in the load path)
-   evidence: a coord-validator report with a stated sample size and a FAIL/PASS/UNVERIFIED count — note: features are anonymously named ("ONEE 60 kV line" ×947), so the standard Nominatim/Wikipedia named-lookup method doesn't apply; needs a bbox/topology/endpoint-cluster method instead
-   size:     M
-   risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG" -sourced files sitting in production
+   evidence: **DONE (2026-08-20 23:00 sitting, PR #42)** — bbox check 1,488/1,488 PASS; stratified topology sample n=30, 0 self-intersections/degenerate geometries; vertex-density clustering around 10 known grid nodes, all corridors represented. **Verdict: PASS, 0 FAIL, 0 UNVERIFIED.**
+   size:     M — resolved, no longer blocking on coordinate accuracy
+   risk:     none to ship (read-only); reputational risk is what's already live — two unchecked "ONEE/WBG"-sourced files sitting in production
+   note:     new finding, not on the FAIL/PASS scale: 536/947 (57%) `national-hv` features share endpoints within 2 km of a `transmission-lines` feature — the two files substantially duplicate the same physical corridors. This is now the actual blocker on OBJ-map-debugger-2 (a rendering-dedup design call), not positional accuracy.
 3. **OBJ-coord-validator-3** | Remove or clearly mark deprecated `docs/data/morocco/grid-lines.geojson` (11 features)
    unlocks:  a developer or regulator who fetches `docs/data/` directly doesn't get a stale, unmaintained duplicate of `interconnectors.geojson`/`planned-corridors.geojson` data that can silently drift from the live files (confirmed: file is never loaded by `docs/app.js` — `app.js:86` only keeps a "legacy fallback" key-mapping comment referencing it; 2 of its 3 checked features are verbatim duplicates of `interconnectors.geojson`)
    evidence: file removed or a `deprecated: true` root note added; zero change to any rendered layer (file was never loaded); the "legacy fallback" comment at `app.js:86` removed
@@ -51,11 +69,13 @@ _none_
    evidence: mailto target is a real, monitored address in all 3 locations
    size:     S
    risk:     none — string replacement in 2 files, no logic change
+   status:   **blocked pending human input (since 2026-08-20 23:00)** — the fix requires publishing a real, monitored contact address on a public page. That's a visible, hard-to-reverse, human-facing decision; an unattended sitting should not pick one on its own. Not vetoed — needs Reda to confirm the address, then it's a trivial S.
 2. **OBJ-map-debugger-2** | Wire `docs/data/morocco/national-hv.geojson` (947 features) and `docs/data/morocco/transmission-lines.geojson` (541 features) into the live map as renderable layers
    unlocks:  a DC developer assessing grid headroom near a candidate site can currently see only 11 editorial grid lines (3 interconnectors + 8 planned corridors) plus whatever OpenInfraMap/OSM happens to have — ~1,488 curated ONEE/WBG transmission features already sit in this repo, fully unrendered, understating the network by orders of magnitude
    evidence: toggling the grid layer renders `national-hv` + `transmission-lines` features; panel layer counts match file feature counts
    size:     L
-   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer, and it inherits the unresolved validation status from OBJ-coord-validator-2 — must not ship ahead of that; needs splitting before it is shippable
+   risk:     performance (947+541 line features on one MapLibre source), visual clutter against the existing OIM grey grid layer
+   status:   **coordinate accuracy resolved (OBJ-coord-validator-2: PASS, 0 FAIL, 2026-08-20)** — no longer blocked on validation. Now blocked on a rendering-dedup design call instead: 57% of `national-hv` features duplicate a nearby `transmission-lines` corridor. Needs a map-debugger decision (pick one source per corridor, or layer-toggle both with an overlap note) before this can be split into a shippable S.
 3. **OBJ-map-debugger-4** | Fix light-theme topbar button contrast in `docs/brand.css`
    unlocks:  a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons, instead of white-on-white text — confirmed root cause by reading source and reproducing live: `docs/brand.css:32-36` sets `.topbar .ghost-btn,.topbar .icon-btn{color:rgba(255,255,255,.85)}` unconditionally (no `[data-theme="light"]` variant anywhere in that file, which per its own header comment loads *after* `docs/style.css` "so chrome rules win"); this silently overrides `docs/style.css:113-115`'s `[data-theme="light"] .ghost-btn{background:#fff;color:#18181a}` — the background flips to white but the text color does not, since brand.css's later, unconditional rule wins the cascade at equal specificity. Reproduced via `document.body.dataset.theme="light"` in a live browser (screenshot: all four topbar buttons render blank/unreadable) and confirmed present on the pre-edit file too (git-stash comparison), so it predates and is unrelated to OBJ-frontend-engineer-1.
    evidence: in light theme, all four topbar buttons show visible, sufficient-contrast text against their background
@@ -85,17 +105,12 @@ _none_
    risk:     none — audit only; the fix belongs to whichever objective wires those layers in (OBJ-map-debugger-2)
 
 ### platform-engineer
-1. **OBJ-platform-engineer-1** | Add a minimal CI check on push to `main` (no build step, no bundler — pure validation)
-   unlocks:  a regulator or DC developer visiting the map right after a bad commit is not served a broken page, because a check runs automatically instead of depending on a human remembering to run map-tester first — confirmed: no `.github/workflows/` directory exists anywhere in the repo
-   evidence: a CI config exists (e.g. GitHub Action) that JSON-validates every `docs/data/*.geojson` and checks `docs/index.html`/`docs/app.js` reference only files that exist; fails the check on a deliberately broken test commit
-   size:     M
-   risk:     must stay pure shell/validation steps — a careless implementation could itself introduce the build-step/bundler the structural veto forbids
-2. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
+1. **OBJ-platform-engineer-2** | Wire an uptime check against the live map URL (`https://atlas-nexus-69o.pages.dev/`, per README.md)
    unlocks:  a regulator or DC developer trying to reach the map during a real outage is not left assuming the map simply doesn't exist for however long it takes someone to notice by hand — confirmed: no scheduled liveness check exists anywhere in the repo
    evidence: a scheduled check exists and something (log/notification) proves it fired at least once
    size:     S
    risk:     low — read-only external HTTP check; must not require a new secret beyond what platform-engineer already holds
-3. **OBJ-platform-engineer-3** | Add `docs/_headers` with an explicit cache-control policy for `docs/data/*.geojson`
+2. **OBJ-platform-engineer-3** | Add `docs/_headers` with an explicit cache-control policy for `docs/data/*.geojson`
    unlocks:  a regulator or DC developer who reloads the map right after a data correction ships actually sees the corrected figure, instead of a stale cached copy with no defined expiry — confirmed: no `docs/_headers` file or equivalent exists, so caching behavior for the data files is entirely undefined
    evidence: `docs/_headers` sets an explicit, short max-age (or must-revalidate) on `docs/data/*.geojson`; a fetch immediately after a data commit is confirmed to bypass/refresh the cache
    size:     S
@@ -124,7 +139,8 @@ _none_
 
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
-| 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` (merged to `main`) | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
+| 2026-08-20 | 23:00 | OBJ-platform-engineer-1 | PR #42, branch `council/2026-08-20-2100` — **not yet merged to `main`** | a regulator or DC developer visiting the map right after a bad commit is not served a broken page — CI now validates GeoJSON/JS syntax and data-file references on every push to `main`, once merged |
 
 ---
 
