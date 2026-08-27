@@ -73,7 +73,7 @@ morocco-map/
 │   ├── style.css
 │   ├── app.js
 │   ├── config.example.js          ← committed template
-│   ├── config.js                  ← your token — gitignored
+│   ├── config.js                  ← gitignored; unused, no key needed
 │   ├── countries.config.js        ← add a country here
 │   └── data/
 │       └── morocco/
@@ -143,8 +143,8 @@ dependency**: the map has to keep rendering for a visitor with no account.
 - [x] Bottom bar with source attribution + GitHub link
 - [x] Mobile responsive down to 375 px
 - [x] `DATA_SOURCES.md` lists every source
-- [x] `config.js` gitignored
-- [ ] Token domain-restricted in Mapbox dashboard *(manual step after deploy)*
+- [x] `config.js` gitignored *(kept as a safety net; no key is needed any more)*
+- [x] No API key required — MapLibre + CARTO/OSM on both surfaces
 - [ ] Live on GitHub Pages *(manual step — owner-driven)*
 
 ## v1.1 backlog

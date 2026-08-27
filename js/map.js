@@ -486,6 +486,11 @@ function rebuildChart() {
 }
 
 // ── Boot ─────────────────────────────────────────
+// The old token bar persisted whatever was pasted into it under `mg-token`.
+// Nothing reads it any more, so clear it from browsers that still carry one.
+// Safe to delete this line once the keyless build has been live a while.
+try { localStorage.removeItem('mg-token'); } catch (e) { /* storage blocked */ }
+
 initState();
 buildSidebar();
 initInfoPanel();
