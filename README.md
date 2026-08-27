@@ -116,16 +116,23 @@ window.COUNTRIES_ENABLED = ["morocco", "egypt"];
 Drop the four GeoJSONs into `docs/data/egypt/`. No JS or CSS change
 required — the app reads the manifest at boot.
 
-## Security — token hygiene
+## Security — no keys to leak
 
-- `docs/config.js` is in `.gitignore`. **Verify** before pushing:
-  ```bash
-  git status    # config.js must NOT appear
-  ```
-- If you accidentally commit a token: rotate it immediately in the
-  [Mapbox dashboard](https://account.mapbox.com/access-tokens).
-- In production, restrict the token to the GitHub Pages URL:
-  *Mapbox dashboard → Tokens → URL restrictions → add your Pages URL.*
+Both surfaces are **fully open source and keyless**. There is no API key,
+access token or account to manage, and therefore nothing to leak:
+
+| | Engine | Basemap | Key required |
+|---|---|---|---|
+| `docs/` (deployed map) | MapLibre GL JS 4.7.1 | CARTO raster over OpenStreetMap | none |
+| root prototype | MapLibre GL JS 4.7.1 | CARTO raster over OpenStreetMap | none |
+
+Basemap tiles come from [CARTO](https://carto.com/basemaps) over
+[OpenStreetMap](https://www.openstreetmap.org/copyright) data (ODbL);
+grid overlays come from [OpenInfraMap](https://openinframap.org) (ODbL).
+Attribution is mandatory and is rendered on the map — keep it.
+
+**If a proprietary basemap is ever reintroduced, it must not become a hard
+dependency**: the map has to keep rendering for a visitor with no account.
 
 ## Definition of Done — v1.0
 
