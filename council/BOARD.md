@@ -123,7 +123,7 @@ _none_
 | Date | Sitting | OBJ | Commit | Unlocks |
 |---|---|---|---|---|
 | 2026-08-04 | 14:15 | OBJ-frontend-engineer-1 | `c808b1e` | a regulator or DC developer navigating by keyboard/screen reader can toggle which infrastructure layers are visible |
-| 2026-08-27 | 12:11 | OBJ-map-debugger-4 | `PENDING` (this branch) | a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons instead of white-on-white text |
+| 2026-08-27 | 12:11 | OBJ-map-debugger-4 | `96f395d` | a regulator or DC developer using light mode can actually read the Solaire/Methodology/GitHub/theme-toggle buttons instead of white-on-white text |
 
 ---
 
