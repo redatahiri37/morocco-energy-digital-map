@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+#
+# Blocks a commit that stages something shaped like a live credential.
+#
+# Why this exists: deploy.sh does `git add -A && git commit && git push` with
+# no scan in between, and that path has already shipped real credentials to
+# GitHub twice. Both were caught by GitHub push protection, not by this repo.
+# This is the local guard that should have caught them first.
+#
+# Install (once per clone):
+#     git config core.hooksPath .githooks
+#
+# Bypass, when you are certain a hit is a false positive:
+#     git commit --no-verify
+# ...or mark the specific line with a trailing:  pragma: allowlist secret
+#
+# Design note: patterns match credential SHAPE, not just a prefix. A real
+# Mapbox token is a JWT — pk.<base64>.<base64> — so the documentation
+# placeholder "pk.eyJ1Ijo..." and prose like "a pk.eyJ… token" do NOT trip
+# it. Prefix-only matching produces false alarms, which train people to
+# reflexively --no-verify, which is worse than having no hook at all.
+
+set -uo pipefail
+
+RED=''; YEL=''; BLD=''; RST=''
+if [ -t 2 ]; then RED=$'\033[31m'; YEL=$'\033[33m'; BLD=$'\033[1m'; RST=$'\033[0m'; fi
+
+# label <TAB> extended-regex
+PATTERNS=$(cat <<'EOF'
+Mapbox public token	pk\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}
+Mapbox secret token	sk\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}
+GitHub PAT (classic)	gh[pousr]_[A-Za-z0-9]{36,}
+GitHub PAT (fine-grained)	github_pat_[A-Za-z0-9_]{60,}
+AWS access key id	AKIA[0-9A-Z]{16}
+Google API key	AIza[0-9A-Za-z_-]{35}
+Slack token	xox[abprs]-[0-9A-Za-z-]{10,}
+Stripe secret key	sk_live_[0-9A-Za-z]{24,}
+OpenAI / Anthropic key	sk-(ant-)?[A-Za-z0-9_-]{32,}
+Private key block	-----BEGIN [A-Z ]*PRIVATE KEY-----
+Cloudflare API token	CLOUDFLARE_API_TOKEN[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9_-]{30,}
+Generic assigned secret	(api[_-]?key|secret|passwd|password|access[_-]?token)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9/+_-]{24,}['\"]
+EOF
+)
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+findings=0
+report() {
+  if [ "$findings" -eq 0 ]; then
+    printf '\n%s%sBLOCKED: staged changes look like they contain a credential.%s\n\n' "$BLD" "$RED" "$RST" >&2
+  fi
+  findings=$((findings + 1))
+  printf '  %s%s%s\n    %s\n' "$RED" "$1" "$RST" "$2" >&2
+}
+
+# Scan only ADDED lines of the staged diff, per file, so we report a path.
+while IFS= read -r file; do
+  # Skip this hook itself — it necessarily contains the patterns it matches.
+  case "$file" in .githooks/pre-commit) continue ;; esac
+
+  added=$(git diff --cached -U0 -- "$file" | sed -n 's/^+\([^+].*\)/\1/p; s/^+$//p')
+  [ -z "$added" ] && continue
+  # Honour an explicit per-line allowlist marker.
+  added=$(printf '%s\n' "$added" | grep -v 'pragma: allowlist secret')
+  [ -z "$added" ] && continue
+
+  while IFS=$'\t' read -r label regex; do
+    [ -z "${label:-}" ] && continue
+    # -e is required: several patterns begin with "-" and would otherwise
+    # be parsed as grep options.
+    hit=$(printf '%s\n' "$added" | grep -nE -e "$regex" | head -1)
+    [ -n "$hit" ] && report "$label  →  $file" "$(printf '%s' "$hit" | cut -c1-100)"
+  done <<< "$PATTERNS"
+done <<< "$staged"
+
+# A .env file should never be committed regardless of contents.
+while IFS= read -r file; do
+  case "$(basename "$file")" in
+    .env|.env.*) [ "$(basename "$file")" = ".env.example" ] || \
+      report "Environment file staged  →  $file" "commit .env.example instead" ;;
+  esac
+done <<< "$staged"
+
+if [ "$findings" -gt 0 ]; then
+  printf '\n%sIf this is genuinely a placeholder or example:%s\n' "$YEL" "$RST" >&2
+  printf '  · append  pragma: allowlist secret  to that line, or\n' >&2
+  printf '  · re-run with  git commit --no-verify\n' >&2
+  printf '\n%sIf it is a real credential: do NOT commit it. Rotate it if it ever left this machine.%s\n\n' "$BLD" "$RST" >&2
+  exit 1
+fi
+
+exit 0

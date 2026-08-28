@@ -134,6 +134,36 @@ Attribution is mandatory and is rendered on the map — keep it.
 **If a proprietary basemap is ever reintroduced, it must not become a hard
 dependency**: the map has to keep rendering for a visitor with no account.
 
+### Pre-commit secret scan — run this once per clone
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`deploy.sh` runs `git add -A && git commit && git push` with nothing in
+between, and that path has shipped real credentials to GitHub before. The
+hook in `.githooks/pre-commit` blocks a commit whose staged lines look like
+a live credential (Mapbox/GitHub/AWS/Stripe/Slack/OpenAI keys, private-key
+blocks, assigned secrets, or a stray `.env`).
+
+It matches credential **shape**, not just a prefix — a real Mapbox token is
+a JWT (`pk.<base64>.<base64>`), so the documentation placeholder
+`pk.eyJ1Ijo...` does not trip it. That distinction matters: a hook that
+cries wolf trains you to reflexively `--no-verify`, which is worse than no
+hook at all.
+
+Escape hatches, when a hit is genuinely a placeholder:
+
+```bash
+# per line
+const example = "pk.eyJ...";   // pragma: allowlist secret
+# per commit
+git commit --no-verify
+```
+
+The hook is local-only — it cannot protect the remote. It is a fast first
+line of defence, not a replacement for GitHub push protection.
+
 ## Definition of Done — v1.0
 
 - [x] Four layers, toggle independently
