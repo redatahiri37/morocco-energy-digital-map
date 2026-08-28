@@ -362,7 +362,17 @@
       return ["lyr-oim-line-lv","lyr-oim-line-mv","lyr-oim-line-hv",
               "lyr-oim-substation-poly","lyr-oim-substation-pt"];
     }
-    if(kind === "grid"){
+    // Interconnectors and planned corridors share one "src-grid" source but own
+    // different lyr-grid-* layers, split by status. Partition by data layer, not
+    // by kind — returning all five for both would alias the two panel toggles,
+    // so hiding either row would blank the other's lines as well.
+    if(dataLayerId === "interconnectors"){
+      return ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-idle"];
+    }
+    if(dataLayerId === "planned-corridors"){
+      return ["lyr-grid-planned"];
+    }
+    if(kind === "grid"){   // legacy "grid-lines" fallback
       return [
         "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
       ];
@@ -485,13 +495,20 @@
       catch(e){ console.error("[MoroccoMap] layer failed:", label, e); }
     };
 
-    // Operational interconnectors (ES-MA I/II, DZ-MA idle)
-    safe("interconnectors", () =>
-      buildLineLayer("interconnectors", layerData["interconnectors"] || { features:[] }));
-
-    // Planned corridors (ES-MA III, Xlinks, Dakhla HVDC, WBG 2018 planned)
-    safe("planned-corridors", () =>
-      buildLineLayer("planned-corridors", layerData["planned-corridors"] || { features:[] }));
+    // Grid lines — interconnectors (ES-MA I/II, DZ-MA idle) and planned
+    // corridors (ES-MA III, Xlinks, Dakhla HVDC, WBG 2018 planned) share the
+    // single "src-grid" source, so they must be built in ONE call: buildLineLayer
+    // replaces that source outright, and building them separately silently
+    // destroyed whichever was built first. The lyr-grid-* filters partition the
+    // merged set by status/voltage_kv, so each still renders in its own style.
+    safe("grid-lines", () =>
+      buildLineLayer("grid-lines", {
+        type: "FeatureCollection",
+        features: [
+          ...((layerData["interconnectors"]    || {}).features || []),
+          ...((layerData["planned-corridors"] || {}).features || [])
+        ]
+      }));
 
     // Power plants (clustered)
     safe("power-plants", () =>
