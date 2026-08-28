@@ -137,8 +137,27 @@ dependency**: the map has to keep rendering for a visitor with no account.
 ### Pre-commit secret scan — run this once per clone
 
 ```bash
+cd /path/to/morocco-energy-digital-map    # must be INSIDE the clone
 git config core.hooksPath .githooks
 ```
+
+This writes a **repo-local** setting, so it only works from inside the
+repository. Running it anywhere else fails with:
+
+```
+fatal: not in a git directory
+```
+
+That means your shell is not in the clone — `cd` into it and re-run.
+Confirm it took:
+
+```bash
+git config core.hooksPath        # → .githooks
+git rev-parse --show-toplevel    # → path to your clone
+```
+
+Any directory inside the repo works; the relative path resolves against
+the repository root, not your current directory.
 
 `deploy.sh` runs `git add -A && git commit && git push` with nothing in
 between, and that path has shipped real credentials to GitHub before. The
