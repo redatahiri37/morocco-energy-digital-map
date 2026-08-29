@@ -83,10 +83,31 @@
     "oim-grid":"oim",
     "interconnectors":"grid",
     "planned-corridors":"grid",
-    "grid-lines":"grid",        // legacy fallback
+    "grid-lines":"grid",
     "industrial":"industrial",
     "digital":"digital"
   };
+
+  // Line layers ("interconnectors", "planned-corridors") each need their
+  // own MapLibre source + layer ids — see OBJ-map-debugger-5. Both are
+  // LAYER_KIND "grid" (same legend dot color) but must not share a source,
+  // or the second buildLineLayer() call silently replaces the first's data.
+  const LINE_LAYER_IDS = {
+    "interconnectors":   { srcId: "src-grid-interconnectors", idPrefix: "lyr-gridint"  },
+    "planned-corridors": { srcId: "src-grid-planned",         idPrefix: "lyr-gridplan" }
+  };
+  function lineLayerIds(dataLayerId){
+    const m = LINE_LAYER_IDS[dataLayerId];
+    if(!m) return null;
+    return {
+      srcId: m.srcId,
+      hv:      m.idPrefix + "-hv",
+      mv:      m.idPrefix + "-mv",
+      lv:      m.idPrefix + "-lv",
+      planned: m.idPrefix + "-planned",
+      idle:    m.idPrefix + "-idle"
+    };
+  }
 
   // Industrial sector colour palette
   const SECTOR_COLOR = {
@@ -154,6 +175,10 @@
   $("#panelExpand").addEventListener("click",   ()=>layout.classList.remove("panel-collapsed"));
 
   ["githubLink","githubContribute","githubFooter"].forEach(id=>{ const el = $("#"+id); if(el) el.href = REPO_URL; });
+  (function(){
+    const el = $("#reportErrorFooter");
+    if(el) el.href = REPO_URL + "/issues/new?title=" + encodeURIComponent("MoroccoMap data correction");
+  })();
 
   // ---------- Methodology modal ----------
   const methModal = $("#methodologyModal");
@@ -363,9 +388,10 @@
               "lyr-oim-substation-poly","lyr-oim-substation-pt"];
     }
     if(kind === "grid"){
-      return [
-        "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
-      ];
+      const ll = lineLayerIds(dataLayerId);
+      if(ll) return [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
+      // legacy fallback ("grid-lines") — no dedicated source/layer mapping
+      return [];
     }
     if(dataLayerId === "power-plants"){
       return ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
@@ -382,11 +408,12 @@
   function queryableLayers(){
     // Only interactive (non-cluster, non-halo) layers
     const ids = [];
-    if(map && map.getLayer("lyr-grid-hv"))      ids.push("lyr-grid-hv");
-    if(map && map.getLayer("lyr-grid-mv"))      ids.push("lyr-grid-mv");
-    if(map && map.getLayer("lyr-grid-lv"))      ids.push("lyr-grid-lv");
-    if(map && map.getLayer("lyr-grid-planned")) ids.push("lyr-grid-planned");
-    if(map && map.getLayer("lyr-grid-idle"))    ids.push("lyr-grid-idle");
+    Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
+      const ll = lineLayerIds(dataLayerId);
+      [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle].forEach(id=>{
+        if(map && map.getLayer(id)) ids.push(id);
+      });
+    });
     if(map && map.getLayer("lyr-power-points")) ids.push("lyr-power-points");
     if(map && map.getLayer("lyr-ind-points"))   ids.push("lyr-ind-points");
     if(map && map.getLayer("lyr-dig-points"))   ids.push("lyr-dig-points");
@@ -525,8 +552,12 @@
   }
 
   function buildLineLayer(dataLayerId, fc){
-    const srcId = "src-grid";
-    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"];
+    // OBJ-map-debugger-5: "interconnectors" and "planned-corridors" each get
+    // their own source + layer ids (via lineLayerIds()) so the second call
+    // no longer clobbers the first's data / visibility toggle.
+    const ll = lineLayerIds(dataLayerId);
+    const srcId = ll.srcId;
+    const ids = [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
     ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
@@ -535,19 +566,19 @@
     // so the strategic story pops.
     // Interconnector color: blue family — distinct from wind's teal (#0D9488)
     const intColor = isDark() ? "#60A5FA" : "#1D4ED8";
-    map.addLayer({ id:"lyr-grid-hv", type:"line", source:srcId,
+    map.addLayer({ id:ll.hv, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
       paint:{ "line-color": intColor, "line-width":2.6, "line-opacity":0.95 }});
-    map.addLayer({ id:"lyr-grid-mv", type:"line", source:srcId,
+    map.addLayer({ id:ll.mv, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
       paint:{ "line-color": intColor, "line-width":1.6, "line-opacity":0.85 }});
-    map.addLayer({ id:"lyr-grid-lv", type:"line", source:srcId,
+    map.addLayer({ id:ll.lv, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
       paint:{ "line-color": intColor, "line-width":1.0, "line-opacity":0.6 }});
-    map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
+    map.addLayer({ id:ll.planned, type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
       paint:{ "line-color":"#a37df0", "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
-    map.addLayer({ id:"lyr-grid-idle", type:"line", source:srcId,
+    map.addLayer({ id:ll.idle, type:"line", source:srcId,
       filter:["==",["get","status"],"idle"],
       paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }});
   }
@@ -799,13 +830,13 @@
       { id:"lyr-dig-points",   src:"src-digital",  dataLayer:"digital" },
       { id:"lyr-dig-cables",   src:"src-digital",  dataLayer:"digital" }
     ];
-    const lineLayers = [
-      { id:"lyr-grid-hv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-mv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-lv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-idle",    src:"src-grid", dataLayer:"grid-lines" }
-    ];
+    const lineLayers = [];
+    Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
+      const ll = lineLayerIds(dataLayerId);
+      [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle].forEach(id=>{
+        lineLayers.push({ id, src: ll.srcId, dataLayer: dataLayerId });
+      });
+    });
 
     pointLayers.forEach(({id, src, dataLayer})=>{
       if(!map.getLayer(id)) return;
@@ -957,7 +988,7 @@
       <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
-        <span class="src">${escapeHtml(p.source || "—")}</span>
+        <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
@@ -965,7 +996,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
       </div>`;
     popup.classList.add("open");
@@ -994,7 +1025,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}" target="_blank" rel="noopener">Report an error</a>
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");

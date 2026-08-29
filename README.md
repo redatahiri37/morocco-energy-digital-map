@@ -73,7 +73,7 @@ morocco-map/
 │   ├── style.css
 │   ├── app.js
 │   ├── config.example.js          ← committed template
-│   ├── config.js                  ← your token — gitignored
+│   ├── config.js                  ← gitignored; unused, no key needed
 │   ├── countries.config.js        ← add a country here
 │   └── data/
 │       └── morocco/
@@ -116,16 +116,72 @@ window.COUNTRIES_ENABLED = ["morocco", "egypt"];
 Drop the four GeoJSONs into `docs/data/egypt/`. No JS or CSS change
 required — the app reads the manifest at boot.
 
-## Security — token hygiene
+## Security — no keys to leak
 
-- `docs/config.js` is in `.gitignore`. **Verify** before pushing:
-  ```bash
-  git status    # config.js must NOT appear
-  ```
-- If you accidentally commit a token: rotate it immediately in the
-  [Mapbox dashboard](https://account.mapbox.com/access-tokens).
-- In production, restrict the token to the GitHub Pages URL:
-  *Mapbox dashboard → Tokens → URL restrictions → add your Pages URL.*
+Both surfaces are **fully open source and keyless**. There is no API key,
+access token or account to manage, and therefore nothing to leak:
+
+| | Engine | Basemap | Key required |
+|---|---|---|---|
+| `docs/` (deployed map) | MapLibre GL JS 4.7.1 | CARTO raster over OpenStreetMap | none |
+| root prototype | MapLibre GL JS 4.7.1 | CARTO raster over OpenStreetMap | none |
+
+Basemap tiles come from [CARTO](https://carto.com/basemaps) over
+[OpenStreetMap](https://www.openstreetmap.org/copyright) data (ODbL);
+grid overlays come from [OpenInfraMap](https://openinframap.org) (ODbL).
+Attribution is mandatory and is rendered on the map — keep it.
+
+**If a proprietary basemap is ever reintroduced, it must not become a hard
+dependency**: the map has to keep rendering for a visitor with no account.
+
+### Pre-commit secret scan — run this once per clone
+
+```bash
+cd /path/to/morocco-energy-digital-map    # must be INSIDE the clone
+git config core.hooksPath .githooks
+```
+
+This writes a **repo-local** setting, so it only works from inside the
+repository. Running it anywhere else fails with:
+
+```
+fatal: not in a git directory
+```
+
+That means your shell is not in the clone — `cd` into it and re-run.
+Confirm it took:
+
+```bash
+git config core.hooksPath        # → .githooks
+git rev-parse --show-toplevel    # → path to your clone
+```
+
+Any directory inside the repo works; the relative path resolves against
+the repository root, not your current directory.
+
+`deploy.sh` runs `git add -A && git commit && git push` with nothing in
+between, and that path has shipped real credentials to GitHub before. The
+hook in `.githooks/pre-commit` blocks a commit whose staged lines look like
+a live credential (Mapbox/GitHub/AWS/Stripe/Slack/OpenAI keys, private-key
+blocks, assigned secrets, or a stray `.env`).
+
+It matches credential **shape**, not just a prefix — a real Mapbox token is
+a JWT (`pk.<base64>.<base64>`), so the documentation placeholder
+`pk.eyJ1Ijo...` does not trip it. That distinction matters: a hook that
+cries wolf trains you to reflexively `--no-verify`, which is worse than no
+hook at all.
+
+Escape hatches, when a hit is genuinely a placeholder:
+
+```bash
+# per line
+const example = "pk.eyJ...";   // pragma: allowlist secret
+# per commit
+git commit --no-verify
+```
+
+The hook is local-only — it cannot protect the remote. It is a fast first
+line of defence, not a replacement for GitHub push protection.
 
 ## Definition of Done — v1.0
 
@@ -136,8 +192,8 @@ required — the app reads the manifest at boot.
 - [x] Bottom bar with source attribution + GitHub link
 - [x] Mobile responsive down to 375 px
 - [x] `DATA_SOURCES.md` lists every source
-- [x] `config.js` gitignored
-- [ ] Token domain-restricted in Mapbox dashboard *(manual step after deploy)*
+- [x] `config.js` gitignored *(kept as a safety net; no key is needed any more)*
+- [x] No API key required — MapLibre + CARTO/OSM on both surfaces
 - [ ] Live on GitHub Pages *(manual step — owner-driven)*
 
 ## v1.1 backlog
