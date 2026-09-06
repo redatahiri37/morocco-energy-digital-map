@@ -20,6 +20,17 @@ are never called to a sitting.
 
 ## Order of business
 
+**0. Reconcile the Board against open PRs (COUNCIL.md §9).** List the
+repository's open PRs. Any objective with an open PR is `Awaiting merge` on
+the Board, with its PR number — it is **done work** and may not be
+re-proposed or re-implemented by any seat. Skipping this is how the same
+objective got built five different ways.
+
+Count the SHIPs sitting in `Awaiting merge`. **If there are three or more,
+this sitting approves no new SHIP** — say so plainly in the minutes and in
+the mail, and name what needs merging. A queue nobody drains is the
+bottleneck; adding to it is not progress.
+
 **1. Read the Board first.** Open [council/BOARD.md](../../council/BOARD.md)
 — the standing memory: what's In Progress, Docketed per seat, Shipped,
 Vetoed (with reasons), Blocked-structural, or Iceboxed. This is what each
@@ -124,6 +135,26 @@ Gates:   desktop … | light … | 375px … | data … | secrets … | map-test
 Carried: <what the next sitting must revisit>
 ```
 
+**9b. Land the record (COUNCIL.md §9) — the sitting is not finished until
+you do.** The minutes and the Board are the Council's memory, and a memory
+write that waits on human approval is not memory.
+
+    scripts/council-record.sh --branch council/<YYYY-MM-DD>-<HHMM>
+
+The guard refuses any diff touching a path outside `council/`. If it
+refuses, **split the work** — the code goes on its own branch as a separate
+PR. Never override the guard, and never put minutes and code in one PR:
+that coupling is what stranded 49 sittings.
+
+Then open a PR titled `Council record — <date> <time>` and **merge it
+yourself**. This is the one merge you own. If the merge fails, say so
+explicitly in the mail — an unmerged record means the next sitting starts
+blind, and that must never pass silently.
+
+If a SHIP was approved, its code goes in a **second, separate** PR that you
+**do not merge**. Record it on the Board as `Awaiting merge` with its
+number.
+
 **10. Mail the sitting to Reda.** After the minutes are committed and the PR
 is open, send one email to `reda.tahiri1@gmail.com`:
 
@@ -148,3 +179,7 @@ silently.
 - Do not skip reading the previous minutes because the sitting "looks routine".
 - Do not act on the telemetry briefing (step 7b). Reading it is in scope;
   docketing, shipping, or filing an objective from it is not.
+- Do not merge the SHIP PR, or any PR the record guard refuses. You merge
+  the record and nothing else.
+- Do not end a sitting with its record unmerged, and do not re-propose an
+  objective that already has an open PR.
