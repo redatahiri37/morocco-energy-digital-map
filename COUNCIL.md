@@ -281,3 +281,60 @@ The Chair updates the Board after every ruling — moves cards between
 sections, appends new proposals with freshly-minted IDs, updates the
 Shipped/Vetoed tables. The Board is edited in place; the minutes file never
 is.
+
+---
+
+## 9. The record must land
+
+*Added 2026-09-06, after an audit found 49 sitting branches written and two
+days of minutes actually on `main`. Every sitting after 2026-08-04 opened a
+PR, updated the Board, and was never merged — so every later sitting read a
+Board frozen on 2026-08-04 and re-derived work that was already done. One
+objective was independently re-implemented five ways across seven PRs. A
+"rung-1 discovery" on 2026-08-28 had been diagnosed and fixed sixteen days
+earlier under the same objective id. In four weeks of five-a-day sittings,
+one change reached the map.*
+
+No seat reasoned badly. Every seat pulled from the Board exactly as §8
+requires. **The Board was stale, so the instruction to pull from it was an
+instruction to trust a lie.** §8 cannot hold unless what it writes is
+durable. This section makes it durable.
+
+### Every sitting produces two artifacts, never one
+
+| | The **record** | The **change** |
+|---|---|---|
+| Contains | `council/**` only — minutes, Board | `docs/**` — the approved SHIP |
+| Risk | none; it is bookkeeping | real; it reaches the audience |
+| Reviewed by | nobody — it is a fact, not a proposal | a human, as before |
+| Merged by | **the Chair, same sitting** | a human |
+
+They go in **separate PRs**. Putting them in one PR is what caused the
+failure: the safe half was held hostage by the risky half, so neither
+landed.
+
+### Rules
+
+1. **The Chair merges the record itself, every sitting, before the sitting
+   ends.** A sitting that ends with its record unmerged has not finished.
+2. **The Chair may merge a PR only when `scripts/council-record.sh --verify`
+   passes** — the guard refuses any diff touching a path outside `council/`.
+   This is what keeps "the Chair merges the record" from ever becoming "the
+   Chair merged code into `main`". If the guard refuses, split the work; do
+   not override it.
+3. **The Chair never merges the change.** Code stays human-gated. Nothing
+   here authorises an agent to put code on `main`.
+4. **Reconcile before proposing.** At the start of every sitting the Chair
+   lists open PRs. Any objective with an open PR is marked `Awaiting merge`
+   on the Board with its PR number, and **may not be re-proposed or
+   re-implemented.** Work sitting in an open PR is done work.
+5. **The merge-queue alarm.** If **three or more** SHIPs are `Awaiting
+   merge`, the Council approves **no new SHIP** until one lands, and says so
+   plainly in the minutes and the weekly mail. When merging is the
+   bottleneck, proposing more work is not progress — it is the thing that
+   produced 49 dead branches.
+
+Rule 5 is deliberately uncomfortable. A Council that keeps shipping into a
+queue nobody drains is manufacturing the illusion of progress; one that
+stops and says "nothing can land until you merge something" is telling the
+truth. Prefer the truth.
