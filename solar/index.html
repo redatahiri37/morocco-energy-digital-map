@@ -186,7 +186,7 @@
           <div id="map"></div>
         </div>
 
-        <div class="finance-card">
+        <div class="finance-card" data-depth="financing">
           <div class="chart-header">
             <h3>Modes de financement</h3>
             <span class="chart-sub">Comparaison achat comptant vs crédit</span>
@@ -208,7 +208,7 @@
           <div class="finance-hint">Crédit simulé à <span id="fin-rate-note">6 % sur 10 ans</span><button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Taux indicatif d'un crédit bancaire résidentiel au Maroc. Le montant réel dépend de votre banque et de votre dossier.</span></button></div>
         </div>
 
-        <div class="chart-card">
+        <div class="chart-card" data-depth="charts">
           <div class="chart-header">
             <h3>Production mensuelle</h3>
             <span class="chart-sub">kWh / mois — moyenne long terme</span>
@@ -235,7 +235,7 @@
     </div>
   </section>
 
-  <section id="about" class="about">
+  <section id="about" class="about" data-depth="method">
     <h2>Pourquoi cet outil</h2>
     <p>Le Maroc a l'un des meilleurs ensoleillements au monde, mais le résidentiel reste si marginal qu'il n'apparaît même pas comme segment à part dans les statistiques nationales de capacité installée. La raison principale : personne ne sait combien ça rapporte réellement chez soi. Cet outil répond à cette question, gratuitement et sans inscription.</p>
     <p>Fait partie de <a href="https://atlas-nexus-69o.pages.dev/">Atlas Nexus</a> — cartographie des infrastructures énergie × digital au Maroc.</p>
@@ -243,6 +243,7 @@
 
 </main>
 
+<script src="analytics.js" defer></script>
 <script src="app.js" defer></script>
 </body>
 </html>

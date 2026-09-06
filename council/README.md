@@ -12,9 +12,18 @@ Two files, two jobs — do not conflate them:
   **Append-only** — never edited after the fact. It's the record of what
   happened, not what's true now.
 
-Sittings run every 5 hours. The SHIP budget is **1 per rolling 24 h across
-all sittings** — the Chair checks both the Board (`In Progress`) and today's
-minutes file before approving one.
+Sittings run **weekly** (Monday 10:00 Europe/Paris). The SHIP budget is
+**1 per rolling 24 h across all sittings** — the Chair checks both the Board
+(`In Progress`) and today's minutes file before approving one. COUNCIL.md §4
+still describes the older 5-hourly cadence in its budget note; the budget
+itself is unchanged and binding, only the firing schedule moved.
+
+Each sitting also carries a `### Telemetry briefing` block — the usage
+reading from `scripts/telemetry_brief.py`, pasted verbatim. It is
+**informational only and expands no remit**: no seat files objectives on it,
+nothing from it is docketed, and Atlas Solar stays out of remit under
+COUNCIL.md §2. It exists so a sitting is not blind to whether anything is
+actually used. See `.claude/agents/standup-chair.md` step 7b.
 
 The Board is what stops a recurring routine from re-deriving the same three
 objectives every five hours — seats pull from it instead of inventing from

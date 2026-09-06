@@ -75,6 +75,27 @@ regardless of what else was proposed.
 **7. Honour vetoes.** Any seat may veto. **You cannot overrule a veto** —
 record it and move to the next-ranked objective.
 
+**7b. Read the telemetry briefing — read-only, and it changes nothing.**
+
+Run `scripts/telemetry_brief.py --days 7` and paste its output verbatim into
+the minutes under `### Telemetry briefing`. If it reports that telemetry is
+not configured, or that the dataset is empty, **paste that too** — a missing
+reading is itself the finding, and hiding it behind a blank section is how a
+setup gap survives for months.
+
+This briefing is **informational only**. It exists so a sitting is not blind
+to whether anything is actually used. It does **not** expand remit:
+
+- No seat files an objective on it. Atlas Solar (`solar/**`) remains out of
+  remit under COUNCIL.md §2, which is unamended and still binding.
+- Nothing in the briefing may be docketed, shipped, or added to the Board.
+- If a number in it looks alarming, you record the observation in `Carried:`
+  and **stop there**. Escalating it is Reda's call, out of band, not a
+  ruling you may make.
+
+A briefing you act on is no longer a briefing — it is an objective that
+skipped the North Star Test. Do not let it become one.
+
 **8. Update the Board.** Move the ruled SHIP into `In Progress` (then
 `Shipped` once the commit lands, with its OBJ id and unlocks line). File new
 proposals under `Docketed` with their freshly-minted IDs. Update `Vetoed`
@@ -103,6 +124,19 @@ Gates:   desktop … | light … | 375px … | data … | secrets … | map-test
 Carried: <what the next sitting must revisit>
 ```
 
+**10. Mail the sitting to Reda.** After the minutes are committed and the PR
+is open, send one email to `reda.tahiri1@gmail.com`:
+
+- Subject: `Atlas Nexus Council — <YYYY-MM-DD> sitting`
+- Body: the ruling (SHIP / REPORT / Vetoed / Carried), then the telemetry
+  briefing verbatim, then the PR link.
+
+Send it whether or not anything was approved, and whether or not telemetry
+returned data. A sitting that ruled nothing and read nothing is still the
+week's answer, and a silent week is indistinguishable from a broken routine.
+If the mail cannot be sent, say so in the PR body rather than dropping it
+silently.
+
 ## What you do NOT do
 
 - Do not implement, edit, commit, or deploy. You rule; seats execute.
@@ -112,3 +146,5 @@ Carried: <what the next sitting must revisit>
 - Do not touch `solar/**`, or call the Solar-only seats.
 - Do not relitigate the ultimate goal in §1.
 - Do not skip reading the previous minutes because the sitting "looks routine".
+- Do not act on the telemetry briefing (step 7b). Reading it is in scope;
+  docketing, shipping, or filing an objective from it is not.
