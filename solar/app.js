@@ -177,8 +177,10 @@ const PVGIS = {
     { name: "Laâyoune",    lat: 27.15, lon: -13.20, y: 1800 },
     { name: "Errachidia",  lat: 31.93, lon: -4.42, y: 1780 },
   ],
-  // Typical Morocco monthly production shape (fractions of the year)
-  FALLBACK_SHAPE: [0.072, 0.071, 0.086, 0.089, 0.092, 0.090, 0.096, 0.095, 0.087, 0.081, 0.068, 0.070],
+  // Typical Morocco monthly production shape (fractions of the year; sum = 1.0)
+  // Normalized from: [0.072, 0.071, 0.086, 0.089, 0.092, 0.090, 0.096, 0.095, 0.087, 0.081, 0.068, 0.070]
+  // divided by 0.9970 to ensure mathematical consistency
+  FALLBACK_SHAPE: [0.0722, 0.0712, 0.0863, 0.0893, 0.0923, 0.0903, 0.0963, 0.0953, 0.0873, 0.0812, 0.0682, 0.0702],
 
   fallbackPerKw(lat, lon) {
     let best = this.FALLBACK_CITIES[0], bestD = Infinity;
