@@ -6,6 +6,8 @@
  *   PVGIS         EU JRC PVcalc API → annual + monthly kWh
  *   Tariff        ONEE stepped tariff, avoided cost per kWh
  *   ROI           payback, cashflow, NPV
+ *   Sensitivity   one-at-a-time perturbation of each assumption
+ *   Tornado       sensitivity chart (plain DOM, no chart lib)
  *   Chart         Chart.js wrappers
  *   Map           Leaflet mini-map
  *   UI            DOM binding, state, transitions
@@ -62,6 +64,21 @@ const CONFIG = {
 
   // Auto-sizing: recommend a system covering this share of annual consumption
   AUTOSIZE_COVER: 0.80,
+
+  // Sensitivity ranges — plausible bounds used by the tornado view.
+  // Each is a documented interval, not a symmetric ±x % guess. Format
+  // [borne_a, borne_b]; the view decides which end is favorable from the
+  // computed result, not from the ordering here.
+  SENSITIVITY: {
+    COST_MAD_PER_WC:  [8.5, 14],     // fourchette marché résidentiel (central 11)
+    YIELD_MULT:       [0.85, 1.05],  // ombrage / salissure / écart PVGIS (asymétrique)
+    BILL_MULT:        [0.75, 1.25],  // facture réelle vs facture déclarée
+    SELF_RATIO_MULT:  [0.75, 1.25],  // heuristique d'autoconsommation (placeholder)
+    OPEX_PCT:         [0.005, 0.02], // O&M annuel en % du capex
+    TARIFF_INFLATION: [0, 0.04],     // dérive tarifaire ONEE
+    DEGRADATION:      [0.003, 0.008],// dégradation modules /an
+    DISCOUNT_RATE:    [0.03, 0.08],  // taux d'actualisation
+  },
 
   // Self-consumption ratio heuristic — fraction of PV production consumed on-site
   // Function of (annual_production / annual_consumption). Empirical residential curve.
@@ -284,12 +301,28 @@ const Tariff = {
 
 // ── ROI ────────────────────────────────────────────
 const ROI = {
-  compute({ pv, monthlyConsumption, capexMAD, exportAllowed }) {
+  // `assumptions` overrides the CONFIG defaults one key at a time — the hook
+  // the sensitivity view uses to perturb a single lever and re-run the exact
+  // same model. Omitted keys fall back to CONFIG, so existing callers are
+  // unaffected.
+  defaults() {
+    return {
+      degradation: CONFIG.DEGRADATION_PCT_YR,
+      tariffInflation: CONFIG.TARIFF_INFLATION_YR,
+      discountRate: CONFIG.DISCOUNT_RATE,
+      opexPct: CONFIG.OPEX_PCT_CAPEX_YR,
+      exportPrice: CONFIG.EXPORT_PRICE_MAD_PER_KWH,
+      selfRatioMult: 1,
+    };
+  },
+
+  compute({ pv, monthlyConsumption, capexMAD, exportAllowed, assumptions }) {
+    const A = Object.assign(this.defaults(), assumptions || {});
     // pv.monthlyKwh: production per month, kWh
     const annualPv = pv.annualKwh;
     const annualCons = monthlyConsumption * 12;
     const sizingRatio = annualPv / Math.max(annualCons, 1);
-    const selfRatio = CONFIG.selfConsumptionRatio(sizingRatio);
+    const selfRatio = Math.min(1, CONFIG.selfConsumptionRatio(sizingRatio) * A.selfRatioMult);
 
     // Monthly split — assume same self-consumption ratio across months (simplification)
     let annualSavingsMAD = 0;
@@ -312,11 +345,11 @@ const ROI = {
     if (exportAllowed) {
       const cap = annualPv * CONFIG.EXPORT_CAP_PCT;
       annualExportKwh = Math.min(annualExportableKwh, cap);
-      annualExportMAD = annualExportKwh * CONFIG.EXPORT_PRICE_MAD_PER_KWH;
+      annualExportMAD = annualExportKwh * A.exportPrice;
       annualSavingsMAD += annualExportMAD;
     }
 
-    const opex = capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
+    const opex = capexMAD * A.opexPct;
     const netYear1 = annualSavingsMAD - opex;
     const paybackYr = netYear1 > 0 ? capexMAD / netYear1 : Infinity;
 
@@ -325,8 +358,8 @@ const ROI = {
     let cumulative = -capexMAD;
     cashflow.push({ year: 0, net: -capexMAD, cumulative });
     for (let y = 1; y <= CONFIG.LIFETIME_YR; y++) {
-      const degrade = Math.pow(1 - CONFIG.DEGRADATION_PCT_YR, y - 1);
-      const inflate = Math.pow(1 + CONFIG.TARIFF_INFLATION_YR, y - 1);
+      const degrade = Math.pow(1 - A.degradation, y - 1);
+      const inflate = Math.pow(1 + A.tariffInflation, y - 1);
       const revenue = annualSavingsMAD * degrade * inflate;
       const net = revenue - opex;
       cumulative += net;
@@ -335,7 +368,7 @@ const ROI = {
 
     // NPV
     const npv = cashflow.reduce((acc, c) =>
-      acc + c.net / Math.pow(1 + CONFIG.DISCOUNT_RATE, c.year), 0);
+      acc + c.net / Math.pow(1 + A.discountRate, c.year), 0);
 
     return {
       annualSavingsMAD,
@@ -348,6 +381,219 @@ const ROI = {
       npv,
       lifetimeSavingsMAD: cashflow[cashflow.length - 1].cumulative + capexMAD,
     };
+  },
+};
+
+// ── Sensitivity ────────────────────────────────────
+// One-at-a-time sensitivity: hold the reference case fixed, move a single
+// assumption to each end of its plausible range, re-run the *same* model, and
+// report the two results. No correlation between levers is modelled — that is
+// what a tornado chart is, and the UI says so.
+const Sensitivity = {
+  // A scenario carries everything ROI needs; each perturbation mutates a clone.
+  baseScenario({ perKw, peakpower, costPerWc, bill, exportAllowed }) {
+    return {
+      perKw, peakpower, costPerWc, bill, exportAllowed,
+      yieldMult: 1,
+      assumptions: ROI.defaults(),
+    };
+  },
+
+  clone(sc) {
+    return Object.assign({}, sc, { assumptions: Object.assign({}, sc.assumptions) });
+  },
+
+  evaluate(sc) {
+    const pv = PVGIS.scale(sc.perKw, sc.peakpower);
+    if (sc.yieldMult !== 1) {
+      pv.annualKwh *= sc.yieldMult;
+      pv.specificYield *= sc.yieldMult;
+      pv.monthlyKwh = pv.monthlyKwh.map(m => m * sc.yieldMult);
+    }
+    const roi = ROI.compute({
+      pv,
+      monthlyConsumption: Tariff.kwhFromBill(sc.bill),
+      capexMAD: sc.peakpower * 1000 * sc.costPerWc,
+      exportAllowed: sc.exportAllowed,
+      assumptions: sc.assumptions,
+    });
+    return { payback: roi.paybackYr, npv: roi.npv };
+  },
+
+  // Each variable: two endpoints of a documented range, applied to a clone.
+  // `range` is the human-readable interval shown next to the label.
+  variables() {
+    const S = CONFIG.SENSITIVITY;
+    const pct = v => {
+      const x = Math.round(v * 1000) / 10;          // one decimal, no float dust
+      return (Number.isInteger(x) ? x.toFixed(0) : x.toFixed(1)).replace(".", ",").replace("-", "\u2212") + " %";
+    };
+    const mad = v => String(v).replace(".", ",");
+    return [
+      {
+        key: "cost",
+        label: "Coût installé",
+        range: `${mad(S.COST_MAD_PER_WC[0])} – ${mad(S.COST_MAD_PER_WC[1])} MAD/Wc`,
+        ends: S.COST_MAD_PER_WC.map(v => sc => { sc.costPerWc = v; }),
+      },
+      {
+        key: "yield",
+        label: "Production réelle",
+        range: `${pct(S.YIELD_MULT[0] - 1)} … +${pct(S.YIELD_MULT[1] - 1)} vs PVGIS`,
+        ends: S.YIELD_MULT.map(v => sc => { sc.yieldMult = v; }),
+      },
+      {
+        key: "bill",
+        label: "Facture mensuelle",
+        range: `± 25 % autour de votre saisie`,
+        ends: S.BILL_MULT.map(v => sc => { sc.bill = sc.bill * v; }),
+      },
+      {
+        key: "self",
+        label: "Part autoconsommée",
+        range: "± 25 % autour de l'estimation",
+        ends: S.SELF_RATIO_MULT.map(v => sc => { sc.assumptions.selfRatioMult = v; }),
+      },
+      {
+        key: "opex",
+        label: "Entretien annuel",
+        range: `${pct(S.OPEX_PCT[0])} – ${pct(S.OPEX_PCT[1])} du capex / an`,
+        ends: S.OPEX_PCT.map(v => sc => { sc.assumptions.opexPct = v; }),
+      },
+      {
+        key: "inflation",
+        label: "Hausse du tarif ONEE",
+        range: `${pct(S.TARIFF_INFLATION[0])} – ${pct(S.TARIFF_INFLATION[1])} / an`,
+        ends: S.TARIFF_INFLATION.map(v => sc => { sc.assumptions.tariffInflation = v; }),
+      },
+      {
+        key: "degradation",
+        label: "Dégradation des panneaux",
+        range: `${pct(S.DEGRADATION[0])} – ${pct(S.DEGRADATION[1])} / an`,
+        ends: S.DEGRADATION.map(v => sc => { sc.assumptions.degradation = v; }),
+      },
+      {
+        key: "discount",
+        label: "Taux d'actualisation",
+        range: `${pct(S.DISCOUNT_RATE[0])} – ${pct(S.DISCOUNT_RATE[1])}`,
+        ends: S.DISCOUNT_RATE.map(v => sc => { sc.assumptions.discountRate = v; }),
+      },
+    ];
+  },
+
+  run(baseInputs) {
+    const base = this.baseScenario(baseInputs);
+    const baseResult = this.evaluate(base);
+    const rows = this.variables().map(v => {
+      const results = v.ends.map(apply => {
+        const sc = this.clone(base);
+        apply(sc);
+        return this.evaluate(sc);
+      });
+      return {
+        key: v.key,
+        label: v.label,
+        range: v.range,
+        payback: results.map(r => r.payback),
+        npv: results.map(r => r.npv),
+      };
+    });
+    return { base: baseResult, rows };
+  },
+};
+
+// ── Tornado chart (plain DOM) ──────────────────────
+// Deliberately not Chart.js: floating stacked bars with per-row baselines are
+// fiddly there, and a DOM chart keeps every number in the accessibility tree
+// and readable at 375 px.
+const Tornado = {
+  metric: "payback",
+
+  METRICS: {
+    payback: {
+      // Simple payback (capex / net year-1) — same definition as the hero KPI,
+      // so the reference bar matches the headline number.
+      title: "Amortissement",
+      betterIsLower: true,
+      // Non-amortised cases are clamped so one runaway scenario cannot squash
+      // the whole scale; the label still says "> 25 ans".
+      scale: v => (isFinite(v) ? Math.min(v, CONFIG.LIFETIME_YR + 5) : CONFIG.LIFETIME_YR + 5),
+      fmt: v => (isFinite(v) && v <= CONFIG.LIFETIME_YR
+        ? v.toFixed(1).replace(".", ",") + " ans"
+        : "> 25 ans"),
+      // Below this, a lever is not worth a bar (years).
+      epsilon: 0.05,
+      // Past the modelled lifetime every scenario piles up on the clamp, so
+      // the bars would compare nothing. Say that instead of drawing it.
+      unreadable: v => !isFinite(v) || v > CONFIG.LIFETIME_YR,
+    },
+    npv: {
+      title: "Gain net actualisé sur 25 ans",
+      betterIsLower: false,
+      scale: v => v,
+      fmt: v => fmtMAD(v),
+      epsilon: 100,
+    },
+  },
+
+  render(result) {
+    const host = $("tornado");
+    const m = this.METRICS[this.metric];
+    if (!host || !result) return;
+
+    const baseVal = result.base[this.metric];
+    $("sens-base").textContent =
+      `Scénario de référence : ${m.fmt(baseVal)} — ${m.title.toLowerCase()}`;
+
+    if (m.unreadable && m.unreadable(baseVal)) {
+      host.innerHTML = `<div class="tor-empty">Avec ces paramètres l'installation ne s'amortit pas sur sa durée de vie : comparer des délais d'amortissement n'a plus de sens. Basculez sur « Gain net 25 ans » pour voir quelles hypothèses pèsent le plus.</div>`;
+      return;
+    }
+
+    const rows = result.rows
+      .map(r => {
+        const [a, b] = r[this.metric].map(m.scale);
+        return { label: r.label, range: r.range, lo: Math.min(a, b), hi: Math.max(a, b), span: Math.abs(a - b) };
+      })
+      .filter(r => r.span > m.epsilon)
+      .sort((x, y) => y.span - x.span);
+
+    if (!rows.length) {
+      host.innerHTML = `<div class="tor-empty">Aucune hypothèse ne déplace cet indicateur de façon significative.</div>`;
+      return;
+    }
+
+    const baseScaled = m.scale(baseVal);
+    const values = rows.flatMap(r => [r.lo, r.hi]).concat(baseScaled);
+    let dmin = Math.min(...values), dmax = Math.max(...values);
+    const pad = (dmax - dmin) * 0.06 || Math.abs(dmax || 1) * 0.06;
+    dmin -= pad; dmax += pad;
+    const pos = v => ((v - dmin) / (dmax - dmin)) * 100;
+
+    // Left of the reference line = lower value. Whether that is good depends
+    // on the metric, not on the geometry.
+    const leftClass = m.betterIsLower ? "tor-good" : "tor-bad";
+    const rightClass = m.betterIsLower ? "tor-bad" : "tor-good";
+    const basePct = pos(baseScaled);
+
+    host.innerHTML = rows.map(r => {
+      const loPct = pos(Math.min(r.lo, baseScaled));
+      const hiPct = pos(Math.max(r.hi, baseScaled));
+      return `
+      <div class="tor-row">
+        <div class="tor-label">
+          <span class="tor-name">${escapeHtml(r.label)}</span>
+          <span class="tor-range">${escapeHtml(r.range)}</span>
+        </div>
+        <div class="tor-val tor-val-lo">${escapeHtml(m.fmt(r.lo))}</div>
+        <div class="tor-track">
+          <div class="tor-bar ${leftClass}" style="left:${loPct}%;width:${Math.max(0, basePct - loPct)}%"></div>
+          <div class="tor-bar ${rightClass}" style="left:${basePct}%;width:${Math.max(0, hiPct - basePct)}%"></div>
+          <div class="tor-axis" style="left:${basePct}%"></div>
+        </div>
+        <div class="tor-val tor-val-hi">${escapeHtml(m.fmt(r.hi))}</div>
+      </div>`;
+    }).join("");
   },
 };
 
@@ -471,6 +717,7 @@ const State = {
   sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
   lastPvKey: null,
   lastPerKw: null,  // cached 1 kWc PVGIS response for current (loc, angle, aspect)
+  lastSensitivity: null,  // last Sensitivity.run() result, for metric switching
   heroAnimated: false,
 };
 
@@ -540,6 +787,19 @@ const UI = {
         this.syncBillPresets();
         this.renderParamLabels();
         this.recalc();
+      });
+    });
+
+    // Sensitivity metric switch
+    document.querySelectorAll(".sens-metric").forEach(btn => {
+      btn.addEventListener("click", () => {
+        Tornado.metric = btn.dataset.metric;
+        document.querySelectorAll(".sens-metric").forEach(b => {
+          const on = b === btn;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-pressed", String(on));
+        });
+        Tornado.render(State.lastSensitivity);
       });
     });
 
@@ -773,6 +1033,17 @@ const UI = {
 
     Chart_.renderMonthly(pv.monthlyKwh);
     Chart_.renderCashflow(roi.cashflow, roi.paybackYr);
+
+    // Sensitivity — 8 levers × 2 ends, all local arithmetic on the cached
+    // 1 kWc PVGIS response, so no extra network call.
+    State.lastSensitivity = Sensitivity.run({
+      perKw: State.lastPerKw,
+      peakpower: p.peakpower,
+      costPerWc: p.cost,
+      bill: p.bill,
+      exportAllowed: p.exportAllowed,
+    });
+    Tornado.render(State.lastSensitivity);
   },
 };
 
