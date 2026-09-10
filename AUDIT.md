@@ -11,6 +11,33 @@ check the arithmetic, and a run of `solar/proxy/worker.test.mjs` (20/20 pass —
 the worker's *tested* behaviour is sound; the findings below are in the parts
 the tests do not cover).
 
+## How this was checked
+
+The findings below were produced by a first full read, then put through an
+independent second pass — a target-selection stage, two bug hunters in
+separate lanes (logic/state, edge cases/schema), a reproducer that executes
+claims against shipped source, and a verifier whose brief was to *falsify*
+this document rather than confirm it. The hunters were denied sight of this
+file so their pass would be genuinely independent.
+
+That second pass changed five findings. It confirmed the rest:
+
+| Finding | Verdict | What changed |
+|---|---|---|
+| A1, A4, A11, B1, B6, B10, C1, C6, C12, E3 | upheld | nothing |
+| A5 | overstated | causal chain wrong — latent, not live. S2 → S3 |
+| A18 | overstated | "no properties at all" was false |
+| B2 | overstated | right outcome, wrong mechanism and error |
+| B3 | overstated | dimming is a no-op, not an inverted dim |
+| E1 / E2 | overstated | 16 of 42 grey and 40 %→23 %, not all and 0 % |
+
+Nothing was refuted outright. Each corrected finding carries a note saying
+what the first draft got wrong, kept deliberately rather than silently edited,
+so the record shows which claims have been challenged and which have not.
+
+Claims marked **UNVERIFIED** could not be settled in this sandbox and name the
+command that would settle them.
+
 **101 findings.** Severity is about user impact, not effort:
 
 | | |
@@ -63,11 +90,20 @@ path back except a reload.
 and `re_zones` (2 polygons) therefore display `—` forever, so the two largest
 datasets in the app look empty in the UI.
 
-### A5 — S2 — `MultiLineString` features are silently dropped
-`js/map.js:286, 296, 330, 387` all filter on `f.geometry.type === 'LineString'`.
-`scripts/build-transmission-geojson.py:45-49` deliberately emits
-`MultiLineString` for multi-part shapes. Any such feature vanishes with no
-warning.
+### A5 — S3 — Line renderers filter on an exact geometry type (latent)
+`js/map.js:286, 296, 330, 387` all filter on `f.geometry.type === 'LineString'`,
+so a `MultiLineString` feature would be dropped with no warning.
+
+**Corrected by the verifier pass.** The first draft of this finding claimed
+`scripts/build-transmission-geojson.py` feeds these renderers and that features
+are vanishing today. That causal chain is wrong. The script writes
+`docs/data/morocco/transmission-lines.geojson`, which is consumed by
+`docs/app.js` — a different app, which does no geometry-type filtering at all
+(`grep -c LineString docs/app.js` → 0) and hands the collection to MapLibre,
+which supports `MultiLineString` natively. The files `js/map.js` actually loads
+(`data/energy/grid_hv.geojson`, `grid_hv_real.geojson`) are 100 % `LineString`
+today, verified. So nothing is being lost as shipped — this is brittleness
+waiting for the first multi-part geometry, not a live defect.
 
 ### A6 — S2 — Toggling one layer tears down and rebuilds all of them
 `js/map.js:404-412`. `toggleLayer()` → `renderAllLayers()` → `clearAll()` +
@@ -132,9 +168,14 @@ feature, and `docs/app.js:714` *does* halo construction — the two apps
 disagree about what counts as pipeline.
 
 ### A18 — S3 — `data/energy/grid_hv_future.geojson` is orphaned and unusable
-Not present in `LAYER_REGISTRY`. Its 5 features carry **no properties at all** —
-no `id`, `name`, `status` or `grid_class` — so it could not be rendered,
-filtered or popped up even if it were wired in.
+Not present in `LAYER_REGISTRY`. Its 5 features carry exactly one property,
+`{"Legend": "225 kV"}` or `{"Legend": "400 kV"}` — and none of the fields the
+rest of the pipeline requires (`id`, `name`, `status`, `grid_class`), so it
+could not be filtered, styled or popped up even if it were wired in.
+
+**Corrected by the verifier pass.** The first draft said "no properties at
+all", which is false — there is a `Legend` on every feature. The conclusion
+(unusable as-is) is unchanged; the stated reason was wrong.
 
 ### A19 — S3 — Placeholder is hidden before the data is there
 `js/map.js:149-155`: the `load` handler hides `#map-placeholder` and shows
@@ -168,20 +209,36 @@ const oimIds = [...];
 oimIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
 ```
 `addOrReplace` (line 522) calls `map.removeSource("src-oim")` while the five
-`lyr-oim-*` layers still reference it. MapLibre throws
-*"Source 'src-oim' cannot be removed while layer … is using it."* On first boot
-the layers do not exist yet, so it works; on **every theme toggle and every
-country switch** it throws at the top of `buildMapLayers()`, outside the
-`safe()` wrapper introduced at line 483, and the whole rebuild aborts. The map
-is left with the new basemap and none of the overlays.
+`lyr-oim-*` layers still reference it. On first boot the layers do not exist
+yet, so it works; on **every theme toggle and every country switch** the
+rebuild aborts at the top of `buildMapLayers()`, outside the `safe()` wrapper
+introduced at line 483, leaving the new basemap with none of the overlays.
+
+**Mechanism corrected by the verifier pass.** The first draft claimed
+`removeSource` throws *"Source 'src-oim' cannot be removed while layer … is
+using it."* It does not throw: MapLibre's `Style.removeSource` does
+`return this.fire(new ErrorEvent(...))`, a non-throwing dispatch that lands in
+the `map.on("error")` handler at line 224 (which only `console.warn`s).
+Execution continues into `addOrReplace`'s next statement — and because the
+removal was skipped, the source still exists, so `Style.addSource` throws
+`Source "src-oim" already exists.` synchronously. Same outcome, different
+error and different line. Read from the maplibre-gl-js sources, not executed:
+confirm in a browser by toggling the theme and reading the console.
 
 ### B3 — S1 — Hover dimming dims the feature you are hovering
 `docs/app.js:670, 709` set `promoteId:"id"` on `src-industrial` and
 `src-digital`, so MapLibre derives feature-state ids from `properties.id`
 (strings such as `"noor-ouarzazate"`). But `loadAllData` (line 253) assigns a
 *numeric top-level* `f.id = idx*10000 + i`, and `setHoverDim` (line 855)
-compares `f.id !== keepId` against that numeric id. The two id spaces never
-intersect, so the hovered feature is dimmed along with everything else.
+compares `f.id !== keepId` against that numeric id. The two id spaces never intersect.
+
+**Symptom corrected by the verifier pass.** The first draft said the hovered
+feature "is dimmed along with everything else". It is not: because
+`setFeatureState` is called with the numeric ids while the rendered features
+are keyed by the promoted *string* ids, none of those calls reach the
+`["feature-state","dim"]` paint expression. Hover dimming is a complete no-op —
+nothing ever dims. That is a quieter failure than the one first described, and
+harder to notice, since the feature looks like it was never built.
 
 ### B4 — S2 — `setHoverDim` reads a private MapLibre field, on every mousemove
 `docs/app.js:852, 864`: `map.getSource(sourceId)._data`. No public fallback, no
@@ -498,16 +555,32 @@ worker should re-round on ingest.
 
 ## E. Build & data scripts
 
-### E1 — S1 — `scripts/build-power-plants.py` emits a fuel vocabulary the map cannot render
+### E1 — S1 — `scripts/build-power-plants.py` emits fuel types the map cannot render
 `build-power-plants.py:24-44` returns `solar_pv`, `solar_csp`, `gas_ccgt`,
-`gas_iscc`, `hfo`, `pumped_storage`, `thermal`.
+`gas_iscc`, `hfo`, `pumped_storage`, `thermal`, `wind`, `coal`, `hydro`.
 `docs/app.js:606-615` matches only `solar|wind|hydro|coal|gas|oil`, falling
-back to `#888`. Running the build turns **every plant grey**.
+back to `#888`.
 
-### E2 — S1 — …and drives the renewables KPI to zero
+Executed: the script's real `transform()` was imported and run over the real
+`data/energy/gen_*.geojson` (42 features). **16 of 42 would render grey** —
+`solar_csp` ×5, `solar_pv` ×5, `pumped_storage` ×3, `gas_iscc`, `gas_ccgt`,
+`hfo`. `wind`, `coal` and `hydro` map through cleanly.
+
+### E2 — S1 — …and misreports the renewables KPI as 23 %
 `docs/app.js:329` filters `["solar","wind","hydro"].includes(fuel_type)`.
-None of the script's solar or hydro outputs match, so "Renewables share*"
-would read a confident, wrong **0 %**.
+After a rebuild, `wind` and `hydro` still match but every solar plant and all
+pumped storage no longer do. Computed from the same run:
+
+| | tracked capacity | renewables share |
+|---|---|---|
+| committed `power-plants.geojson` | 9.8 GW | **40 %** |
+| after running the build script | 13.6 GW | **23 %** |
+
+**Corrected by the reproducer pass.** The first draft of E1/E2 claimed the
+script would grey out *every* plant and report a *0 %* renewables share. Both
+were overstated. The real behaviour is worse in one respect: 23 % is a
+plausible-looking number that no one would question, where 0 % would have been
+obviously broken.
 
 ### E3 — S1 — …and wipes every source URL
 `build-power-plants.py:73`: `"source_url": ""`, hardcoded. The committed
@@ -684,13 +757,13 @@ the send. If `sendBeacon` returns false *and* the `fetch` fallback throws, the
 
 | Area | S1 | S2 | S3 | Total |
 |---|---|---|---|---|
-| A. Root app (`index.html`, `js/`) | 2 | 12 | 6 | 20 |
+| A. Root app (`index.html`, `js/`) | 2 | 11 | 7 | 20 |
 | B. Live map (`docs/`) | 5 | 12 | 5 | 22 |
 | C. Estimator (`solar/`) | 3 | 8 | 7 | 18 |
 | D. Worker (`solar/proxy/`) | 0 | 5 | 2 | 7 |
 | E. Build & data scripts | 5 | 8 | 9 | 22 |
 | F. Deploy & ops | 1 | 7 | 4 | 12 |
-| **Total** | **16** | **52** | **33** | **101** |
+| **Total** | **16** | **51** | **34** | **101** |
 
 ## The seven to fix first
 
