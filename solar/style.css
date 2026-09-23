@@ -635,3 +635,121 @@ a:hover { text-decoration: underline; }
 
   #map { height: 200px; }
 }
+
+/* ── Sensitivity / tornado ──────────────────────── */
+.sens-toolbar {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(0,31,77,0.05);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.sens-metric {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px; font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  transition: background .15s, color .15s;
+}
+.sens-metric:hover { color: var(--navy); }
+.sens-metric.active {
+  background: var(--navy);
+  color: white;
+}
+.sens-metric:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.sens-base {
+  font-size: 12px; color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.tor-row {
+  display: grid;
+  /* Value columns size to their content — a 25-yr NPV can reach six figures
+     and must never be clipped or wrapped onto the track. */
+  grid-template-columns: minmax(110px, 1fr) max-content minmax(60px, 1.6fr) max-content;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.tor-row + .tor-row { border-top: 1px solid rgba(0,31,77,0.05); }
+.tor-label { min-width: 0; }
+.tor-name {
+  display: block;
+  font-size: 13px; font-weight: 600; color: var(--navy);
+  line-height: 1.25;
+}
+.tor-range {
+  display: block;
+  font-size: 11px; color: var(--muted);
+}
+.tor-val {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--charcoal);
+  white-space: nowrap;
+}
+.tor-val-lo { text-align: right; }
+.tor-val-hi { text-align: left; }
+
+.tor-track {
+  position: relative;
+  height: 18px;
+  border-radius: 3px;
+  background: rgba(0,31,77,0.035);
+}
+.tor-bar {
+  position: absolute;
+  top: 3px; bottom: 3px;
+  border-radius: 2px;
+  min-width: 1px;
+}
+.tor-good { background: #128C5A; }
+.tor-bad  { background: var(--orange); }
+.tor-axis {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--navy);
+  opacity: 0.55;
+}
+.tor-empty {
+  font-size: 13px; color: var(--muted);
+  padding: 10px 0;
+}
+
+.sens-legend {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  margin-top: 12px;
+  font-size: 11px; color: var(--muted);
+}
+.sens-key { display: inline-flex; align-items: center; gap: 6px; }
+.sens-swatch {
+  width: 12px; height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.sens-swatch-axis {
+  height: 0; width: 14px;
+  border-radius: 0;
+  border-top: 1px dashed var(--navy);
+  opacity: 0.7;
+}
+.sens-foot {
+  margin-top: 8px;
+  font-size: 11px; color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 620px) {
+  .tor-row {
+    grid-template-columns: max-content minmax(40px, 1fr) max-content;
+    row-gap: 4px;
+  }
+  .tor-label { grid-column: 1 / -1; }
+  .tor-val { font-size: 11px; }
+}

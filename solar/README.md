@@ -108,10 +108,12 @@ If any tool grows beyond ~500 LOC, split `app.js` into ES modules and add a ligh
 - **PVGIS** uses PVGIS-SARAH3 radiation DB (satellite-derived, 5×5 km, 1990–2020 climatology). Systematic bias typically ±5% for MA.
 - **Self-consumption ratio** is heuristic: `0.30 + 0.55·exp(-0.9·(prod/cons))`. At sizing ratio 1.0 → ~55%; at 2.0 → ~33%. Real values depend on load profile — should be a per-user input in a future version.
 - **Cashflow** uses 0.5%/yr degradation, 2%/yr tariff inflation, 1% opex, 5% discount, 25-yr life. All in `CONFIG` — swap freely.
+- **Sensitivity (tornado)** is one-at-a-time: each lever is moved to both ends of its plausible range (`CONFIG.SENSITIVITY`) while everything else stays at the reference case, and the model is re-run. Effects are not combined — two adverse assumptions together are worse than the longest bar. Two metrics: simple payback (same definition as the hero KPI, so the reference bar matches the headline) and 25-yr NPV. Levers that cannot move simple payback — tariff inflation, degradation, discount rate — are filtered out of the payback view rather than drawn as zero-width bars; they show up under the NPV metric. Perturbations reuse the cached 1 kWc PVGIS response, so the view costs no extra network call.
 
 ## Known limitations
 
 - Nominatim rate limit (1 req/s) can bite on aggressive typing. Debounced 300 ms; consider Photon or a Cloudflare-cached geocoder if traffic grows.
 - Self-consumption ratio is a rough model; not validated against measured MA household load curves.
 - Export revenue is a rough upper bound — LV residential feed-in tariff not yet officially published.
-- No sensitivity view yet (single-point estimates only). Add tornado chart when needed.
+- The sensitivity view is one-at-a-time (no joint/Monte-Carlo scenarios, no correlation between levers).
+- Sensitivity ranges are judgement calls documented in `CONFIG.SENSITIVITY`, not fitted distributions — the cost range comes from the market survey, the rest are plausible bounds.

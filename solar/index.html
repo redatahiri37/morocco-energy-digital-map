@@ -228,6 +228,27 @@
           </div>
         </div>
 
+        <div class="chart-card" id="sensitivity-card">
+          <div class="chart-header">
+            <h3>Ce qui fait bouger le résultat</h3>
+            <span class="chart-sub">Analyse de sensibilité<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Chaque barre montre l'effet d'une seule hypothèse poussée à chaque bout de sa fourchette plausible, toutes les autres restant à leur valeur de référence. Les hypothèses ne sont pas combinées : deux effets défavorables simultanés feraient pire que la barre la plus longue.</span></button></span>
+          </div>
+
+          <div class="sens-toolbar" role="group" aria-label="Indicateur analysé">
+            <button type="button" class="sens-metric active" data-metric="payback" aria-pressed="true">Amortissement</button>
+            <button type="button" class="sens-metric" data-metric="npv" aria-pressed="false">Gain net 25 ans</button>
+          </div>
+
+          <div class="sens-base" id="sens-base">—</div>
+          <div class="tornado" id="tornado"></div>
+          <div class="sens-legend">
+            <span class="sens-key"><i class="sens-swatch tor-good"></i>plus favorable</span>
+            <span class="sens-key"><i class="sens-swatch tor-bad"></i>moins favorable</span>
+            <span class="sens-key"><i class="sens-swatch sens-swatch-axis"></i>scénario de référence</span>
+          </div>
+          <div class="sens-foot">La taille du système reste celle affichée ci-dessus : la ligne « facture mensuelle » teste une consommation différente sur la même installation.</div>
+        </div>
+
         <div class="disclaimer">
           <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs ONEE résidentiels 2025. La part d'électricité que vous consommez directement est estimée à partir d'un profil de foyer type. L'ombrage, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
         </div>

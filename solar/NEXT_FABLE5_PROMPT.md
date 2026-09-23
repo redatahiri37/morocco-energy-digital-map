@@ -104,7 +104,7 @@ At the end of your session, produce:
 
 If time permits or the user wants to keep going:
 
-1. **Sensitivity view** (`solar/PROMPT.md` §11 candidate). Tornado chart showing how each input variable moves the payback. High-impact for the "policy researcher" persona.
+1. ~~**Sensitivity view**~~ **Shipped (2026-09-04).** Tornado chart on the results page (`Sensitivity` + `Tornado` in `app.js`): 8 levers moved one at a time, metric toggle between payback and 25-yr NPV.
 2. **Arabic language toggle** (`§11.4`). RTL layout is the interesting part.
 3. **PDF export** (`§11.3`). `window.print()` + a dedicated print stylesheet.
 

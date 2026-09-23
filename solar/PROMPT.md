@@ -48,6 +48,7 @@ The user should be able to say all of these after using the tool:
 - Annual + monthly production estimate (PVGIS v5.2)
 - ROI: payback, 25-yr cashflow, NPV
 - Adjustable: system size, tilt, azimuth, monthly consumption, installed cost, export toggle
+- Sensitivity view: tornado chart ranking the assumptions that move payback / 25-yr NPV
 - ONEE stepped tariff model with correct top-tranche displacement
 - Loi 82-21 export model (20 % cap, 0.18 MAD/kWh upper bound)
 - Mini-map showing the geocoded point
@@ -120,7 +121,8 @@ Selective billing above 150 kWh/mo (each tranche at its own price). PV displaces
 7. Open Network tab → PVGIS call goes through the configured proxy; response cached (no duplicate hit on unchanged params).
 8. Check that Casablanca 3 kWc, 30°, Sud, 14 % loss returns ~1 640–1 750 kWh/kWc specific yield. Anything outside this range is a red flag.
 9. Confirm no console errors on the full flow.
-10. Confirm README + PROMPT files updated if any assumption changed.
+10. Scroll to « Ce qui fait bouger le résultat » → bars are sorted longest-first, the reference (dashed) line sits at the headline payback, and switching to « Gain net 25 ans » adds the tariff-inflation, degradation and discount-rate rows.
+11. Confirm README + PROMPT files updated if any assumption changed.
 
 ## 10. Anti-patterns (do not do)
 
@@ -141,7 +143,8 @@ Design v1 so these v2 additions are additive, not rewrites:
 3. **PDF export.** Server-less print stylesheet + `window.print()`. Zero deps.
 4. **Arabic / English.** Wrap user-facing strings in a `t("key")` function backed by a JSON dictionary. Do not adopt a i18n framework.
 5. **Installer marketplace.** Separate module; the estimator remains vendor-neutral. Estimator link to marketplace, never the reverse.
-6. ~~**Cloudflare Worker proxy.**~~ **Done (2026-07-31).** `solar/proxy/worker.js` — edge cache 24 h, 60 req/min/IP, French error contract. Ops in `solar/README.md`.
+6. ~~**Sensitivity view.**~~ **Done (2026-09-04).** Tornado chart on the results page — 8 levers, one-at-a-time, toggle between payback and 25-yr NPV. Ranges live in `CONFIG.SENSITIVITY`, model overrides go through `ROI.compute({ assumptions })`.
+7. ~~**Cloudflare Worker proxy.**~~ **Done (2026-07-31).** `solar/proxy/worker.js` — edge cache 24 h, 60 req/min/IP, French error contract. Ops in `solar/README.md`.
 
 ## 12. Success metrics
 
