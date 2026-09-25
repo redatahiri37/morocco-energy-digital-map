@@ -78,7 +78,8 @@ morocco-map/
 │   └── data/
 │       └── morocco/
 │           ├── power-plants.geojson
-│           ├── grid-lines.geojson
+│           ├── interconnectors.geojson
+│           ├── planned-corridors.geojson
 │           ├── industrial.geojson
 │           └── digital.geojson
 ├── .gitignore

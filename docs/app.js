@@ -83,7 +83,6 @@
     "oim-grid":"oim",
     "interconnectors":"grid",
     "planned-corridors":"grid",
-    "grid-lines":"grid",
     "industrial":"industrial",
     "digital":"digital"
   };
@@ -99,7 +98,7 @@
   function lineLayerIds(dataLayerId){
     const m = LINE_LAYER_IDS[dataLayerId];
     if(!m) return null;
-    return {
+    const ll = {
       srcId: m.srcId,
       hv:      m.idPrefix + "-hv",
       mv:      m.idPrefix + "-mv",
@@ -107,6 +106,8 @@
       planned: m.idPrefix + "-planned",
       idle:    m.idPrefix + "-idle"
     };
+    ll.all = [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
+    return ll;
   }
 
   // Industrial sector colour palette
@@ -175,10 +176,8 @@
   $("#panelExpand").addEventListener("click",   ()=>layout.classList.remove("panel-collapsed"));
 
   ["githubLink","githubContribute","githubFooter"].forEach(id=>{ const el = $("#"+id); if(el) el.href = REPO_URL; });
-  (function(){
-    const el = $("#reportErrorFooter");
-    if(el) el.href = REPO_URL + "/issues/new?title=" + encodeURIComponent("MoroccoMap data correction");
-  })();
+  const reportErrorFooter = $("#reportErrorFooter");
+  if(reportErrorFooter) reportErrorFooter.href = REPO_URL + "/issues/new?title=" + encodeURIComponent("MoroccoMap data correction");
 
   // ---------- Methodology modal ----------
   const methModal = $("#methodologyModal");
@@ -389,9 +388,7 @@
     }
     if(kind === "grid"){
       const ll = lineLayerIds(dataLayerId);
-      if(ll) return [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
-      // legacy fallback ("grid-lines") — no dedicated source/layer mapping
-      return [];
+      return ll ? ll.all : [];
     }
     if(dataLayerId === "power-plants"){
       return ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
@@ -409,8 +406,7 @@
     // Only interactive (non-cluster, non-halo) layers
     const ids = [];
     Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
-      const ll = lineLayerIds(dataLayerId);
-      [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle].forEach(id=>{
+      lineLayerIds(dataLayerId).all.forEach(id=>{
         if(map && map.getLayer(id)) ids.push(id);
       });
     });
@@ -557,8 +553,7 @@
     // no longer clobbers the first's data / visibility toggle.
     const ll = lineLayerIds(dataLayerId);
     const srcId = ll.srcId;
-    const ids = [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
-    ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    ll.all.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
     // Editorial overlay — interconnectors, HVDC corridors, planned/idle
@@ -833,7 +828,7 @@
     const lineLayers = [];
     Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
       const ll = lineLayerIds(dataLayerId);
-      [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle].forEach(id=>{
+      ll.all.forEach(id=>{
         lineLayers.push({ id, src: ll.srcId, dataLayer: dataLayerId });
       });
     });
