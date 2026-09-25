@@ -328,7 +328,7 @@
           32.481
         ]
       },
-      "properties": {
+      "properties": { "id": "al-massira-dam",
         "name": "Al Massira Dam",
         "fuel_type": "hydro",
         "capacity_mw": 232,
@@ -347,7 +347,7 @@
           32.092
         ]
       },
-      "properties": {
+      "properties": { "id": "bin-el-ouidane-dam",
         "name": "Bin el Ouidane Dam",
         "fuel_type": "hydro",
         "capacity_mw": 256,
@@ -366,7 +366,7 @@
           34.198
         ]
       },
-      "properties": {
+      "properties": { "id": "idriss-1er-dam",
         "name": "Idriss 1er Dam",
         "fuel_type": "hydro",
         "capacity_mw": 432,
@@ -385,7 +385,7 @@
           34.945
         ]
       },
-      "properties": {
+      "properties": { "id": "oued-el-makhazine-dam",
         "name": "Oued el Makhazine Dam",
         "fuel_type": "hydro",
         "capacity_mw": 35,
@@ -404,7 +404,7 @@
           34.516
         ]
       },
-      "properties": {
+      "properties": { "id": "al-wahda-dam",
         "name": "Hassan II (Al Wahda) Dam",
         "fuel_type": "hydro",
         "capacity_mw": 240,

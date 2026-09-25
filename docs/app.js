@@ -956,7 +956,7 @@
     $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}"><span class="dot" style="background:${dotColor}"></span>${badgeLabel}</span>`;
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
-      <div class="pop-sub">${escapeHtml(p.region || "")} · ${coords}</div>
+      <div class="pop-sub">${p.region ? escapeHtml(p.region) + " · " : ""}${coords}</div>
       <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
@@ -968,7 +968,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+(p.id || p.name)+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
       </div>`;
     popup.classList.add("open");
