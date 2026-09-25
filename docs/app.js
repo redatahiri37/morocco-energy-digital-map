@@ -66,17 +66,17 @@
   const INTERCONNECTOR_COLOR = () => isDark() ? "#60A5FA" : "#1D4ED8";
   const PLANNED_COLOR = "#a37df0";
 
-  // DC provider palette — shown in the sidebar legend, used on the map.
-  // Keep the list short; anything unknown falls back to DIGITAL_COLOR.
+  // DC provider palette — colours the map bubbles; the tooltip names the
+  // provider next to its colour. Anything unknown falls back to DIGITAL_COLOR.
   const PROVIDERS = [
-    { key:"N+ONE",                     color:"#9B6BF0", label:"N+ONE (colocation)", short:"N+ONE" },
-    { key:"inwi",                      color:"#5BBFD9", label:"inwi (telco)", short:"inwi" },
-    { key:"Maroc Telecom (IAM)",       color:"#EC4899", label:"Maroc Telecom / IAM (telco)", short:"Maroc Telecom" },
-    { key:"Naver / Nvidia consortium", color:"#F59E0B", label:"Naver × Nvidia (hyperscale, announced)", short:"Naver × Nvidia" },
-    { key:"Iozera",                    color:"#F97316", label:"Iozera (hyperscale, announced)", short:"Iozera" },
-    { key:"Government of Morocco",     color:"#10B981", label:"Gov. of Morocco (sovereign)", short:"Government" },
+    { key:"N+ONE",                     color:"#9B6BF0", short:"N+ONE" },
+    { key:"inwi",                      color:"#5BBFD9", short:"inwi" },
+    { key:"Maroc Telecom (IAM)",       color:"#EC4899", short:"Maroc Telecom" },
+    { key:"Naver / Nvidia consortium", color:"#F59E0B", short:"Naver × Nvidia" },
+    { key:"Iozera",                    color:"#F97316", short:"Iozera" },
+    { key:"Government of Morocco",     color:"#10B981", short:"Government" },
     { key:"ADD (Agence de Développement du Digital)",
-                                       color:"#10B981", label:"ADD (gov. sovereign)", short:"ADD" }
+                                       color:"#10B981", short:"ADD" }
   ];
   const PROVIDER_COLOR_EXPR = (function(){
     // Build a case expression: operator match → color; else category default
@@ -159,8 +159,11 @@
     document.body.dataset.theme = next;
     localStorage.setItem("mg.theme", next);
     if(map){
-      map.setStyle(basemapStyle(next));
+      // Full reload, not a diff: diffing Positron→Dark patches the basemap in
+      // place, which drops our layers and never fires "style.load", so they
+      // were never rebuilt (empty map after switching theme). Listen first.
       map.once("style.load", ()=>buildMapLayers(currentCountry));
+      map.setStyle(basemapStyle(next), { diff:false });
     }
     if(currentCountry) renderLayerList(currentCountry); // swatch colours are theme-aware
   });
@@ -228,7 +231,6 @@
     loadAllData(initialCountry).then(()=>{
       renderLayerList(initialCountry);
       renderKPIs(initialCountry);
-      renderProviderLegend();
       renderMethodologySources(initialCountry);
       dataReady = true;
       tryBuild();
@@ -340,21 +342,6 @@
       if(visibility[L.id] === false) row.classList.add("muted");
       host.appendChild(row);
     });
-  }
-
-  function renderProviderLegend(){
-    const host = $("#providerLegend");
-    if(!host) return;
-    const fc = layerData["digital"] || { features:[] };
-    // Count features per operator to show only providers that are in data
-    const seen = new Set(fc.features.map(f => (f.properties||{}).operator).filter(Boolean));
-    const rows = PROVIDERS
-      .filter(p => seen.has(p.key))
-      .map(p => `<span class="chip" title="${escapeHtml(p.label)}"><span class="swatch" style="background:${p.color}"></span>${escapeHtml(p.short)}</span>`)
-      .join("");
-    const cableRow = fc.features.some(f => f.properties && f.properties.category === "cable_landing")
-      ? `<span class="chip"><span class="swatch cable" style="background:${CABLE_COLOR}"></span>Cable landing</span>` : "";
-    host.innerHTML = rows + cableRow;
   }
 
   function renderKPIs(countryKey){
@@ -887,12 +874,23 @@
   function showPointTooltip(dataLayerId, f, point){
     const p = f.properties || {};
     const kind = layerKind(dataLayerId);
-    let metric = "";
+    let metric = "", dot = "";
     if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${p.fuel_type || ""}`;
     else if(kind === "industrial") metric = `${p.sector || ""} · est. ${fmtCap(p.estimated_demand_mw)}`;
-    else if(kind === "digital")    metric = p.capacity_estimate_mw ? `${fmtCap(p.capacity_estimate_mw)} · ${p.operator || ""}` : (p.operator || p.category || "");
+    else if(kind === "digital"){
+      if(p.category === "cable_landing"){
+        metric = ["Submarine cable landing", p.operator].filter(Boolean).join(" · ");
+        dot = CABLE_COLOR;
+      } else {
+        const prov = PROVIDERS.find(x => x.key === p.operator);
+        metric = [prov ? prov.short : p.operator,
+                  p.capacity_estimate_mw != null ? fmtCap(p.capacity_estimate_mw) : "",
+                  p.status].filter(Boolean).join(" · ");
+        dot = prov ? prov.color : DIGITAL_COLOR;
+      }
+    }
     tooltip.innerHTML = `
-      <div class="tt-name">${escapeHtml(p.name)}</div>
+      <div class="tt-name">${dot ? `<span class="tt-dot" style="background:${dot}"></span>` : ""}${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
