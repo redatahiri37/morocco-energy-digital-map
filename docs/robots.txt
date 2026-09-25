@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ainfrastructure.ma/sitemap.xml
+Sitemap: https://atlas-nexus-69o.pages.dev/sitemap.xml
