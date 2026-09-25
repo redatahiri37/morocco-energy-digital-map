@@ -12,9 +12,17 @@ projects, separate URLs, no shared CSS or JS — a broken deploy on one cannot
 take the other down.
 
 ```bash
-wrangler pages deploy docs  --project-name=atlas-nexus   # map
+wrangler pages deploy docs  --project-name=atlas-nexus   # map (automatic, see below)
 wrangler pages deploy solar --project-name=atlas-solar   # solar
 ```
+
+The map deploys itself: every push to `main` that touches `docs/` runs
+`.github/workflows/validate.yml`, which validates and then publishes `docs/`
+to the `atlas-nexus` Pages project
+(`atlas-nexus-69o.pages.dev`). It needs the `CLOUDFLARE_API_TOKEN`
+and `CLOUDFLARE_ACCOUNT_ID` repository secrets; use Actions → docs-validate →
+"Run workflow" to redeploy without a code change. Solar is still deployed by
+hand.
 
 The only shared infrastructure is the `solar-pvgis` Cloudflare Worker, the
 account, and DNS. The legacy `/solar/` path on the map's domain 301-redirects

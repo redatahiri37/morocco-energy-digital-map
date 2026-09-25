@@ -3,10 +3,11 @@ name: docs-validate
 on:
   push:
     branches: [main]
-    paths: ['docs/**']
+    paths: ['docs/**', '.github/workflows/validate.yml']
   pull_request:
     branches: [main]
-    paths: ['docs/**']
+    paths: ['docs/**', '.github/workflows/validate.yml']
+  workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 jobs:
   validate:
@@ -49,3 +50,25 @@ jobs:
           }
           console.log(`OK - ${files.length} referenced GeoJSON files present.`);
           EOF
+
+  # Publishes docs/ to the Cloudflare Pages project behind atlas-nexus-69o.pages.dev
+  # (atlas-nexus). Runs only on main, and only after validate passes.
+  # Needs two repository secrets:
+  #   CLOUDFLARE_API_TOKEN   — token with Account › Cloudflare Pages › Edit
+  #   CLOUDFLARE_ACCOUNT_ID  — shown on the Cloudflare dashboard sidebar
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy-atlas-nexus
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy docs/ to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy docs --project-name=atlas-nexus --branch=main --commit-dirty=true
