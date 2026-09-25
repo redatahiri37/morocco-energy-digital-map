@@ -86,36 +86,10 @@
 
     <section class="panel-section" id="providerLegendSection">
       <div class="panel-subhead">
-        <h3>Data-center providers</h3>
+        <h3>Data centres</h3>
+        <span class="micro">size = MW · faded = planned</span>
       </div>
       <div class="provider-legend" id="providerLegend"></div>
-      <p class="micro" style="margin-top:8px;color:var(--text-3)">Bubble size ∝ announced capacity. Paler fill = announced / under construction.</p>
-    </section>
-
-    <section class="panel-section">
-      <details class="disclosure">
-        <summary>About this tool</summary>
-        <p>An open, transparent map of Morocco's electricity and digital infrastructure — built for researchers, developers and policy teams who need a single view of where power is produced, moved and consumed, and where the data-center pipeline is landing.</p>
-        <p>Every feature carries a <code>source</code> and a source URL. Nothing here is proprietary.</p>
-      </details>
-
-      <details class="disclosure">
-        <summary>Methodology</summary>
-        <p>Data is hand-curated from Global Energy Monitor, ONEE, OpenStreetMap, Datacentermap.com and operator disclosures. Each GeoJSON feature includes a <code>precision</code> flag (<em>exact</em> or <em>approximate</em>), a <code>source</code>, and the <code>commissioning_year</code> or announcement year.</p>
-        <p>Transmission-line routing is indicative, traced from ONEE network maps and OSM — <strong>not survey-grade</strong>. Industrial demand figures are public-source estimates, not audited.</p>
-        <p>Inspired by <a href="https://paczyzak.substack.com/p/data-centers" target="_blank" rel="noopener">Pawel Czyzak's Data Center Siting Tool</a> (transparency-first) and <a href="https://www.enersite.app/" target="_blank" rel="noopener">enersite.app</a> (multi-layer spatial analysis).</p>
-      </details>
-
-      <details class="disclosure">
-        <summary>Known data gaps (v1.0)</summary>
-        <ul class="bullets">
-          <li>No sub-60 kV distribution network.</li>
-          <li>Transmission lines are approximate corridors, not survey-grade.</li>
-          <li>Industrial demand is estimated from public disclosures.</li>
-          <li>Renewable-potential layer (solar/wind irradiation) deferred to v1.1.</li>
-          <li>No live data feeds — everything is static GeoJSON.</li>
-        </ul>
-      </details>
     </section>
 
     <section class="panel-section panel-footer">
@@ -138,12 +112,12 @@
   <div class="map-wrap">
     <div id="map"></div>
 
-    <!-- Map init error (rare — CARTO tiles are public) -->
+    <!-- Map init error (rare — OpenFreeMap tiles are public) -->
     <div id="noTokenCard" class="no-token hidden">
       <div class="no-token-inner">
         <h2>Map engine unavailable</h2>
-        <p>The map could not initialise. This is almost always a transient network issue — reload to retry. If it persists, the basemap provider (CARTO) may be unreachable from your network.</p>
-        <p class="micro">No account or token required — this map uses open tiles from <a href="https://carto.com/basemaps" target="_blank" rel="noopener">CARTO</a> + <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> via MapLibre.</p>
+        <p>The map could not initialise. This is almost always a transient network issue — reload to retry.</p>
+        <p class="micro">No account or token required — this map uses open <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> tiles (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>) via MapLibre.</p>
       </div>
     </div>
 
@@ -167,15 +141,10 @@
 <!-- ───── BOTTOM BAR ───── -->
 <footer class="bottombar">
   <div class="bb-left">
-    <span class="bb-dot" style="background:#F59E0B"></span>
-    <span class="bb-dot" style="background:#0D9488"></span>
-    <span class="bb-dot" style="background:#3B82F6"></span>
-    <span class="bb-dot" style="background:#EA580C"></span>
-    <span class="bb-dot" style="background:#7C3AED"></span>
-    <span>Data: GEM · Datacentermap · Grid: <a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> (ODbL) · Basemap: MapLibre | © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
+    <span>Data: GEM · ONEE · Datacentermap · Grid: <a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> · Basemap: <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
   </div>
   <div class="bb-center">
-    Not affiliated with any entity. Built by <a href="https://paczyzak.substack.com/p/data-centers" target="_blank" rel="noopener">Reda Tahiri — Energy × Digital Nexus</a>.
+    Built by <a href="https://redatahiri.substack.com/" target="_blank" rel="noopener">Reda Tahiri</a> · independent, not affiliated
   </div>
   <div class="bb-right">
     <a id="githubFooter" href="#" target="_blank" rel="noopener">Contribute data ↗</a>
@@ -190,7 +159,8 @@
       <button class="icon-btn" id="methodologyClose" aria-label="Close"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </header>
     <div class="modal-body">
-      <p>Every layer on this map is a static GeoJSON under <code>/docs/data/morocco/</code>. Features include <code>source</code>, <code>source_url</code>, and <code>precision</code> so provenance is inspectable from the tooltip.</p>
+      <p>An open map of Morocco's electricity and digital infrastructure: where power is produced, moved and consumed, and where the data-centre pipeline is landing. Every layer is a static GeoJSON under <code>/docs/data/morocco/</code>; every feature carries a <code>source</code>, <code>source_url</code> and <code>precision</code> flag, so provenance is one click away.</p>
+      <p>Data is hand-curated from Global Energy Monitor, ONEE, OpenStreetMap, Datacentermap.com and operator disclosures. Inspired by <a href="https://paczyzak.substack.com/p/data-centers" target="_blank" rel="noopener">Pawel Czyzak's Data Center Siting Tool</a> and <a href="https://www.enersite.app/" target="_blank" rel="noopener">enersite.app</a>.</p>
       <h3>Sources by layer</h3>
       <ul id="methodologySources"></ul>
       <h3>Third-party requests on load</h3>
@@ -198,17 +168,16 @@
       <ul class="bullets">
         <li><strong>Google Fonts</strong> (<code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>) — serves the page typefaces (Inter, JetBrains Mono).</li>
         <li><strong>unpkg.com</strong> — serves the MapLibre GL JS library and stylesheet that render the map.</li>
-        <li><strong>CARTO</strong> (<code>basemaps.cartocdn.com</code>) — serves basemap raster tiles, requested continuously as you pan and zoom.</li>
+        <li><strong>OpenFreeMap</strong> (<code>tiles.openfreemap.org</code>) — serves the basemap style, vector tiles and label fonts, requested continuously as you pan and zoom.</li>
         <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
-        <li><strong>MapLibre demo tiles</strong> (<code>demotiles.maplibre.org</code>) — serves the font glyphs used to render map labels (place names, layer text).</li>
       </ul>
-      <p class="micro">OpenStreetMap.org is credited above for data attribution only — this page does not request tiles directly from openstreetmap.org; that data reaches you via CARTO and OpenInfraMap.</p>
       <h3>Limits</h3>
       <ul class="bullets">
-        <li>Transmission-line routing is indicative, not survey-grade.</li>
+        <li>Transmission-line routing is indicative, not survey-grade. No sub-60 kV distribution network.</li>
         <li>Capacity factors are not applied — figures are nameplate.</li>
-        <li>Industrial demand is estimated from public disclosures.</li>
+        <li>Industrial demand is estimated from public disclosures, not audited.</li>
         <li>Announced DC capacity is the headline, not energised capacity.</li>
+        <li>No live data feeds — everything except the OpenInfraMap grid is static GeoJSON.</li>
       </ul>
       <p class="micro">See <a href="../DATA_SOURCES.md" target="_blank">DATA_SOURCES.md</a> and <a href="../ASSUMPTIONS.md" target="_blank">ASSUMPTIONS.md</a> for the full write-up.</p>
     </div>
