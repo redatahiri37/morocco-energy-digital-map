@@ -4,7 +4,7 @@ Two live tools at the energy × digital intersection in Morocco:
 
 | Tool | URL | Code |
 |---|---|---|
-| **Infrastructure map** — generation, grid, industrial load, data centers | [atlas-nexus-69o.pages.dev](https://atlas-nexus-69o.pages.dev/) | `docs/` |
+| **Infrastructure map** — generation, grid, industrial load, data centers | [ainfrastructure.ma](https://ainfrastructure.ma/) | `docs/` |
 | **Atlas Solar** — residential PV production + ROI estimator | [atlas-solar.pages.dev/](https://atlas-solar.pages.dev/) | `solar/` ([docs](solar/README.md)) |
 
 **The two are infrastructurally independent.** Separate Cloudflare Pages
@@ -12,9 +12,17 @@ projects, separate URLs, no shared CSS or JS — a broken deploy on one cannot
 take the other down.
 
 ```bash
-wrangler pages deploy docs  --project-name=atlas-nexus   # map
+wrangler pages deploy docs  --project-name=atlas-nexus   # map (automatic, see below)
 wrangler pages deploy solar --project-name=atlas-solar   # solar
 ```
+
+The map deploys itself: every push to `main` that touches `docs/` runs
+`.github/workflows/validate.yml`, which validates and then publishes `docs/`
+to the `atlas-nexus` Pages project (custom domain `ainfrastructure.ma`,
+fallback `atlas-nexus-69o.pages.dev`). It needs the `CLOUDFLARE_API_TOKEN`
+and `CLOUDFLARE_ACCOUNT_ID` repository secrets; use Actions → docs-validate →
+"Run workflow" to redeploy without a code change. Solar is still deployed by
+hand.
 
 The only shared infrastructure is the `solar-pvgis` Cloudflare Worker, the
 account, and DNS. The legacy `/solar/` path on the map's domain 301-redirects

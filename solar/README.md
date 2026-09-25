@@ -13,8 +13,8 @@ infrastructure map, even though both live in this repo:
 |---|---|---|
 | Source | `solar/` | `docs/` |
 | Pages project | `atlas-solar` | `atlas-nexus` |
-| URL | atlas-solar.pages.dev | atlas-nexus-69o.pages.dev |
-| Deploy | `wrangler pages deploy solar --project-name=atlas-solar` | `wrangler pages deploy docs --project-name=atlas-nexus` |
+| URL | atlas-solar.pages.dev | ainfrastructure.ma (atlas-nexus-69o.pages.dev) |
+| Deploy | `wrangler pages deploy solar --project-name=atlas-solar` | automatic on push to `main` (GitHub Actions) |
 
 A broken deploy on one **cannot** take the other down. They share no CSS
 (`brand.css` is duplicated deliberately, not imported across the boundary),
