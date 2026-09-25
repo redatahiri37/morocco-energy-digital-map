@@ -15,3 +15,11 @@ name = "RATE_LIMITER"
 type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 60, period = 60 }
+
+# Usage analytics dataset written by POST /e (see ../ANALYTICS.md).
+# Analytics Engine is included on the Workers Free plan. If `wrangler deploy`
+# rejects this block, delete it — the worker degrades gracefully (events are
+# accepted and dropped) when the binding is absent.
+[[analytics_engine_datasets]]
+binding = "SOLAR_ANALYTICS"
+dataset = "solar_events"

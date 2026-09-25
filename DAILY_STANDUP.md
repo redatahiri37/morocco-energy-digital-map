@@ -101,8 +101,10 @@ These exist today and will keep surfacing until closed:
 - **No CI.** Nothing runs on push; deploys are a human typing `wrangler`.
 - **No pre-commit secret scan.** Two credential leaks were caught only by
   GitHub's push protection, not by this repo.
-- **No analytics.** Zero visibility into whether anyone uses the tool.
 - **No error monitoring.** If the Worker starts failing, nobody finds out.
+- **No conversion baseline yet.** Analytics now ships (`solar/ANALYTICS.md`),
+  but until a week of data lands, the funnel numbers have nothing to be
+  compared against. First scored week closes this.
 - **Self-consumption ratio is an unvalidated heuristic** — the weakest link
   in an otherwise defensible model.
 - **Nominatim rate limit (1 req/s)** is the real scaling ceiling before

@@ -33,6 +33,7 @@ solar/          (repo root — its own Cloudflare Pages project)
 ├── index.html       Page shell — two <section class="step"> views
 ├── style.css        Atlas Nexus brand (navy #001F4D / orange #FF6B35)
 ├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
+├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
 └── README.md
 ```
 

@@ -483,13 +483,14 @@ const UI = {
       e.preventDefault();
       this.handleAddressSubmit();
     });
+    $("address-input").addEventListener("input", () => Analytics.once("address_input", "address_input"));
     $("address-input").addEventListener("input", debounce(() => this.showSuggestions(), 300));
 
     document.querySelectorAll(".chip").forEach(chip => {
       chip.addEventListener("click", () => {
         const lat = parseFloat(chip.dataset.lat);
         const lon = parseFloat(chip.dataset.lon);
-        this.setLocationAndGo({ lat, lon, label: chip.dataset.label });
+        this.setLocationAndGo({ lat, lon, label: chip.dataset.label, src: "chip" });
       });
     });
 
@@ -497,6 +498,9 @@ const UI = {
     ["peakpower", "angle", "aspect", "cost"].forEach(id => {
       const input = $(id);
       input.addEventListener("input", () => {
+        // once() per field: a slider fires continuously, and what we want to
+        // know is whether anyone touches it at all, not how many pixels.
+        Analytics.once("param_change:" + id, "param_change", { field: id });
         State.params[id] = parseFloat(input.value);
         if (id === "peakpower") {
           State.sizeAuto = false;
@@ -508,18 +512,21 @@ const UI = {
       });
     });
     $("size-auto-reset").addEventListener("click", () => {
+      Analytics.once("param_change:size_reset", "param_change", { field: "size_reset" });
       State.sizeAuto = true;
       $("size-auto-badge").hidden = false;
       $("size-auto-reset").hidden = true;
       this.recalc();
     });
     $("export-toggle").addEventListener("change", (e) => {
+      Analytics.once("param_change:export", "param_change", { field: "export" });
       State.params.exportAllowed = e.target.checked;
       this.recalc();
     });
 
     // Bill — slider + presets
     $("bill").addEventListener("input", () => {
+      Analytics.once("param_change:bill", "param_change", { field: "bill" });
       State.params.bill = parseFloat($("bill").value);
       this.syncBillPresets();
       this.renderParamLabels();
@@ -527,6 +534,7 @@ const UI = {
     });
     document.querySelectorAll(".bill-chip").forEach(chip => {
       chip.addEventListener("click", () => {
+        Analytics.once("param_change:bill_chip", "param_change", { field: "bill_chip" });
         State.params.bill = parseFloat(chip.dataset.bill);
         $("bill").value = State.params.bill;
         this.syncBillPresets();
@@ -563,7 +571,7 @@ const UI = {
           const r = results[i];
           $("address-input").value = r.short;
           list.hidden = true;
-          this.setLocationAndGo(r);
+          this.setLocationAndGo({ ...r, src: "suggestion" });
         });
       });
     } catch (e) { list.hidden = true; }
@@ -578,11 +586,14 @@ const UI = {
     try {
       const results = await Geocoder.search(q);
       if (!results.length) {
+        // The query itself is never sent — only the fact that it failed.
+        Analytics.track("geocode_fail", { src: "no_result" });
         this.showStep1Error("Adresse introuvable. Précisez la ville.");
         return;
       }
-      await this.setLocationAndGo(results[0]);
+      await this.setLocationAndGo({ ...results[0], src: "typed" });
     } catch (e) {
+      Analytics.track("geocode_fail", { src: "error" });
       this.showStep1Error("Erreur de géocodage. Réessayez.");
     } finally {
       $("estimate-btn").disabled = false;
@@ -591,6 +602,15 @@ const UI = {
   },
 
   async setLocationAndGo(loc) {
+    // Activation — the single most important number in the funnel: how many
+    // visitors get an actual estimate. Coordinates are coarsened to ~11 km
+    // and the typed address is never transmitted.
+    Analytics.setStep(2);
+    Analytics.track("estimate", {
+      src: loc.src || "unknown",
+      lat: Analytics.coarse(loc.lat),
+      lon: Analytics.coarse(loc.lon),
+    });
     State.location = loc;
     State.heroAnimated = false;   // replay the count-up for a new address
     this.goToStep(2);
@@ -672,6 +692,7 @@ const UI = {
         $("step2-error").hidden = true;
       } catch (e) {
         console.error(e);
+        Analytics.track("pvgis_fallback", {});
         // Degrade to the nearest-city estimate rather than a dead end.
         State.lastPerKw = PVGIS.fallbackPerKw(State.location.lat, State.location.lon);
         State.lastPvKey = key;
@@ -735,6 +756,20 @@ const UI = {
     }
     $("fin-rate-note").textContent =
       `${(CONFIG.LOAN_APR * 100).toFixed(0)} % sur ${CONFIG.LOAN_YEARS} ans`;
+
+    // Queued before the charts render: if Chart.js failed to load from its
+    // CDN the calls below throw, and that is precisely the session we most
+    // want recorded. Debounced so a slider drag reports the value the
+    // visitor settled on, not every intermediate frame.
+    clearTimeout(this._outcomeTimer);
+    this._outcomeTimer = setTimeout(() => {
+      Analytics.track("outcome", {
+        bill: p.bill,
+        kwp: p.peakpower,
+        payback: isFinite(roi.paybackYr) ? Math.round(roi.paybackYr * 10) / 10 : 0,
+        savings: Math.round(roi.annualSavingsMAD),
+      });
+    }, 2500);
 
     Chart_.renderMonthly(pv.monthlyKwh);
     Chart_.renderCashflow(roi.cashflow, roi.paybackYr);
@@ -832,4 +867,25 @@ function escapeHtml(s) {
 }
 
 // Boot when DOM + libs ready
-window.addEventListener("load", () => { UI.init(); Tooltips.init(); });
+// Which sections visitors actually reach. Answers "is the financing card
+// worth the space it takes?" without anyone having to guess.
+const Depth = {
+  init() {
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        Analytics.once("depth:" + en.target.dataset.depth, "depth", { section: en.target.dataset.depth });
+        io.unobserve(en.target);
+      });
+    }, { threshold: 0.01 });
+    document.querySelectorAll("[data-depth]").forEach(el => io.observe(el));
+  },
+};
+
+window.addEventListener("load", () => {
+  Analytics.init();
+  UI.init();
+  Tooltips.init();
+  Depth.init();
+});
