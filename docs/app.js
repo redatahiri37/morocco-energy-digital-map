@@ -4,7 +4,7 @@
    tooltips, popups, methodology modal.
 
    v1.1 — public basemap pass:
-     · Mapbox GL → MapLibre GL + CARTO dark-matter / positron
+     · Mapbox GL → MapLibre GL + OpenFreeMap vector basemap
      · No token required (fully public, like enersite / Pawel)
      · WS boundary filtered out of render
      · DC bubble radius scales with capacity_estimate_mw
@@ -17,26 +17,32 @@
   // ---------- Config & country manifest ----------
   const CFG = window.APP_CONFIG || { defaultCountry:"morocco" };
 
-  // Basemap: CARTO raster tiles (dark_all / light_all). We build the
-  // MapLibre style inline so there is zero chance of a style-spec parse
-  // failure at load time. Raster is heavier than vector but bulletproof.
+  // Basemap: OpenFreeMap vector styles — open, no key, no account.
+  // (CARTO's free tiles now arrive stamped "API KEY REQUIRED".) Positron
+  // for light, Dark for dark: both are low-contrast so the data layers
+  // carry the colour. The styles bring their own glyph server, which is
+  // where our label fonts come from.
   function basemapStyle(theme){
-    const variant = theme === "dark" ? "dark_all" : "light_all";
+    return "https://tiles.openfreemap.org/styles/" + (theme === "dark" ? "dark" : "positron");
+  }
+
+  // Used only if the OpenFreeMap style itself can't be fetched: a plain
+  // background, so the data layers still render instead of nothing at all.
+  function fallbackStyle(theme){
     return {
       version: 8,
-      glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-      sources: {
-        "carto-base": {
-          type: "raster",
-          tiles: ["a","b","c","d"].map(s =>
-            `https://${s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}.png`),
-          tileSize: 256,
-          attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
-        }
-      },
-      layers: [{ id: "carto-base", type: "raster", source: "carto-base" }]
+      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+      sources: {},
+      layers: [{ id:"background", type:"background",
+                 paint:{ "background-color": theme === "dark" ? "#0e0e0d" : "#f5f4ef" } }]
     };
   }
+
+  // Fonts on the OpenFreeMap glyph server. Labels also get their own
+  // sources (see addLabelLayer) so a font failure can only hide text,
+  // never the points.
+  const FONT_REGULAR = ["Noto Sans Regular"];
+  const FONT_BOLD    = ["Noto Sans Bold"];
 
   // OpenInfraMap vector tiles — transmission grid, substations, plants.
   // Data is OSM under ODbL; attribution is mandatory.
@@ -57,18 +63,20 @@
 
   // Resolves current theme; called inside buildMapLayers which re-runs on theme change
   const isDark = () => document.body.dataset.theme !== "light";
+  const INTERCONNECTOR_COLOR = () => isDark() ? "#60A5FA" : "#1D4ED8";
+  const PLANNED_COLOR = "#a37df0";
 
   // DC provider palette — shown in the sidebar legend, used on the map.
   // Keep the list short; anything unknown falls back to DIGITAL_COLOR.
   const PROVIDERS = [
-    { key:"N+ONE",                     color:"#9B6BF0", label:"N+ONE (colocation)" },
-    { key:"inwi",                      color:"#5BBFD9", label:"inwi (telco)" },
-    { key:"Maroc Telecom (IAM)",       color:"#EC4899", label:"Maroc Telecom / IAM (telco)" },
-    { key:"Naver / Nvidia consortium", color:"#F59E0B", label:"Naver × Nvidia (hyperscale, announced)" },
-    { key:"Iozera",                    color:"#F97316", label:"Iozera (hyperscale, announced)" },
-    { key:"Government of Morocco",     color:"#10B981", label:"Gov. of Morocco (sovereign)" },
+    { key:"N+ONE",                     color:"#9B6BF0", label:"N+ONE (colocation)", short:"N+ONE" },
+    { key:"inwi",                      color:"#5BBFD9", label:"inwi (telco)", short:"inwi" },
+    { key:"Maroc Telecom (IAM)",       color:"#EC4899", label:"Maroc Telecom / IAM (telco)", short:"Maroc Telecom" },
+    { key:"Naver / Nvidia consortium", color:"#F59E0B", label:"Naver × Nvidia (hyperscale, announced)", short:"Naver × Nvidia" },
+    { key:"Iozera",                    color:"#F97316", label:"Iozera (hyperscale, announced)", short:"Iozera" },
+    { key:"Government of Morocco",     color:"#10B981", label:"Gov. of Morocco (sovereign)", short:"Government" },
     { key:"ADD (Agence de Développement du Digital)",
-                                       color:"#10B981", label:"ADD (gov. sovereign)" }
+                                       color:"#10B981", label:"ADD (gov. sovereign)", short:"ADD" }
   ];
   const PROVIDER_COLOR_EXPR = (function(){
     // Build a case expression: operator match → color; else category default
@@ -83,10 +91,32 @@
     "oim-grid":"oim",
     "interconnectors":"grid",
     "planned-corridors":"grid",
-    "grid-lines":"grid",        // legacy fallback
     "industrial":"industrial",
     "digital":"digital"
   };
+
+  // Line layers ("interconnectors", "planned-corridors") each need their
+  // own MapLibre source + layer ids — see OBJ-map-debugger-5. Both are
+  // LAYER_KIND "grid" (same legend dot color) but must not share a source,
+  // or the second buildLineLayer() call silently replaces the first's data.
+  const LINE_LAYER_IDS = {
+    "interconnectors":   { srcId: "src-grid-interconnectors", idPrefix: "lyr-gridint"  },
+    "planned-corridors": { srcId: "src-grid-planned",         idPrefix: "lyr-gridplan" }
+  };
+  function lineLayerIds(dataLayerId){
+    const m = LINE_LAYER_IDS[dataLayerId];
+    if(!m) return null;
+    const ll = {
+      srcId: m.srcId,
+      hv:      m.idPrefix + "-hv",
+      mv:      m.idPrefix + "-mv",
+      lv:      m.idPrefix + "-lv",
+      planned: m.idPrefix + "-planned",
+      idle:    m.idPrefix + "-idle"
+    };
+    ll.all = [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
+    return ll;
+  }
 
   // Industrial sector colour palette
   const SECTOR_COLOR = {
@@ -130,8 +160,9 @@
     localStorage.setItem("mg.theme", next);
     if(map){
       map.setStyle(basemapStyle(next));
-      map.once("styledata", ()=>buildMapLayers(currentCountry));
+      map.once("style.load", ()=>buildMapLayers(currentCountry));
     }
+    if(currentCountry) renderLayerList(currentCountry); // swatch colours are theme-aware
   });
 
   // ---------- Country selector ----------
@@ -154,6 +185,8 @@
   $("#panelExpand").addEventListener("click",   ()=>layout.classList.remove("panel-collapsed"));
 
   ["githubLink","githubContribute","githubFooter"].forEach(id=>{ const el = $("#"+id); if(el) el.href = REPO_URL; });
+  const reportErrorFooter = $("#reportErrorFooter");
+  if(reportErrorFooter) reportErrorFooter.href = REPO_URL + "/issues/new?title=" + encodeURIComponent("MoroccoMap data correction");
 
   // ---------- Methodology modal ----------
   const methModal = $("#methodologyModal");
@@ -221,9 +254,16 @@
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
       });
+      let usingFallback = false;
       map.on("error", (e)=>{
-        const msg = e && e.error && String(e.error.message||"");
-        console.warn("[MoroccoMap] map error:", msg);
+        const err = e && e.error;
+        console.warn("[MoroccoMap] map error:", err && String(err.message||""));
+        // An error before the style has loaded means the basemap style
+        // itself failed (the fetch error carries no URL to match on).
+        if(!mapReady && !usingFallback && !map.isStyleLoaded()){
+          usingFallback = true;
+          map.setStyle(fallbackStyle(document.body.dataset.theme));
+        }
       });
     } catch(err){
       showMapError(String(err));
@@ -270,30 +310,26 @@
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
       const dotColor = (
+        L.id==="interconnectors"   ? INTERCONNECTOR_COLOR() :
+        L.id==="planned-corridors" ? PLANNED_COLOR :
         kind==="power"      ? FUEL_COLOR.solar :
-        kind==="grid"       ? GRID_COLOR :
-        kind==="oim"        ? "#6B7280" :
+        kind==="oim"        ? "#8a877c" :
         kind==="industrial" ? INDUSTRIAL_COLOR :
         kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
+      const swatch = kind==="grid" || kind==="oim"
+        ? `<span class="layer-line${L.id==="planned-corridors" ? " dashed" : ""}" style="border-color:${dotColor}"></span>`
+        : `<span class="layer-dot" style="background:${dotColor}"></span>`;
       const row = document.createElement("label");
       row.className = "layer-row";
       row.dataset.layer = L.id;
+      row.title = `${L.source} · updated ${L.updated}`;
       row.innerHTML = `
         <input type="checkbox" ${visibility[L.id]!==false?"checked":""}>
         <span class="check"></span>
-        <div class="layer-body">
-          <div class="layer-head">
-            <span class="layer-dot" style="background:${dotColor}"></span>
-            <span class="layer-name">${escapeHtml(L.title)}</span>
-            <span class="layer-count">${kind==="oim" ? "OSM live" : fc.features.length}</span>
-          </div>
-          <div class="layer-meta">
-            <span>${escapeHtml(L.source)}</span> ·
-            <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">source ↗</a> ·
-            <span class="micro">updated ${escapeHtml(L.updated)}</span>
-          </div>
-        </div>
+        ${swatch}
+        <span class="layer-name">${escapeHtml(L.title)}</span>
+        <span class="layer-count">${kind==="oim" ? "live" : fc.features.length}</span>
       `;
       row.querySelector("input").addEventListener("change", (e)=>{
         const on = e.target.checked;
@@ -314,10 +350,10 @@
     const seen = new Set(fc.features.map(f => (f.properties||{}).operator).filter(Boolean));
     const rows = PROVIDERS
       .filter(p => seen.has(p.key))
-      .map(p => `<div class="row"><span class="swatch" style="background:${p.color}"></span>${escapeHtml(p.label)}</div>`)
+      .map(p => `<span class="chip" title="${escapeHtml(p.label)}"><span class="swatch" style="background:${p.color}"></span>${escapeHtml(p.short)}</span>`)
       .join("");
     const cableRow = fc.features.some(f => f.properties && f.properties.category === "cable_landing")
-      ? `<div class="row cable"><span class="swatch" style="background:${CABLE_COLOR}"></span>Submarine cable landing</div>` : "";
+      ? `<span class="chip"><span class="swatch cable" style="background:${CABLE_COLOR}"></span>Cable landing</span>` : "";
     host.innerHTML = rows + cableRow;
   }
 
@@ -350,7 +386,7 @@
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
     ).join("") + `<li><strong>Boundary:</strong> Natural Earth 1:50m Admin 0 — <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">naturalearthdata.com</a> (public domain).</li>` +
-    `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> + <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors — public, no token required.</li>`;
+    `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.</li>`;
   }
 
   // ---------- Layer ID bookkeeping ----------
@@ -363,9 +399,8 @@
               "lyr-oim-substation-poly","lyr-oim-substation-pt"];
     }
     if(kind === "grid"){
-      return [
-        "lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"
-      ];
+      const ll = lineLayerIds(dataLayerId);
+      return ll ? ll.all : [];
     }
     if(dataLayerId === "power-plants"){
       return ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
@@ -382,11 +417,11 @@
   function queryableLayers(){
     // Only interactive (non-cluster, non-halo) layers
     const ids = [];
-    if(map && map.getLayer("lyr-grid-hv"))      ids.push("lyr-grid-hv");
-    if(map && map.getLayer("lyr-grid-mv"))      ids.push("lyr-grid-mv");
-    if(map && map.getLayer("lyr-grid-lv"))      ids.push("lyr-grid-lv");
-    if(map && map.getLayer("lyr-grid-planned")) ids.push("lyr-grid-planned");
-    if(map && map.getLayer("lyr-grid-idle"))    ids.push("lyr-grid-idle");
+    Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
+      lineLayerIds(dataLayerId).all.forEach(id=>{
+        if(map && map.getLayer(id)) ids.push(id);
+      });
+    });
     if(map && map.getLayer("lyr-power-points")) ids.push("lyr-power-points");
     if(map && map.getLayer("lyr-ind-points"))   ids.push("lyr-ind-points");
     if(map && map.getLayer("lyr-dig-points"))   ids.push("lyr-dig-points");
@@ -418,7 +453,7 @@
       id:"lyr-oim-line-lv", type:"line", source:"src-oim", "source-layer":"power_line",
       filter:["<", voltExpr, 100000],
       minzoom: 8,
-      paint:{ "line-color":"rgba(229,228,224,0.22)", "line-width":0.6 }
+      paint:{ "line-color": isDark() ? "rgba(229,228,224,0.22)" : "rgba(50,50,50,0.25)", "line-width":0.6 }
     });
     map.addLayer({
       id:"lyr-oim-line-mv", type:"line", source:"src-oim", "source-layer":"power_line",
@@ -436,17 +471,17 @@
       id:"lyr-oim-substation-poly", type:"fill", source:"src-oim", "source-layer":"power_substation",
       minzoom: 10,
       paint:{
-        "fill-color":"rgba(229,228,224,0.15)",
-        "fill-outline-color":"rgba(229,228,224,0.55)"
+        "fill-color": isDark() ? "rgba(229,228,224,0.15)" : "rgba(50,50,50,0.12)",
+        "fill-outline-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.5)"
       }
     });
     map.addLayer({
       id:"lyr-oim-substation-pt", type:"circle", source:"src-oim", "source-layer":"power_substation_point",
       minzoom: 5,
       paint:{
-        "circle-color":"rgba(229,228,224,0.75)",
+        "circle-color": isDark() ? "rgba(229,228,224,0.75)" : "rgba(50,50,50,0.7)",
         "circle-radius":["interpolate",["linear"],["zoom"], 5,1.2, 10,3.5],
-        "circle-stroke-color":"rgba(0,0,0,0.55)",
+        "circle-stroke-color": isDark() ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.8)",
         "circle-stroke-width":0.5
       }
     });
@@ -455,26 +490,23 @@
     // one territory — no internal border). The geojson was pre-dissolved
     // by scripts/build-transmission-geojson.py companion pass.
     if(boundaryData){
+      ["lyr-boundary-fill","lyr-boundary-line"].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
       addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
-      if(!map.getLayer("lyr-boundary-fill")){
-        map.addLayer({
-          id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
-          paint:{
-            "fill-color":"rgba(255,255,255,0.03)",
-            "fill-outline-color":"rgba(0,0,0,0)"
-          }
-        });
-      }
-      if(!map.getLayer("lyr-boundary-line")){
-        map.addLayer({
-          id:"lyr-boundary-line", type:"line", source:"src-boundary",
-          paint:{
-            "line-color":"rgba(255,255,255,0.28)",
-            "line-width":1.0,
-            "line-dasharray":[3,2]
-          }
-        });
-      }
+      map.addLayer({
+        id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
+        paint:{
+          "fill-color": isDark() ? "rgba(255,255,255,0.03)" : "rgba(0,31,77,0.03)",
+          "fill-outline-color":"rgba(0,0,0,0)"
+        }
+      });
+      map.addLayer({
+        id:"lyr-boundary-line", type:"line", source:"src-boundary",
+        paint:{
+          "line-color": isDark() ? "rgba(255,255,255,0.35)" : "rgba(0,31,77,0.45)",
+          "line-width":1.0,
+          "line-dasharray":[3,2]
+        }
+      });
     }
 
     // Each build*Layer call is isolated: if one throws (bad MapLibre
@@ -525,29 +557,32 @@
   }
 
   function buildLineLayer(dataLayerId, fc){
-    const srcId = "src-grid";
-    const ids = ["lyr-grid-hv","lyr-grid-mv","lyr-grid-lv","lyr-grid-planned","lyr-grid-idle"];
-    ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    // OBJ-map-debugger-5: "interconnectors" and "planned-corridors" each get
+    // their own source + layer ids (via lineLayerIds()) so the second call
+    // no longer clobbers the first's data / visibility toggle.
+    const ll = lineLayerIds(dataLayerId);
+    const srcId = ll.srcId;
+    ll.all.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     addOrReplace(srcId, { type:"geojson", data: fc });
 
     // Editorial overlay — interconnectors, HVDC corridors, planned/idle
     // strategic links. Rendered bold/colored on top of OIM's grey OSM grid
     // so the strategic story pops.
     // Interconnector color: blue family — distinct from wind's teal (#0D9488)
-    const intColor = isDark() ? "#60A5FA" : "#1D4ED8";
-    map.addLayer({ id:"lyr-grid-hv", type:"line", source:srcId,
+    const intColor = INTERCONNECTOR_COLOR();
+    map.addLayer({ id:ll.hv, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
       paint:{ "line-color": intColor, "line-width":2.6, "line-opacity":0.95 }});
-    map.addLayer({ id:"lyr-grid-mv", type:"line", source:srcId,
+    map.addLayer({ id:ll.mv, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
       paint:{ "line-color": intColor, "line-width":1.6, "line-opacity":0.85 }});
-    map.addLayer({ id:"lyr-grid-lv", type:"line", source:srcId,
+    map.addLayer({ id:ll.lv, type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
       paint:{ "line-color": intColor, "line-width":1.0, "line-opacity":0.6 }});
-    map.addLayer({ id:"lyr-grid-planned", type:"line", source:srcId,
+    map.addLayer({ id:ll.planned, type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
-      paint:{ "line-color":"#a37df0", "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
-    map.addLayer({ id:"lyr-grid-idle", type:"line", source:srcId,
+      paint:{ "line-color":PLANNED_COLOR, "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
+    map.addLayer({ id:ll.idle, type:"line", source:srcId,
       filter:["==",["get","status"],"idle"],
       paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }});
   }
@@ -558,11 +593,10 @@
     const toRemove = ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
     toRemove.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
 
-    addOrReplace(srcId, {
-      type:"geojson", data: fc,
-      cluster: true, clusterMaxZoom: 6, clusterRadius: 35,
-      generateId: false
-    });
+    const clusterOpts = { cluster: true, clusterMaxZoom: 6, clusterRadius: 35 };
+    addOrReplace(srcId, { type:"geojson", data: fc, generateId: false, ...clusterOpts });
+    // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
+    addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
     // Cluster bubbles
     map.addLayer({
@@ -571,16 +605,16 @@
       paint:{
         "circle-color":"rgba(245,158,11,0.85)",
         "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22],
-        "circle-stroke-color":"#0e0e0d",
+        "circle-stroke-color": isDark() ? "#0e0e0d" : "#ffffff",
         "circle-stroke-width":1.5
       }
     });
     map.addLayer({
-      id:"lyr-power-cluster-count", type:"symbol", source:srcId,
+      id:"lyr-power-cluster-count", type:"symbol", source:srcId + "-text",
       filter:["has","point_count"],
       layout:{
         "text-field":["get","point_count_abbreviated"],
-        "text-font":["Open Sans Bold","Arial Unicode MS Bold"],
+        "text-font":FONT_BOLD,
         "text-size":11,
         "text-allow-overlap":true
       },
@@ -619,7 +653,7 @@
           7, 6,
           10, 8
         ],
-        "circle-stroke-color":"rgba(0,0,0,0.55)",
+        "circle-stroke-color": POINT_STROKE(),
         "circle-stroke-width":1.5,
         "circle-opacity":[
           "case",
@@ -629,37 +663,7 @@
       }
     });
 
-    // Labels at zoom >= 7
-    map.addLayer({
-      id:"lyr-power-labels", type:"symbol", source:srcId,
-      filter:["!",["has","point_count"]],
-      minzoom: 7,
-      layout:{
-        "text-field":["get","name"],
-        "text-font":["Open Sans Regular","Arial Unicode MS Regular"],
-        "text-size":10.5,
-        "text-offset":[0, 1.1],
-        "text-anchor":"top",
-        "text-allow-overlap":false
-      },
-      paint:{
-        "text-color": isDark() ? "#f1efe9" : "#18181a",
-        "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
-        "text-halo-width":1.5
-      }
-    });
-
-    // Cluster click → zoom in
-    map.on("click","lyr-power-clusters",(e)=>{
-      const f = e.features[0];
-      const clusterId = f.properties.cluster_id;
-      map.getSource(srcId).getClusterExpansionZoom(clusterId, (err, zoom)=>{
-        if(err) return;
-        map.easeTo({ center: f.geometry.coordinates, zoom });
-      });
-    });
-    map.on("mouseenter","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor="pointer"; });
-    map.on("mouseleave","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor=""; });
+    addLabelLayer("lyr-power-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]]);
   }
 
   function buildPointLayer(opts){
@@ -674,7 +678,7 @@
       paint:{
         "circle-color": color,
         "circle-radius":["interpolate",["linear"],["zoom"], 4, 4, 7, 6, 10, 8],
-        "circle-stroke-color":"rgba(0,0,0,0.55)",
+        "circle-stroke-color": POINT_STROKE(),
         "circle-stroke-width":1.5,
         "circle-opacity":[
           "case",
@@ -683,14 +687,22 @@
         ]
       }
     });
-    map.addLayer({
-      id: lbs, type:"symbol", source: sourceId,
-      minzoom: minZoomLabel,
+    addOrReplace(sourceId + "-text", { type:"geojson", data });
+    addLabelLayer(lbs, sourceId + "-text", labelField, minZoomLabel, 1.1);
+  }
+
+  const POINT_STROKE = () => isDark() ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.9)";
+
+  // Name labels live on a separate text-only source: MapLibre drops every
+  // layer of a source whose glyphs fail to load, and points must survive that.
+  function addLabelLayer(id, sourceId, field, minzoom, offset, filter){
+    const spec = {
+      id, type:"symbol", source: sourceId, minzoom,
       layout:{
-        "text-field":["get", labelField],
-        "text-font":["Open Sans Regular","Arial Unicode MS Regular"],
+        "text-field":["get", field],
+        "text-font":FONT_REGULAR,
         "text-size":10.5,
-        "text-offset":[0, 1.1],
+        "text-offset":[0, offset],
         "text-anchor":"top",
         "text-allow-overlap":false
       },
@@ -699,7 +711,9 @@
         "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
         "text-halo-width":1.5
       }
-    });
+    };
+    if(filter) spec.filter = filter;
+    map.addLayer(spec);
   }
 
   function buildDigitalLayer(fc){
@@ -739,7 +753,7 @@
         "circle-stroke-color":[
           "case",
           ["in",["get","status"],["literal",["announced","construction","planned"]]], "rgba(163,125,240,0.9)",
-          "rgba(0,0,0,0.6)"
+          POINT_STROKE()
         ],
         "circle-stroke-width":1.5,
         "circle-opacity":[
@@ -753,62 +767,54 @@
       }
     });
 
-    // Cable landings — symbol diamond
+    // Cable landings — small teal circle with a contrasting ring. Drawn as
+    // a circle rather than a "◆" glyph so it needs no font to render.
     map.addLayer({
-      id:"lyr-dig-cables", type:"symbol", source: srcId,
+      id:"lyr-dig-cables", type:"circle", source: srcId,
       filter:["==",["get","category"],"cable_landing"],
-      layout:{
-        "text-field":"◆",
-        "text-font":["Open Sans Bold","Arial Unicode MS Bold"],
-        "text-size":["interpolate",["linear"],["zoom"], 4, 13, 10, 19],
-        "text-allow-overlap":true
-      },
       paint:{
-        "text-color": CABLE_COLOR,
-        "text-halo-color":"rgba(0,0,0,0.85)",
-        "text-halo-width":1.2,
-        "text-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
+        "circle-color": CABLE_COLOR,
+        "circle-radius":["interpolate",["linear"],["zoom"], 4, 4.5, 10, 7],
+        "circle-stroke-color": isDark() ? "#0e0e0d" : "#ffffff",
+        "circle-stroke-width":2,
+        "circle-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
       }
     });
 
-    // Labels
-    map.addLayer({
-      id:"lyr-dig-labels", type:"symbol", source: srcId,
-      minzoom: 7,
-      layout:{
-        "text-field":["get","name"],
-        "text-font":["Open Sans Regular","Arial Unicode MS Regular"],
-        "text-size":10.5,
-        "text-offset":[0, 1.2],
-        "text-anchor":"top",
-        "text-allow-overlap":false
-      },
-      paint:{
-        "text-color": isDark() ? "#f1efe9" : "#18181a",
-        "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
-        "text-halo-width":1.5
-      }
-    });
+    addOrReplace(srcId + "-text", { type:"geojson", data: fc });
+    addLabelLayer("lyr-dig-labels", srcId + "-text", "name", 7, 1.2);
   }
 
   // ---------- Layer interactions (hover dim + tooltip + click) ----------
+  // Layer-scoped handlers survive setStyle() and the layer ids never change,
+  // so wire once; re-wiring on every rebuild stacked duplicate handlers.
+  let interactionsWired = false;
   function wireLayerInteractions(){
+    if(interactionsWired) return;
+    interactionsWired = true;
+
+    // Cluster click → zoom in (MapLibre 4: getClusterExpansionZoom returns a promise)
+    map.on("click","lyr-power-clusters",(e)=>{
+      const f = e.features[0];
+      map.getSource("src-power").getClusterExpansionZoom(f.properties.cluster_id)
+        .then(zoom=>map.easeTo({ center: f.geometry.coordinates, zoom }))
+        .catch(()=>{});
+    });
+    map.on("mouseenter","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor="pointer"; });
+    map.on("mouseleave","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor=""; });
+
     const pointLayers = [
       { id:"lyr-power-points", src:"src-power",    dataLayer:"power-plants" },
       { id:"lyr-ind-points",   src:"src-industrial", dataLayer:"industrial" },
       { id:"lyr-dig-points",   src:"src-digital",  dataLayer:"digital" },
       { id:"lyr-dig-cables",   src:"src-digital",  dataLayer:"digital" }
     ];
-    const lineLayers = [
-      { id:"lyr-grid-hv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-mv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-lv",      src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-planned", src:"src-grid", dataLayer:"grid-lines" },
-      { id:"lyr-grid-idle",    src:"src-grid", dataLayer:"grid-lines" }
-    ];
+    const lineLayers = [];
+    Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
+      lineLayerIds(dataLayerId).all.forEach(id=>lineLayers.push({ id }));
+    });
 
     pointLayers.forEach(({id, src, dataLayer})=>{
-      if(!map.getLayer(id)) return;
       map.on("mousemove", id, (e)=>{
         const f = e.features[0]; if(!f) return;
         map.getCanvas().style.cursor = "pointer";
@@ -828,8 +834,7 @@
       });
     });
 
-    lineLayers.forEach(({id, src, dataLayer})=>{
-      if(!map.getLayer(id)) return;
+    lineLayers.forEach(({id})=>{
       map.on("mousemove", id, (e)=>{
         const f = e.features[0]; if(!f) return;
         map.getCanvas().style.cursor = "pointer";
@@ -957,7 +962,7 @@
       <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
-        <span class="src">${escapeHtml(p.source || "—")}</span>
+        <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
@@ -965,7 +970,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+p.id+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
       </div>`;
     popup.classList.add("open");
@@ -994,7 +999,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="mailto:reda.tahiri@example.com?subject=${encodeURIComponent('MoroccoMap — correction: '+p.name)}">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}" target="_blank" rel="noopener">Report an error</a>
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");

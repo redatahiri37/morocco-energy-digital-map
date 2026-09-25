@@ -1,0 +1,51 @@
+name: docs-validate
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**']
+  pull_request:
+    branches: [main]
+    paths: ['docs/**']
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate GeoJSON files parse as JSON
+        run: |
+          set -e
+          for f in docs/data/morocco/*.geojson; do
+            echo "checking $f"
+            python3 -m json.tool "$f" > /dev/null
+          done
+
+      - name: Syntax-check app.js and countries.config.js
+        run: |
+          set -e
+          node --check docs/app.js
+          node --check docs/countries.config.js
+
+      # Limitation: this regex extractor only reads the FIRST dataPath:/file:
+      # block in countries.config.js. Fine while morocco is the only country
+      # with data (egypt/senegal/namibia are placeholders with layers: []).
+      # If a second country ships real layers, this needs to loop per-country
+      # block instead of doing a single flat match across the whole file.
+      - name: Check config-referenced data files exist
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const cfg = fs.readFileSync('docs/countries.config.js', 'utf8');
+          const dataPath = (cfg.match(/dataPath:\s*"([^"]+)"/) || [])[1] || './data/morocco/';
+          const files = [...cfg.matchAll(/file:\s*"([^"]+)"/g)].map(m => m[1]);
+          const missing = files
+            .map(f => 'docs/' + dataPath.replace(/^\.\//, '') + f)
+            .filter(p => !fs.existsSync(p));
+          if (missing.length) {
+            console.error('Missing referenced data files:\n' + missing.join('\n'));
+            process.exit(1);
+          }
+          console.log(`OK - ${files.length} referenced GeoJSON files present.`);
+          EOF

@@ -21,8 +21,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/3.4.0/mapbox-gl.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/3.4.0/mapbox-gl.min.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.394.0/lucide.min.js"></script>
 <style>
@@ -76,27 +76,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   color:var(--text-2);cursor:pointer;transition:all .15s;flex-shrink:0;
 }
 .top-btn:hover{border-color:var(--navy-primary);color:var(--navy-primary)}
-
-/* Token bar */
-#token-bar{
-  position:fixed;top:var(--top-h);left:0;right:0;
-  background:var(--bg-2);border-bottom:1px solid var(--border);
-  padding:8px 16px;display:flex;align-items:center;gap:8px;z-index:899;
-  transition:transform .25s var(--ease),opacity .25s;
-}
-#token-bar.hidden{transform:translateY(-100%);opacity:0;pointer-events:none}
-#token-bar label{font-size:11px;color:var(--text-2);white-space:nowrap}
-#token-input{
-  flex:1;max-width:420px;height:28px;
-  background:var(--bg-0);border:1px solid var(--border);border-radius:5px;
-  color:var(--text-0);font-size:12px;padding:0 8px;font-family:monospace;
-}
-#token-input:focus{outline:none;border-color:var(--navy-primary)}
-#token-btn{
-  height:28px;padding:0 12px;background:var(--navy-primary);border:none;border-radius:5px;
-  color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;
-}
-#token-dismiss{background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
 
 /* ── SIDEBAR ─────────────────────────────────── */
 #sidebar{
@@ -154,9 +133,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   z-index:1;
 }
 #map{width:100%;height:100%;background:var(--bg-0)}
-.mapboxgl-canvas{outline:none}
-.mapboxgl-ctrl-bottom-left,.mapboxgl-ctrl-bottom-right{opacity:.5;font-size:9px}
-.mapboxgl-ctrl-attrib-inner{font-size:9px!important}
+.maplibregl-canvas{outline:none}
+.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{opacity:.5;font-size:9px}
+.maplibregl-ctrl-attrib-inner{font-size:9px!important}
 
 /* Fit button */
 #fit-btn{
@@ -402,16 +381,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <div class="spacer"></div>
   <span class="ts" id="topbar-date"></span>
   <button class="top-btn" id="theme-toggle" title="Toggle light/dark"><i data-lucide="sun" style="width:15px;height:15px"></i></button>
-  <button class="top-btn" id="token-toggle" title="Mapbox token"><i data-lucide="key" style="width:15px;height:15px"></i></button>
 </header>
-
-<!-- ═══════ TOKEN BAR ═══════ -->
-<div id="token-bar">
-  <label>Mapbox Access Token</label>
-  <input id="token-input" type="text" placeholder="pk.eyJ1Ijo...">
-  <button id="token-btn" onclick="applyToken()">Load Map</button>
-  <button id="token-dismiss" onclick="hideTokenBar()">&times;</button>
-</div>
 
 <!-- ═══════ SIDEBAR ═══════ -->
 <aside id="sidebar">
@@ -455,8 +425,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <div id="map-wrap">
   <div id="map"></div>
   <div id="map-placeholder">
-    <h2>Enter a Mapbox token to load the map</h2>
-    <p>Click the key icon in the top bar, paste your public Mapbox access token, and press Load Map. The sidebar data is available without a token.</p>
+    <h2>Map engine unavailable</h2>
+    <p>The map could not initialise — this is almost always a transient network issue. Reload to retry. The sidebar data is available regardless.</p>
+    <p>No account, API key or token required — this map uses open tiles from <a href="https://carto.com/basemaps" target="_blank" rel="noopener">CARTO</a> + <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> via MapLibre.</p>
   </div>
   <button id="fit-btn" onclick="fitMorocco()" style="display:none"><i data-lucide="locate" style="width:14px;height:14px"></i> Fit Morocco</button>
 </div>

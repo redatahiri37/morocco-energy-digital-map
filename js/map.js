@@ -1,7 +1,10 @@
 import { LAYER_REGISTRY } from './layers.js';
 import { initInfoPanel, openInfo, closeInfo } from './popups.js';
 
-// Mapbox token loaded from localStorage via applyToken() or from .env in CI/CD
+// Basemap: MapLibre GL + CARTO raster tiles (dark_all / light_all) over
+// OpenStreetMap data. Fully open — no account, no API key, no token.
+// The style is built inline so there is zero chance of a style-spec parse
+// failure at load time. Mirrors the proven basemap in docs/app.js.
 
 let map = null;
 let mapLoaded = false;
@@ -11,7 +14,26 @@ let chartInstance = null;
 const layerState = {};    // id → bool (parent layers)
 const sublayerState = {}; // id → bool (sublayers)
 const loadedData = {};    // id → GeoJSON FeatureCollection
-const htmlMarkers = [];   // Mapbox Marker instances
+const htmlMarkers = [];   // MapLibre Marker instances
+
+// ── Basemap style (open tiles, no token) ─────────
+function basemapStyle(dark) {
+  const variant = dark ? 'dark_all' : 'light_all';
+  return {
+    version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    sources: {
+      'carto-base': {
+        type: 'raster',
+        tiles: ['a', 'b', 'c', 'd'].map(s =>
+          `https://${s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}.png`),
+        tileSize: 256,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
+      },
+    },
+    layers: [{ id: 'carto-base', type: 'raster', source: 'carto-base' }],
+  };
+}
 
 // ── State init ───────────────────────────────────
 function initState() {
@@ -117,19 +139,7 @@ function updateCount(layerId, count) {
   if (el) el.textContent = count > 0 ? String(count) : '—';
 }
 
-// ── Token / map init ─────────────────────────────
-window.hideTokenBar = () => document.getElementById('token-bar').classList.add('hidden');
-window.showTokenBar = () => document.getElementById('token-bar').classList.remove('hidden');
-
-window.applyToken = () => {
-  const tk = document.getElementById('token-input').value.trim();
-  if (!tk) { alert('Paste a valid Mapbox token.'); return; }
-  mapboxgl.accessToken = tk;
-  localStorage.setItem('mg-token', tk);
-  window.hideTokenBar();
-  initMap();
-};
-
+// ── Map init ─────────────────────────────────────
 window.fitMorocco = () => {
   if (!map) return;
   map.flyTo({ center: [-6.0, 31.0], zoom: 5.2, duration: 1200 });
@@ -139,13 +149,13 @@ function initMap() {
   if (mapLoaded) return;
   const ph = document.getElementById('map-placeholder');
   try {
-    map = new mapboxgl.Map({
+    map = new maplibregl.Map({
       container: 'map',
-      style: darkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+      style: basemapStyle(darkMode),
       center: [-6.0, 31.0],
       zoom: 5.2,
     });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.on('load', async () => {
       mapLoaded = true;
       ph.classList.add('hidden');
@@ -157,14 +167,14 @@ function initMap() {
       if (!e.originalEvent.target.closest('.mg-marker')) closeInfo();
     });
     map.on('error', e => {
+      // Tile fetch hiccups are common and recoverable; only surface the
+      // placeholder if the map never finished loading at all.
       console.error(e);
-      ph.classList.remove('hidden');
-      window.showTokenBar();
+      if (!mapLoaded) ph.classList.remove('hidden');
     });
   } catch (err) {
     console.error(err);
     ph.classList.remove('hidden');
-    window.showTokenBar();
   }
 }
 
@@ -265,7 +275,7 @@ function renderPointLayer(layer, fc) {
       el.appendChild(tooltip);
       el.addEventListener('click', e => { e.stopPropagation(); openInfo(props); });
 
-      const m = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      const m = new maplibregl.Marker({ element: el, anchor: 'center' })
         .setLngLat([lng, lat])
         .addTo(map);
       htmlMarkers.push(m);
@@ -426,7 +436,7 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
   darkMode = !darkMode;
   document.body.classList.toggle('light', !darkMode);
   if (map && mapLoaded) {
-    map.setStyle(darkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
+    map.setStyle(basemapStyle(darkMode));
     map.once('style.load', renderAllLayers);
   }
   rebuildChart();
@@ -476,9 +486,10 @@ function rebuildChart() {
 }
 
 // ── Boot ─────────────────────────────────────────
-document.getElementById('token-toggle').addEventListener('click', () => {
-  document.getElementById('token-bar').classList.toggle('hidden');
-});
+// The old token bar persisted whatever was pasted into it under `mg-token`.
+// Nothing reads it any more, so clear it from browsers that still carry one.
+// Safe to delete this line once the keyless build has been live a while.
+try { localStorage.removeItem('mg-token'); } catch (e) { /* storage blocked */ }
 
 initState();
 buildSidebar();
@@ -489,9 +500,5 @@ lucide.createIcons();
 const _dateEl = document.getElementById('topbar-date');
 if (_dateEl) _dateEl.textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
-const tk = localStorage.getItem('mg-token') || MAPBOX_TOKEN;
-document.getElementById('token-input').value = tk;
-mapboxgl.accessToken = tk;
-window.hideTokenBar();
 initMap();
 rebuildChart();
