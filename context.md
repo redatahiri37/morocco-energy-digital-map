@@ -43,6 +43,31 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-09-29 (multi-country)
+Branch `claude/gallant-maxwell-b0ho3a`: the map is now config-driven.
+- Country switch fixed (it crashed and kept Morocco's data on screen).
+- Layers render from `countries.config.js` by `kind`; palettes, boundary
+  credit, footer credits and page text are per country.
+- `scripts/validate-countries.mjs` + `DATA_SCHEMA.md` validate every country
+  in CI; `scripts/test-validate-countries.mjs` self-tests the validator.
+- **Senegal is enabled in the PR** with 13 power plants from an owner-supplied
+  list (ChatGPT-compiled, Sep 2026). Every feature is `precision: approximate`
+  and its `source` says it is unverified; none has `source_url`. The rows were
+  checked against GeoNames towns (via the `geonamescache` PyPI package; cloud
+  sessions can't reach Nominatim, Wikipedia, GEM or Overpass). Held out:
+  - CSS (Compagnie Sucrière Sénégalaise): given 7 km from Saint-Louis city;
+    the mill is at Richard-Toll, ~93 km east.
+  - "Senegal Solar Project – Dagana": 39 km from Dagana.
+  - Santhiou Mékhé: its point is WRI GPPD's point for Ten Merina (0.3 km).
+  - Cap des Biches Senelec engines: same coordinate and MW as ContourGlobal.
+  A live "OSM power plants" layer (kind `oim-plants`, OpenInfraMap's
+  power_plant_point tiles) is on for Senegal and off by default for Morocco;
+  use it to cross-check the curated list in a browser (cloud sessions can't
+  reach openinframap.org).
+  Next: a source_url + commissioning_year per plant; statuses were assumed
+  operational. Biomass isn't a fuel_type the renderer knows yet.
+- morocco-grid is superseded by this repo for the map.
+
 ## Session handoff — 2026-09-25
 Merged today: #48 (45-PR consolidation), #56 (redesign: OpenFreeMap basemap,
 data layers that survive font failures, one-line legend, light-mode topbar),

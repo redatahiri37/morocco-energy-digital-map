@@ -1,5 +1,5 @@
 /* =============================================================
-   Energy × Digital Nexus — Morocco Infrastructure Map
+   Energy × Digital Nexus — Infrastructure Map (multi-country)
    Single-file app logic: country switch, layer manifest, map,
    tooltips, popups, methodology modal.
 
@@ -66,76 +66,40 @@
   const INTERCONNECTOR_COLOR = () => isDark() ? "#60A5FA" : "#1D4ED8";
   const PLANNED_COLOR = "#a37df0";
 
-  // DC provider palette — colours the map bubbles; the tooltip names the
-  // provider next to its colour. Anything unknown falls back to DIGITAL_COLOR.
-  const PROVIDERS = [
-    { key:"N+ONE",                     color:"#9B6BF0", short:"N+ONE" },
-    { key:"inwi",                      color:"#5BBFD9", short:"inwi" },
-    { key:"Maroc Telecom (IAM)",       color:"#EC4899", short:"Maroc Telecom" },
-    { key:"Naver / Nvidia consortium", color:"#F59E0B", short:"Naver × Nvidia" },
-    { key:"Iozera",                    color:"#F97316", short:"Iozera" },
-    { key:"Government of Morocco",     color:"#10B981", short:"Government" },
-    { key:"ADD (Agence de Développement du Digital)",
-                                       color:"#10B981", short:"ADD" }
-  ];
-  const PROVIDER_COLOR_EXPR = (function(){
-    // Build a case expression: operator match → color; else category default
+  // Palettes are per country (countries.config.js → `palette`): operators
+  // and industrial sectors differ from one market to the next. Anything not
+  // listed falls back to DIGITAL_COLOR / INDUSTRIAL_COLOR.
+  //   palette.providers: [{ key: <operator as in the data>, color, short }]
+  //   palette.sectors:   { <sector as in the data>: color }
+  function palette(){
+    const p = (COUNTRIES[currentCountry] || {}).palette || {};
+    return { providers: p.providers || [], sectors: p.sectors || {} };
+  }
+  function providerColorExpr(){
     const expr = ["case"];
-    PROVIDERS.forEach(p => { expr.push(["==",["get","operator"], p.key], p.color); });
+    palette().providers.forEach(p => { expr.push(["==",["get","operator"], p.key], p.color); });
     expr.push(DIGITAL_COLOR); // default
     return expr;
-  })();
-
-  const LAYER_KIND = {
-    "power-plants":"power",
-    "oim-grid":"oim",
-    "interconnectors":"grid",
-    "planned-corridors":"grid",
-    "industrial":"industrial",
-    "digital":"digital"
-  };
-
-  // Line layers ("interconnectors", "planned-corridors") each need their
-  // own MapLibre source + layer ids — see OBJ-map-debugger-5. Both are
-  // LAYER_KIND "grid" (same legend dot color) but must not share a source,
-  // or the second buildLineLayer() call silently replaces the first's data.
-  const LINE_LAYER_IDS = {
-    "interconnectors":   { srcId: "src-grid-interconnectors", idPrefix: "lyr-gridint"  },
-    "planned-corridors": { srcId: "src-grid-planned",         idPrefix: "lyr-gridplan" }
-  };
-  function lineLayerIds(dataLayerId){
-    const m = LINE_LAYER_IDS[dataLayerId];
-    if(!m) return null;
-    const ll = {
-      srcId: m.srcId,
-      hv:      m.idPrefix + "-hv",
-      mv:      m.idPrefix + "-mv",
-      lv:      m.idPrefix + "-lv",
-      planned: m.idPrefix + "-planned",
-      idle:    m.idPrefix + "-idle"
-    };
-    ll.all = [ll.hv, ll.mv, ll.lv, ll.planned, ll.idle];
-    return ll;
   }
-
-  // Industrial sector colour palette
-  const SECTOR_COLOR = {
-    "phosphates / fertilisers": "#F59E0B",
-    "phosphate mining":         "#F59E0B",
-    "cement":                   "#A1A1AA",
-    "steel":                    "#64748B",
-    "automotive":               "#0EA5E9",
-    "oil refining":             "#DC2626",
-    "mining / metallurgy":      "#92400E",
-  };
-  const SECTOR_COLOR_EXPR = (function(){
+  function sectorColorExpr(){
     const expr = ["case"];
-    Object.entries(SECTOR_COLOR).forEach(([k,v])=>{
+    Object.entries(palette().sectors).forEach(([k,v])=>{
       expr.push(["==",["get","sector"],k], v);
     });
     expr.push(INDUSTRIAL_COLOR); // default
     return expr;
-  })();
+  }
+
+  // A layer's `kind` in countries.config.js picks its renderer. Every map
+  // layer and source id is derived from the config layer id, so any number
+  // of layers of any kind can coexist and nothing here names a Moroccan file.
+  // The order is the draw order, bottom to top.
+  const KINDS = ["oim", "oim-plants", "grid", "power", "industrial", "digital"];
+  const LIVE_KINDS = ["oim", "oim-plants"]; // drawn from OpenInfraMap tiles, no file
+
+  // Rebuilt by buildMapLayers(): map layer id → { dataLayerId, kind, src, role }.
+  // role "point" / "line" get hover + click, "cluster" zooms in on click.
+  let mapLayers = {};
 
   // ---------- State ----------
   let map = null;
@@ -189,7 +153,6 @@
 
   ["githubLink","githubContribute","githubFooter"].forEach(id=>{ const el = $("#"+id); if(el) el.href = REPO_URL; });
   const reportErrorFooter = $("#reportErrorFooter");
-  if(reportErrorFooter) reportErrorFooter.href = REPO_URL + "/issues/new?title=" + encodeURIComponent("MoroccoMap data correction");
 
   // ---------- Methodology modal ----------
   const methModal = $("#methodologyModal");
@@ -206,7 +169,15 @@
   }
   function fmtCap(mw){ return mw == null ? "—" : mw.toLocaleString() + " MW"; }
   function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
-  function layerKind(layerId){ return LAYER_KIND[layerId] || "other"; }
+  function layerConfig(layerId){
+    return ((COUNTRIES[currentCountry] || {}).layers || []).find(L=>L.id === layerId);
+  }
+  function layerKind(layerId){ const L = layerConfig(layerId); return L ? L.kind : "other"; }
+  // A grid layer whose features are all planned draws as a dashed purple line.
+  function isPlannedGrid(layerId){
+    const fc = layerData[layerId];
+    return !!fc && fc.features.length > 0 && fc.features.every(f=>f.properties.status === "planned");
+  }
 
   function showMapError(reason){
     noTokenCard.classList.remove("hidden");
@@ -275,32 +246,37 @@
   // ---------- Data loading ----------
   async function loadAllData(countryKey){
     const c = COUNTRIES[countryKey];
-    layerData = {};
-    // Load boundary (if the file exists)
+    // Per-country state starts clean: a country without a boundary file (or
+    // without a layer) must not inherit the previous country's. Built in
+    // locals and committed at the end, so a slower load for a country the
+    // user has already switched away from can't overwrite the newer one.
+    const data = {}, vis = {};
+    let boundary = null;
     try{
       const r = await fetch(c.dataPath + "boundary.geojson");
-      if(r.ok) boundaryData = await r.json();
-    } catch(e){ boundaryData = null; }
+      if(r.ok) boundary = await r.json();
+    } catch(e){ /* no boundary for this country */ }
 
     const promises = c.layers.map(async (L, idx)=>{
-      if(!L.file){ // OIM or other virtual layers — no fetch needed
-        if(visibility[L.id] === undefined) visibility[L.id] = true;
-        return;
-      }
+      vis[L.id] = L.visible !== false;
+      if(!L.file) return; // OIM or other virtual layers — no fetch needed
       try{
         const res = await fetch(c.dataPath + L.file);
         if(!res.ok) throw new Error(res.status + " " + L.file);
         const fc = await res.json();
         // Ensure each feature has a stable numeric id — required for feature-state
         fc.features.forEach((f,i)=>{ if(f.id == null) f.id = idx*10000 + i; });
-        layerData[L.id] = fc;
+        data[L.id] = fc;
       } catch(e){
         console.warn("[MoroccoMap] failed to load", L.file, e);
-        layerData[L.id] = { type:"FeatureCollection", features:[] };
+        data[L.id] = { type:"FeatureCollection", features:[] };
       }
-      if(visibility[L.id] === undefined) visibility[L.id] = true;
     });
     await Promise.all(promises);
+    if(countryKey !== currentCountry) return;
+    layerData = data;
+    visibility = vis;
+    boundaryData = boundary;
   }
 
   // ---------- Panel: layer list ----------
@@ -311,16 +287,18 @@
     c.layers.forEach(L=>{
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
+      const planned = kind==="grid" && isPlannedGrid(L.id);
       const dotColor = (
-        L.id==="interconnectors"   ? INTERCONNECTOR_COLOR() :
-        L.id==="planned-corridors" ? PLANNED_COLOR :
+        planned             ? PLANNED_COLOR :
+        kind==="grid"       ? INTERCONNECTOR_COLOR() :
         kind==="power"      ? FUEL_COLOR.solar :
         kind==="oim"        ? "#8a877c" :
+        kind==="oim-plants" ? OSM_PLANT_SWATCH :
         kind==="industrial" ? INDUSTRIAL_COLOR :
         kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
       const swatch = kind==="grid" || kind==="oim"
-        ? `<span class="layer-line${L.id==="planned-corridors" ? " dashed" : ""}" style="border-color:${dotColor}"></span>`
+        ? `<span class="layer-line${planned ? " dashed" : ""}" style="border-color:${dotColor}"></span>`
         : `<span class="layer-dot" style="background:${dotColor}"></span>`;
       const row = document.createElement("label");
       row.className = "layer-row";
@@ -331,7 +309,7 @@
         <span class="check"></span>
         ${swatch}
         <span class="layer-name">${escapeHtml(L.title)}</span>
-        <span class="layer-count">${kind==="oim" ? "live" : fc.features.length}</span>
+        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : fc.features.length}</span>
       `;
       row.querySelector("input").addEventListener("change", (e)=>{
         const on = e.target.checked;
@@ -344,126 +322,180 @@
     });
   }
 
+  // All features of every layer of a kind, for this country.
+  function featuresOfKind(countryKey, kind){
+    return COUNTRIES[countryKey].layers.filter(L=>L.kind === kind)
+      .flatMap(L=>(layerData[L.id] || { features:[] }).features);
+  }
+
   function renderKPIs(countryKey){
     const host = $("#kpiGrid");
-    const fcPower = layerData["power-plants"] || { features:[] };
-    const fcDC    = layerData["digital"]      || { features:[] };
+    const c = COUNTRIES[countryKey];
+    const snap = $("#snapshotSource");
+    if(snap) snap.textContent = c.snapshotSource ? "source: " + c.snapshotSource : "";
+    const fcPower = { features: featuresOfKind(countryKey, "power") };
+    const fcDC    = { features: featuresOfKind(countryKey, "digital") };
     const totalMW = fcPower.features.reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
     const renewMW = fcPower.features.filter(f=>["solar","wind","hydro"].includes(f.properties.fuel_type))
                     .reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
     const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
     const dcMW = fcDC.features.reduce((s,f)=>s + (f.properties.capacity_estimate_mw || 0), 0);
     const dcInvest = fcDC.features.reduce((s,f)=>s + (f.properties.investment_usd || 0), 0);
+    // A country with no layer of a kind shows "—", not a zero that reads as a finding.
+    const hasPower = fcPower.features.length > 0, hasDC = fcDC.features.length > 0;
+    const NA = "—";
     host.innerHTML = `
       <div class="kpi"><div class="k">Tracked capacity</div>
-        <div class="v">${(totalMW/1000).toFixed(1)}<small> GW</small></div></div>
+        <div class="v">${hasPower ? `${(totalMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
       <div class="kpi"><div class="k">Renewables share*</div>
-        <div class="v">${renewShare}<small>%</small></div></div>
+        <div class="v">${hasPower ? `${renewShare}<small>%</small>` : NA}</div></div>
       <div class="kpi"><div class="k">DC pipeline</div>
-        <div class="v">${(dcMW/1000).toFixed(1)}<small> GW</small></div></div>
+        <div class="v">${hasDC ? `${(dcMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
       <div class="kpi"><div class="k">DC investment</div>
-        <div class="v">${fmtInvestment(dcInvest)}</div></div>
+        <div class="v">${hasDC ? fmtInvestment(dcInvest) : NA}</div></div>
     `;
+  }
+
+  // Country name wherever the page names one: tab title, brand line,
+  // methodology intro, the data path it cites, and the report-an-error link.
+  function renderCountryText(countryKey){
+    const c = COUNTRIES[countryKey];
+    document.title = `Energy × Digital Nexus — ${c.label} Infrastructure Map`;
+    document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = c.label; });
+    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? `Data: ${c.credits} · ` : ""; });
+    document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
+    if(reportErrorFooter) reportErrorFooter.href = REPO_URL + "/issues/new?title=" + encodeURIComponent(`${c.label} map — data correction`);
   }
 
   function renderMethodologySources(countryKey){
     const c = COUNTRIES[countryKey];
+    renderCountryText(countryKey);
     const host = $("#methodologySources");
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
-    ).join("") + `<li><strong>Boundary:</strong> Natural Earth 1:50m Admin 0 — <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">naturalearthdata.com</a> (public domain).</li>` +
+    ).join("") + (c.boundary ? `<li><strong>Boundary:</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
     `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.</li>`;
   }
 
   // ---------- Layer ID bookkeeping ----------
-  // Each data layer produces a set of Mapbox GL layers. queryableLayers()
-  // returns the ones that should catch clicks (everything except clusters).
+  // Each data layer produces a set of MapLibre layers, registered in
+  // `mapLayers` as they are added, so visibility toggles, click queries and
+  // interactions all read the same table.
   function layersFor(dataLayerId){
-    const kind = layerKind(dataLayerId);
-    if(dataLayerId === "oim-grid"){
-      return ["lyr-oim-line-lv","lyr-oim-line-mv","lyr-oim-line-hv",
-              "lyr-oim-substation-poly","lyr-oim-substation-pt"];
-    }
-    if(kind === "grid"){
-      const ll = lineLayerIds(dataLayerId);
-      return ll ? ll.all : [];
-    }
-    if(dataLayerId === "power-plants"){
-      return ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
-    }
-    if(dataLayerId === "industrial"){
-      return ["lyr-ind-points","lyr-ind-labels"];
-    }
-    if(dataLayerId === "digital"){
-      return ["lyr-dig-halo","lyr-dig-points","lyr-dig-cables","lyr-dig-labels"];
-    }
-    return [];
+    return Object.keys(mapLayers).filter(id=>mapLayers[id].dataLayerId === dataLayerId);
   }
 
   function queryableLayers(){
     // Only interactive (non-cluster, non-halo) layers
-    const ids = [];
-    Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
-      lineLayerIds(dataLayerId).all.forEach(id=>{
-        if(map && map.getLayer(id)) ids.push(id);
-      });
-    });
-    if(map && map.getLayer("lyr-power-points")) ids.push("lyr-power-points");
-    if(map && map.getLayer("lyr-ind-points"))   ids.push("lyr-ind-points");
-    if(map && map.getLayer("lyr-dig-points"))   ids.push("lyr-dig-points");
-    if(map && map.getLayer("lyr-dig-cables"))   ids.push("lyr-dig-cables");
-    return ids;
+    return Object.keys(mapLayers).filter(id=>
+      ["point","line"].includes(mapLayers[id].role) && map && map.getLayer(id));
+  }
+
+  // map.addLayer() plus registration. `src` is the source hover-dim works on
+  // (the data source, not the text-only twin); `role` is null for decorative
+  // layers (halos, labels) that take no interaction.
+  function addLayer(L, spec, role, src){
+    map.addLayer(spec);
+    mapLayers[spec.id] = { dataLayerId: L.id, src: src || spec.source, role: role || null };
+    wireLayer(spec.id);
   }
 
   // ---------- Build map layers ----------
+  // Removes every layer and source this app added (all "lyr-*" / "src-*"),
+  // leaving the basemap alone. A source can't be removed while a layer
+  // still uses it, so layers go first. Without this, switching country threw
+  // on the first addSource and the previous country's data stayed on screen.
+  function clearDataLayers(){
+    map.getStyle().layers.forEach(l=>{ if(l.id.startsWith("lyr-")) map.removeLayer(l.id); });
+    Object.keys(map.getStyle().sources).forEach(id=>{ if(id.startsWith("src-")) map.removeSource(id); });
+  }
+
   function buildMapLayers(countryKey){
     if(!map) return;
+    clearDataLayers();
+    mapLayers = {};
+    const c = COUNTRIES[countryKey];
 
-    // OpenInfraMap vector overlay — full OSM-sourced transmission grid,
-    // substations and plants. Free, ODbL, no API key. Rendered below all
-    // editorial features so our announced/planned overlays stay on top.
-    addOrReplace("src-oim", {
+    // Each builder call is isolated: if one throws (bad MapLibre
+    // expression, missing source, etc.), the rest still render and the
+    // error surfaces in the console for the map-debugger agent.
+    const safe = (label, fn) => {
+      try { fn(); }
+      catch(e){ console.error("[MoroccoMap] layer failed:", label, e); }
+    };
+    const builders = {
+      oim:        (L)=>buildOimLayer(L),
+      "oim-plants": (L)=>buildOimPlantsLayer(L),
+      grid:       (L)=>buildLineLayer(L, layerData[L.id] || { features:[] }),
+      power:      (L)=>buildPowerLayer(L, layerData[L.id] || { features:[] }),
+      industrial: (L)=>buildIndustrialLayer(L, layerData[L.id] || { features:[] }),
+      digital:    (L)=>buildDigitalLayer(L, layerData[L.id] || { features:[] })
+    };
+    c.layers.filter(L=>!KINDS.includes(L.kind)).forEach(L=>
+      console.error("[MoroccoMap] unknown layer kind:", L.id, L.kind));
+
+    KINDS.forEach(kind=>{
+      c.layers.filter(L=>L.kind === kind).forEach(L=>safe(L.id, ()=>builders[kind](L)));
+      // The country outline sits above the OSM grid, below our own layers.
+      if(kind === "oim") safe("boundary", buildBoundaryLayer);
+    });
+
+    // Apply visibility from state
+    Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
+  }
+
+  // OpenInfraMap vector overlay — full OSM-sourced transmission grid,
+  // substations and plants. Free, ODbL, no API key, worldwide: the same
+  // layer works for every country. Drawn below all editorial features so
+  // our announced/planned overlays stay on top.
+  // One OpenInfraMap tile source, shared by the grid and plant layers.
+  const OIM_SRC = "src-oim-tiles";
+  function ensureOimSource(){
+    if(map.getSource(OIM_SRC)) return;
+    map.addSource(OIM_SRC, {
       type: "vector",
       tiles: [OIM_TILES],
       minzoom: 0, maxzoom: 17,
       attribution: OIM_ATTR
     });
-    const oimIds = ["lyr-oim-line-lv","lyr-oim-line-mv","lyr-oim-line-hv",
-                    "lyr-oim-substation-poly","lyr-oim-substation-pt"];
-    oimIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+  }
+
+  function buildOimLayer(L){
+    const src = OIM_SRC, p = "lyr-" + L.id;
+    ensureOimSource();
 
     // Lines — styled by voltage. OIM exposes a numeric `voltage` (volts).
     // Non-numeric / multi-voltage tags coerce to 0 and fall into LV.
     const voltExpr = ["coalesce", ["to-number", ["get","voltage"]], 0];
-    map.addLayer({
-      id:"lyr-oim-line-lv", type:"line", source:"src-oim", "source-layer":"power_line",
+    addLayer(L, {
+      id: p + "-line-lv", type:"line", source:src, "source-layer":"power_line",
       filter:["<", voltExpr, 100000],
       minzoom: 8,
       paint:{ "line-color": isDark() ? "rgba(229,228,224,0.22)" : "rgba(50,50,50,0.25)", "line-width":0.6 }
     });
-    map.addLayer({
-      id:"lyr-oim-line-mv", type:"line", source:"src-oim", "source-layer":"power_line",
+    addLayer(L, {
+      id: p + "-line-mv", type:"line", source:src, "source-layer":"power_line",
       filter:["all",[">=",voltExpr,100000],["<",voltExpr,300000]],
       paint:{ "line-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.65)", "line-width":1.0 }
     });
-    map.addLayer({
-      id:"lyr-oim-line-hv", type:"line", source:"src-oim", "source-layer":"power_line",
+    addLayer(L, {
+      id: p + "-line-hv", type:"line", source:src, "source-layer":"power_line",
       filter:[">=", voltExpr, 300000],
       paint:{ "line-color": isDark() ? GRID_COLOR : "#3b3b3f", "line-width":1.8, "line-opacity":0.9 }
     });
 
     // Substations — polygon at high zoom, points at low zoom
-    map.addLayer({
-      id:"lyr-oim-substation-poly", type:"fill", source:"src-oim", "source-layer":"power_substation",
+    addLayer(L, {
+      id: p + "-substation-poly", type:"fill", source:src, "source-layer":"power_substation",
       minzoom: 10,
       paint:{
         "fill-color": isDark() ? "rgba(229,228,224,0.15)" : "rgba(50,50,50,0.12)",
         "fill-outline-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.5)"
       }
     });
-    map.addLayer({
-      id:"lyr-oim-substation-pt", type:"circle", source:"src-oim", "source-layer":"power_substation_point",
+    addLayer(L, {
+      id: p + "-substation-pt", type:"circle", source:src, "source-layer":"power_substation_point",
       minzoom: 5,
       paint:{
         "circle-color": isDark() ? "rgba(229,228,224,0.75)" : "rgba(50,50,50,0.7)",
@@ -472,70 +504,72 @@
         "circle-stroke-width":0.5
       }
     });
+  }
 
-    // Boundary: dissolved single polygon (Morocco + Southern Provinces as
-    // one territory — no internal border). The geojson was pre-dissolved
-    // by scripts/build-transmission-geojson.py companion pass.
-    if(boundaryData){
-      ["lyr-boundary-fill","lyr-boundary-line"].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-      addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
-      map.addLayer({
-        id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
-        paint:{
-          "fill-color": isDark() ? "rgba(255,255,255,0.03)" : "rgba(0,31,77,0.03)",
-          "fill-outline-color":"rgba(0,0,0,0)"
-        }
-      });
-      map.addLayer({
-        id:"lyr-boundary-line", type:"line", source:"src-boundary",
-        paint:{
-          "line-color": isDark() ? "rgba(255,255,255,0.35)" : "rgba(0,31,77,0.45)",
-          "line-width":1.0,
-          "line-dasharray":[3,2]
-        }
-      });
-    }
+  // OpenStreetMap power plants, live from OpenInfraMap's power_plant_point
+  // layer: every plant OSM mappers have traced, in any country. OIM thins it
+  // by size at low zoom (all plants from zoom 8; >250 MW from 7, >500 MW
+  // from 6), so it can't feed the KPI totals; those come from the curated
+  // `power` layer, drawn above this one.
+  // Tile fields: name, output (MW), source (first fuel), construction,
+  // disused, start_date.
+  const OSM_PLANT_SWATCH = "#b8b4a8";
+  const OSM_FUEL = { solar:"solar", wind:"wind", hydro:"hydro", coal:"coal",
+                     gas:"gas", oil:"oil", diesel:"oil" };
+  function buildOimPlantsLayer(L){
+    ensureOimSource();
+    const fuelExpr = ["match", ["get","source"]];
+    Object.entries(OSM_FUEL).forEach(([osm, fuel])=>fuelExpr.push(osm, FUEL_COLOR[fuel]));
+    fuelExpr.push(OSM_PLANT_SWATCH);
+    addLayer(L, {
+      id: "lyr-" + L.id + "-points", type:"circle", source: OIM_SRC, "source-layer":"power_plant_point",
+      paint:{
+        "circle-color": fuelExpr,
+        "circle-radius":["interpolate",["linear"],["coalesce",["get","output"],0], 0,3.5, 50,5, 300,8, 1000,11],
+        "circle-opacity":0.75,
+        "circle-stroke-color": isDark() ? "rgba(241,239,233,0.8)" : "rgba(24,24,26,0.7)",
+        "circle-stroke-width":1
+      }
+    }, "point");
+  }
 
-    // Each build*Layer call is isolated: if one throws (bad MapLibre
-    // expression, missing source, etc.), the rest still render and the
-    // error surfaces in the console for the map-debugger agent.
-    const safe = (label, fn) => {
-      try { fn(); }
-      catch(e){ console.error("[MoroccoMap] layer failed:", label, e); }
+  // Maps an OpenInfraMap plant's tile fields onto the curated power schema,
+  // so the tooltip and popup render it like any other plant.
+  function osmPlantProps(p, f){
+    const [lng, lat] = f.geometry.coordinates;
+    return {
+      name: p.name || "Unnamed plant (OSM)",
+      capacity_mw: typeof p.output === "number" ? Math.round(p.output * 10) / 10 : null,
+      fuel_type: OSM_FUEL[p.source] || p.source || "unknown",
+      status: p.construction ? "construction" : p.disused ? "idle" : "operational",
+      commissioning_year: p.start_date || null,
+      source: "OpenStreetMap contributors via OpenInfraMap",
+      source_url: `https://openinframap.org/#14/${lat.toFixed(5)}/${lng.toFixed(5)}`,
+      osm: true
     };
+  }
 
-    // Operational interconnectors (ES-MA I/II, DZ-MA idle)
-    safe("interconnectors", () =>
-      buildLineLayer("interconnectors", layerData["interconnectors"] || { features:[] }));
-
-    // Planned corridors (ES-MA III, Xlinks, Dakhla HVDC, WBG 2018 planned)
-    safe("planned-corridors", () =>
-      buildLineLayer("planned-corridors", layerData["planned-corridors"] || { features:[] }));
-
-    // Power plants (clustered)
-    safe("power-plants", () =>
-      buildPowerLayer(layerData["power-plants"] || { features:[] }));
-
-    // Industrial — sector-coloured by SECTOR_COLOR_EXPR
-    safe("industrial", () =>
-      buildPointLayer({
-        idPrefix:     "lyr-ind",
-        sourceId:     "src-industrial",
-        data:         layerData["industrial"] || { features:[] },
-        color:        SECTOR_COLOR_EXPR,
-        minZoomLabel: 7,
-        labelField:   "name"
-      }));
-
-    // Digital infrastructure — split cables (diamond) from regular DC circles
-    safe("digital", () =>
-      buildDigitalLayer(layerData["digital"] || { features:[] }));
-
-    // Apply visibility from state
-    Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
-
-    // Wire interactions
-    wireLayerInteractions();
+  // Country outline from <dataPath>/boundary.geojson, if the country has one.
+  // Morocco's is a dissolved single polygon (Morocco + Southern Provinces as
+  // one territory — no internal border).
+  function buildBoundaryLayer(){
+    if(!boundaryData) return;
+    addOrReplace("src-boundary", { type:"geojson", data: boundaryData });
+    map.addLayer({
+      id:"lyr-boundary-fill", type:"fill", source:"src-boundary",
+      paint:{
+        "fill-color": isDark() ? "rgba(255,255,255,0.03)" : "rgba(0,31,77,0.03)",
+        "fill-outline-color":"rgba(0,0,0,0)"
+      }
+    });
+    map.addLayer({
+      id:"lyr-boundary-line", type:"line", source:"src-boundary",
+      paint:{
+        "line-color": isDark() ? "rgba(255,255,255,0.35)" : "rgba(0,31,77,0.45)",
+        "line-width":1.0,
+        "line-dasharray":[3,2]
+      }
+    });
   }
 
   function addOrReplace(id, spec){
@@ -543,13 +577,10 @@
     map.addSource(id, spec);
   }
 
-  function buildLineLayer(dataLayerId, fc){
-    // OBJ-map-debugger-5: "interconnectors" and "planned-corridors" each get
-    // their own source + layer ids (via lineLayerIds()) so the second call
-    // no longer clobbers the first's data / visibility toggle.
-    const ll = lineLayerIds(dataLayerId);
-    const srcId = ll.srcId;
-    ll.all.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+  function buildLineLayer(L, fc){
+    // Each grid layer gets its own source + layer ids, so two line layers
+    // never clobber each other's data / visibility toggle (OBJ-map-debugger-5).
+    const srcId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(srcId, { type:"geojson", data: fc });
 
     // Editorial overlay — interconnectors, HVDC corridors, planned/idle
@@ -557,28 +588,26 @@
     // so the strategic story pops.
     // Interconnector color: blue family — distinct from wind's teal (#0D9488)
     const intColor = INTERCONNECTOR_COLOR();
-    map.addLayer({ id:ll.hv, type:"line", source:srcId,
+    addLayer(L, { id:p+"-hv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
-      paint:{ "line-color": intColor, "line-width":2.6, "line-opacity":0.95 }});
-    map.addLayer({ id:ll.mv, type:"line", source:srcId,
+      paint:{ "line-color": intColor, "line-width":2.6, "line-opacity":0.95 }}, "line");
+    addLayer(L, { id:p+"-mv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],100],["<",["get","voltage_kv"],300]],
-      paint:{ "line-color": intColor, "line-width":1.6, "line-opacity":0.85 }});
-    map.addLayer({ id:ll.lv, type:"line", source:srcId,
+      paint:{ "line-color": intColor, "line-width":1.6, "line-opacity":0.85 }}, "line");
+    addLayer(L, { id:p+"-lv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],["<",["get","voltage_kv"],100]],
-      paint:{ "line-color": intColor, "line-width":1.0, "line-opacity":0.6 }});
-    map.addLayer({ id:ll.planned, type:"line", source:srcId,
+      paint:{ "line-color": intColor, "line-width":1.0, "line-opacity":0.6 }}, "line");
+    addLayer(L, { id:p+"-planned", type:"line", source:srcId,
       filter:["==",["get","status"],"planned"],
-      paint:{ "line-color":PLANNED_COLOR, "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }});
-    map.addLayer({ id:ll.idle, type:"line", source:srcId,
+      paint:{ "line-color":PLANNED_COLOR, "line-width":2.0, "line-opacity":0.95, "line-dasharray":[2,2] }}, "line");
+    addLayer(L, { id:p+"-idle", type:"line", source:srcId,
       filter:["==",["get","status"],"idle"],
-      paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }});
+      paint:{ "line-color":"#8a877c", "line-width":1.6, "line-opacity":0.7, "line-dasharray":[1,2] }}, "line");
   }
 
 
-  function buildPowerLayer(fc){
-    const srcId = "src-power";
-    const toRemove = ["lyr-power-clusters","lyr-power-cluster-count","lyr-power-halo","lyr-power-points","lyr-power-labels"];
-    toRemove.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+  function buildPowerLayer(L, fc){
+    const srcId = "src-" + L.id, p = "lyr-" + L.id;
 
     const clusterOpts = { cluster: true, clusterMaxZoom: 6, clusterRadius: 35 };
     addOrReplace(srcId, { type:"geojson", data: fc, generateId: false, ...clusterOpts });
@@ -586,8 +615,8 @@
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
     // Cluster bubbles
-    map.addLayer({
-      id:"lyr-power-clusters", type:"circle", source:srcId,
+    addLayer(L, {
+      id: p+"-clusters", type:"circle", source:srcId,
       filter:["has","point_count"],
       paint:{
         "circle-color":"rgba(245,158,11,0.85)",
@@ -595,9 +624,9 @@
         "circle-stroke-color": isDark() ? "#0e0e0d" : "#ffffff",
         "circle-stroke-width":1.5
       }
-    });
-    map.addLayer({
-      id:"lyr-power-cluster-count", type:"symbol", source:srcId + "-text",
+    }, "cluster");
+    addLayer(L, {
+      id: p+"-cluster-count", type:"symbol", source:srcId + "-text",
       filter:["has","point_count"],
       layout:{
         "text-field":["get","point_count_abbreviated"],
@@ -609,8 +638,8 @@
     });
 
     // Halo for announced/construction status
-    map.addLayer({
-      id:"lyr-power-halo", type:"circle", source:srcId,
+    addLayer(L, {
+      id: p+"-halo", type:"circle", source:srcId,
       filter:["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
       paint:{
         "circle-color":"rgba(245,158,11,0.25)",
@@ -620,8 +649,8 @@
     });
 
     // Individual plants, color by fuel
-    map.addLayer({
-      id:"lyr-power-points", type:"circle", source:srcId,
+    addLayer(L, {
+      id: p+"-points", type:"circle", source:srcId,
       filter:["!",["has","point_count"]],
       paint:{
         "circle-color":[
@@ -648,22 +677,20 @@
           1
         ]
       }
-    });
+    }, "point");
 
-    addLabelLayer("lyr-power-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]]);
+    addLabelLayer(L, p+"-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]]);
   }
 
-  function buildPointLayer(opts){
-    const { idPrefix, sourceId, data, color, minZoomLabel, labelField } = opts;
-    const pts = idPrefix + "-points";
-    const lbs = idPrefix + "-labels";
-    [pts, lbs].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+  // Industrial consumers — coloured by the country's sector palette
+  function buildIndustrialLayer(L, data){
+    const sourceId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(sourceId, { type:"geojson", data, promoteId: "id" });
 
-    map.addLayer({
-      id: pts, type:"circle", source: sourceId,
+    addLayer(L, {
+      id: p + "-points", type:"circle", source: sourceId,
       paint:{
-        "circle-color": color,
+        "circle-color": sectorColorExpr(),
         "circle-radius":["interpolate",["linear"],["zoom"], 4, 4, 7, 6, 10, 8],
         "circle-stroke-color": POINT_STROKE(),
         "circle-stroke-width":1.5,
@@ -673,16 +700,16 @@
           1
         ]
       }
-    });
+    }, "point");
     addOrReplace(sourceId + "-text", { type:"geojson", data });
-    addLabelLayer(lbs, sourceId + "-text", labelField, minZoomLabel, 1.1);
+    addLabelLayer(L, p + "-labels", sourceId + "-text", "name", 7, 1.1);
   }
 
   const POINT_STROKE = () => isDark() ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.9)";
 
   // Name labels live on a separate text-only source: MapLibre drops every
   // layer of a source whose glyphs fail to load, and points must survive that.
-  function addLabelLayer(id, sourceId, field, minzoom, offset, filter){
+  function addLabelLayer(L, id, sourceId, field, minzoom, offset, filter){
     const spec = {
       id, type:"symbol", source: sourceId, minzoom,
       layout:{
@@ -700,18 +727,16 @@
       }
     };
     if(filter) spec.filter = filter;
-    map.addLayer(spec);
+    addLayer(L, spec);
   }
 
-  function buildDigitalLayer(fc){
-    const srcId = "src-digital";
-    const ids = ["lyr-dig-halo","lyr-dig-points","lyr-dig-cables","lyr-dig-labels"];
-    ids.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+  function buildDigitalLayer(L, fc){
+    const srcId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(srcId, { type:"geojson", data: fc, promoteId: "id" });
 
     // Halo for announced status (pulsing-style, static render)
-    map.addLayer({
-      id:"lyr-dig-halo", type:"circle", source: srcId,
+    addLayer(L, {
+      id: p+"-halo", type:"circle", source: srcId,
       filter:["any",["==",["get","status"],"announced"],["==",["get","status"],"construction"]],
       paint:{
         "circle-color":"rgba(124,58,237,0.22)",
@@ -723,11 +748,11 @@
     // Regular DCs (non-cable). Radius scales with capacity; planned/announced
     // DCs render at lower opacity with a dashed stroke so the pipeline is
     // visually distinct from energised capacity.
-    map.addLayer({
-      id:"lyr-dig-points", type:"circle", source: srcId,
+    addLayer(L, {
+      id: p+"-points", type:"circle", source: srcId,
       filter:["!=",["get","category"],"cable_landing"],
       paint:{
-        "circle-color": PROVIDER_COLOR_EXPR,
+        "circle-color": providerColorExpr(),
         "circle-radius":[
           "interpolate",["linear"],
           ["coalesce",["get","capacity_estimate_mw"], 3],
@@ -752,12 +777,12 @@
           0.95
         ]
       }
-    });
+    }, "point");
 
     // Cable landings — small teal circle with a contrasting ring. Drawn as
     // a circle rather than a "◆" glyph so it needs no font to render.
-    map.addLayer({
-      id:"lyr-dig-cables", type:"circle", source: srcId,
+    addLayer(L, {
+      id: p+"-cables", type:"circle", source: srcId,
       filter:["==",["get","category"],"cable_landing"],
       paint:{
         "circle-color": CABLE_COLOR,
@@ -766,75 +791,58 @@
         "circle-stroke-width":2,
         "circle-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
       }
-    });
+    }, "point");
 
     addOrReplace(srcId + "-text", { type:"geojson", data: fc });
-    addLabelLayer("lyr-dig-labels", srcId + "-text", "name", 7, 1.2);
+    addLabelLayer(L, p+"-labels", srcId + "-text", "name", 7, 1.2);
   }
 
   // ---------- Layer interactions (hover dim + tooltip + click) ----------
-  // Layer-scoped handlers survive setStyle() and the layer ids never change,
-  // so wire once; re-wiring on every rebuild stacked duplicate handlers.
-  let interactionsWired = false;
-  function wireLayerInteractions(){
-    if(interactionsWired) return;
-    interactionsWired = true;
+  // Layer-scoped handlers survive setStyle() and removeLayer(), so each map
+  // layer id is wired once, the first time a layer with that id and a role is
+  // added; re-wiring on every rebuild stacked duplicate handlers. Handlers
+  // read `mapLayers` when they fire, so they always act on the current
+  // country's layer of that id, and do nothing once it is gone.
+  const wiredLayers = new Set();
+  function wireLayer(id){
+    if(!mapLayers[id].role || wiredLayers.has(id)) return;
+    wiredLayers.add(id);
+    const current = ()=>mapLayers[id];
 
-    // Cluster click → zoom in (MapLibre 4: getClusterExpansionZoom returns a promise)
-    map.on("click","lyr-power-clusters",(e)=>{
-      const f = e.features[0];
-      map.getSource("src-power").getClusterExpansionZoom(f.properties.cluster_id)
-        .then(zoom=>map.easeTo({ center: f.geometry.coordinates, zoom }))
-        .catch(()=>{});
-    });
-    map.on("mouseenter","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor="pointer"; });
-    map.on("mouseleave","lyr-power-clusters", ()=>{ map.getCanvas().style.cursor=""; });
-
-    const pointLayers = [
-      { id:"lyr-power-points", src:"src-power",    dataLayer:"power-plants" },
-      { id:"lyr-ind-points",   src:"src-industrial", dataLayer:"industrial" },
-      { id:"lyr-dig-points",   src:"src-digital",  dataLayer:"digital" },
-      { id:"lyr-dig-cables",   src:"src-digital",  dataLayer:"digital" }
-    ];
-    const lineLayers = [];
-    Object.keys(LINE_LAYER_IDS).forEach(dataLayerId=>{
-      lineLayerIds(dataLayerId).all.forEach(id=>lineLayers.push({ id }));
-    });
-
-    pointLayers.forEach(({id, src, dataLayer})=>{
-      map.on("mousemove", id, (e)=>{
-        const f = e.features[0]; if(!f) return;
-        map.getCanvas().style.cursor = "pointer";
-        setHoverDim(src, id, f.id);
-        showPointTooltip(dataLayer, f, e.point);
-      });
-      map.on("mouseleave", id, ()=>{
-        map.getCanvas().style.cursor = "";
-        clearHoverDim();
-        hideTooltip();
-      });
-      map.on("click", id, (e)=>{
-        e.originalEvent.stopPropagation();
-        const f = e.features[0];
-        openPointPopup(dataLayer, f);
-        map.easeTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 7), duration: 600 });
-      });
-    });
-
-    lineLayers.forEach(({id})=>{
-      map.on("mousemove", id, (e)=>{
-        const f = e.features[0]; if(!f) return;
-        map.getCanvas().style.cursor = "pointer";
+    map.on("mousemove", id, (e)=>{
+      const m = current(); const f = e.features[0];
+      if(!m || !f) return;
+      map.getCanvas().style.cursor = "pointer";
+      if(m.role === "point"){
+        setHoverDim(m.src, id, f.id);
+        showPointTooltip(m.dataLayerId, f, e.point);
+      } else if(m.role === "line"){
         showLineTooltip(f, e.point);
-      });
-      map.on("mouseleave", id, ()=>{
-        map.getCanvas().style.cursor = "";
-        hideTooltip();
-      });
-      map.on("click", id, (e)=>{
-        e.originalEvent.stopPropagation();
-        openLinePopup(e.features[0]);
-      });
+      }
+    });
+    map.on("mouseleave", id, ()=>{
+      if(!current()) return;
+      map.getCanvas().style.cursor = "";
+      clearHoverDim();
+      hideTooltip();
+    });
+    map.on("click", id, (e)=>{
+      const m = current(); const f = e.features[0];
+      if(!m || !f) return;
+      if(m.role === "cluster"){
+        // Cluster click → zoom in (MapLibre 4: getClusterExpansionZoom returns a promise)
+        map.getSource(m.src).getClusterExpansionZoom(f.properties.cluster_id)
+          .then(zoom=>map.easeTo({ center: f.geometry.coordinates, zoom }))
+          .catch(()=>{});
+        return;
+      }
+      e.originalEvent.stopPropagation();
+      if(m.role === "point"){
+        openPointPopup(m.dataLayerId, f);
+        map.easeTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 7), duration: 600 });
+      } else if(m.role === "line"){
+        openLinePopup(f);
+      }
     });
   }
 
@@ -872,8 +880,9 @@
 
   // ---------- Tooltip ----------
   function showPointTooltip(dataLayerId, f, point){
-    const p = f.properties || {};
-    const kind = layerKind(dataLayerId);
+    let p = f.properties || {};
+    let kind = layerKind(dataLayerId);
+    if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     let metric = "", dot = "";
     if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${p.fuel_type || ""}`;
     else if(kind === "industrial") metric = `${p.sector || ""} · est. ${fmtCap(p.estimated_demand_mw)}`;
@@ -882,7 +891,7 @@
         metric = ["Submarine cable landing", p.operator].filter(Boolean).join(" · ");
         dot = CABLE_COLOR;
       } else {
-        const prov = PROVIDERS.find(x => x.key === p.operator);
+        const prov = palette().providers.find(x => x.key === p.operator);
         metric = [prov ? prov.short : p.operator,
                   p.capacity_estimate_mw != null ? fmtCap(p.capacity_estimate_mw) : "",
                   p.status].filter(Boolean).join(" · ");
@@ -916,10 +925,11 @@
 
   // ---------- Popup ----------
   function openPointPopup(dataLayerId, f){
-    const p = f.properties || {};
-    const kind = layerKind(dataLayerId);
+    let p = f.properties || {};
+    let kind = layerKind(dataLayerId);
+    if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     const badgeClass = kind === "power" ? "power" : kind === "industrial" ? "industrial" : kind === "digital" ? "digital" : "grid";
-    const badgeLabel = kind === "power" ? "Generation"
+    const badgeLabel = kind === "power" ? (p.osm ? "Generation · OpenStreetMap" : "Generation")
                      : kind === "industrial" ? "Industrial consumer"
                      : kind === "digital" ? (p.category === "cable_landing" ? "Submarine cable" : "Data center")
                      : "Infrastructure";
@@ -968,8 +978,12 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+(p.id || p.name)+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
-        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
+        ${p.osm
+          // OSM data is fixed at the source, where every map using it benefits.
+          ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">View on OpenInfraMap ↗</a>
+             <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
+          : `<a href="${REPO_URL}/issues/new?title=${encodeURIComponent(COUNTRIES[currentCountry].label + ' map — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+(p.id || p.name)+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
+        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
@@ -997,7 +1011,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent('MoroccoMap — correction: '+p.name)}" target="_blank" rel="noopener">Report an error</a>
+        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent(COUNTRIES[currentCountry].label + ' map — correction: '+p.name)}" target="_blank" rel="noopener">Report an error</a>
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
@@ -1015,11 +1029,15 @@
     if(!ENABLED.includes(key)) return;
     currentCountry = key;
     const c = COUNTRIES[key];
+    closePopup();
+    hideTooltip();
+    hoveredLayer = null;
     await loadAllData(key);
+    if(key !== currentCountry) return; // superseded by a later switch
     renderLayerList(key);
     renderKPIs(key);
     renderMethodologySources(key);
-    if(map){
+    if(map && mapReady){
       map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
       buildMapLayers(key);
     }

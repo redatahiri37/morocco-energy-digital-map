@@ -1,0 +1,278 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-cap-des-biches-contourglobal",
+    "name": "Cap des Biches (ContourGlobal)",
+    "capacity_mw": 86,
+    "fuel_type": "oil",
+    "tech": "Reciprocating engines, HFO / gas",
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.297044,
+     14.718988
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-bel-air-c6",
+    "name": "Bel-Air C6 (Senelec)",
+    "capacity_mw": 90,
+    "fuel_type": "oil",
+    "tech": "Reciprocating engines, HFO / LNG",
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.434005,
+     14.690486
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-karpowership-aysegul-sultan",
+    "name": "Karpowership Ayşegül Sultan",
+    "capacity_mw": 235,
+    "fuel_type": "oil",
+    "tech": "Floating power plant, HFO / LNG",
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.432331,
+     14.689333
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-kounoune",
+    "name": "Kounoune Power",
+    "capacity_mw": 67.5,
+    "fuel_type": "oil",
+    "tech": "Reciprocating engines, diesel",
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.26635,
+     14.743768
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-tobene",
+    "name": "Tobène Power",
+    "capacity_mw": 115,
+    "fuel_type": "oil",
+    "tech": "Reciprocating engines, HFO",
+    "status": "operational",
+    "region": "Thiès",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.861741,
+     15.007438
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-malicounda",
+    "name": "Malicounda Power",
+    "capacity_mw": 120,
+    "fuel_type": "oil",
+    "tech": "Dual-fuel engines",
+    "status": "operational",
+    "region": "Thiès",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.950748,
+     14.472403
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-sendou",
+    "name": "Sendou Power Station",
+    "capacity_mw": 125,
+    "fuel_type": "coal",
+    "tech": "Coal steam",
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.213926,
+     14.686988
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-taiba-ndiaye-wind",
+    "name": "Taïba Ndiaye Wind Farm",
+    "capacity_mw": 158.7,
+    "fuel_type": "wind",
+    "tech": "Onshore wind",
+    "status": "operational",
+    "region": "Thiès",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.88111,
+     15.04944
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-bokhol-solar",
+    "name": "Bokhol Solar Farm",
+    "capacity_mw": 20,
+    "fuel_type": "solar",
+    "tech": "Solar PV (20 MWp)",
+    "status": "operational",
+    "region": "Saint-Louis",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -15.4692,
+     16.5172
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-kahone-solar-1",
+    "name": "Kahone Solar Farm",
+    "capacity_mw": 25,
+    "fuel_type": "solar",
+    "tech": "Solar PV",
+    "status": "operational",
+    "region": "Kaolack",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.027,
+     14.178
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-kahone-solar-2",
+    "name": "Kahone Solaire (Kahone 2)",
+    "capacity_mw": 35,
+    "fuel_type": "solar",
+    "tech": "Solar PV (35 MWp)",
+    "status": "operational",
+    "region": "Kaolack",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.025,
+     14.169
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-kael-solar",
+    "name": "Kaël Solar Farm",
+    "capacity_mw": 35,
+    "fuel_type": "solar",
+    "tech": "Solar PV (35 MWp)",
+    "status": "operational",
+    "region": "Diourbel",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -15.9222,
+     14.7728
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "sn-diass-solar",
+    "name": "Diass Solar Farm",
+    "capacity_mw": 23,
+    "fuel_type": "solar",
+    "tech": "Solar PV (23 MWp)",
+    "status": "operational",
+    "region": "Thiès",
+    "precision": "approximate",
+    "source": "Owner-supplied list, Sep 2026 (compiled with ChatGPT; not yet checked against a primary source)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.103,
+     14.652
+    ]
+   }
+  }
+ ]
+}
