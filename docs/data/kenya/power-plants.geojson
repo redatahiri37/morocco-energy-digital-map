@@ -1,0 +1,508 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000054",
+    "name": "Lake Turkana",
+    "capacity_mw": 310.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Lake Turkana Wind Power",
+    "source_url": "http://ltwp.co.ke/",
+    "commissioning_year": 2017,
+    "operator": "Lake Turkana Wind Power Ltd."
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.7378,
+     2.6447
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000039",
+    "name": "Gitaru",
+    "capacity_mw": 225.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1978,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.7497,
+     -0.7967
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061218",
+    "name": "Olkaria I",
+    "capacity_mw": 185.0,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1981,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.3086,
+     -0.8933
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000041",
+    "name": "Kiambere",
+    "capacity_mw": 168.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1987,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.91,
+     -0.64
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061219",
+    "name": "Olkaria I units 4 & 5",
+    "capacity_mw": 140.0,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/geothermal-plants",
+    "commissioning_year": 2015,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.2961,
+     -0.891
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061217",
+    "name": "Olkaria IV",
+    "capacity_mw": 140.0,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/geothermal-plants",
+    "commissioning_year": 2014,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.3338,
+     -0.9186
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061220",
+    "name": "Olkaria III (Orpower 4)",
+    "capacity_mw": 139.0,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Ormat ; Kenya Power",
+    "source_url": "http://www.ormat.com/en/projects/all/main/ ; http://www.kplc.co.ke/AR2016/KPLC%202016%20Annual%20Report%20Upload.pdf",
+    "commissioning_year": 2015,
+    "operator": "Ormat Technologies Inc"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.2892,
+     -0.8905
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000052",
+    "name": "Kipevu III",
+    "capacity_mw": 120.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/thermal-power-plant",
+    "commissioning_year": 1999,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.6333,
+     -4.0379
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061216",
+    "name": "Iberafrica I & II (Nairobi south diesel PP)",
+    "capacity_mw": 109.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GPG ; Kenya Power",
+    "source_url": "http://www.globalpower-generation.com/projects/kenya/ ; http://www.kplc.co.ke/AR2016/KPLC%202016%20Annual%20Report%20Upload.pdf",
+    "operator": "Iberafrica Power Ltd."
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.8905,
+     -1.2431
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000047",
+    "name": "Turkwel",
+    "capacity_mw": 106.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1990,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.3443,
+     1.9138
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061221",
+    "name": "Olkaria II",
+    "capacity_mw": 105.0,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/geothermal-plants",
+    "commissioning_year": 1982,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.2985,
+     -0.8644
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000040",
+    "name": "Kamburu",
+    "capacity_mw": 94.2,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1974,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.6867,
+     -0.8093
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061214",
+    "name": "Rabai",
+    "capacity_mw": 90.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · BWSC",
+    "source_url": "http://www.bwsc.com/Rabai-Power-Plant--Kenya.aspx?ID=208",
+    "commissioning_year": 2009,
+    "operator": "Rabai Power Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.5626,
+     -3.9334
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061223",
+    "name": "Thika",
+    "capacity_mw": 88.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · MAN Power plants",
+    "source_url": "http://powerplants.man.eu/references/projects/thika-power-plant",
+    "commissioning_year": 2012,
+    "operator": "Thika Power Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.0508,
+     1.0605
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000051",
+    "name": "Kipevu II (Tsavo)",
+    "capacity_mw": 74.5,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wartsila",
+    "source_url": "http://www.wartsila.com/resources/customer-references/view/kipevu-ii-iii-kenya",
+    "commissioning_year": 2001,
+    "operator": "Tsavo Power Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.6333,
+     -4.0379
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000050",
+    "name": "Kipevu I",
+    "capacity_mw": 74.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/thermal-power-plant",
+    "commissioning_year": 2011,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.638,
+     -4.04
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000042",
+    "name": "Kindaruma",
+    "capacity_mw": 72.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1968,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.811,
+     -0.806
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061222",
+    "name": "Sondu Miru",
+    "capacity_mw": 60.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/hydro-power-stations",
+    "commissioning_year": 2007,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     34.8521,
+     -0.3426
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WKS0062186",
+    "name": "Garissa",
+    "capacity_mw": 55.7,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wiki-Solar",
+    "source_url": "https://www.wiki-solar.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.605,
+     -0.35
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000048",
+    "name": "Olkaria I",
+    "capacity_mw": 45.0,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/geothermal-plants",
+    "commissioning_year": 1981,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.2557,
+     -0.8893
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000043",
+    "name": "Masinga",
+    "capacity_mw": 40.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 1980,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.588,
+     -0.879
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061215",
+    "name": "Ngong",
+    "capacity_mw": 25.5,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=content/wind",
+    "commissioning_year": 1993,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.6356,
+     -1.3811
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000046",
+    "name": "Tana",
+    "capacity_mw": 20.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Kenya Electricity Generating Company",
+    "source_url": "http://www.kengen.co.ke/?q=kengen-download",
+    "commissioning_year": 2011,
+    "operator": "Kenya Electric Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.2654,
+     -0.7854
+    ]
+   }
+  }
+ ]
+}

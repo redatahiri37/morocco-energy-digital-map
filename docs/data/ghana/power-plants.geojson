@@ -1,0 +1,129 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000011",
+    "name": "Aksombo",
+    "capacity_mw": 1038.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Volta River Authority",
+    "source_url": "http://www.vra.com/resources/annual_reports/2014%20Annual%20Report.pdf",
+    "commissioning_year": 1961
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.0594,
+     6.2998
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000012",
+    "name": "Bui",
+    "capacity_mw": 400.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Volta River Authority",
+    "source_url": "http://www.vra.com/resources/annual_reports/2014%20Annual%20Report.pdf",
+    "commissioning_year": 2013
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.1661,
+     8.1822
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000015",
+    "name": "Takoradi 1",
+    "capacity_mw": 330.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Volta River Authority",
+    "source_url": "http://www.vra.com/resources/annual_reports/2014%20Annual%20Report.pdf"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.75,
+     4.8833
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000014",
+    "name": "Kpong",
+    "capacity_mw": 160.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Volta River Authority",
+    "source_url": "http://www.vra.com/resources/annual_reports/2014%20Annual%20Report.pdf",
+    "commissioning_year": 1982
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.1255,
+     6.1201
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000016",
+    "name": "Tema",
+    "capacity_mw": 160.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Volta River Authority",
+    "source_url": "http://www.vra.com/resources/annual_reports/2014%20Annual%20Report.pdf",
+    "commissioning_year": 2008
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.02,
+     5.67
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WKS0066652",
+    "name": "Gomoa Onyadze",
+    "capacity_mw": 20.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wiki-Solar",
+    "source_url": "https://www.wiki-solar.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.95,
+     5.29
+    ]
+   }
+  }
+ ]
+}

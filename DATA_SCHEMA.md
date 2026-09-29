@@ -69,7 +69,7 @@ Power plants. Points, clustered at low zoom, coloured by fuel.
 | Field | Required | Notes |
 |---|---|---|
 | `capacity_mw` | yes | Nameplate MW, number. Feeds "Tracked capacity". |
-| `fuel_type` | yes | One of `solar`, `wind`, `hydro`, `coal`, `gas`, `oil`. `solar`, `wind` and `hydro` count toward "Renewables share". Use `oil` for HFO and diesel plants. |
+| `fuel_type` | yes | One of `solar`, `wind`, `hydro`, `coal`, `gas`, `oil`, `nuclear`, `geothermal`, `biomass`, `waste`. `solar`, `wind`, `hydro`, `geothermal` and `biomass` count toward "Renewables share". Use `oil` for HFO and diesel plants. |
 | `status` | yes | `operational`, `construction`, `announced`, `planned` or `idle`. `construction` and `announced` get a halo. |
 | `commissioning_year` | recommended | Year commissioned, or target year if not operational. |
 | `tech`, `operator`, `region` | recommended | Shown in the popup. |

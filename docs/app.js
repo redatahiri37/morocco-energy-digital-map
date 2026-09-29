@@ -54,8 +54,11 @@
 
   const FUEL_COLOR = {
     solar:"#F59E0B", wind:"#0D9488", hydro:"#3B82F6",
-    coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A"
+    coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A",
+    nuclear:"#DB2777", geothermal:"#DC2626", biomass:"#65A30D", waste:"#78716C"
   };
+  // Counted in the "Renewables share" KPI.
+  const RENEWABLE_FUELS = ["solar", "wind", "hydro", "geothermal", "biomass"];
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
   const CABLE_COLOR      = "#2DD4BF";  // teal — was orange, collided with industrial
@@ -336,7 +339,7 @@
     const fcPower = { features: featuresOfKind(countryKey, "power") };
     const fcDC    = { features: featuresOfKind(countryKey, "digital") };
     const totalMW = fcPower.features.reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
-    const renewMW = fcPower.features.filter(f=>["solar","wind","hydro"].includes(f.properties.fuel_type))
+    const renewMW = fcPower.features.filter(f=>RENEWABLE_FUELS.includes(f.properties.fuel_type))
                     .reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
     const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
     const dcMW = fcDC.features.reduce((s,f)=>s + (f.properties.capacity_estimate_mw || 0), 0);
@@ -514,8 +517,11 @@
   // Tile fields: name, output (MW), source (first fuel), construction,
   // disused, start_date.
   const OSM_PLANT_SWATCH = "#b8b4a8";
+  // OSM `plant:source` values → our fuel_type.
   const OSM_FUEL = { solar:"solar", wind:"wind", hydro:"hydro", coal:"coal",
-                     gas:"gas", oil:"oil", diesel:"oil" };
+                     gas:"gas", oil:"oil", diesel:"oil", nuclear:"nuclear",
+                     geothermal:"geothermal", biomass:"biomass", biofuel:"biomass",
+                     biogas:"biomass", waste:"waste" };
   function buildOimPlantsLayer(L){
     ensureOimSource();
     const fuelExpr = ["match", ["get","source"]];
@@ -661,6 +667,10 @@
           "coal",  FUEL_COLOR.coal,
           "gas",   FUEL_COLOR.gas,
           "oil",   FUEL_COLOR.oil,
+          "nuclear",    FUEL_COLOR.nuclear,
+          "geothermal", FUEL_COLOR.geothermal,
+          "biomass",    FUEL_COLOR.biomass,
+          "waste",      FUEL_COLOR.waste,
           "#888"
         ],
         "circle-radius":[

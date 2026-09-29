@@ -27,3 +27,6 @@ __pycache__/
 .venv/
 venv/
 .wrangler/
+
+# Downloads cached by scripts/build-country-open-data.py
+scripts/.cache/
