@@ -92,9 +92,9 @@ window.COUNTRIES = {
   // Reserved — no data in v1, will no-op until GeoJSON files are dropped in.
   egypt:   { label: "Egypt",   iso: "EG", center: [30.8, 26.8], zoom: 5.2,
              dataPath: "./data/egypt/",   layers: [], placeholder: true },
-  // Staged: configured and validated in CI, not yet in COUNTRIES_ENABLED.
-  // Has the outline and the live OSM grid; power plants, industry and data
-  // centres are pending a sourced, coordinate-checked dataset.
+  // Power plants are an owner-supplied list, marked unverified per feature
+  // until each is checked against a primary source. Industry and data
+  // centres are not mapped yet.
   senegal: {
     label: "Senegal",
     iso:   "SN",
@@ -102,10 +102,17 @@ window.COUNTRIES = {
     zoom:   6.2,
     bounds: [[-17.6, 12.3], [-11.3, 16.7]],
     dataPath: "./data/senegal/",
+    snapshotSource: "owner list, unverified",
+    credits: "owner-supplied plant list (unverified)",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
                 note: "public domain" },
     layers: [
+      { id: "power-plants", file: "power-plants.geojson", kind: "power",
+        title: "Power plants",
+        source: "Owner-supplied list (compiled with ChatGPT), not yet checked against primary sources",
+        sourceUrl: "https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/docs/data/senegal/power-plants.geojson",
+        updated: "2026-09" },
       { id: "oim-grid", file: null, kind: "oim",
         title: "Transmission grid",
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
@@ -117,4 +124,4 @@ window.COUNTRIES = {
              dataPath: "./data/namibia/", layers: [], placeholder: true }
 };
 
-window.COUNTRIES_ENABLED = ["morocco"];
+window.COUNTRIES_ENABLED = ["morocco", "senegal"];

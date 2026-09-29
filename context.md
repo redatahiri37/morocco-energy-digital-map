@@ -50,12 +50,18 @@ Branch `claude/gallant-maxwell-b0ho3a`: the map is now config-driven.
   credit, footer credits and page text are per country.
 - `scripts/validate-countries.mjs` + `DATA_SCHEMA.md` validate every country
   in CI; `scripts/test-validate-countries.mjs` self-tests the validator.
-- **Senegal is staged**: config, Natural Earth outline and the live OSM grid,
-  validated but not in `COUNTRIES_ENABLED`. Needs a sourced power-plant list
-  with checked coordinates. WRI GPPD (reachable from cloud sessions via
-  GitHub raw) is unusable as-is: Cap des Biches at 17.72°N (at sea),
-  Sambangalou (unbuilt) listed, no Taïba Ndiaye / Sendou / Malicounda /
-  Karpowership. Cloud sessions can't reach Wikipedia, GEM, Nominatim or Overpass.
+- **Senegal is enabled in the PR** with 13 power plants from an owner-supplied
+  list (ChatGPT-compiled, Sep 2026). Every feature is `precision: approximate`
+  and its `source` says it is unverified; none has `source_url`. The rows were
+  checked against GeoNames towns (via the `geonamescache` PyPI package; cloud
+  sessions can't reach Nominatim, Wikipedia, GEM or Overpass). Held out:
+  - CSS (Compagnie Sucrière Sénégalaise): given 7 km from Saint-Louis city;
+    the mill is at Richard-Toll, ~93 km east.
+  - "Senegal Solar Project – Dagana": 39 km from Dagana.
+  - Santhiou Mékhé: its point is WRI GPPD's point for Ten Merina (0.3 km).
+  - Cap des Biches Senelec engines: same coordinate and MW as ContourGlobal.
+  Next: a source_url + commissioning_year per plant; statuses were assumed
+  operational. Biomass isn't a fuel_type the renderer knows yet.
 - morocco-grid is superseded by this repo for the map.
 
 ## Session handoff — 2026-09-25
