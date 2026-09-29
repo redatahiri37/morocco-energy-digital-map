@@ -31,7 +31,7 @@ jobs:
       - name: Self-test the validator
         run: node scripts/test-validate-countries.mjs
 
-  # Publishes docs/ to the Cloudflare Pages project behind atlas-nexus-69o.pages.dev
+  # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.
   # Needs two repository secrets:
   #   CLOUDFLARE_API_TOKEN   — token with Account › Cloudflare Pages › Edit

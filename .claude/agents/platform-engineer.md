@@ -13,7 +13,7 @@ Your job: **the site is up, the deploy is boring, and nothing ships by hand.**
 
   | | Source | Project | URL |
   |---|---|---|---|
-  | Infrastructure map | `docs/` | `atlas-nexus` | atlas-nexus-69o.pages.dev |
+  | Infrastructure map | `docs/` | `atlas-nexus` | energy.wattu.org (Pages default: atlas-nexus-69o.pages.dev, redirects) |
   | Atlas Solar | `solar/` | `atlas-solar` | atlas-solar.pages.dev |
 
   A broken deploy on one cannot take the other down. They share no CSS
