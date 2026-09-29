@@ -275,32 +275,37 @@
   // ---------- Data loading ----------
   async function loadAllData(countryKey){
     const c = COUNTRIES[countryKey];
-    layerData = {};
-    // Load boundary (if the file exists)
+    // Per-country state starts clean: a country without a boundary file (or
+    // without a layer) must not inherit the previous country's. Built in
+    // locals and committed at the end, so a slower load for a country the
+    // user has already switched away from can't overwrite the newer one.
+    const data = {}, vis = {};
+    let boundary = null;
     try{
       const r = await fetch(c.dataPath + "boundary.geojson");
-      if(r.ok) boundaryData = await r.json();
-    } catch(e){ boundaryData = null; }
+      if(r.ok) boundary = await r.json();
+    } catch(e){ /* no boundary for this country */ }
 
     const promises = c.layers.map(async (L, idx)=>{
-      if(!L.file){ // OIM or other virtual layers — no fetch needed
-        if(visibility[L.id] === undefined) visibility[L.id] = true;
-        return;
-      }
+      vis[L.id] = true;
+      if(!L.file) return; // OIM or other virtual layers — no fetch needed
       try{
         const res = await fetch(c.dataPath + L.file);
         if(!res.ok) throw new Error(res.status + " " + L.file);
         const fc = await res.json();
         // Ensure each feature has a stable numeric id — required for feature-state
         fc.features.forEach((f,i)=>{ if(f.id == null) f.id = idx*10000 + i; });
-        layerData[L.id] = fc;
+        data[L.id] = fc;
       } catch(e){
         console.warn("[MoroccoMap] failed to load", L.file, e);
-        layerData[L.id] = { type:"FeatureCollection", features:[] };
+        data[L.id] = { type:"FeatureCollection", features:[] };
       }
-      if(visibility[L.id] === undefined) visibility[L.id] = true;
     });
     await Promise.all(promises);
+    if(countryKey !== currentCountry) return;
+    layerData = data;
+    visibility = vis;
+    boundaryData = boundary;
   }
 
   // ---------- Panel: layer list ----------
@@ -417,8 +422,18 @@
   }
 
   // ---------- Build map layers ----------
+  // Removes every layer and source this app added (all "lyr-*" / "src-*"),
+  // leaving the basemap alone. A source can't be removed while a layer
+  // still uses it, so layers go first. Without this, switching country threw
+  // on the first addSource and the previous country's data stayed on screen.
+  function clearDataLayers(){
+    map.getStyle().layers.forEach(l=>{ if(l.id.startsWith("lyr-")) map.removeLayer(l.id); });
+    Object.keys(map.getStyle().sources).forEach(id=>{ if(id.startsWith("src-")) map.removeSource(id); });
+  }
+
   function buildMapLayers(countryKey){
     if(!map) return;
+    clearDataLayers();
 
     // OpenInfraMap vector overlay — full OSM-sourced transmission grid,
     // substations and plants. Free, ODbL, no API key. Rendered below all
@@ -429,9 +444,6 @@
       minzoom: 0, maxzoom: 17,
       attribution: OIM_ATTR
     });
-    const oimIds = ["lyr-oim-line-lv","lyr-oim-line-mv","lyr-oim-line-hv",
-                    "lyr-oim-substation-poly","lyr-oim-substation-pt"];
-    oimIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
 
     // Lines — styled by voltage. OIM exposes a numeric `voltage` (volts).
     // Non-numeric / multi-voltage tags coerce to 0 and fall into LV.
@@ -1015,11 +1027,15 @@
     if(!ENABLED.includes(key)) return;
     currentCountry = key;
     const c = COUNTRIES[key];
+    closePopup();
+    hideTooltip();
+    hoveredLayer = null;
     await loadAllData(key);
+    if(key !== currentCountry) return; // superseded by a later switch
     renderLayerList(key);
     renderKPIs(key);
     renderMethodologySources(key);
-    if(map){
+    if(map && mapReady){
       map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
       buildMapLayers(key);
     }
