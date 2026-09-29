@@ -339,15 +339,18 @@
     const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
     const dcMW = fcDC.features.reduce((s,f)=>s + (f.properties.capacity_estimate_mw || 0), 0);
     const dcInvest = fcDC.features.reduce((s,f)=>s + (f.properties.investment_usd || 0), 0);
+    // A country with no layer of a kind shows "—", not a zero that reads as a finding.
+    const hasPower = fcPower.features.length > 0, hasDC = fcDC.features.length > 0;
+    const NA = "—";
     host.innerHTML = `
       <div class="kpi"><div class="k">Tracked capacity</div>
-        <div class="v">${(totalMW/1000).toFixed(1)}<small> GW</small></div></div>
+        <div class="v">${hasPower ? `${(totalMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
       <div class="kpi"><div class="k">Renewables share*</div>
-        <div class="v">${renewShare}<small>%</small></div></div>
+        <div class="v">${hasPower ? `${renewShare}<small>%</small>` : NA}</div></div>
       <div class="kpi"><div class="k">DC pipeline</div>
-        <div class="v">${(dcMW/1000).toFixed(1)}<small> GW</small></div></div>
+        <div class="v">${hasDC ? `${(dcMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
       <div class="kpi"><div class="k">DC investment</div>
-        <div class="v">${fmtInvestment(dcInvest)}</div></div>
+        <div class="v">${hasDC ? fmtInvestment(dcInvest) : NA}</div></div>
     `;
   }
 
@@ -357,6 +360,7 @@
     const c = COUNTRIES[countryKey];
     document.title = `Energy × Digital Nexus — ${c.label} Infrastructure Map`;
     document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = c.label; });
+    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? `Data: ${c.credits} · ` : ""; });
     document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
     if(reportErrorFooter) reportErrorFooter.href = REPO_URL + "/issues/new?title=" + encodeURIComponent(`${c.label} map — data correction`);
   }

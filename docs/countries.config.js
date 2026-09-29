@@ -19,6 +19,7 @@
 //   palette:        { providers: [{ key, color, short }], sectors: { name: color } }
 //   boundary:       { source, sourceUrl, note } — provenance of boundary.geojson
 //   snapshotSource: short credit shown above the KPI tiles
+//   credits:        data credits in the footer, e.g. "GEM · ONEE · Datacentermap"
 
 window.COUNTRIES = {
   morocco: {
@@ -29,6 +30,7 @@ window.COUNTRIES = {
     bounds: [[-17.5, 20.5], [-0.8, 36.35]],
     dataPath: "./data/morocco/",
     snapshotSource: "ONEE 2025",
+    credits: "GEM · ONEE · Datacentermap",
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
                 sourceUrl: "https://www.naturalearthdata.com/",
                 note: "Morocco and the Southern Provinces drawn as one territory" },
@@ -90,8 +92,27 @@ window.COUNTRIES = {
   // Reserved — no data in v1, will no-op until GeoJSON files are dropped in.
   egypt:   { label: "Egypt",   iso: "EG", center: [30.8, 26.8], zoom: 5.2,
              dataPath: "./data/egypt/",   layers: [], placeholder: true },
-  senegal: { label: "Senegal", iso: "SN", center: [-14.4, 14.5], zoom: 6.2,
-             dataPath: "./data/senegal/", layers: [], placeholder: true },
+  // Staged: configured and validated in CI, not yet in COUNTRIES_ENABLED.
+  // Has the outline and the live OSM grid; power plants, industry and data
+  // centres are pending a sourced, coordinate-checked dataset.
+  senegal: {
+    label: "Senegal",
+    iso:   "SN",
+    center: [-14.4, 14.5],
+    zoom:   6.2,
+    bounds: [[-17.6, 12.3], [-11.3, 16.7]],
+    dataPath: "./data/senegal/",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain" },
+    layers: [
+      { id: "oim-grid", file: null, kind: "oim",
+        title: "Transmission grid",
+        source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+        sourceUrl: "https://openinframap.org/",
+        updated: "live" }
+    ]
+  },
   namibia: { label: "Namibia", iso: "NA", center: [17.5, -22.5], zoom: 5.2,
              dataPath: "./data/namibia/", layers: [], placeholder: true }
 };

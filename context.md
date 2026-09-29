@@ -43,6 +43,21 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-09-29 (multi-country)
+Branch `claude/gallant-maxwell-b0ho3a`: the map is now config-driven.
+- Country switch fixed (it crashed and kept Morocco's data on screen).
+- Layers render from `countries.config.js` by `kind`; palettes, boundary
+  credit, footer credits and page text are per country.
+- `scripts/validate-countries.mjs` + `DATA_SCHEMA.md` validate every country
+  in CI; `scripts/test-validate-countries.mjs` self-tests the validator.
+- **Senegal is staged**: config, Natural Earth outline and the live OSM grid,
+  validated but not in `COUNTRIES_ENABLED`. Needs a sourced power-plant list
+  with checked coordinates. WRI GPPD (reachable from cloud sessions via
+  GitHub raw) is unusable as-is: Cap des Biches at 17.72°N (at sea),
+  Sambangalou (unbuilt) listed, no Taïba Ndiaye / Sendou / Malicounda /
+  Karpowership. Cloud sessions can't reach Wikipedia, GEM, Nominatim or Overpass.
+- morocco-grid is superseded by this repo for the map.
+
 ## Session handoff — 2026-09-25
 Merged today: #48 (45-PR consolidation), #56 (redesign: OpenFreeMap basemap,
 data layers that survive font failures, one-line legend, light-mode topbar),

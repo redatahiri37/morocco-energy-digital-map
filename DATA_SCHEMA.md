@@ -39,6 +39,7 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `boundary` | if `boundary.geojson` exists | `{ source, sourceUrl, note }`. This is the provenance of the outline, shown in Methodology. |
 | `palette` | no | `{ providers: [{ key, color, short }], sectors: { "<sector>": "#rrggbb" } }`. `key` matches `operator` in the data. Unlisted values use the default colour. |
 | `snapshotSource` | no | Short credit above the KPI tiles. |
+| `credits` | no | Data credits in the footer. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
 
 Each layer needs `id` (unique within the country, lowercase and dashes),
