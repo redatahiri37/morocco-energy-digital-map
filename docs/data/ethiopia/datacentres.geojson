@@ -1,0 +1,49 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12504",
+    "name": "Raxio, ET1, Addis Ababa, Ethiopia",
+    "operator": "RAXIO DATA CENTRES",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Addis Ababa",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12504"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     38.7792,
+     8.99775
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-13445",
+    "name": "Wingu Addis Ababa",
+    "operator": "Wingu Africa Data Center PLC",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Addis Ababa",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/13445"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     38.84053,
+     8.96604
+    ]
+   }
+  }
+ ]
+}

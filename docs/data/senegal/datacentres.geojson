@@ -1,0 +1,49 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-15730",
+    "name": "PAIX Dakar",
+    "operator": "PAIX Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/15730"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.53,
+     14.74083
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-16913",
+    "name": "ONIX Senegal",
+    "operator": "ONIX Senegal",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Dakar",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/16913"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -17.44638,
+     14.67559
+    ]
+   }
+  }
+ ]
+}

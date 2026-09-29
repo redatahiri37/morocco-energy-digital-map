@@ -1,0 +1,93 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-2159",
+    "name": "Telecom House Kigali",
+    "operator": "Telecom House Kigali",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Kigali",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/2159"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.05885,
+     -1.94995
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-11839",
+    "name": "MTN Centre Kigali",
+    "operator": "MTN Rwandacell",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Kigali",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/11839"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.10344,
+     -1.94069
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12033",
+    "name": "TrAC CDC - B.Secure",
+    "operator": "TransAfrica Communications Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Kigali",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12033"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.08968,
+     -1.94445
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-16223",
+    "name": "AOS Ltd",
+    "operator": "AOS LTD",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Kigali",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/16223"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.09148,
+     -1.9524
+    ]
+   }
+  }
+ ]
+}
