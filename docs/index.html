@@ -12,6 +12,13 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://energy.wattu.org/">
 <link rel="canonical" href="https://energy.wattu.org/">
+<script>
+  // The Cloudflare Pages production address still serves the site; send
+  // visitors to the real domain, keeping any path, query and hash.
+  // Preview deploys (<hash>.atlas-nexus-69o.pages.dev) are left alone.
+  if(location.hostname === "atlas-nexus-69o.pages.dev")
+    location.replace("https://energy.wattu.org" + location.pathname + location.search + location.hash);
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
