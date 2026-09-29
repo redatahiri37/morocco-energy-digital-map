@@ -25,7 +25,8 @@ Short analytical posts on:
 ## Stack
 Static HTML/JS in `docs/` + **MapLibre GL JS 4.7.1** + GeoJSON (no token, no build step)
 Basemap: OpenFreeMap (Positron light / Dark). Grid overlay: OpenInfraMap vector tiles.
-Hosting: Cloudflare Pages project `atlas-nexus` → https://atlas-nexus-69o.pages.dev/
+Hosting: Cloudflare Pages project `atlas-nexus` → https://energy.wattu.org/
+(Pages default address https://atlas-nexus-69o.pages.dev/ redirects there)
 (mirror: https://redatahiri37.github.io/morocco-energy-digital-map/)
 Deploy: automatic — every push to `main` touching `docs/` runs
 `.github/workflows/validate.yml` (validate → deploy with wrangler). Secrets
@@ -90,8 +91,10 @@ Open:
 
 Rules the owner set:
 - Never merge a PR without the owner's explicit OK for that PR.
-- `ainfrastructure.ma` was added to Cloudflare but never registered — ignore it;
-  the site address stays `atlas-nexus-69o.pages.dev`.
+- `ainfrastructure.ma` was added to Cloudflare but never registered — ignore it.
+- 2026-09-29: the map's address is **energy.wattu.org** (owner's domain
+  wattu.org on Cloudflare). The solar tool's address on wattu.org is being
+  decided in another session.
 - Cloud sessions can't reach the live site, tile servers or satellite imagery;
   test with Playwright + vendored MapLibre (morocco-grid `vendor/maplibre-gl`).
 

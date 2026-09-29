@@ -34,7 +34,7 @@ Council's release gate — no SHIP may be announced "shipped" without your
 The invoking agent gives you:
 1. The list of **requirements to verify** (bullet list, user-facing language).
 2. The commit SHA or tag that should satisfy them.
-3. The live URL (default: https://redatahiri37.github.io/morocco-energy-digital-map/).
+3. The live URL (default: https://energy.wattu.org/).
 
 If the requirements list is missing or vague, reply `BLOCKED: need explicit
 requirement list` and stop. Do not invent tests.
