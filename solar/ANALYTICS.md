@@ -1,4 +1,4 @@
-# Atlas Solar — usage analytics
+# Wattu — usage analytics
 
 Before this existed, the tool had **zero** visibility into whether anyone
 used it. Every product decision was opinion. This document describes what

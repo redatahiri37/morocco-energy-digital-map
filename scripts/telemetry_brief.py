@@ -66,7 +66,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--dataset", default="solar_events")
-    ap.add_argument("--label", default="Atlas Solar")
+    ap.add_argument("--label", default="Wattu")
     args = ap.parse_args()
 
     acct = os.environ.get("CF_ACCOUNT_ID")

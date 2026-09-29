@@ -1,4 +1,4 @@
-/* Atlas Solar — usage analytics (cookieless, no PII, self-hosted)
+/* Wattu — usage analytics (cookieless, no PII, self-hosted)
  * ---------------------------------------------------------------
  * Why this exists: until now the tool had zero visibility into whether
  * anyone uses it, where they drop off, or which estimates they actually

@@ -1,11 +1,11 @@
-# Energy × Digital Nexus — Morocco
+# Wattu — Energy × Digital, Morocco
 
 Two live tools at the energy × digital intersection in Morocco:
 
 | Tool | URL | Code |
 |---|---|---|
 | **Infrastructure map** — generation, grid, industrial load, data centers | [energy.wattu.org](https://energy.wattu.org/) | `docs/` |
-| **Atlas Solar** — residential PV production + ROI estimator | [atlas-solar.pages.dev/](https://atlas-solar.pages.dev/) | `solar/` ([docs](solar/README.md)) |
+| **Solar estimator** — residential PV production + ROI estimator | [solar.wattu.org](https://solar.wattu.org/) | `solar/` ([docs](solar/README.md)) |
 
 **The two are infrastructurally independent.** Separate Cloudflare Pages
 projects, separate URLs, no shared CSS or JS — a broken deploy on one cannot

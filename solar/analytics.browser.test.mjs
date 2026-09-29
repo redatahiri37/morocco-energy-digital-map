@@ -1,4 +1,4 @@
-/* Atlas Solar — end-to-end analytics test.
+/* Wattu — end-to-end analytics test.
  *
  * Walks the real funnel in a real browser and asserts that each stage emits
  * the event the report depends on, that no address text or cookie ever

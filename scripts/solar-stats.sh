@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atlas Solar — usage report from the Analytics Engine dataset.
+# Wattu — usage report from the Analytics Engine dataset.
 #
 # Answers the questions that actually feed a product decision:
 #   who shows up, where from, on what device, how far they get, where they
@@ -69,7 +69,7 @@ for r in rows:
 '
 }
 
-echo "Atlas Solar — last ${DAYS} day(s)"
+echo "Wattu — last ${DAYS} day(s)"
 
 q "Daily traffic" "
 SELECT toDate(timestamp) AS day,
