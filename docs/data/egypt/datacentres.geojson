@@ -1,0 +1,115 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-838",
+    "name": "CityNet Host",
+    "operator": "CityNet Telecom",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Tenth of Ramadan",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/838"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.25435,
+     30.09144
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1509",
+    "name": "Ramses Exchange",
+    "operator": "Telecom Egypt",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cairo",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1509"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.24696,
+     30.14597
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1768",
+    "name": "AUTO DATA Center",
+    "operator": "Telecom Egypt",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Alexandria",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1768"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.90199,
+     31.19254
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-8871",
+    "name": "Smart Village Data Center (B90)",
+    "operator": "Telecom Egypt",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Giza",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/8871"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.0207,
+     30.0679
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-9616",
+    "name": "Regional Data Hub (RDH)",
+    "operator": "Telecom Egypt",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Giza",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/9616"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.0207,
+     30.0679
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,159 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1965",
+    "name": "Equinix AC1 - Accra",
+    "operator": "Equinix, Inc.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1965"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.09437,
+     5.80266
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-3850",
+    "name": "PAIX Accra",
+    "operator": "PAIX Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/3850"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.2029,
+     5.57262
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-3990",
+    "name": "K-Net Accra",
+    "operator": "K-Net Ghana",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/3990"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.19187,
+     5.59936
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-3998",
+    "name": "IS Internet Solutions Ghana",
+    "operator": "IS InternetSolutions Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/3998"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.19977,
+     5.55224
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-4004",
+    "name": "NITA data center",
+    "operator": "National Information Technology Agency",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/4004"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.1969,
+     5.55602
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-10468",
+    "name": "ONIX Data Centre Accra",
+    "operator": "ONIX Data Centres (Ghana) Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/10468"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.19639,
+     5.60706
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-14469",
+    "name": "Digital Realty ACR2 - Accra",
+    "operator": "Digital Realty",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Accra",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/14469"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.20642,
+     5.54233
+    ]
+   }
+  }
+ ]
+}

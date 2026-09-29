@@ -1,0 +1,379 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-993",
+    "name": "Digital Realty Lagos (LOS1-2)",
+    "operator": "Digital Realty Lagos",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/993"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.41753,
+     6.42664
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-3039",
+    "name": "Phase3Telecom",
+    "operator": "Phase3 Telecom Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Abuja",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/3039"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.49508,
+     9.09315
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-4361",
+    "name": "NCR-Marina",
+    "operator": "Internet eXchange Point of Nigeria Ltd.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/4361"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.39788,
+     6.44757
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-4411",
+    "name": "Rack Centre Lagos",
+    "operator": "Rack Centre Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Ikeja",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/4411"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.37306,
+     6.59753
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-5094",
+    "name": "Equinix LG1/LG2 – Lagos, Lekki",
+    "operator": "Equinix, Inc.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lekki",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/5094"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.58833,
+     6.4496
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6072",
+    "name": "Broadbased Communications",
+    "operator": "Broadbased Communications Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos Island",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6072"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.39769,
+     6.44606
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-7246",
+    "name": "Swift Networks Lagos",
+    "operator": "Swift Networks Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/7246"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.4211,
+     6.42728
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-8185",
+    "name": "Interconnect Nigeria",
+    "operator": "Internet eXchange Point of Nigeria Ltd.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/8185"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.39746,
+     6.44607
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-8424",
+    "name": "Medallion Abuja",
+    "operator": "Digital Realty Lagos",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Abuja",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/8424"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.47982,
+     9.06959
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-9827",
+    "name": "interconnectnigeria Data Centre",
+    "operator": "Internet eXchange Point of Nigeria Ltd.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Port Harcourt",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/9827"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.00595,
+     4.80593
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-10663",
+    "name": "Ninext Data Center",
+    "operator": "Brainshare Technologies and Services Nigeria Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/10663"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.39755,
+     6.44645
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-11435",
+    "name": "Cloud Exchange West Africa",
+    "operator": "Cloud Exchange West Africa limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/11435"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.43065,
+     6.45586
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-11659",
+    "name": "Africa Data Centres, Lagos LOS1, Nigeria",
+    "operator": "Africa Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/11659"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.41575,
+     6.4105
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12332",
+    "name": "Galaxy Backbone NSSC-Abuja",
+    "operator": "Galaxy Backbone LTD",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Abuja",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12332"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.49271,
+     9.06381
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12860",
+    "name": "OADC LOS1 - Lagos",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12860"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.49812,
+     6.42418
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-15197",
+    "name": "Choice2mobile Technology Ltd",
+    "operator": "De Choicetech Integrated Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Lagos",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/15197"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.36226,
+     6.6361
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-16747",
+    "name": "Digital Realty Lekki (LKK1-2)",
+    "operator": "Digital Realty Lagos",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Ibeju-Lekki",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/16747"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.6465,
+     6.42598
+    ]
+   }
+  }
+ ]
+}

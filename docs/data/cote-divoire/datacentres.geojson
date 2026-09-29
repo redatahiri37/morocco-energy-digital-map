@@ -1,0 +1,115 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6246",
+    "name": "PAIX Abidjan",
+    "operator": "PAIX Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Abidjan",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6246"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.97329,
+     5.35585
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12168",
+    "name": "Equinix AB1 - Abidjan",
+    "operator": "Equinix, Inc.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Grand Bassam",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12168"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.75778,
+     5.23035
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-15354",
+    "name": "DATACONNECT COTE D'IVOIRE",
+    "operator": "DATACONNECT COTE D'IVOIRE",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Abidjan",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/15354"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.00167,
+     5.35444
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-15642",
+    "name": "Raxio, CIV1, Abidjan, Côte d’Ivoire",
+    "operator": "RAXIO DATA CENTRES",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Zone Franche, VITIB,",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/15642"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.75778,
+     5.23035
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-15646",
+    "name": "Datacenter service Abidjan CIV01",
+    "operator": "ST Digital",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Grand Bassam",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/15646"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.75778,
+     5.23035
+    ]
+   }
+  }
+ ]
+}

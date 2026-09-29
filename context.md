@@ -52,9 +52,14 @@ each checked against the outline (1 held out: Rusizi I, DRC side of the
 border) + live OSM plants and grid. Senegal's hand list is untouched (the
 script would catch Cap des Biches 174 km at sea). New fuels: nuclear,
 geothermal, biomass, waste.
-**No data centres yet for these countries.** PeeringDB (open facility
-registry with coordinates) is blocked from cloud sessions; owner to allow
-peeringdb.com in the environment's network settings or supply lists.
+Data centres: 77 sites from a PeeringDB facility export the owner saved
+from Chrome (peeringdb.com is blocked from cloud sessions), built with
+`scripts/build-datacentres-peeringdb.py` (needs `pip install geonamescache`).
+4 held out (GPX Cairo 1 pinned in Alexandria, CYNOX-KANO, a duplicate Icolo,
+Strand Exchange). Morocco keeps its curated layer; its 5 PeeringDB sites
+were not merged. To refresh: open
+https://www.peeringdb.com/api/fac?country__in=ZA,NG,KE,EG,GH,CI,RW,ET,SN
+save as JSON, rerun the script.
 GPPD is thin for Nigeria (13 plants) and Ghana (6); KPIs say "WRI GPPD 2021".
 
 ## Session handoff — 2026-09-29 (multi-country)

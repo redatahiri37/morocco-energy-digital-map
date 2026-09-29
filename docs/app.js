@@ -78,13 +78,17 @@
     const p = (COUNTRIES[currentCountry] || {}).palette || {};
     return { providers: p.providers || [], sectors: p.sectors || {} };
   }
+  // An empty palette must yield a plain colour: ["case", fallback] is not a
+  // valid expression, and MapLibre then drops the layer with only a warning.
   function providerColorExpr(){
+    if(!palette().providers.length) return DIGITAL_COLOR;
     const expr = ["case"];
     palette().providers.forEach(p => { expr.push(["==",["get","operator"], p.key], p.color); });
     expr.push(DIGITAL_COLOR); // default
     return expr;
   }
   function sectorColorExpr(){
+    if(!Object.keys(palette().sectors).length) return INDUSTRIAL_COLOR;
     const expr = ["case"];
     Object.entries(palette().sectors).forEach(([k,v])=>{
       expr.push(["==",["get","sector"],k], v);
@@ -346,16 +350,21 @@
     const dcInvest = fcDC.features.reduce((s,f)=>s + (f.properties.investment_usd || 0), 0);
     // A country with no layer of a kind shows "—", not a zero that reads as a finding.
     const hasPower = fcPower.features.length > 0, hasDC = fcDC.features.length > 0;
+    // Registries such as PeeringDB list sites without MW or investment
+    // figures: show the site count and "—" rather than 0.0 GW / $0.
+    const hasDCmw = fcDC.features.some(f=>f.properties.capacity_estimate_mw != null);
+    const hasDCinv = fcDC.features.some(f=>f.properties.investment_usd != null);
     const NA = "—";
     host.innerHTML = `
       <div class="kpi"><div class="k">Tracked capacity</div>
         <div class="v">${hasPower ? `${(totalMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
       <div class="kpi"><div class="k">Renewables share*</div>
         <div class="v">${hasPower ? `${renewShare}<small>%</small>` : NA}</div></div>
-      <div class="kpi"><div class="k">DC pipeline</div>
-        <div class="v">${hasDC ? `${(dcMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
+      <div class="kpi"><div class="k">${hasDC && !hasDCmw ? "Data centres" : "DC pipeline"}</div>
+        <div class="v">${!hasDC ? NA : hasDCmw ? `${(dcMW/1000).toFixed(1)}<small> GW</small>`
+                                               : `${fcDC.features.length}<small> sites</small>`}</div></div>
       <div class="kpi"><div class="k">DC investment</div>
-        <div class="v">${hasDC ? fmtInvestment(dcInvest) : NA}</div></div>
+        <div class="v">${hasDCinv ? fmtInvestment(dcInvest) : NA}</div></div>
     `;
   }
 

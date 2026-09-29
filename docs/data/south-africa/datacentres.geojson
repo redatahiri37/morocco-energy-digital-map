@@ -1,0 +1,599 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-760",
+    "name": "OADC CPT3 - Cape Town",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cape Town",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/760"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.42057,
+     -33.9186
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-850",
+    "name": "Teraco Johannesburg Campus, South Africa",
+    "operator": "Teraco Data Environments Pty Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Johannesburg",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/850"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.19752,
+     -26.13796
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1225",
+    "name": "Teraco CT1 Cape Town, South Africa",
+    "operator": "Teraco Data Environments Pty Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cape Town",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1225"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.46522,
+     -33.97087
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1289",
+    "name": "Teraco DB1 Durban, South Africa",
+    "operator": "Teraco Data Environments Pty Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Durban",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1289"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.99013,
+     -29.78337
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1301",
+    "name": "Bunker One",
+    "operator": "Bunker One Management",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Midrand",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1301"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.12549,
+     -25.99741
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-2031",
+    "name": "SEACOM Mtunzini CLS",
+    "operator": "SEACOM Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Mtunzini",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/2031"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.75838,
+     -28.96024
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-2172",
+    "name": "xneelo JNB1 (Formerly Hetzner SA)",
+    "operator": "xneelo (Formerly Hetzner SA)",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Centurion",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/2172"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.14075,
+     -25.92762
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-3417",
+    "name": "Beonline 24/7",
+    "operator": "BEONLINE TWENTY FOUR SEVEN INTERNET GROUP",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Groot Drakenstein",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/3417"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.97262,
+     -33.83924
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-3625",
+    "name": "OADC, Umhlanga",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Durban",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/3625"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.06768,
+     -29.72614
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-4511",
+    "name": "OADC - Parklands",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Johannesburg",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/4511"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.03697,
+     -26.14614
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-5716",
+    "name": "Africa Data Centres, Cape Town CPT1, South Africa",
+    "operator": "Africa Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cape Town",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/5716"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.4772,
+     -34.03736
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-5719",
+    "name": "Africa Data Centres, Johannesburg JHB1, South Africa",
+    "operator": "Africa Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Midrand",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/5719"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.11895,
+     -26.01056
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6837",
+    "name": "Teraco Johannesburg Bredell Campus",
+    "operator": "Teraco Data Environments Pty Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Johannesburg",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6837"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.27846,
+     -26.07414
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-9338",
+    "name": "Africa Data Centres, Johannesburg JHB2, South Africa",
+    "operator": "Africa Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Samrand",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/9338"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.13842,
+     -25.93054
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-10265",
+    "name": "Digital Parks - Samrand",
+    "operator": "Digital Parks Africa (PTY) LTD",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Samrand",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/10265"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.16306,
+     -25.91459
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-11044",
+    "name": "Reflex Solutions",
+    "operator": "Reflex Solutions (Pty) Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Johannesburg",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/11044"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.0355,
+     -26.13406
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-11298",
+    "name": "NTT Johannesburg 1 Data Center (JOH1)",
+    "operator": "NTT DATA's Global Data Centers division",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Centurion",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/11298"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.14055,
+     -25.92066
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12652",
+    "name": "ICTGlobe Centurion",
+    "operator": "ICTGlobe Management (Pty) Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Centurion",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12652"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.18459,
+     -25.88246
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12861",
+    "name": "OADC JNB1 - Johannesburg",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Johannesburg",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12861"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.1991,
+     -26.13608
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12862",
+    "name": "OADC DUR1 - Durban",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Durban",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12862"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.0292,
+     -29.8579
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-12863",
+    "name": "OADC CPT1 - Cape Town",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cape Town",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/12863"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.47689,
+     -33.95948
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-13550",
+    "name": "OADC, Port Elizabeth",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Gqeberha",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/13550"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.57411,
+     -33.9508
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-13947",
+    "name": "OADC CPT2 - Brackenfell",
+    "operator": "Open Access Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cape Town",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/13947"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.42322,
+     -33.92584
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-13972",
+    "name": "NTT Data (MEA) - Johannesburg 1 Data Center (JOH1)",
+    "operator": "NTT DATA, Middle East and Africa (MEA)",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Centurion",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/13972"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.14397,
+     -25.92064
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-14016",
+    "name": "Dolphin Coast Wireless & Fiber Solutions",
+    "operator": "Dolphin Coast Wireless Pty Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Ballito",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/14016"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.21387,
+     -29.53543
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-14858",
+    "name": "Teraco CT2 Cape Town, South Africa",
+    "operator": "Teraco Data Environments Pty Ltd",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Cape Town",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/14858"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.67913,
+     -33.90732
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-15356",
+    "name": "Equinix JN1 - Johannesburg",
+    "operator": "Equinix, Inc.",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Johannesburg",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/15356"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.1984,
+     -26.1562
+    ]
+   }
+  }
+ ]
+}

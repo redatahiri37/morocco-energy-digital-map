@@ -1,0 +1,291 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1648",
+    "name": "SEACOM Mombasa CLS",
+    "operator": "SEACOM Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Mombasa",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1648"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.66359,
+     -4.05466
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-1964",
+    "name": "Africa Data Centres, Nairobi NBO1, Kenya",
+    "operator": "Africa Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Nairobi",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/1964"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.89653,
+     -1.34014
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-4533",
+    "name": "SimbaNET Nairobi",
+    "operator": "SimbaNET Comm Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Gateway Business Park",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/4533"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.84961,
+     -1.3258
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-5019",
+    "name": "icolo.io Mombasa One (MBA1)",
+    "operator": "icolo",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Miritini",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/5019"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.59039,
+     -4.00774
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-5802",
+    "name": "Africa Digital Data Center - Thika",
+    "operator": "Safaricom Limited",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Thika",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/5802"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.06933,
+     -1.03326
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6448",
+    "name": "icolo.io Nairobi One (NBO1)",
+    "operator": "icolo",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Karen",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6448"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.74923,
+     -1.35008
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6929",
+    "name": "Telkom - Milimani Data Center - Nairobi",
+    "operator": "Telkom Kenya",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Nairobi",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6929"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.80529,
+     -1.29017
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6930",
+    "name": "Telkom - Telephone House - Mombasa",
+    "operator": "Telkom Kenya",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Mombasa",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6930"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.65717,
+     -4.06081
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-6931",
+    "name": "Telkom - Telephone House - Nairobi",
+    "operator": "Telkom Kenya",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Nairobi",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/6931"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.81771,
+     -1.28086
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-7995",
+    "name": "PAIX Nairobi",
+    "operator": "PAIX Data Centres",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Nairobi",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/7995"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.81322,
+     -1.29994
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-10232",
+    "name": "icolo.io Mombasa Two (MBA2)",
+    "operator": "icolo",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Nyali",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/10232"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.70014,
+     -4.04209
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-13572",
+    "name": "iXAfrica NBOX1 (Nairobi X One)",
+    "operator": "IXAfrica Data Centre",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Nairobi",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/13572"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.88917,
+     -1.33215
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-14166",
+    "name": "icolo.io Nairobi Two (NBO2)",
+    "operator": "icolo",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Karen",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/14166"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.75208,
+     -1.35255
+    ]
+   }
+  }
+ ]
+}
