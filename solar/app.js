@@ -1,4 +1,4 @@
-/* Atlas Solar — Morocco residential PV estimator
+/* Wattu — Morocco residential PV estimator
  * ------------------------------------------------
  * Modules:
  *   CONFIG        constants that are easy to update (tariffs, cost, CO2, etc.)

@@ -7,7 +7,7 @@ import worker from "./worker.js";
 
 const written = [];
 const env = { SOLAR_ANALYTICS: { writeDataPoint: (d) => written.push(d) } };
-const ORIGIN = "https://atlas-solar.pages.dev";
+const ORIGIN = "https://solar.wattu.org";
 const post = (body) => new Request("https://w.dev/e", {
   method: "POST", headers: { Origin: ORIGIN, "content-type": "text/plain" }, body,
 });

@@ -1,8 +1,8 @@
-/* solar-pvgis — Cloudflare Worker proxying PVGIS v5.2 for Atlas Solar.
+/* solar-pvgis — Cloudflare Worker proxying PVGIS v5.2 for Wattu's solar tool.
  *
  * Contract:
  *   GET /pvcalc?lat=..&lon=..&peakpower=..&loss=..&angle=..&aspect=..&mountingplace=..&outputformat=json
- *   → JRC JSON verbatim, CORS-scoped to the Atlas Nexus origins, edge-cached 24 h.
+ *   → JRC JSON verbatim, CORS-scoped to the Wattu origins, edge-cached 24 h.
  *   Errors → { "error": "<message fr>", "status": <code> } with matching HTTP status.
  *
  *   POST /e  { sid, ev: [{ e, t, ... }] }
@@ -15,6 +15,8 @@
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 
 const ALLOWED_ORIGINS = [
+  "https://solar.wattu.org",             // solar tool — custom domain
+  "https://energy.wattu.org",            // map — custom domain
   "https://atlas-solar.pages.dev",       // solar tool — its own Pages project
   "https://atlas-nexus-69o.pages.dev",   // map (kept: /solar/ 301s from here)
   "https://redatahiri37.github.io",

@@ -1,19 +1,19 @@
-# Atlas Solar — Morocco residential PV estimator
+# Wattu — Morocco residential PV estimator
 
 Two-step web tool: user enters an address → gets instant production + ROI estimate → refines with sliders. Static site, no backend runtime.
 
-**Live: https://atlas-solar.pages.dev**
+**Live: https://solar.wattu.org** (Pages default: atlas-solar.pages.dev)
 
 ## Deployment independence
 
-This tool is **infrastructurally independent** from the Atlas Nexus
+This tool is **infrastructurally independent** from the Wattu
 infrastructure map, even though both live in this repo:
 
-| | Atlas Solar | Infrastructure map |
+| | Solar tool | Infrastructure map |
 |---|---|---|
 | Source | `solar/` | `docs/` |
 | Pages project | `atlas-solar` | `atlas-nexus` |
-| URL | atlas-solar.pages.dev | atlas-nexus-69o.pages.dev |
+| URL | solar.wattu.org | energy.wattu.org |
 | Deploy | `wrangler pages deploy solar --project-name=atlas-solar` | automatic on push to `main` (GitHub Actions) |
 
 A broken deploy on one **cannot** take the other down. They share no CSS
@@ -31,7 +31,7 @@ The map links to this tool and vice versa, but only by absolute URL. The old
 ```
 solar/          (repo root — its own Cloudflare Pages project)
 ├── index.html       Page shell — two <section class="step"> views
-├── style.css        Atlas Nexus brand (navy #001F4D / orange #FF6B35)
+├── style.css        Wattu brand (navy #001F4D / orange #FF6B35)
 ├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
 ├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
 └── README.md
@@ -89,7 +89,7 @@ The deploy output prints the live URL. Currently deployed at
 
 ## Long-term architecture
 
-This module is a template for future single-purpose tools under Atlas Nexus:
+This module is a template for future single-purpose tools under Wattu:
 
 ```
 /                    → main map (existing)
