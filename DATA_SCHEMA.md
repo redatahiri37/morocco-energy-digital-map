@@ -115,3 +115,13 @@ Data centres and submarine-cable landings. Points.
 
 The OpenInfraMap live grid (OSM data, worldwide). No file: set `file: null`.
 It needs no data from us, so any country can include it.
+
+## `oim-plants`
+
+OpenStreetMap power plants, live from OpenInfraMap's `power_plant_point`
+tile layer (name, output in MW, fuel, construction, disused, start date).
+No file: set `file: null`. It covers every country, but OpenInfraMap thins
+it by size at low zoom (all plants from zoom 8), so it is not counted in the
+KPI tiles. Those come from the curated `power` layer. The two layers overlap
+where both know a plant; set `visible: false` to start this one unticked.
+Errors in it are fixed on OpenStreetMap; the popup links there.

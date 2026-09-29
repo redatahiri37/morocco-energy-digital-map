@@ -20,7 +20,8 @@ const DOCS = join(ROOT, "docs");
 // The schema. DATA_SCHEMA.md documents exactly this; the drift check at the
 // bottom fails if a required field below is missing from that document.
 // ---------------------------------------------------------------------------
-const KINDS = ["power", "grid", "industrial", "digital", "oim"];
+const KINDS = ["power", "grid", "industrial", "digital", "oim", "oim-plants"];
+const LIVE_KINDS = ["oim", "oim-plants"];  // OpenInfraMap tiles, no file
 
 const POINT_STATUS = ["operational", "construction", "announced", "planned", "idle"];
 // The grid renderer only draws these three; any other status is invisible.
@@ -136,7 +137,8 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     for (const f of ["title", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
     if (!/^https:\/\//.test(L.sourceUrl || "")) fail(lat, "sourceUrl must be an https URL");
 
-    if (L.kind === "oim") { if (L.file) fail(lat, "oim layers take file: null"); continue; }
+    if (L.visible !== undefined && typeof L.visible !== "boolean") fail(lat, "visible must be true or false");
+    if (LIVE_KINDS.includes(L.kind)) { if (L.file) fail(lat, `${L.kind} layers take file: null`); continue; }
     if (!str(L.file)) { fail(lat, "file missing"); continue; }
     referenced.add(L.file);
     const path = join(dir, L.file);

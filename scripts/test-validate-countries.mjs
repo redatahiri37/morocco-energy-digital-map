@@ -28,6 +28,8 @@ const MA = "docs/data/morocco";
 const cases = [
   ["unknown layer kind", /unknown kind "points"/,
     (d) => config(d, `window.COUNTRIES.morocco.layers[0].kind = "points";`)],
+  ["file on a live layer", /oim-plants layers take file: null/,
+    (d) => config(d, `window.COUNTRIES.morocco.layers.find(L => L.kind === "oim-plants").file = "x.geojson";`)],
   ["duplicate layer id", /duplicate layer id/,
     (d) => config(d, `window.COUNTRIES.morocco.layers[1].id = window.COUNTRIES.morocco.layers[0].id;`)],
   ["missing data file", /does not exist/,

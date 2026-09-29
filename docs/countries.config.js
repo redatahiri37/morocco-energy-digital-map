@@ -13,6 +13,8 @@
 //   industrial  industrial consumers — coloured by palette.sectors
 //   digital     data centres + cable landings — coloured by palette.providers
 //   oim         OpenInfraMap live grid tiles (worldwide; file: null)
+//   oim-plants  OpenInfraMap live OSM power plants (worldwide; file: null).
+//               Not counted in the KPIs; `visible: false` starts it unticked.
 // Layer ids must be unique within a country; map ids derive from them.
 //
 // Optional per country:
@@ -66,6 +68,11 @@ window.COUNTRIES = {
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
         sourceUrl: "https://openinframap.org/",
         updated: "live" },
+      { id: "osm-plants", file: null, kind: "oim-plants", visible: false,
+        title: "OSM power plants",
+        source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+        sourceUrl: "https://openinframap.org/",
+        updated: "live" },
       { id: "interconnectors", file: "interconnectors.geojson", kind: "grid",
         title: "Interconnectors",
         source: "REE · ONEE · editorial overlay on OpenInfraMap",
@@ -113,6 +120,11 @@ window.COUNTRIES = {
         source: "Owner-supplied list (compiled with ChatGPT), not yet checked against primary sources",
         sourceUrl: "https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/docs/data/senegal/power-plants.geojson",
         updated: "2026-09" },
+      { id: "osm-plants", file: null, kind: "oim-plants",
+        title: "OSM power plants",
+        source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+        sourceUrl: "https://openinframap.org/",
+        updated: "live" },
       { id: "oim-grid", file: null, kind: "oim",
         title: "Transmission grid",
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",

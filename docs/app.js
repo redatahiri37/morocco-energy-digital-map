@@ -94,7 +94,8 @@
   // layer and source id is derived from the config layer id, so any number
   // of layers of any kind can coexist and nothing here names a Moroccan file.
   // The order is the draw order, bottom to top.
-  const KINDS = ["oim", "grid", "power", "industrial", "digital"];
+  const KINDS = ["oim", "oim-plants", "grid", "power", "industrial", "digital"];
+  const LIVE_KINDS = ["oim", "oim-plants"]; // drawn from OpenInfraMap tiles, no file
 
   // Rebuilt by buildMapLayers(): map layer id → { dataLayerId, kind, src, role }.
   // role "point" / "line" get hover + click, "cluster" zooms in on click.
@@ -257,7 +258,7 @@
     } catch(e){ /* no boundary for this country */ }
 
     const promises = c.layers.map(async (L, idx)=>{
-      vis[L.id] = true;
+      vis[L.id] = L.visible !== false;
       if(!L.file) return; // OIM or other virtual layers — no fetch needed
       try{
         const res = await fetch(c.dataPath + L.file);
@@ -292,6 +293,7 @@
         kind==="grid"       ? INTERCONNECTOR_COLOR() :
         kind==="power"      ? FUEL_COLOR.solar :
         kind==="oim"        ? "#8a877c" :
+        kind==="oim-plants" ? OSM_PLANT_SWATCH :
         kind==="industrial" ? INDUSTRIAL_COLOR :
         kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
@@ -307,7 +309,7 @@
         <span class="check"></span>
         ${swatch}
         <span class="layer-name">${escapeHtml(L.title)}</span>
-        <span class="layer-count">${kind==="oim" ? "live" : fc.features.length}</span>
+        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : fc.features.length}</span>
       `;
       row.querySelector("input").addEventListener("change", (e)=>{
         const on = e.target.checked;
@@ -424,6 +426,7 @@
     };
     const builders = {
       oim:        (L)=>buildOimLayer(L),
+      "oim-plants": (L)=>buildOimPlantsLayer(L),
       grid:       (L)=>buildLineLayer(L, layerData[L.id] || { features:[] }),
       power:      (L)=>buildPowerLayer(L, layerData[L.id] || { features:[] }),
       industrial: (L)=>buildIndustrialLayer(L, layerData[L.id] || { features:[] }),
@@ -446,14 +449,21 @@
   // substations and plants. Free, ODbL, no API key, worldwide: the same
   // layer works for every country. Drawn below all editorial features so
   // our announced/planned overlays stay on top.
-  function buildOimLayer(L){
-    const src = "src-" + L.id, p = "lyr-" + L.id;
-    addOrReplace(src, {
+  // One OpenInfraMap tile source, shared by the grid and plant layers.
+  const OIM_SRC = "src-oim-tiles";
+  function ensureOimSource(){
+    if(map.getSource(OIM_SRC)) return;
+    map.addSource(OIM_SRC, {
       type: "vector",
       tiles: [OIM_TILES],
       minzoom: 0, maxzoom: 17,
       attribution: OIM_ATTR
     });
+  }
+
+  function buildOimLayer(L){
+    const src = OIM_SRC, p = "lyr-" + L.id;
+    ensureOimSource();
 
     // Lines — styled by voltage. OIM exposes a numeric `voltage` (volts).
     // Non-numeric / multi-voltage tags coerce to 0 and fall into LV.
@@ -494,6 +504,49 @@
         "circle-stroke-width":0.5
       }
     });
+  }
+
+  // OpenStreetMap power plants, live from OpenInfraMap's power_plant_point
+  // layer: every plant OSM mappers have traced, in any country. OIM thins it
+  // by size at low zoom (all plants from zoom 8; >250 MW from 7, >500 MW
+  // from 6), so it can't feed the KPI totals; those come from the curated
+  // `power` layer, drawn above this one.
+  // Tile fields: name, output (MW), source (first fuel), construction,
+  // disused, start_date.
+  const OSM_PLANT_SWATCH = "#b8b4a8";
+  const OSM_FUEL = { solar:"solar", wind:"wind", hydro:"hydro", coal:"coal",
+                     gas:"gas", oil:"oil", diesel:"oil" };
+  function buildOimPlantsLayer(L){
+    ensureOimSource();
+    const fuelExpr = ["match", ["get","source"]];
+    Object.entries(OSM_FUEL).forEach(([osm, fuel])=>fuelExpr.push(osm, FUEL_COLOR[fuel]));
+    fuelExpr.push(OSM_PLANT_SWATCH);
+    addLayer(L, {
+      id: "lyr-" + L.id + "-points", type:"circle", source: OIM_SRC, "source-layer":"power_plant_point",
+      paint:{
+        "circle-color": fuelExpr,
+        "circle-radius":["interpolate",["linear"],["coalesce",["get","output"],0], 0,3.5, 50,5, 300,8, 1000,11],
+        "circle-opacity":0.75,
+        "circle-stroke-color": isDark() ? "rgba(241,239,233,0.8)" : "rgba(24,24,26,0.7)",
+        "circle-stroke-width":1
+      }
+    }, "point");
+  }
+
+  // Maps an OpenInfraMap plant's tile fields onto the curated power schema,
+  // so the tooltip and popup render it like any other plant.
+  function osmPlantProps(p, f){
+    const [lng, lat] = f.geometry.coordinates;
+    return {
+      name: p.name || "Unnamed plant (OSM)",
+      capacity_mw: typeof p.output === "number" ? Math.round(p.output * 10) / 10 : null,
+      fuel_type: OSM_FUEL[p.source] || p.source || "unknown",
+      status: p.construction ? "construction" : p.disused ? "idle" : "operational",
+      commissioning_year: p.start_date || null,
+      source: "OpenStreetMap contributors via OpenInfraMap",
+      source_url: `https://openinframap.org/#14/${lat.toFixed(5)}/${lng.toFixed(5)}`,
+      osm: true
+    };
   }
 
   // Country outline from <dataPath>/boundary.geojson, if the country has one.
@@ -827,8 +880,9 @@
 
   // ---------- Tooltip ----------
   function showPointTooltip(dataLayerId, f, point){
-    const p = f.properties || {};
-    const kind = layerKind(dataLayerId);
+    let p = f.properties || {};
+    let kind = layerKind(dataLayerId);
+    if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     let metric = "", dot = "";
     if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${p.fuel_type || ""}`;
     else if(kind === "industrial") metric = `${p.sector || ""} · est. ${fmtCap(p.estimated_demand_mw)}`;
@@ -871,10 +925,11 @@
 
   // ---------- Popup ----------
   function openPointPopup(dataLayerId, f){
-    const p = f.properties || {};
-    const kind = layerKind(dataLayerId);
+    let p = f.properties || {};
+    let kind = layerKind(dataLayerId);
+    if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     const badgeClass = kind === "power" ? "power" : kind === "industrial" ? "industrial" : kind === "digital" ? "digital" : "grid";
-    const badgeLabel = kind === "power" ? "Generation"
+    const badgeLabel = kind === "power" ? (p.osm ? "Generation · OpenStreetMap" : "Generation")
                      : kind === "industrial" ? "Industrial consumer"
                      : kind === "digital" ? (p.category === "cable_landing" ? "Submarine cable" : "Data center")
                      : "Infrastructure";
@@ -923,8 +978,12 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent(COUNTRIES[currentCountry].label + ' map — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+(p.id || p.name)+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
-        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}
+        ${p.osm
+          // OSM data is fixed at the source, where every map using it benefits.
+          ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">View on OpenInfraMap ↗</a>
+             <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
+          : `<a href="${REPO_URL}/issues/new?title=${encodeURIComponent(COUNTRIES[currentCountry].label + ' map — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+(p.id || p.name)+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
+        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
