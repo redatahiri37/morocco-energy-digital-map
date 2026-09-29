@@ -93,8 +93,9 @@ Rules the owner set:
 - Never merge a PR without the owner's explicit OK for that PR.
 - `ainfrastructure.ma` was added to Cloudflare but never registered — ignore it.
 - 2026-09-29: the map's address is **energy.wattu.org** (owner's domain
-  wattu.org on Cloudflare). The solar tool's address on wattu.org is being
-  decided in another session.
+  wattu.org on Cloudflare). The solar tool is at **solar.wattu.org**.
+- 2026-09-29: the project's public name is **Wattu** (was Atlas Nexus / Atlas
+  Solar). Cloudflare Pages project names `atlas-nexus` / `atlas-solar` stay.
 - Cloud sessions can't reach the live site, tile servers or satellite imagery;
   test with Playwright + vendored MapLibre (morocco-grid `vendor/maplibre-gl`).
 
