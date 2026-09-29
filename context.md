@@ -44,6 +44,19 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-09-29 (African DC markets)
+Added South Africa, Nigeria, Kenya, Egypt, Ghana, Côte d'Ivoire, Rwanda and
+Ethiopia with `scripts/build-country-open-data.py`: Natural Earth outline +
+WRI Global Power Plant Database v1.3 (2021, CC BY 4.0, unmaintained) plants,
+each checked against the outline (1 held out: Rusizi I, DRC side of the
+border) + live OSM plants and grid. Senegal's hand list is untouched (the
+script would catch Cap des Biches 174 km at sea). New fuels: nuclear,
+geothermal, biomass, waste.
+**No data centres yet for these countries.** PeeringDB (open facility
+registry with coordinates) is blocked from cloud sessions; owner to allow
+peeringdb.com in the environment's network settings or supply lists.
+GPPD is thin for Nigeria (13 plants) and Ghana (6); KPIs say "WRI GPPD 2021".
+
 ## Session handoff — 2026-09-29 (multi-country)
 Branch `claude/gallant-maxwell-b0ho3a`: the map is now config-driven.
 - Country switch fixed (it crashed and kept Morocco's data on screen).

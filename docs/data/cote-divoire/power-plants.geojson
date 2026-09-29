@@ -1,0 +1,165 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042570",
+    "name": "Azito OCGT Power Plant Ivory Coast",
+    "capacity_mw": 294.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.0763,
+     5.3015
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042576",
+    "name": "Taabo Hydroelectric Power Plant Cote dIvoire",
+    "capacity_mw": 210.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.0829,
+     6.2093
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042574",
+    "name": "Vridi CIPREL OCGT Power Plant Cote DIvoire",
+    "capacity_mw": 210.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.0096,
+     5.2612
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042577",
+    "name": "Kossou Hydroelectric Power Plant Cote dIvoire",
+    "capacity_mw": 174.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.473,
+     7.0304
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042575",
+    "name": "Buyo Hydroelectric Power Plant Cote dIvoire",
+    "capacity_mw": 165.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.0453,
+     6.2422
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042573",
+    "name": "Centrale Vridi OCGT Power Plant Cote DIvoire",
+    "capacity_mw": 100.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.0079,
+     5.2579
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042578",
+    "name": "Ayame (Ayme) II Hydroelectric Power Plant Cote dIvoire",
+    "capacity_mw": 30.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.1591,
+     5.5819
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "GEODB0042579",
+    "name": "Ayame (Ayme) I Hydroelectric Power Plant Cote dIvoire",
+    "capacity_mw": 20.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GEODB",
+    "source_url": "http://globalenergyobservatory.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.1691,
+     5.6058
+    ]
+   }
+  }
+ ]
+}

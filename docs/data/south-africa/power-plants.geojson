@@ -1,0 +1,2267 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000125",
+    "name": "Kendal power station",
+    "capacity_mw": 4116.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1990,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.9689,
+     -26.088
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000129",
+    "name": "Majuba power station",
+    "capacity_mw": 4110.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/OurCompany/PhotoGallery/Pages/Eskom_Power_Stations.aspx",
+    "commissioning_year": 1999,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.7706,
+     -27.0955
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000130",
+    "name": "Matimba power station",
+    "capacity_mw": 3990.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1989,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.6128,
+     -23.6678
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000128",
+    "name": "Lethabo power station",
+    "capacity_mw": 3708.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1987,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.975,
+     -26.7403
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000135",
+    "name": "Tutuka power station",
+    "capacity_mw": 3654.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1987,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.3527,
+     -26.7767
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000119",
+    "name": "Duvha power station",
+    "capacity_mw": 3600.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1982,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.3409,
+     -25.9595
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000131",
+    "name": "Matla power station",
+    "capacity_mw": 3600.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1981,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.1423,
+     -26.2804
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000127",
+    "name": "Kriel power station",
+    "capacity_mw": 3000.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1978,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.1801,
+     -26.254
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000117",
+    "name": "Arnot power station",
+    "capacity_mw": 2352.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1973,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.7917,
+     -25.9444
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000124",
+    "name": "Hendrina power station",
+    "capacity_mw": 2000.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1973,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.6014,
+     -26.0314
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000137",
+    "name": "Koeberg",
+    "capacity_mw": 1800.0,
+    "fuel_type": "nuclear",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/Whatweredoing/ElectricityGeneration/KoebergNuclearPowerStation/Pages/Koeberg_Power_Station.aspx",
+    "commissioning_year": 1984,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.4281,
+     -33.6737
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000118",
+    "name": "Camden power station",
+    "capacity_mw": 1600.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1968,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.0911,
+     -26.6201
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000116",
+    "name": "Ankerlig",
+    "capacity_mw": 1327.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/Whatweredoing/ElectricityGeneration/PowerStations/Pages/Ankerlig.aspx",
+    "commissioning_year": 2007,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.4607,
+     -33.592
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000123",
+    "name": "Grootvlei power station",
+    "capacity_mw": 1190.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1972,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.4995,
+     -26.7695
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000120",
+    "name": "Drakensberg",
+    "capacity_mw": 1000.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/OurCompany/PhotoGallery/Pages/Eskom_Power_Stations.aspx",
+    "commissioning_year": 1981,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.0842,
+     -28.5651
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000126",
+    "name": "Komati Power Station",
+    "capacity_mw": 1000.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1963,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.4725,
+     -26.0899
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061281",
+    "name": "Kusile Power Station",
+    "capacity_mw": 794.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 2018,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.9156,
+     -25.9194
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000122",
+    "name": "Gourikwa",
+    "capacity_mw": 740.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/OurCompany/PhotoGallery/Pages/Eskom_Power_Stations.aspx",
+    "commissioning_year": 2007,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     21.9608,
+     -34.1653
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1075860",
+    "name": "Kelvin power station",
+    "capacity_mw": 600.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1964,
+    "operator": "Aldwych International Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.194,
+     -26.1158
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000132",
+    "name": "Palmiet",
+    "capacity_mw": 400.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/OurCompany/PhotoGallery/Pages/Eskom_Power_Stations.aspx",
+    "commissioning_year": 1988,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.9736,
+     -34.1972
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000121",
+    "name": "Gariep",
+    "capacity_mw": 360.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/OurCompany/PhotoGallery/Pages/Eskom_Power_Stations.aspx",
+    "commissioning_year": 1971,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.504,
+     -30.624
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1075862",
+    "name": "Rooiwal power station",
+    "capacity_mw": 300.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1966,
+    "operator": "Tshwane Electricity Division"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.2376,
+     -25.555
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000136",
+    "name": "Vanderkloof",
+    "capacity_mw": 240.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/sites/heritage/Pages/VANDERKLOOF-POWER-STATION.aspx",
+    "commissioning_year": 1977,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.7338,
+     -29.9934
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1075861",
+    "name": "Pretoria West power station",
+    "capacity_mw": 180.0,
+    "fuel_type": "coal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · GCPT",
+    "source_url": "https://endcoal.org/global-coal-plant-tracker/",
+    "commissioning_year": 1952
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.1467,
+     -25.7584
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000115",
+    "name": "Acacia",
+    "capacity_mw": 171.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/Whatweredoing/ElectricityGeneration/PowerStations/Pages/Acacia_Power_Station.aspx",
+    "commissioning_year": 1976,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.5336,
+     -33.8841
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000133",
+    "name": "Port Rex",
+    "capacity_mw": 171.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/Whatweredoing/ElectricityGeneration/PowerStations/Pages/Port_Rex_Power_Station.aspx",
+    "commissioning_year": 1976,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.8838,
+     -33.0274
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061284",
+    "name": "Longyuan Mulilo Green Energy De Aar 2 North Wind Energy Facility",
+    "capacity_mw": 144.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Mulilo",
+    "source_url": "http://mulilo.com/Projects/longyuan-mulilo-de-aar-2-north/",
+    "commissioning_year": 2017,
+    "operator": "Longyuan South Africa Renewables / Mulilo"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.26,
+     -30.5411
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061278",
+    "name": "Khobab Wind",
+    "capacity_mw": 140.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Khobab Wind Farm",
+    "source_url": "https://khobabwind.co.za/",
+    "operator": "Lekela POwer"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.5233,
+     -30.4642
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061282",
+    "name": "Loeriesfontein 2",
+    "capacity_mw": 140.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Loeriesfontein Wind Farm",
+    "source_url": "https://loeriesfonteinwind.co.za/loeriesfontein-wind-farm/overview/",
+    "commissioning_year": 2017,
+    "operator": "Mainstream Renewable Power / Actis"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.5891,
+     -30.4037
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026026",
+    "name": "Cookhouse",
+    "capacity_mw": 138.6,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · African Clean Energy Developments",
+    "source_url": "http://www.nersa.org.za/Admin/Document/Editor/file/Consultations/Electricity/Presentations/Cookhouse%20Wind%20Farm%20%28ACED%20Renewables%20Cookhouse%29%20%28Pty%29%20Ltd.pdf",
+    "commissioning_year": 2014,
+    "operator": "African Clean Energy Developments (Pty) Limited"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.9242,
+     -32.742
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061299",
+    "name": "Gouda Wind Farm",
+    "capacity_mw": 138.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Acciona",
+    "source_url": "http://www.acciona-energia.com/areas-of-activity/wind-power/major-projects/gouda-wind-farm/",
+    "commissioning_year": 2015,
+    "operator": "ACCIONA Energía (54.9%); Royal bafokeng Holdings (25.1%); Soul City (10%); Gouda Wind Energy Community Trust (10%)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.0225,
+     -33.2665
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061296",
+    "name": "Jeffrey's Bay Wind Farm",
+    "capacity_mw": 138.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Jeffrey's Bay Wind Farm",
+    "source_url": "https://jeffreysbaywindfarm.co.za/",
+    "commissioning_year": 2014,
+    "operator": "Globeleq"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.8435,
+     -33.9962
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026029",
+    "name": "Amakhala Emoyeni Wind Farm",
+    "capacity_mw": 134.4,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Power Technology",
+    "source_url": "http://www.power-technology.com/projects/amakhala-emoyeni-wind-farm-bedford/",
+    "commissioning_year": 2016,
+    "operator": "A joint venture (JV) of Exxaro Resources and Tata Power  Cennergi is the owner and developer of the wind farm."
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.9977,
+     -32.875
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061295",
+    "name": "Dorper Wind Farm",
+    "capacity_mw": 100.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Dorper Wind Farm",
+    "source_url": "http://dorperwindfarm.co.za/",
+    "commissioning_year": 2014,
+    "operator": "Dorper Wind Development"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     26.4407,
+     -31.4802
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026047",
+    "name": "KaXu Solar Power Plant",
+    "capacity_mw": 100.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Abengoa Solar",
+    "source_url": "http://www.abengoasolar.com/web/en/plantas_solares/",
+    "commissioning_year": 2015,
+    "operator": "Abengoa Solar"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.1365,
+     -30.16
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WKS0064975",
+    "name": "Kathu CSP",
+    "capacity_mw": 100.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wiki-Solar",
+    "source_url": "https://www.wiki-solar.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.025,
+     -27.613
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061277",
+    "name": "Kathu Solar Park",
+    "capacity_mw": 100.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · IPP Project South Africa",
+    "source_url": "https://www.ipp-projects.co.za/ProjectDatabase",
+    "operator": "Building Power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.929,
+     -27.5954
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061283",
+    "name": "Longyuan Mulilo De Aar Maanhaarberg Wind Energy Facility",
+    "capacity_mw": 100.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Mulilo",
+    "source_url": "http://mulilo.com/Projects/longyuan-mulilo-de-aar-wind-power/",
+    "operator": "Longyuan South Africa Renewables / Mulilo"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.9137,
+     -30.7259
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000134",
+    "name": "Sere",
+    "capacity_mw": 100.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Eskom",
+    "source_url": "http://www.eskom.co.za/AboutElectricity/RenewableEnergy/Pages/SereWindFarm.aspx",
+    "commissioning_year": 2015,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.0914,
+     -31.5128
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WKS0071109",
+    "name": "Xina One",
+    "capacity_mw": 100.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wiki-Solar",
+    "source_url": "https://www.wiki-solar.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.592,
+     -28.895
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026044",
+    "name": "Jasper Solar Power Plant",
+    "capacity_mw": 96.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Solar Reserve",
+    "source_url": "http://www.solarreserve.com/en/global-projects/pv/jasper",
+    "commissioning_year": 2014,
+    "operator": "Jasper Solar Park"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.3673,
+     -28.312
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061300",
+    "name": "Tsitsikamma Community Wind Farm",
+    "capacity_mw": 95.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Koukamma Municipality",
+    "source_url": "http://www.koukammamunicipality.gov.za/tsitsikamma-community-wind-farm/",
+    "commissioning_year": 2016,
+    "operator": "Exxaro (50%) Tata Power (50%)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.5057,
+     -34.0731
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026056",
+    "name": "Sishen Solar Power Plant",
+    "capacity_mw": 94.3,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Acciona",
+    "source_url": "http://accionaenergia.azurewebsites.net/areas-of-activity/photovoltaic/major-projects/sishen-photovoltaic-plant/",
+    "commissioning_year": 2014,
+    "operator": "ACCIONA Energy (51%)  Aveng (29%)  Soul City (10%)  Dibeng Community Solar Energy Trust (10%)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.9275,
+     -27.584
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026023",
+    "name": "West Coast 1",
+    "capacity_mw": 94.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Engie",
+    "source_url": "http://www.engie.com/en/journalists/press-releases/inaugurates-wind-farm-south-africa/",
+    "commissioning_year": 2015,
+    "operator": "ENGIE (43%)  Investec Bank Limited (34.5%) and KTH (20%)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.0061,
+     -32.834
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061291",
+    "name": "Mulilo Sonnedix Prieska",
+    "capacity_mw": 86.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Sonnedix",
+    "source_url": "http://sonnedix.com/news/mulilo-sonnedix-prieska-solar-pv-plant-achieves-commercial-operation/",
+    "commissioning_year": 2016,
+    "operator": "Sonnedix"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.3392,
+     -30.0246
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026063",
+    "name": "Prieska Solar Plant",
+    "capacity_mw": 86.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Juwi",
+    "source_url": "http://www.juwi.co.za/projects/detail/juwiarticle/artikel/detail//prieska-solar-plant/",
+    "commissioning_year": 2016,
+    "operator": "Juwi Renewable Energies (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.3559,
+     -30.022
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061276",
+    "name": "Adams Solar PV Project",
+    "capacity_mw": 82.5,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Enel Green Power",
+    "source_url": "https://www.enelgreenpower.com/media/press/d/2017/02/enel-brings-two-new-south-african-pv-plants-into-operation--",
+    "operator": "Aurora Power Solutions"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.0076,
+     -27.3737
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026053",
+    "name": "Paleisheuwel Solar Power Plant",
+    "capacity_mw": 82.5,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Enel Green Power",
+    "source_url": "https://www.enelgreenpower.com/en/media/press/d201605-enel-starts-production-at-its-largest-solar-power-plant-in-south-africa.html",
+    "operator": "Electra Capital (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.7356,
+     -32.423
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061292",
+    "name": "Pulida Solar Park",
+    "capacity_mw": 82.5,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Enel Green Power",
+    "source_url": "https://www.enelgreenpower.com/media/press/d/2017/02/enel-brings-two-new-south-african-pv-plants-into-operation--",
+    "commissioning_year": 2017,
+    "operator": "Enel Green Power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.9332,
+     -29.0387
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061302",
+    "name": "Nouport Wind Farm",
+    "capacity_mw": 80.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Mainstream Renewable Power",
+    "source_url": "http://mainstreamrp.com/6400-2/",
+    "commissioning_year": 2016,
+    "operator": "Mainstream Renewable Power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.0224,
+     -31.1759
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026014",
+    "name": "Red Cap",
+    "capacity_mw": 80.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/u/g/NI4MS38U5B6PADXQ0K2FLG9VY1EHWO.pdf/PDD%20-%20Red%20Cap%20Kouga%20Wind%20Farm.pdf?t=ZUt8b2pkNjE3fDDrIEb0PZzOV-CHzPAgyBW8",
+    "commissioning_year": 2015,
+    "operator": "Red Cap Kouga Wind Farm Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.7105,
+     -34.136
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026039",
+    "name": "De Aar 3 Solar Power Plant",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · South Africa Renewable Energy Organization",
+    "source_url": "http://energy.org.za/knowledge-tools/project-database/solar-capital-de-aar-3",
+    "commissioning_year": 2016,
+    "operator": "Solar Capital De Aar 3"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.1026,
+     -30.596
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026040",
+    "name": "Dreunberg Solar Power Plant",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Scatec Solar",
+    "source_url": "http://www.scatecsolar.com/Portfolio/South-Africa/Dreunberg-South-Africa-75-MW",
+    "commissioning_year": 2014,
+    "operator": "Linde Solar Power Plant"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     26.2259,
+     -30.838
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026045",
+    "name": "Kalkbult Solar Power Plant",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Acciona",
+    "source_url": "http://www.scatecsolar.com/Portfolio/South-Africa/Kalkbult-South-Africa-75-MW",
+    "operator": "Scatec Solar"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.192,
+     -31.727
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061280",
+    "name": "Konkoonsies II Solar Facility",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · NERSA",
+    "source_url": "http://www.nersa.org.za/Admin/Document/Editor/file/Consultations/Electricity/Presentations/Ramizone%20(RF)%20Proprietary%20Limited.pdf"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.5538,
+     -28.8871
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026050",
+    "name": "Lesedi Solar Power Plant",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Solar Reserve",
+    "source_url": "http://www.solarreserve.com/en/global-projects/pv/lesedi",
+    "commissioning_year": 2014,
+    "operator": "Lesedi Solar Park"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.3536,
+     -28.3153
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026051",
+    "name": "Letsatsi Solar Power Plant",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Solar Reserve",
+    "source_url": "http://www.solarreserve.com/en/global-projects/pv/letsatsi",
+    "commissioning_year": 2014,
+    "operator": "Letsatsi Solar Energy Limited"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.9199,
+     -28.915
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061287",
+    "name": "Solar Capital De Aar I",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Stellenbosch University Thesis Paper",
+    "source_url": "http://concentrating.sun.ac.za/wp-content/uploads/2014/02/5.pdf",
+    "commissioning_year": 2014,
+    "operator": "Solar Capital"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.0789,
+     -30.5788
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061289",
+    "name": "Solar Capital De Aar III",
+    "capacity_mw": 75.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Solar Capital",
+    "source_url": "http://www.solarcapital.co.za/our-projects/de-aar-3-project-2/",
+    "commissioning_year": 2015,
+    "operator": "Eskom"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.103,
+     -30.5956
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026027",
+    "name": "Coega IDZ Windfarm",
+    "capacity_mw": 73.8,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/4/2/UB1DG6JSNM5RP749A8EYHFCX0LTV2Z.pdf/8954%20PDD%2022%20Dec%2012.pdf?t=Ylp8b2pkOG0xfDDwgY0_wDMQWuuX_NwESiDj",
+    "commissioning_year": 2010,
+    "operator": "Electrawinds Africa and Indian Ocean Islands (Pty)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.6028,
+     -33.676
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026019",
+    "name": "Karoo Renewable Energy Facility (Nobelsfontein Wind)",
+    "capacity_mw": 73.8,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/h/v/WJEK19MU3GNLTH562P0A7ZYQVDCIRS.pdf/PDD.pdf?t=eEN8b2pkNnp6fDDXvZVJYrHBHDoegHcnh7mQ",
+    "commissioning_year": 2014,
+    "operator": "South African Renewable Green Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.9201,
+     -27.602
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026018",
+    "name": "Hopefield",
+    "capacity_mw": 66.6,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/l/u/F1A2TM3QHOKWNVLDE5JZGIRS98BUCX.pdf/PDD%20Hopefield.pdf?t=OTR8b2pkNngzfDDowoIvyI_mpurbcPT1SA-3",
+    "commissioning_year": 2014,
+    "operator": "Umoya Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.3987,
+     -33.093
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061290",
+    "name": "Tom Burke Solar Park",
+    "capacity_mw": 66.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Enel Green Power",
+    "source_url": "https://www.enelgreenpower.com/media/news/d/2017/09/south-africa-tom-burke-solar-plant-key-to-security-of-supply-for-limpopo-province",
+    "commissioning_year": 2017,
+    "operator": "Enel Green Power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.9912,
+     -23.0748
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061298",
+    "name": "Grassridge Wind Farm",
+    "capacity_mw": 61.5,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · InnoWind",
+    "source_url": "http://www.innowind.com/?page_id=53",
+    "commissioning_year": 2015,
+    "operator": "InnoWind (Pty) Ltd Subsidiary of EDF Energies Nouvelles (EDF EN) Group"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.6029,
+     -33.6763
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026036",
+    "name": "Boshoff Solar Power Plant",
+    "capacity_mw": 60.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Industry About",
+    "source_url": "http://www.industryabout.com/country-territories-3/1401-south-africa/solar-energy/26442-boshoff-solar-power-plant",
+    "commissioning_year": 2014,
+    "operator": "Boshoff Solar Power Plant"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.1947,
+     -28.466
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WKS0061716",
+    "name": "Karoo",
+    "capacity_mw": 50.4,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wiki-Solar",
+    "source_url": "https://www.wiki-solar.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.163,
+     -31.7318
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026035",
+    "name": "Bokpoort Solar Power Plant",
+    "capacity_mw": 50.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Acciona",
+    "source_url": "http://www.acciona-energia.com/pressroom/news/2016/september/bokpoort-csp-plant-wins-south-african-national-energy-association-prize/",
+    "commissioning_year": 2016,
+    "operator": "ACWA Power Solafrica Bokpoort CSP Power Plant (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     21.9951,
+     -28.727
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026037",
+    "name": "De Aar - Mainstream Solar Power Plant",
+    "capacity_mw": 50.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · De Aar Solar",
+    "source_url": "http://deaarsolar.co.za/about-de-aar-solar-power/project-description/",
+    "commissioning_year": 2014,
+    "operator": "Mainstream Renewable Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.0347,
+     -30.617
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026041",
+    "name": "Droogfontein Solar Power Plant",
+    "capacity_mw": 50.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Droogfontein",
+    "source_url": "http://droogfonteinsolar.co.za/",
+    "commissioning_year": 2014,
+    "operator": "Mainstream Renewable Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.7521,
+     -28.612
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026048",
+    "name": "Khi Solar Power Plant",
+    "capacity_mw": 50.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Abengoa Solar",
+    "source_url": "http://www.abengoasolar.com/web/en/plantas_solares/",
+    "commissioning_year": 2016,
+    "operator": "Abengoa Solar"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     21.0777,
+     -28.538
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061288",
+    "name": "De Aar Solar Power",
+    "capacity_mw": 48.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Globeleq",
+    "source_url": "https://www.globeleq.com/power-plants/de-aar/",
+    "operator": "Globeleq"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.0338,
+     -30.6198
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026059",
+    "name": "Touwsrivier Solar Power Plant",
+    "capacity_mw": 44.2,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · South Africa Renewable Energy Organization",
+    "source_url": "http://energy.org.za/knowledge-tools/project-database/touwsrivier-project",
+    "commissioning_year": 2014,
+    "operator": "Public Investment Corporation (PIC)  Government Employee Pension Fund (GEPF)  SOITEC"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.9392,
+     -33.4055
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026052",
+    "name": "Linde Solar Power Plant",
+    "capacity_mw": 40.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Scatec Solar",
+    "source_url": "http://www.scatecsolar.com/Portfolio/South-Africa/Linde-South-Africa-40-MW",
+    "commissioning_year": 2014,
+    "operator": "Scatec Solar"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.6512,
+     -31.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061279",
+    "name": "Klawer Wind Farm",
+    "capacity_mw": 30.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "http://www.energy.gov.za/files/esources/kyoto/2011/06-06-2011%20-%20Klawer%20PDD.pdf",
+    "commissioning_year": 2014,
+    "operator": "Energie Baden Württemberg Kraftwerke AG (Germany) and Private entity G7 Renewable Energies (Pty) Ltd (South Africa)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.5638,
+     -31.8394
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026062",
+    "name": "Witkop Solar Power Plant",
+    "capacity_mw": 30.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · About Industry",
+    "source_url": "http://www.industryabout.com/country-territories-3/1401-south-africa/solar-energy/26443-witkop-solar-power-plant",
+    "commissioning_year": 2014,
+    "operator": "Core Energy (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.3685,
+     -24.042
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026057",
+    "name": "Soutpan Solar Power Plant",
+    "capacity_mw": 28.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Erika Energy",
+    "source_url": "http://www.nersa.org.za/Admin/Document/Editor/file/Consultations/Electricity/Presentations/Soutpan%20Solar%20Park%20(Erika%20Energy)(%20Pty)%20Ltd.pdf",
+    "operator": "Erika Energy (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.2518,
+     -22.993
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026021",
+    "name": "Dassieklip",
+    "capacity_mw": 27.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · BioTherm Energy",
+    "source_url": "http://www.biothermenergy.com/content/dassiesklip-project",
+    "commissioning_year": 2014,
+    "operator": "BioTherm Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.3727,
+     -34.227
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061294",
+    "name": "Van Stadens",
+    "capacity_mw": 27.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Metro Wind",
+    "source_url": "https://www.metrowind.co.za/Our-Project",
+    "commissioning_year": 2014,
+    "operator": "MetroWind"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     25.2422,
+     -33.963
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026032",
+    "name": "Hernic Waste Heat Plant",
+    "capacity_mw": 25.5,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/u/6/NXTI6RW85GJYOVD7L31F9CPM04SKQZ.pdf/pdd_8956.pdf?t=V1N8b2pkOWpqfDD5qnFqM5wMEN5sEfTla-ss",
+    "commissioning_year": 2013,
+    "operator": "Hernic Ferrochrome"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.837,
+     -25.662
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061297",
+    "name": "Waainek Wind Farm",
+    "capacity_mw": 23.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · InnoWind",
+    "source_url": "http://www.innowind.com/?page_id=54",
+    "commissioning_year": 2016,
+    "operator": "InnoWind (Pty) Ltd Subsidiary of EDF Energies Nouvelles (EDF EN) Group"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     26.4642,
+     -33.3238
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061301",
+    "name": "Chaba Wind Farm",
+    "capacity_mw": 21.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · InnoWind",
+    "source_url": "http://www.innowind.com/?page_id=55",
+    "commissioning_year": 2015,
+    "operator": "InnoWind (Pty) Ltd Subsidiary of EDF Energies Nouvelles (EDF EN) Group"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.9631,
+     -32.5912
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026054",
+    "name": "Prieska - Mulilo Solar Power Plant",
+    "capacity_mw": 19.9,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Mulilo",
+    "source_url": "http://mulilo.com/our-projects/",
+    "operator": "Mulilo Renewable Energy Solar PV Prieska"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.3199,
+     -29.968
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026043",
+    "name": "Herbert Solar Power Plant",
+    "capacity_mw": 19.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · AR AMD Renewable Energy",
+    "source_url": "http://ae-amd.co.za/portfolio/",
+    "commissioning_year": 2013,
+    "operator": "AE-AMD Independent Power Producer 1 (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.8005,
+     -29.001
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026017",
+    "name": "Neusberg",
+    "capacity_mw": 12.6,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/t/z/MGRXNJW6LIFP7TYHB3E8O9S4VQ12AC.pdf/Neusberg%20Grid%20Connected%20Hydroelectric%20Power%20Plant%2C%20South%20Africa.pdf?t=S0R8b2pkNm1ofDDHCciysjdEqJ9GrpoNRKeP"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     20.7431,
+     -28.772
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026049",
+    "name": "Konkoonsies Solar Power Plant",
+    "capacity_mw": 11.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Juwi",
+    "source_url": "http://www.juwi.co.za/projects/",
+    "commissioning_year": 2014,
+    "operator": "Juwi Renewable Energies (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     19.5553,
+     -28.889
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026033",
+    "name": "Aries Solar Power Plant",
+    "capacity_mw": 10.7,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · BioTherm Energy",
+    "source_url": "http://www.biothermenergy.com/blog/aries-solar-pv",
+    "commissioning_year": 2014,
+    "operator": "Juwi Renewable Energies (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     20.7852,
+     -29.497
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026061",
+    "name": "Vredendal Solar Power Plant",
+    "capacity_mw": 10.5,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Engie",
+    "source_url": "http://uas.engie.com/content/uploads/sites/8/2016/07/20160602-Africa-Presentation-me%CC%81tiers.pdf",
+    "commissioning_year": 2014,
+    "operator": "Solairedirect Southern Africa"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.5053,
+     -31.634
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026034",
+    "name": "Aurora Solar Power Plant",
+    "capacity_mw": 10.3,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Solairedirect",
+    "source_url": "http://www.nersa.org.za/Admin/Document/Editor/file/Consultations/Electricity/Presentations/Aurora%20-%20Rietvlei%20Solar%20Power%20(PTY)%20LTD.pdf",
+    "commissioning_year": 2014,
+    "operator": "SolaireDirect Southern Africa (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.4974,
+     -32.642
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026025",
+    "name": "Lomati",
+    "capacity_mw": 10.1,
+    "fuel_type": "biomass",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/t/3/9Y54XCFT6QEUHSP8G2LBKDNOVI0MR7.pdf/7476-PDD-%202012%2012%2020.pdf?t=cEV8b2pkOGJqfDAG2GqZOvOHHIj_8tAhv1oC",
+    "operator": "Lomati Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.0406,
+     -25.772
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026042",
+    "name": "Greefspan Solar Power Plant",
+    "capacity_mw": 10.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · AR AMD Renewable Energy",
+    "source_url": "http://ae-amd.co.za/portfolio/",
+    "commissioning_year": 2012,
+    "operator": "AE-AMD Independent Power Producer 1 (Pty) Ltd"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.3117,
+     -29.391
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026038",
+    "name": "De Aar - Mulilo Solar Power Plant",
+    "capacity_mw": 9.7,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Mulilo",
+    "source_url": "http://mulilo.com/our-projects/",
+    "commissioning_year": 2014,
+    "operator": "Mulilo Renewable Energy Solar PV De Aar"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.0054,
+     -30.628
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061285",
+    "name": "Mulilo Renewable Energy Solar PV De Aar",
+    "capacity_mw": 9.7,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Mulilo",
+    "source_url": "http://mulilo.com/Projects/mulilo-renewable-energy-solar-pv-de-aar-10mw/",
+    "operator": "Mulilo"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     24.0054,
+     -30.6279
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026060",
+    "name": "Upington Solar Power Plant",
+    "capacity_mw": 8.9,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · South Africa Renewable Energy Organization",
+    "source_url": "http://energy.org.za/knowledge-tools/project-database/upington-solar-pv",
+    "commissioning_year": 2014,
+    "operator": "Enel Green Power S.p.a"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     21.2688,
+     -28.419
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026016",
+    "name": "Bethlehem Hydro",
+    "capacity_mw": 7.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · NuPlanet Clean Energy",
+    "source_url": "http://www.nuplanet.co.za/docs/Bethlehem%20Hydro%20Brochure%2011.pdf",
+    "commissioning_year": 2009,
+    "operator": "Bethlehem Hydro Proprietary Limited"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.3631,
+     -28.217
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026055",
+    "name": "RustMo1 Solar Power Plant",
+    "capacity_mw": 7.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Juwi",
+    "source_url": "http://www.juwi.co.za/projects/",
+    "commissioning_year": 2013,
+    "operator": "Momentous Energy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.4181,
+     -25.738
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026015",
+    "name": "Bisasar Road Landfill",
+    "capacity_mw": 6.5,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Ethekwini Municipality",
+    "source_url": "http://www.cityenergy.org.za/uploads/resource_340.pdf",
+    "commissioning_year": 2008,
+    "operator": "Ethekwini Municipality"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.9821,
+     -29.813
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061293",
+    "name": "Darling Wind Farm",
+    "capacity_mw": 5.2,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Darling Wind Farm",
+    "source_url": "http://www.darlingwindfarm.com/",
+    "commissioning_year": 2008,
+    "operator": "Darling Wind power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.2586,
+     -33.3173
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061286",
+    "name": "SlimSun Swartland Solar Park",
+    "capacity_mw": 5.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Stellenbosch University Thesis Paper",
+    "source_url": "http://concentrating.sun.ac.za/wp-content/uploads/2014/02/5.pdf"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.5295,
+     -33.35
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026058",
+    "name": "Swartland Solar Power Plant",
+    "capacity_mw": 5.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · South Africa Renewable Energy Organization",
+    "source_url": "http://energy.org.za/knowledge-tools/project-database/slimsun-swartland-solar-park",
+    "commissioning_year": 2015,
+    "operator": "SlimSun"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     18.5298,
+     -33.35
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026012",
+    "name": "PetroSA Biogas Plant",
+    "capacity_mw": 4.2,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/M/V/B/MVB35TXGKH9S86MMWF1WMYV9LHQJC6.2/PetroSA%20biogas%20to%20energy%20project%20-%20PDD%20final.doc?t=bjh8b2pkNXBrfDCJrEDoqVQN88AILH3Ohy5c",
+    "commissioning_year": 2007,
+    "operator": "The Petroleum Oil and Gas Corporation of South Africa"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     22.1045,
+     -34.145
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026028",
+    "name": "Grahamstown",
+    "capacity_mw": 3.5,
+    "fuel_type": "biomass",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/i/s/C4OHDSABT93VGJLM1KEZ2NWF8RQIX0.pdf/Final%20PDD.pdf?t=RGt8b2pkOHJlfDCYswgKkKG5XKo4tA27UFPb",
+    "commissioning_year": 2013,
+    "operator": "Nollen Group"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     26.4908,
+     -33.315
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026020",
+    "name": "Dundee Biogas",
+    "capacity_mw": 2.2,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/7/u/KG1M94TCPARQIYH3ZWD6J2LXOF8E0S.pdf/8047-PDD-6%20Nov%2012.pdf?t=YlJ8b2pkN2E0fDBhziM8O2VZh573GujB0TQQ",
+    "commissioning_year": 2016,
+    "operator": "Dundee Biogas Power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.3584,
+     -28.119
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026031",
+    "name": "Ferro Waste Heat Plant",
+    "capacity_mw": 2.2,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/x/f/K7G8Q0O29ETDPLRIYMJWUH31AXZN6S.pdf/130320_PDD_v16_vvs.pdf?t=Q2t8b2pkOWY5fDBfprezsoFIxaE2NOr8UhEG",
+    "operator": "International Ferro Metals SA"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     27.6115,
+     -25.725
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1026013",
+    "name": "Mariannhill Landfill",
+    "capacity_mw": 2.0,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · CDM",
+    "source_url": "https://cdm.unfccc.int/filestorage/S/8/O/S8OFI0NDPKJB7E63VQAMHL94WGU21R/Durban%20PDD_v4-Clean_12Aug15%20ver2.pdf?t=a2F8b2pkNWpvfDA-631GBbgfn6Ka-mgOoj8a",
+    "operator": "Mariannhill Landfill"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.8359,
+     -29.848
+    ]
+   }
+  }
+ ]
+}

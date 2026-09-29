@@ -26,7 +26,7 @@ const LIVE_KINDS = ["oim", "oim-plants"];  // OpenInfraMap tiles, no file
 const POINT_STATUS = ["operational", "construction", "announced", "planned", "idle"];
 // The grid renderer only draws these three; any other status is invisible.
 const GRID_STATUS = ["operational", "planned", "idle"];
-const FUELS = ["solar", "wind", "hydro", "coal", "gas", "oil"];
+const FUELS = ["solar", "wind", "hydro", "coal", "gas", "oil", "nuclear", "geothermal", "biomass", "waste"];
 
 const num = (v) => typeof v === "number" && Number.isFinite(v);
 const numOrNull = (v) => v === null || num(v);

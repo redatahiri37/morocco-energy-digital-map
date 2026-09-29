@@ -23,6 +23,25 @@
 //   snapshotSource: short credit shown above the KPI tiles
 //   credits:        data credits in the footer, e.g. "GEM · ONEE · Datacentermap"
 
+// Layers for countries built from open data (see the entries below).
+const GPPD_COUNTRY_LAYERS = [
+  { id: "power-plants", file: "power-plants.geojson", kind: "power",
+    title: "Power plants",
+    source: "WRI Global Power Plant Database v1.3 (2021, CC BY 4.0); unmaintained since 2022, so recent plants are missing",
+    sourceUrl: "https://datasets.wri.org/dataset/globalpowerplantdatabase",
+    updated: "2021" },
+  { id: "osm-plants", file: null, kind: "oim-plants",
+    title: "OSM power plants",
+    source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+    sourceUrl: "https://openinframap.org/",
+    updated: "live" },
+  { id: "oim-grid", file: null, kind: "oim",
+    title: "Transmission grid",
+    source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+    sourceUrl: "https://openinframap.org/",
+    updated: "live" }
+];
+
 window.COUNTRIES = {
   morocco: {
     label: "Morocco",
@@ -97,8 +116,122 @@ window.COUNTRIES = {
   },
 
   // Reserved — no data in v1, will no-op until GeoJSON files are dropped in.
-  egypt:   { label: "Egypt",   iso: "EG", center: [30.8, 26.8], zoom: 5.2,
-             dataPath: "./data/egypt/",   layers: [], placeholder: true },
+  // Built by scripts/build-country-open-data.py: Natural Earth outline and
+  // WRI's Global Power Plant Database (v1.3, 2021, unmaintained), each plant
+  // checked against the outline. Data centres are not mapped yet.
+  "cote-divoire": {
+    label: "C\u00f4te d'Ivoire",
+    iso:   "CI",
+    center: [-5.55, 7.54],
+    zoom:   6.3,
+    bounds: [[-8.9, 4.1], [-2.3, 11.0]],
+    dataPath: "./data/cote-divoire/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  egypt: {
+    label: "Egypt",
+    iso:   "EG",
+    center: [30.79, 26.82],
+    zoom:   5.3,
+    bounds: [[24.5, 21.7], [37.1, 31.9]],
+    dataPath: "./data/egypt/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries: the Halaib Triangle is drawn as administered by Egypt, Bir Tawil is not included" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  ethiopia: {
+    label: "Ethiopia",
+    iso:   "ET",
+    center: [40.49, 9.15],
+    zoom:   5.4,
+    bounds: [[32.7, 3.2], [48.2, 15.1]],
+    dataPath: "./data/ethiopia/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  ghana: {
+    label: "Ghana",
+    iso:   "GH",
+    center: [-1.03, 7.96],
+    zoom:   6.2,
+    bounds: [[-3.5, 4.5], [1.4, 11.4]],
+    dataPath: "./data/ghana/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  kenya: {
+    label: "Kenya",
+    iso:   "KE",
+    center: [37.89, 0.4],
+    zoom:   5.6,
+    bounds: [[33.6, -4.9], [42.1, 5.7]],
+    dataPath: "./data/kenya/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  nigeria: {
+    label: "Nigeria",
+    iso:   "NG",
+    center: [8.66, 9.08],
+    zoom:   5.7,
+    bounds: [[2.4, 4.0], [14.9, 14.1]],
+    dataPath: "./data/nigeria/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  rwanda: {
+    label: "Rwanda",
+    iso:   "RW",
+    center: [29.87, -1.94],
+    zoom:   8.0,
+    bounds: [[28.6, -3.1], [31.1, -0.8]],
+    dataPath: "./data/rwanda/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+  "south-africa": {
+    label: "South Africa",
+    iso:   "ZA",
+    center: [24.67, -28.47],
+    zoom:   4.9,
+    bounds: [[16.2, -35.0], [33.1, -21.9]],
+    dataPath: "./data/south-africa/",
+    snapshotSource: "WRI GPPD 2021",
+    credits: "WRI Global Power Plant Database (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; de facto boundaries; Prince Edward Islands omitted" },
+    layers: GPPD_COUNTRY_LAYERS
+  },
+
   // Power plants are an owner-supplied list, marked unverified per feature
   // until each is checked against a primary source. Industry and data
   // centres are not mapped yet.
@@ -136,4 +269,5 @@ window.COUNTRIES = {
              dataPath: "./data/namibia/", layers: [], placeholder: true }
 };
 
-window.COUNTRIES_ENABLED = ["morocco", "senegal"];
+window.COUNTRIES_ENABLED = ["morocco", "cote-divoire", "egypt", "ethiopia", "ghana",
+  "kenya", "nigeria", "rwanda", "senegal", "south-africa"];

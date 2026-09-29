@@ -1,0 +1,272 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000030",
+    "name": "Alaoji",
+    "capacity_mw": 1074.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131103224412/http:/www.nidelpower.com/main/alaoji"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.3216,
+     5.067
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000036",
+    "name": "Kainji",
+    "capacity_mw": 760.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Sarafinchin",
+    "source_url": "http://www.sarafinchin.com/index.php/projects/africa/kainji-and-jebba-dams-niger-river-nigeria/",
+    "operator": "Government of Nigeria"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     4.6124,
+     9.8641
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000031",
+    "name": "Olorunsogo II",
+    "capacity_mw": 750.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131103224542/http:/www.nidelpower.com/main/olorunsogo"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.2041,
+     6.8982
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000035",
+    "name": "Shiroro",
+    "capacity_mw": 600.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Sarafinchin",
+    "source_url": "http://www.sarafinchin.com/index.php/projects/africa/kainji-and-jebba-dams-niger-river-nigeria/",
+    "operator": "Government of Nigeria"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.8353,
+     9.9724
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000025",
+    "name": "Calabar",
+    "capacity_mw": 561.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131103224627/http:/www.nidelpower.com/main/calabar",
+    "operator": "Calabar Generation Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     8.3394,
+     5.0702
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000037",
+    "name": "Jebba",
+    "capacity_mw": 540.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Sarafinchin",
+    "source_url": "http://www.sarafinchin.com/index.php/projects/africa/kainji-and-jebba-dams-niger-river-nigeria/",
+    "operator": "Government of Nigeria"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     4.7883,
+     9.138
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000032",
+    "name": "Omotosho II",
+    "capacity_mw": 500.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131103224542/http:/www.nidelpower.com/main/olorunsogo"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     4.7106,
+     6.7357
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000026",
+    "name": "Ihovbor",
+    "capacity_mw": 450.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131103223838/http:/www.nidelpower.com/main/ihovbor"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     5.6828,
+     6.4065
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000028",
+    "name": "Sapele",
+    "capacity_mw": 450.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131103223738/http:/www.nidelpower.com/main/sapele",
+    "operator": "Ihovbor Generating Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     5.645,
+     5.9254
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000027",
+    "name": "Gbarain",
+    "capacity_mw": 225.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131002035726/http:/www.nidelpower.com/main/gbarain",
+    "operator": "Gbarain Generation Company"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     5.897,
+     4.798
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000034",
+    "name": "Ibom Power",
+    "capacity_mw": 190.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Nidel Power",
+    "source_url": "https://web.archive.org/web/20131002035947/http:/www.nidelpower.com/main/geregu"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.568,
+     4.5644
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000029",
+    "name": "Omoku",
+    "capacity_mw": 150.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Sahara Power",
+    "source_url": "http://www.sahara-group.com/sahara-power-acquires-additional-power-generation-assets.html",
+    "operator": "Sahara Power"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.6632,
+     5.39
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WKS0068714",
+    "name": "Ibadan",
+    "capacity_mw": 10.0,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Wiki-Solar",
+    "source_url": "https://www.wiki-solar.org"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.885,
+     7.455
+    ]
+   }
+  }
+ ]
+}

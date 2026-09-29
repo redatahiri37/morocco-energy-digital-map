@@ -1,0 +1,276 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1022986",
+    "name": "Gilgel Gibe III",
+    "capacity_mw": 1870.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Hydro World",
+    "source_url": "http://www.hydroworld.com/articles/2015/10/power-generation-begins-at-1-870-mw-gibe-iii-hydroelectric-project-in-ethiopia.html",
+    "commissioning_year": 2015
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.3018,
+     6.8482
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000056",
+    "name": "Beles",
+    "capacity_mw": 460.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 2010
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.9181,
+     11.8196
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000060",
+    "name": "Gilgel Gibe II",
+    "capacity_mw": 420.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 2010
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.5624,
+     7.7571
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000063",
+    "name": "Tekeze",
+    "capacity_mw": 300.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 2009
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     38.7405,
+     13.3492
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000065",
+    "name": "Adama",
+    "capacity_mw": 204.0,
+    "fuel_type": "wind",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa's Power Journal",
+    "source_url": "http://www.esi-africa.com/news/153mw-adama-wind-farm-grows-ethiopias-renewable-energy-plan/"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.2495,
+     8.5913
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000059",
+    "name": "Gilgel Gibe I",
+    "capacity_mw": 184.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 2004
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.3236,
+     7.8349
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000062",
+    "name": "Melka Wekana",
+    "capacity_mw": 153.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 1983
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.4311,
+     7.1761
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000057",
+    "name": "Fincha",
+    "capacity_mw": 134.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 1973
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.3663,
+     9.558
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000058",
+    "name": "Fincha Amerti Nesha",
+    "capacity_mw": 100.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 2011
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.3663,
+     9.558
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000064",
+    "name": "Tis Abay I",
+    "capacity_mw": 84.4,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.5999,
+     11.4887
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000055",
+    "name": "Awash II",
+    "capacity_mw": 64.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 1996
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.352,
+     8.3932
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1000061",
+    "name": "Koka",
+    "capacity_mw": 43.2,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Africa Hydropower Resources Database",
+    "source_url": "http://afrec-energy.org/En/administration/hydro/index.php",
+    "commissioning_year": 1960
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     39.1588,
+     8.4684
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1022987",
+    "name": "Aluto-Langano",
+    "capacity_mw": 7.3,
+    "fuel_type": "geothermal",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · World Bank",
+    "source_url": "http://documents.worldbank.org/curated/en/151581468038142238/E43920V10P13360Box382090B00PUBLIC0.docx",
+    "commissioning_year": 2013
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     38.7947,
+     7.7886
+    ]
+   }
+  }
+ ]
+}

@@ -35,7 +35,7 @@ const cases = [
   ["missing data file", /does not exist/,
     (d) => config(d, `window.COUNTRIES.morocco.layers[0].file = "nope.geojson";`)],
   ["enabled placeholder", /enabled but still marked placeholder/,
-    (d) => config(d, `window.COUNTRIES_ENABLED.push("egypt");`)],
+    (d) => config(d, `window.COUNTRIES_ENABLED.push("namibia");`)],
   ["point outside the country", /outside the country bounds/,
     (d) => editJson(d, `${MA}/power-plants.geojson`, (fc) => { fc.features[0].geometry.coordinates = [2.35, 48.85]; })],
   ["line that never enters the country", /never enters the country bounds/,

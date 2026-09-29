@@ -1,0 +1,224 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1023155",
+    "name": "Rusizi II",
+    "capacity_mw": 43.8,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · REG",
+    "source_url": "http://www.reg.rw",
+    "commissioning_year": 1989,
+    "operator": "Rwanda Energy Group Limited (REG)  Government of Rwanda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     28.903,
+     -2.633
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061154",
+    "name": "Nyabarongo I",
+    "capacity_mw": 28.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Hydro World",
+    "source_url": "http://www.hydroworld.com/articles/2015/03/rwanda-s-28-mw-nyabarongo-hydroelectric-facility-reduces-need-for-fossil-fuel.html",
+    "commissioning_year": 2014,
+    "operator": "Rwanda Energy Group Limited (REG)  Government of Rwanda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.633,
+     -1.989
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061167",
+    "name": "KivuWatt",
+    "capacity_mw": 26.0,
+    "fuel_type": "gas",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Power Africa",
+    "source_url": "https://medium.com/power-africa/the-floating-gas-plant-that-powers-rwanda-1638362a8c76",
+    "commissioning_year": 2016,
+    "operator": "KivuWatt Limited (ContourGlobal)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.32,
+     -2.068
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061146",
+    "name": "Jabana 2",
+    "capacity_mw": 20.0,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · REG",
+    "source_url": "http://reg.rw/index.php/media-centre/download/2-uncategorised/232-power-plant-status-on-february-01-2015",
+    "commissioning_year": 2009,
+    "operator": "Rwanda Energy Group Limited (REG)  Government of Rwanda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.074,
+     -1.882
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1023156",
+    "name": "Mukungwa",
+    "capacity_mw": 12.0,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · REG",
+    "source_url": "http://www.reg.rw/",
+    "commissioning_year": 1982,
+    "operator": "Estab Pub Prod Trans Dist Elec"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.655,
+     -1.582
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1023153",
+    "name": "Ntaruka",
+    "capacity_mw": 11.5,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · REG",
+    "source_url": "http://www.reg.rw/images/pdf/Hydropower_Solar_Breakout_session.pdf",
+    "commissioning_year": 1959,
+    "operator": "Rwanda Energy Group Limited (REG)  Government of Rwanda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.75,
+     -1.477
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061159",
+    "name": "Rwamagana solar",
+    "capacity_mw": 8.5,
+    "fuel_type": "solar",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · The Guardian",
+    "source_url": "https://www.theguardian.com/environment/2015/nov/23/how-africas-fastest-solar-power-project-is-lighting-up-rwanda",
+    "commissioning_year": 2015,
+    "operator": "Scatec Solar Company & GigaWatt Global Cooperatief"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.377,
+     -2.026
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061145",
+    "name": "Jabana 1",
+    "capacity_mw": 7.8,
+    "fuel_type": "oil",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · REG",
+    "source_url": "http://reg.rw/index.php/media-centre/download/2-uncategorised/232-power-plant-status-on-february-01-2015",
+    "commissioning_year": 2005,
+    "operator": "Rwanda Energy Group Limited (REG)  Government of Rwanda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.066,
+     -1.891
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061143",
+    "name": "Gisenyi",
+    "capacity_mw": 3.8,
+    "fuel_type": "waste",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · Global Power Systems",
+    "source_url": "http://www.globalpowersystems.eu/en/project-detail/gisenyi-power-plant-gas-bio-methane/",
+    "commissioning_year": 2010
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.256,
+     -1.727
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "WRI1061149",
+    "name": "Mukungwa II",
+    "capacity_mw": 2.5,
+    "fuel_type": "hydro",
+    "status": "operational",
+    "precision": "approximate",
+    "source": "WRI Global Power Plant Database v1.3 · REG",
+    "source_url": "http://reg.rw/index.php/media-centre/download/2-uncategorised/232-power-plant-status-on-february-01-2015",
+    "commissioning_year": 2010,
+    "operator": "Rwanda Energy Group Limited (REG)  Government of Rwanda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.655,
+     -1.582
+    ]
+   }
+  }
+ ]
+}
