@@ -47,7 +47,12 @@ CITY_KM = 50
 COAST_KM = 15
 DEFAULT_KEYS = {"ZA": "south-africa", "NG": "nigeria", "KE": "kenya", "EG": "egypt",
                 "GH": "ghana", "CI": "cote-divoire", "RW": "rwanda", "ET": "ethiopia",
-                "SN": "senegal"}
+                "SN": "senegal", "MA": "morocco"}
+# A country that already has a hand-curated data-centre layer keeps it; a
+# PeeringDB site is dropped when that layer has the same operator within
+# CURATED_KM (e.g. Morocco's N+ONE Casablanca).
+CURATED_FILE = "digital.geojson"
+CURATED_KM = 15
 
 
 def norm(s):
@@ -93,10 +98,18 @@ def main(argv):
     for iso, key in keys.items():
         polys = load_outline(key)
         kept, held, shared = [], [], {}
+        cur_path = ROOT / "docs" / "data" / key / CURATED_FILE
+        curated = json.loads(cur_path.read_text())["features"] if cur_path.exists() else []
         for r in sorted((f for f in facs if f["country"] == iso and f.get("status") == "ok"),
                         key=lambda f: f["id"]):
             city = (r.get("city") or "").strip()
             matches = gaz.get((iso, norm(city)), []) if gaz is not None else []
+            if not matches and gaz is not None:
+                # "Temara Rabat": try each word, first match wins.
+                for word in norm(city).replace(",", " ").split():
+                    matches = gaz.get((iso, word), [])
+                    if matches:
+                        break
             lon, lat = r.get("longitude"), r.get("latitude")
             precision, why = "exact", None
             if lon is None or lat is None:
@@ -129,6 +142,14 @@ def main(argv):
                     d = od.haversine(lon, lat, matches[0][0], matches[0][1])
                     if d > CITY_KM:
                         why = f"pin is {d:.0f} km from {matches[0][2]}, the city it lists"
+            if not why:
+                text = norm(r["name"] + " " + r["org_name"]).replace(" ", "")
+                for c in curated:
+                    op = norm(c["properties"].get("operator", "")).replace(" ", "")
+                    cx, cy = c["geometry"]["coordinates"]
+                    if op and op in text and od.haversine(lon, lat, cx, cy) <= CURATED_KM:
+                        why = f"already in the curated layer as '{c['properties']['name']}'"
+                        break
             if why:
                 held.append((r["id"], r["name"], why))
                 continue

@@ -1,0 +1,93 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-2577",
+    "name": "HOSTOWEB CASA#1",
+    "operator": "HOSTOWEB",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Casablanca",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/2577"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.61138,
+     33.58831
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-2713",
+    "name": "HOSTOWEB DATA CENTER FEZ#1",
+    "operator": "HOSTOWEB",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Fez",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/2713"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.99969,
+     34.03712
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-11288",
+    "name": "INWI Data Center",
+    "operator": "Wana Corporate",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Rabat",
+    "precision": "exact",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/11288"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.79208,
+     33.98689
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "peeringdb-fac-17074",
+    "name": "Maroc Datacenter",
+    "operator": "Maroc DataCenter",
+    "category": "colocation",
+    "capacity_estimate_mw": null,
+    "status": "operational",
+    "region": "Temara Rabat",
+    "precision": "approximate",
+    "source": "PeeringDB",
+    "source_url": "https://www.peeringdb.com/fac/17074"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.90656,
+     33.92866
+    ]
+   }
+  }
+ ]
+}
