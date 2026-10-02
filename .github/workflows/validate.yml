@@ -46,6 +46,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cloudflare's browser cache keeps style.css / app.js for hours, so a
+      # phone got the new index.html with the old stylesheet. A per-deploy
+      # ?v= query gives every asset a new URL on each deploy.
+      - name: Version the asset URLs
+        run: |
+          set -e
+          V="${GITHUB_SHA::8}"
+          sed -i -E 's#((href|src)="\./(style\.css|brand\.css|app\.js|countries\.config\.js))"#\1?v='"$V"'"#g' docs/index.html
+          test "$(grep -c "?v=$V" docs/index.html)" -eq 4
+
       - name: Deploy docs/ to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

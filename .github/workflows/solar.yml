@@ -47,6 +47,11 @@ jobs:
           mkdir _site
           cp solar/index.html solar/app.js solar/analytics.js solar/style.css \
              solar/brand.css solar/robots.txt solar/sitemap.xml _site/
+          # New asset URLs on every deploy: Cloudflare's browser cache would
+          # otherwise serve the previous style.css / app.js with the new page.
+          V="${GITHUB_SHA::8}"
+          sed -i -E 's#((href|src)="(style\.css|brand\.css|app\.js|analytics\.js))"#\1?v='"$V"'"#g' _site/index.html
+          test "$(grep -c "?v=$V" _site/index.html)" -eq 4
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

@@ -13,6 +13,9 @@
 
 (function(){
   "use strict";
+  // Deploys add ?v=<commit> to this script's URL (see validate.yml); reuse it
+  // on the data files so a phone never mixes new code with cached old data.
+  const ASSET_V = (()=>{ try{ return new URL(document.currentScript.src).search; }catch(e){ return ""; } })();
 
   // ---------- Config & country manifest ----------
   const CFG = window.APP_CONFIG || { defaultCountry:"morocco" };
@@ -260,7 +263,7 @@
     const data = {}, vis = {};
     let boundary = null;
     try{
-      const r = await fetch(c.dataPath + "boundary.geojson");
+      const r = await fetch(c.dataPath + "boundary.geojson" + ASSET_V);
       if(r.ok) boundary = await r.json();
     } catch(e){ /* no boundary for this country */ }
 
@@ -268,7 +271,7 @@
       vis[L.id] = L.visible !== false;
       if(!L.file) return; // OIM or other virtual layers — no fetch needed
       try{
-        const res = await fetch(c.dataPath + L.file);
+        const res = await fetch(c.dataPath + L.file + ASSET_V);
         if(!res.ok) throw new Error(res.status + " " + L.file);
         const fc = await res.json();
         // Ensure each feature has a stable numeric id — required for feature-state
