@@ -665,3 +665,92 @@ a:hover { text-decoration: underline; }
 @media (max-width: 620px) {
   .roof-bar { flex-direction: column; }
 }
+
+/* ── Roof card: legend, potential score, stat tiles ── */
+.roof-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-top: 10px; font-size: 12px; color: var(--muted);
+}
+.roof-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
+.lg-panel { background: #1e3a8a; box-shadow: inset 0 0 0 1px #bfdbfe; }
+.lg-slot { background: rgba(74, 222, 128, 0.45); box-shadow: inset 0 0 0 1px #16a34a; }
+.lg-roof { background: rgba(255, 107, 53, 0.12); box-shadow: inset 0 0 0 2px var(--orange); }
+
+.roof-summary {
+  display: grid; grid-template-columns: 132px 1fr; gap: 20px; align-items: center;
+  margin-top: 18px; padding: 18px; border-radius: var(--r);
+  background: linear-gradient(135deg, #f8fafc, #eef4ff);
+  border: 1px solid var(--border);
+}
+.roof-score { position: relative; display: grid; justify-items: center; }
+.roof-score svg { width: 112px; height: 112px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: #e2e8f0; stroke-width: 10; }
+.ring-fg {
+  fill: none; stroke-width: 10; stroke-linecap: round;
+  transition: stroke-dasharray .6s ease, stroke .3s;
+}
+.ring-val {
+  position: absolute; top: 0; left: 0; right: 0; height: 112px;
+  display: grid; place-items: center;
+}
+.ring-val strong {
+  font-size: 34px; font-weight: 700; color: var(--navy);
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.ring-label {
+  margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.roof-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.roof-bars li {
+  display: grid; grid-template-columns: 104px 1fr 30px; align-items: center; gap: 12px;
+  font-size: 14px; color: var(--text);
+}
+.roof-bars b { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.roof-bars .bar { height: 8px; border-radius: 99px; background: #e2e8f0; overflow: hidden; }
+.roof-bars .bar i { display: block; height: 100%; border-radius: 99px; transition: width .6s ease; }
+
+/* Score tones, shared by the ring and the bars */
+.ring-fg.good { stroke: #16a34a; } .roof-bars i.good { background: #16a34a; }
+.ring-fg.fair { stroke: #84cc16; } .roof-bars i.fair { background: #84cc16; }
+.ring-fg.low  { stroke: var(--orange); } .roof-bars i.low { background: var(--orange); }
+
+.roof-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;
+}
+.roof-stats .stat {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 12px 14px; border-radius: var(--r);
+  background: var(--card); border: 1px solid var(--border);
+}
+.roof-stats .k {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--orange-2);
+}
+.roof-stats .v {
+  font-size: 22px; font-weight: 700; color: var(--navy);
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.roof-stats .s { font-size: 12px; color: var(--muted); }
+.roof-stats .stat.accent { background: var(--navy); border-color: var(--navy); }
+.roof-stats .stat.accent .k { color: #ffb38f; }
+.roof-stats .stat.accent .v { color: #fff; }
+.roof-stats .stat.accent .s { color: rgba(255, 255, 255, 0.7); }
+
+@media (max-width: 620px) {
+  .roof-summary { grid-template-columns: 1fr; justify-items: center; gap: 16px; padding: 16px; }
+  .roof-bars { width: 100%; }
+  .roof-bars li { grid-template-columns: 96px 1fr 28px; gap: 10px; }
+  .roof-stats { grid-template-columns: 1fr 1fr; }
+  .roof-stats .stat.accent { grid-column: 1 / -1; }
+}
+.roof-actions .linkbtn {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 99px;
+  background: var(--card); text-decoration: none; font-weight: 600; font-size: 13px;
+  white-space: nowrap;
+}
+.roof-actions .linkbtn:hover { border-color: var(--orange); color: var(--orange); }
+.roof-actions #roof-done-btn { background: var(--orange); border-color: var(--orange); color: #fff; }
+.roof-actions #roof-done-btn:disabled { opacity: .45; cursor: default; }

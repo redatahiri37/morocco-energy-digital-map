@@ -184,6 +184,31 @@
             <span class="chart-sub" id="coords-label"></span>
           </div>
           <div id="map"></div>
+          <div class="roof-legend" id="roof-legend" hidden>
+            <span><i class="lg lg-panel"></i>Installation proposée</span>
+            <span><i class="lg lg-slot"></i>Place disponible</span>
+            <span><i class="lg lg-roof"></i>Contour du toit</span>
+          </div>
+          <div class="roof-summary" id="roof-summary" hidden>
+            <div class="roof-score">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                <circle class="ring-fg" id="roof-ring" cx="60" cy="60" r="52"/>
+              </svg>
+              <div class="ring-val"><strong id="roof-score">–</strong></div>
+              <div class="ring-label">Potentiel solaire<button type="button" class="help" aria-label="Comment est calculé ce score ?">?<span class="tip" role="tooltip">Indicateur Wattu sur 100, moyenne de trois notes. Toiture : part de l'installation recommandée que votre toit peut accueillir. Ensoleillement : production annuelle par kWc (PVGIS), de 1 200 kWh = 0 à 1 900 kWh = 100. Rentabilité : retour sur investissement, de 15 ans = 0 à 4 ans = 100.</span></button></div>
+            </div>
+            <ul class="roof-bars">
+              <li><span>Toiture</span><div class="bar"><i id="bar-roof"></i></div><b id="val-roof"></b></li>
+              <li><span>Ensoleillement</span><div class="bar"><i id="bar-sun"></i></div><b id="val-sun"></b></li>
+              <li><span>Rentabilité</span><div class="bar"><i id="bar-roi"></i></div><b id="val-roi"></b></li>
+            </ul>
+          </div>
+          <div class="roof-stats" id="roof-stats" hidden>
+            <div class="stat"><span class="k">Surface au sol</span><span class="v" id="st-area"></span><span class="s" id="st-area-sub"></span></div>
+            <div class="stat"><span class="k">Capacité max</span><span class="v" id="st-max"></span><span class="s" id="st-max-sub"></span></div>
+            <div class="stat accent"><span class="k">Votre installation</span><span class="v" id="st-inst"></span><span class="s" id="st-inst-sub"></span></div>
+          </div>
           <div class="roof-bar">
             <p class="roof-info" id="roof-info" aria-live="polite"></p>
             <div class="roof-actions">
