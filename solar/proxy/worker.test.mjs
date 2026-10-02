@@ -31,6 +31,11 @@ ok("estimate doubles lat/lon", est.doubles[4]===33.6 && est.doubles[5]===-7.6, J
 ok("index is event name", est.indexes[0]==="estimate");
 ok("outcome doubles", JSON.stringify(written[2].doubles)==="[20,0,0,0,0,0,750,3.5,6.4,5200]", JSON.stringify(written[2].doubles));
 
+// 1b. roof event keeps its source
+written.length = 0;
+await worker.fetch(post(JSON.stringify({ sid:"x", ev:[{e:"roof", t:3, src:"osm"}] })), env);
+ok("roof event stored with src", written.length===1 && written[0].blobs[0]==="roof" && written[0].blobs[5]==="osm", JSON.stringify(written[0]&&written[0].blobs));
+
 // 2. unknown event dropped
 written.length = 0;
 await worker.fetch(post(JSON.stringify({ sid:"x", ev:[{e:"evil_exfil", addr:"12 rue X"}] })), env);
