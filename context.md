@@ -44,6 +44,18 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-02 (solar: roof area + panels)
+Wattu Solar (`solar/`) now looks up the building under the address in
+OpenStreetMap (Overpass, `way["building"]` within 25 m), shows its footprint
+area and lays out 500 Wc panels (1.13 × 2.28 m) on it, Sunrise-style: rows
+facing the chosen orientation, 1 m margin from the edges, row spacing for a
+33° sun. No building found → "Dessiner mon toit" (click the corners). The
+auto-size never exceeds what the roof holds. The area is the footprint, not
+the sloped roof surface. Solar has no auto-deploy:
+`wrangler pages deploy solar --project-name=atlas-solar`.
+Pending: energy-map fonts inspired by normalcomputing.com (blocked from cloud
+sessions; needs screenshots or font names from the owner).
+
 ## Session handoff — 2026-09-29 (African DC markets)
 Added South Africa, Nigeria, Kenya, Egypt, Ghana, Côte d'Ivoire, Rwanda and
 Ethiopia with `scripts/build-country-open-data.py`: Natural Earth outline +
@@ -56,8 +68,9 @@ Data centres: 77 sites from a PeeringDB facility export the owner saved
 from Chrome (peeringdb.com is blocked from cloud sessions), built with
 `scripts/build-datacentres-peeringdb.py` (needs `pip install geonamescache`).
 4 held out (GPX Cairo 1 pinned in Alexandria, CYNOX-KANO, a duplicate Icolo,
-Strand Exchange). Morocco keeps its curated layer; its 5 PeeringDB sites
-were not merged. To refresh: open
+Strand Exchange). Morocco keeps its curated layer and gets a second
+"More colocation sites (PeeringDB)" layer (4 sites); PeeringDB sites whose
+operator is already curated within 15 km are dropped (N+ONE). To refresh: open
 https://www.peeringdb.com/api/fac?country__in=ZA,NG,KE,EG,GH,CI,RW,ET,SN
 save as JSON, rerun the script.
 GPPD is thin for Nigeria (13 plants) and Ghana (6); KPIs say "WRI GPPD 2021".

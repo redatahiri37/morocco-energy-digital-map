@@ -43,6 +43,20 @@ const CONFIG = {
   // Panel physical assumption (for area hint only)
   M2_PER_KWP: 5,               // ~5 m² per kWc
 
+  // Roof layout (building footprint → panels drawn on the map).
+  // A 2025 mainstream module: 500 Wc, 1.13 m × 2.28 m (≈ 5.2 m²/kWc, in line
+  // with M2_PER_KWP). Panels keep ROOF_SETBACK_M from every roof edge
+  // (parapet, access). Tilted rows are spaced so a row's shadow at
+  // ROW_SHADOW_SUN_ELEV_DEG (≈ winter-noon sun at 30–35°N) misses the next row.
+  PANEL_KWP: 0.5,
+  PANEL_W_M: 1.13,
+  PANEL_L_M: 2.28,
+  ROOF_SETBACK_M: 1.0,
+  ROW_SHADOW_SUN_ELEV_DEG: 33,
+  // OpenStreetMap building lookup (Overpass API), radius around the address
+  OVERPASS_URL: "https://overpass-api.de/api/interpreter",
+  BUILDING_SEARCH_RADIUS_M: 25,
+
   // Loi 82-21 (décret n° 2.25.100, mars 2026) — surplus injection réseau
   // Cap: 20% de la production annuelle. Tarif LV résidentiel non publié —
   // borne haute prise = tarif MV heures creuses (0,18 MAD/kWh, source pv-magazine 02/2026).
@@ -420,6 +434,104 @@ const Chart_ = {
   },
 };
 
+// ── Roof geometry ──────────────────────────────────
+// Pure functions on a building footprint. Coordinates are projected to a
+// local plane in metres (x east, y north) around the footprint, which is
+// accurate to well under 1% at house scale.
+const Roof = {
+  origin(latlngs) {
+    const lat = latlngs.reduce((s, p) => s + p[0], 0) / latlngs.length;
+    const lon = latlngs.reduce((s, p) => s + p[1], 0) / latlngs.length;
+    return { lat, lon, mx: 111320 * Math.cos(lat * Math.PI / 180), my: 110540 };
+  },
+  toLocal(latlngs, o) {
+    return latlngs.map(([lat, lon]) => [(lon - o.lon) * o.mx, (lat - o.lat) * o.my]);
+  },
+  toLatLng(pts, o) {
+    return pts.map(([x, y]) => [o.lat + y / o.my, o.lon + x / o.mx]);
+  },
+  // Shoelace formula, m²
+  area(pts) {
+    let a = 0;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      a += pts[j][0] * pts[i][1] - pts[i][0] * pts[j][1];
+    }
+    return Math.abs(a) / 2;
+  },
+  areaOfLatLngs(latlngs) {
+    return this.area(this.toLocal(latlngs, this.origin(latlngs)));
+  },
+  contains(pts, [x, y]) {
+    let inside = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [xi, yi] = pts[i], [xj, yj] = pts[j];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  },
+  distToEdges(pts, [x, y]) {
+    let best = Infinity;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [ax, ay] = pts[j], [bx, by] = pts[i];
+      const dx = bx - ax, dy = by - ay;
+      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)));
+      best = Math.min(best, Math.hypot(x - (ax + t * dx), y - (ay + t * dy)));
+    }
+    return best;
+  },
+  // Every panel position that fits on the roof, rows facing `aspect`
+  // (PVGIS convention: 0 = south, -90 = east, 90 = west) at `tilt` degrees.
+  // Returns local-metre rectangles, ordered row by row from the sunny edge.
+  layout(pts, { aspect = 0, tilt = 0 } = {}) {
+    const a = aspect * Math.PI / 180, t = tilt * Math.PI / 180;
+    const f = [-Math.sin(a), -Math.cos(a)];   // facing direction (south = [0,-1])
+    const u = [Math.cos(a), -Math.sin(a)];    // along the row
+    const toUV = ([x, y]) => [x * u[0] + y * u[1], x * f[0] + y * f[1]];
+    const fromUV = (uu, vv) => [uu * u[0] + vv * f[0], uu * u[1] + vv * f[1]];
+    const W = CONFIG.PANEL_W_M;
+    const depth = CONFIG.PANEL_L_M * Math.cos(t);
+    const shadow = CONFIG.PANEL_L_M * Math.sin(t) / Math.tan(CONFIG.ROW_SHADOW_SUN_ELEV_DEG * Math.PI / 180);
+    const pitch = depth + shadow;
+    const sb = CONFIG.ROOF_SETBACK_M;
+    const uv = pts.map(toUV);
+    const minU = Math.min(...uv.map(p => p[0])), maxU = Math.max(...uv.map(p => p[0]));
+    const minV = Math.min(...uv.map(p => p[1])), maxV = Math.max(...uv.map(p => p[1]));
+    const ok = (p) => this.contains(pts, p) && this.distToEdges(pts, p) >= sb - 1e-6;
+    const panels = [];
+    // Start from the sunny edge (largest v = furthest toward the facing direction)
+    for (let v = maxV - sb; v - depth >= minV + sb - 1e-6; v -= pitch) {
+      for (let uu = minU + sb; uu + W <= maxU - sb + 1e-6; uu += W + 0.02) {
+        const rect = [fromUV(uu, v), fromUV(uu + W, v), fromUV(uu + W, v - depth), fromUV(uu, v - depth)];
+        if (rect.every(ok)) panels.push(rect);
+      }
+    }
+    return panels;
+  },
+  // OSM building around a point: the one containing it, else the nearest
+  // within the search radius. Resolves to [[lat, lon], …] or null.
+  async findBuilding(lat, lon) {
+    const r = CONFIG.BUILDING_SEARCH_RADIUS_M;
+    const q = `[out:json][timeout:10];way["building"](around:${r},${lat},${lon});out geom;`;
+    const res = await fetch(CONFIG.OVERPASS_URL, {
+      method: "POST",
+      body: "data=" + encodeURIComponent(q),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    if (!res.ok) throw new Error("Overpass " + res.status);
+    const ways = ((await res.json()).elements || [])
+      .filter(e => e.type === "way" && e.geometry && e.geometry.length >= 4)
+      .map(e => e.geometry.slice(0, -1).map(g => [g.lat, g.lon]));   // drop the closing vertex
+    if (!ways.length) return null;
+    const o = { lat, lon, mx: 111320 * Math.cos(lat * Math.PI / 180), my: 110540 };
+    const scored = ways.map(w => {
+      const pts = this.toLocal(w, o);
+      return { w, inside: this.contains(pts, [0, 0]), d: this.distToEdges(pts, [0, 0]) };
+    });
+    const hit = scored.find(s => s.inside) || scored.sort((a, b) => a.d - b.d)[0];
+    return hit.w;
+  },
+};
+
 // ── Map (Leaflet) ──────────────────────────────────
 const MapView = {
   map: null,
@@ -433,12 +545,12 @@ const MapView = {
       const satellite = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
-          maxZoom: 19,
+          maxZoom: 21, maxNativeZoom: 19,   // upscale so a house fills the map
           attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics",
         }
       ).addTo(this.map);
       const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
+        maxZoom: 21, maxNativeZoom: 19,
         attribution: "© OpenStreetMap contributors",
       });
       L.control.layers(
@@ -452,8 +564,67 @@ const MapView = {
     if (this.marker) this.marker.remove();
     this.marker = L.marker([lat, lon]).addTo(this.map);
     if (label) this.marker.bindPopup(label);
+    this.clearRoof();
     // Fix stale size when shown after being hidden
     setTimeout(() => this.map.invalidateSize(), 100);
+  },
+
+  // Roof outline + panels. Layers are kept so each recalc replaces them.
+  roofLayer: null,
+  panelLayer: null,
+  clearRoof() {
+    if (this.roofLayer) this.roofLayer.remove();
+    if (this.panelLayer) this.panelLayer.remove();
+    this.roofLayer = this.panelLayer = null;
+  },
+  showRoof(latlngs, panelsLatLng, { fit = false } = {}) {
+    if (!this.map) return;
+    this.clearRoof();
+    this.roofLayer = L.polygon(latlngs, {
+      color: "#FF6B35", weight: 2, fillColor: "#FF6B35", fillOpacity: 0.08, interactive: false,
+    }).addTo(this.map);
+    this.panelLayer = L.layerGroup(panelsLatLng.map(rect => L.polygon(rect, {
+      color: "#9fc3ff", weight: 0.8, fillColor: "#0b2a5b", fillOpacity: 0.9, interactive: false,
+    }))).addTo(this.map);
+    if (fit) this.map.fitBounds(this.roofLayer.getBounds(), { padding: [24, 24], maxZoom: 21 });
+  },
+
+  // "Dessiner mon toit": clicks add corners; finish() closes the polygon.
+  draw: null,
+  startDraw(onDone) {
+    if (!this.map) return;
+    this.cancelDraw();
+    this.clearRoof();
+    const pts = [];
+    const line = L.polyline([], { color: "#FF6B35", weight: 2, dashArray: "4 4", interactive: false }).addTo(this.map);
+    const dots = L.layerGroup().addTo(this.map);
+    const onClick = (e) => {
+      pts.push([e.latlng.lat, e.latlng.lng]);
+      line.setLatLngs(pts);
+      L.circleMarker(e.latlng, { radius: 4, color: "#FF6B35", fillOpacity: 1, interactive: false }).addTo(dots);
+      if (this.draw.onChange) this.draw.onChange(pts.length);
+    };
+    this.map.on("click", onClick);
+    this.map.getContainer().classList.add("drawing");
+    this.map.doubleClickZoom.disable();
+    this.draw = { pts, line, dots, onClick, onDone, onChange: null };
+    return this.draw;
+  },
+  finishDraw() {
+    if (!this.draw) return;
+    const { pts, onDone } = this.draw;
+    this.cancelDraw();
+    if (pts.length >= 3) onDone(pts);
+  },
+  cancelDraw() {
+    if (!this.draw) return;
+    const { line, dots, onClick } = this.draw;
+    this.map.off("click", onClick);
+    line.remove();
+    dots.remove();
+    this.map.getContainer().classList.remove("drawing");
+    this.map.doubleClickZoom.enable();
+    this.draw = null;
   },
 };
 
@@ -469,6 +640,8 @@ const State = {
     exportAllowed: false,
   },
   sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
+  roof: null,       // { latlngs, src: "osm" | "drawn" } — building footprint, if known
+  roofSearch: 0,    // id of the latest building lookup, so a stale one is ignored
   lastPvKey: null,
   lastPerKw: null,  // cached 1 kWc PVGIS response for current (loc, angle, aspect)
   heroAnimated: false,
@@ -511,6 +684,26 @@ const UI = {
         this.recalc();
       });
     });
+    // Roof: draw / finish / clear
+    $("roof-draw-btn").addEventListener("click", () => {
+      Analytics.once("roof_draw", "roof", { src: "draw_start" });
+      const d = MapView.startDraw((pts) => {
+        State.roof = { latlngs: pts, src: "drawn" };
+        Analytics.track("roof", { src: "drawn" });
+        this.setRoofDrawing(false);
+        this.recalc({ fitRoof: true });
+      });
+      if (!d) return;
+      d.onChange = (n) => { $("roof-done-btn").disabled = n < 3; };
+      this.setRoofDrawing(true);
+    });
+    $("roof-done-btn").addEventListener("click", () => MapView.finishDraw());
+    $("roof-cancel-btn").addEventListener("click", () => {
+      MapView.cancelDraw();
+      this.setRoofDrawing(false);
+      this.recalc();
+    });
+
     $("size-auto-reset").addEventListener("click", () => {
       Analytics.once("param_change:size_reset", "param_change", { field: "size_reset" });
       State.sizeAuto = true;
@@ -617,7 +810,71 @@ const UI = {
     $("location-label").textContent = loc.label || `${loc.lat.toFixed(3)}, ${loc.lon.toFixed(3)}`;
     $("coords-label").textContent = `${loc.lat.toFixed(4)}°N, ${Math.abs(loc.lon).toFixed(4)}°${loc.lon < 0 ? "W" : "E"}`;
     MapView.set(loc.lat, loc.lon, loc.label);
+    State.roof = null;
+    this.detectRoof(loc);   // runs alongside the PVGIS call; recalcs when it lands
     await this.recalc({ force: true });
+  },
+
+  // Look up the building under the address in OpenStreetMap. Never blocks
+  // the estimate: if it fails or finds nothing, the user can draw the roof.
+  async detectRoof(loc) {
+    const id = ++State.roofSearch;
+    this.setRoofInfo("Recherche du bâtiment sur OpenStreetMap…");
+    let latlngs = null;
+    try { latlngs = await Roof.findBuilding(loc.lat, loc.lon); }
+    catch (e) { console.warn("[roof] building lookup failed", e); }
+    if (id !== State.roofSearch || State.location !== loc) return;   // superseded
+    if (State.roof && State.roof.src === "drawn") return;              // user drew meanwhile
+    Analytics.track("roof", { src: latlngs ? "osm" : "none" });
+    if (latlngs) {
+      State.roof = { latlngs, src: "osm" };
+      this.recalc({ fitRoof: true });
+    } else {
+      this.setRoofInfo("Aucun bâtiment trouvé à cette adresse sur OpenStreetMap. " +
+        "Cliquez sur « Dessiner mon toit » et placez les coins de votre toit sur la carte.");
+    }
+  },
+
+  setRoofInfo(html) { $("roof-info").innerHTML = html; },
+
+  setRoofDrawing(on) {
+    $("roof-draw-btn").hidden = on;
+    $("roof-done-btn").hidden = !on;
+    $("roof-cancel-btn").hidden = !on;
+    $("roof-done-btn").disabled = true;
+    if (on) this.setRoofInfo("Cliquez sur chaque coin de votre toit, puis « Terminer ».");
+  },
+
+  // Footprint area and the panels that fit for the current tilt/orientation.
+  roofLayout() {
+    if (!State.roof) return null;
+    const { latlngs } = State.roof;
+    const o = Roof.origin(latlngs);
+    const pts = Roof.toLocal(latlngs, o);
+    const panels = Roof.layout(pts, { aspect: State.params.aspect, tilt: State.params.angle });
+    return {
+      o, panels,
+      areaM2: Roof.area(pts),
+      capacityKw: panels.length * CONFIG.PANEL_KWP,
+    };
+  },
+
+  renderRoof(info, { fit = false } = {}) {
+    if (!info) return;
+    const p = State.params;
+    const needed = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
+    const shown = info.panels.slice(0, needed);
+    MapView.showRoof(State.roof.latlngs, shown.map(r => Roof.toLatLng(r, info.o)), { fit });
+    const src = State.roof.src === "osm" ? "Bâtiment détecté (OpenStreetMap)" : "Toit dessiné";
+    let html = `<strong>${src} : ${fmtNum(info.areaM2)} m² au sol.</strong> ` +
+      `Jusqu'à ${info.panels.length} panneaux (${fmtNum(info.capacityKw)} kWc) en laissant ` +
+      `${CONFIG.ROOF_SETBACK_M} m sur les bords.`;
+    if (needed > info.panels.length) {
+      html += ` <span class="roof-warn">Votre toit ne permet que ${info.panels.length} des ${needed} panneaux de cette installation.</span>`;
+    } else {
+      html += ` ${needed} panneau${needed > 1 ? "x" : ""} affiché${needed > 1 ? "s" : ""} pour ${p.peakpower.toFixed(1)} kWc.`;
+    }
+    this.setRoofInfo(html);
   },
 
   setHeroLoading(on) {
@@ -660,7 +917,9 @@ const UI = {
     $("bill-consumption-hint").textContent =
       `soit environ ${Math.round(consumption)} kWh par mois`;
     $("peakpower-val").textContent = p.peakpower.toFixed(1) + " kWc";
-    $("peakpower-hint").textContent = `≈ ${Math.round(p.peakpower * CONFIG.M2_PER_KWP)} m² de panneaux`;
+    const nPanels = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
+    $("peakpower-hint").textContent =
+      `${nPanels} panneaux de ${CONFIG.PANEL_KWP * 1000} Wc, ≈ ${Math.round(p.peakpower * CONFIG.M2_PER_KWP)} m²`;
     $("angle-val").textContent = p.angle + "°";
     $("aspect-val").textContent = aspectLabel(p.aspect);
     $("cost-val").textContent = p.cost.toFixed(1) + " MAD/Wc";
@@ -668,7 +927,7 @@ const UI = {
     $("capex-hint").textContent = `Investissement total : ${fmtMAD(capex)}`;
   },
 
-  async recalc({ force = false } = {}) {
+  async recalc({ force = false, fitRoof = false } = {}) {
     if (!State.location) return;
     const p = State.params;
     // PVGIS is fetched at 1 kWc per (lat, lon, angle, aspect); size and bill
@@ -709,12 +968,18 @@ const UI = {
 
     // Derive consumption from the bill; auto-size the system if not overridden
     const consumption = Tariff.kwhFromBill(p.bill);
+    const roofInfo = this.roofLayout();
     if (State.sizeAuto) {
       const targetKw = (consumption * 12 * CONFIG.AUTOSIZE_COVER) / State.lastPerKw.yieldPerKw;
-      p.peakpower = Math.min(10, Math.max(1, Math.round(targetKw * 2) / 2));
+      // Never recommend more than the roof holds (when the roof is known).
+      const roofMax = roofInfo ? Math.floor(roofInfo.capacityKw * 2) / 2 : Infinity;
+      p.peakpower = Math.min(10, roofMax, Math.max(1, Math.round(targetKw * 2) / 2));
+      p.peakpower = Math.max(1, p.peakpower);
       $("peakpower").value = p.peakpower;
       this.renderParamLabels();
     }
+
+    this.renderRoof(roofInfo, { fit: fitRoof });
 
     const pv = PVGIS.scale(State.lastPerKw, p.peakpower);
     const capexMAD = p.peakpower * 1000 * p.cost;

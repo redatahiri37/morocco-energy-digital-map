@@ -116,7 +116,14 @@ window.COUNTRIES = {
         title: "Data centres & cables",
         source: "Datacentermap.com · OSM · press releases",
         sourceUrl: "https://www.datacentermap.com/morocco/",
-        updated: "2026-03" }
+        updated: "2026-03" },
+      // PeeringDB sites not already in the curated layer above (same
+      // operator within 15 km is dropped by the build script).
+      { id: "datacentres", file: "datacentres.geojson", kind: "digital",
+        title: "More colocation sites (PeeringDB)",
+        source: "PeeringDB facility registry (operator-maintained); no MW figures",
+        sourceUrl: "https://www.peeringdb.com/",
+        updated: "2026-09" }
     ]
   },
 
