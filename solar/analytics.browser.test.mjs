@@ -48,7 +48,7 @@ await page.route("**://corsproxy.io/**", r => r.abort());
 const stub = (body) => (r) => r.fulfill({ status:200, headers:{"content-type":"text/javascript"}, body });
 await page.route("**unpkg.com/leaflet**.js", stub(`
   window.L = { map:()=>({ setView(){return this}, remove(){}, addLayer(){return this}, invalidateSize(){return this}, removeLayer(){return this}, on(){return this} }),
-    tileLayer:()=>({ addTo(){return this} }), marker:()=>({ addTo(){return this}, bindPopup(){return this} }),
+    tileLayer:()=>({ addTo(){return this} }), marker:()=>({ addTo(){return this}, bindPopup(){return this}, setOpacity(){return this} }),
     latLng:()=>({}), control:{ layers:()=>({ addTo(){return this} }) } };`));
 await page.route("**unpkg.com/leaflet**.css", r => r.fulfill({status:200, headers:{"content-type":"text/css"}, body:""}));
 await page.route("**chart.js**", stub(`

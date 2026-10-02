@@ -573,20 +573,28 @@ const MapView = {
   roofLayer: null,
   panelLayer: null,
   clearRoof() {
+    if (this.marker) this.marker.setOpacity(1);
     if (this.roofLayer) this.roofLayer.remove();
     if (this.panelLayer) this.panelLayer.remove();
     this.roofLayer = this.panelLayer = null;
   },
-  showRoof(latlngs, panelsLatLng, { fit = false } = {}) {
+  // panelsLatLng: the proposed installation; slotsLatLng: every other place
+  // a panel fits, drawn faintly so the roof's full potential is visible.
+  showRoof(latlngs, panelsLatLng, slotsLatLng = [], { fit = false } = {}) {
     if (!this.map) return;
     this.clearRoof();
     this.roofLayer = L.polygon(latlngs, {
-      color: "#FF6B35", weight: 2, fillColor: "#FF6B35", fillOpacity: 0.08, interactive: false,
+      color: "#FF6B35", weight: 2.5, fillColor: "#FF6B35", fillOpacity: 0.12, interactive: false,
     }).addTo(this.map);
-    this.panelLayer = L.layerGroup(panelsLatLng.map(rect => L.polygon(rect, {
-      color: "#9fc3ff", weight: 0.8, fillColor: "#0b2a5b", fillOpacity: 0.9, interactive: false,
-    }))).addTo(this.map);
-    if (fit) this.map.fitBounds(this.roofLayer.getBounds(), { padding: [24, 24], maxZoom: 21 });
+    // The outline marks the address; the pin would only hide the panels.
+    if (this.marker) this.marker.setOpacity(0);
+    const rect = (r, style) => L.polygon(r, { interactive: false, ...style });
+    this.panelLayer = L.layerGroup([
+      ...slotsLatLng.map(r => rect(r, { color: "#ffffff", weight: 0.8, opacity: 0.85, fillColor: "#4ade80", fillOpacity: 0.35 })),
+      ...panelsLatLng.map(r => rect(r, { color: "#bfdbfe", weight: 1, fillColor: "#1e3a8a", fillOpacity: 0.95 })),
+    ]).addTo(this.map);
+    // Zoom 20 rather than 21: Esri imagery stops at 19, so 21 is very blurry.
+    if (fit) this.map.fitBounds(this.roofLayer.getBounds(), { padding: [24, 24], maxZoom: 20 });
   },
 
   // "Dessiner mon toit": clicks add corners; finish() closes the polygon.
@@ -859,20 +867,49 @@ const UI = {
     };
   },
 
-  renderRoof(info, { fit = false } = {}) {
-    if (!info) return;
+  // Roof card: map overlay, potential score, stat tiles. `m` carries the
+  // numbers the score needs (target size, yield, payback).
+  renderRoof(info, m, { fit = false } = {}) {
+    const on = !!info;
+    ["roof-legend", "roof-summary", "roof-stats"].forEach(id => { $(id).hidden = !on; });
+    if (!on) return;
     const p = State.params;
     const needed = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
-    const shown = info.panels.slice(0, needed);
-    MapView.showRoof(State.roof.latlngs, shown.map(r => Roof.toLatLng(r, info.o)), { fit });
-    const src = State.roof.src === "osm" ? "Bâtiment détecté (OpenStreetMap)" : "Toit dessiné";
-    let html = `<strong>${src} : ${fmtNum(info.areaM2)} m² au sol.</strong> ` +
-      `Jusqu'à ${info.panels.length} panneaux (${fmtNum(info.capacityKw)} kWc) en laissant ` +
-      `${CONFIG.ROOF_SETBACK_M} m sur les bords.`;
+    const toLL = r => Roof.toLatLng(r, info.o);
+    MapView.showRoof(State.roof.latlngs,
+      info.panels.slice(0, needed).map(toLL), info.panels.slice(needed).map(toLL), { fit });
+
+    // Score: three transparent 0–100 notes, explained in the "?" tooltip.
+    const clamp = x => Math.max(0, Math.min(100, Math.round(x)));
+    const notes = {
+      roof: clamp(100 * info.capacityKw / Math.max(m.targetKw, 0.5)),
+      sun: clamp(100 * (m.yieldPerKw - 1200) / (1900 - 1200)),
+      roi: isFinite(m.paybackYr) ? clamp(100 * (15 - m.paybackYr) / (15 - 4)) : 0,
+    };
+    const score = Math.round((notes.roof + notes.sun + notes.roi) / 3);
+    const tone = v => v >= 70 ? "good" : v >= 45 ? "fair" : "low";
+    $("roof-score").textContent = score;
+    const ring = $("roof-ring"), C = 2 * Math.PI * 52;
+    ring.style.strokeDasharray = `${C * score / 100} ${C}`;
+    ring.setAttribute("class", "ring-fg " + tone(score));
+    for (const [k, v] of Object.entries(notes)) {
+      const bar = $("bar-" + k);
+      bar.style.width = v + "%";
+      bar.className = tone(v);
+      $("val-" + k).textContent = v;
+    }
+
+    const shown = Math.min(needed, info.panels.length);
+    $("st-area").textContent = `${fmtNum(info.areaM2)} m²`;
+    $("st-area-sub").textContent = State.roof.src === "osm" ? "d'après OpenStreetMap" : "toit dessiné";
+    $("st-max").textContent = `${fmtNum(info.capacityKw)} kWc`;
+    $("st-max-sub").textContent = `${info.panels.length} panneaux`;
+    $("st-inst").textContent = `${p.peakpower.toFixed(1).replace(".0", "")} kWc`;
+    $("st-inst-sub").textContent = `${shown} panneau${shown > 1 ? "x" : ""} · ${fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
+
+    let html = `Panneaux de 500 Wc, ${CONFIG.ROOF_SETBACK_M} m de marge sur les bords, rangées espacées pour éviter l'ombre.`;
     if (needed > info.panels.length) {
-      html += ` <span class="roof-warn">Votre toit ne permet que ${info.panels.length} des ${needed} panneaux de cette installation.</span>`;
-    } else {
-      html += ` ${needed} panneau${needed > 1 ? "x" : ""} affiché${needed > 1 ? "s" : ""} pour ${p.peakpower.toFixed(1)} kWc.`;
+      html = `<span class="roof-warn">Votre toit ne permet que ${info.panels.length} des ${needed} panneaux de cette installation.</span> ` + html;
     }
     this.setRoofInfo(html);
   },
@@ -969,8 +1006,8 @@ const UI = {
     // Derive consumption from the bill; auto-size the system if not overridden
     const consumption = Tariff.kwhFromBill(p.bill);
     const roofInfo = this.roofLayout();
+    const targetKw = (consumption * 12 * CONFIG.AUTOSIZE_COVER) / State.lastPerKw.yieldPerKw;
     if (State.sizeAuto) {
-      const targetKw = (consumption * 12 * CONFIG.AUTOSIZE_COVER) / State.lastPerKw.yieldPerKw;
       // Never recommend more than the roof holds (when the roof is known).
       const roofMax = roofInfo ? Math.floor(roofInfo.capacityKw * 2) / 2 : Infinity;
       p.peakpower = Math.min(10, roofMax, Math.max(1, Math.round(targetKw * 2) / 2));
@@ -978,8 +1015,6 @@ const UI = {
       $("peakpower").value = p.peakpower;
       this.renderParamLabels();
     }
-
-    this.renderRoof(roofInfo, { fit: fitRoof });
 
     const pv = PVGIS.scale(State.lastPerKw, p.peakpower);
     const capexMAD = p.peakpower * 1000 * p.cost;
@@ -989,6 +1024,7 @@ const UI = {
       capexMAD,
       exportAllowed: p.exportAllowed,
     });
+    this.renderRoof(roofInfo, { targetKw, yieldPerKw: State.lastPerKw.yieldPerKw, paybackYr: roi.paybackYr }, { fit: fitRoof });
 
     // Hero
     const savings = Math.round(roi.annualSavingsMAD);
