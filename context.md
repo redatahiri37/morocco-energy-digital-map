@@ -44,6 +44,18 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-02 (solar: roof area + panels)
+Wattu Solar (`solar/`) now looks up the building under the address in
+OpenStreetMap (Overpass, `way["building"]` within 25 m), shows its footprint
+area and lays out 500 Wc panels (1.13 × 2.28 m) on it, Sunrise-style: rows
+facing the chosen orientation, 1 m margin from the edges, row spacing for a
+33° sun. No building found → "Dessiner mon toit" (click the corners). The
+auto-size never exceeds what the roof holds. The area is the footprint, not
+the sloped roof surface. Solar has no auto-deploy:
+`wrangler pages deploy solar --project-name=atlas-solar`.
+Pending: energy-map fonts inspired by normalcomputing.com (blocked from cloud
+sessions; needs screenshots or font names from the owner).
+
 ## Session handoff — 2026-09-29 (African DC markets)
 Added South Africa, Nigeria, Kenya, Egypt, Ghana, Côte d'Ivoire, Rwanda and
 Ethiopia with `scripts/build-country-open-data.py`: Natural Earth outline +

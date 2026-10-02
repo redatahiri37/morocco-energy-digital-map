@@ -429,7 +429,7 @@ a:hover { text-decoration: underline; }
   height: 240px;
 }
 #map {
-  height: 260px;
+  height: 320px;
   width: 100%;
   border-radius: var(--r);
   overflow: hidden;
@@ -633,5 +633,29 @@ a:hover { text-decoration: underline; }
   /* Keep the accordion label on one line */
   .summary-hint { display: none; }
 
-  #map { height: 200px; }
+  #map { height: 280px; }
+}
+
+/* Roof footprint bar under the map */
+.roof-bar {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.roof-info {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted, #5b6472);
+}
+.roof-info strong { color: var(--navy, #001F4D); }
+.roof-warn { color: #b45309; font-weight: 600; }
+.roof-actions { display: flex; gap: 8px; flex-shrink: 0; }
+#map.drawing, #map.drawing .leaflet-interactive { cursor: crosshair; }
+/* While drawing, a corner placed on the address pin or the old roof must reach the map. */
+#map.drawing .leaflet-marker-pane *, #map.drawing .leaflet-overlay-pane * { pointer-events: none; }
+@media (max-width: 620px) {
+  .roof-bar { flex-direction: column; }
 }

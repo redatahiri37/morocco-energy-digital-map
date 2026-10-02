@@ -180,10 +180,18 @@
 
         <div id="map-card" class="chart-card">
           <div class="chart-header">
-            <h3>Localisation</h3>
+            <h3>Votre toit</h3>
             <span class="chart-sub" id="coords-label"></span>
           </div>
           <div id="map"></div>
+          <div class="roof-bar">
+            <p class="roof-info" id="roof-info" aria-live="polite"></p>
+            <div class="roof-actions">
+              <button type="button" class="linkbtn small" id="roof-draw-btn">✎ Dessiner mon toit</button>
+              <button type="button" class="linkbtn small" id="roof-done-btn" hidden disabled>Terminer</button>
+              <button type="button" class="linkbtn small" id="roof-cancel-btn" hidden>Annuler</button>
+            </div>
+          </div>
         </div>
 
         <div class="finance-card" data-depth="financing">
@@ -229,7 +237,7 @@
         </div>
 
         <div class="disclaimer">
-          <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs ONEE résidentiels 2025. La part d'électricité que vous consommez directement est estimée à partir d'un profil de foyer type. L'ombrage, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
+          <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs ONEE résidentiels 2025. La part d'électricité que vous consommez directement est estimée à partir d'un profil de foyer type. Surface du toit : contour du bâtiment OpenStreetMap (via Overpass) ou tracé par vous, avec 1 m de marge sur les bords et des rangées espacées pour éviter l'ombrage. L'ombrage d'arbres ou de bâtiments voisins, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
         </div>
       </div>
     </div>
