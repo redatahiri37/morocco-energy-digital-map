@@ -108,6 +108,7 @@ const EVENT_NAMES = new Set([
   "pvgis_fallback", // PVGIS unavailable, approximate mode shown
   "param_change",   // a control was tuned — tells us what people care about
   "outcome",        // the economics the visitor actually settled on
+  "roof",           // roof found on OSM (src=osm), not found (none), drawing started/finished
   "depth",          // scrolled to a section (financing, charts, method)
   "exit",           // session ended — furthest step + duration
 ]);

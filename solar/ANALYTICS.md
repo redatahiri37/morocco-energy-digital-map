@@ -14,6 +14,7 @@ is now measured, why each number was chosen, and how to run the loop.
 | `estimate` | The result view is reached | **Activation.** The number that matters most |
 | `pvgis_fallback` | PVGIS is down, approximate mode shown | How often we serve a degraded answer |
 | `param_change` | A control is first touched | Which inputs people care about — and which are dead weight |
+| `roof` | Building lookup ends (`src`: `osm` found / `none`), the user starts drawing (`draw_start`, once) or finishes (`drawn`) | How often OpenStreetMap knows the roof, and whether people bother drawing it |
 | `depth` | A section scrolls into view | Whether the financing card and charts earn their space |
 | `outcome` | 2.5 s after the numbers settle | **What economics people actually see** — bill, size, payback, savings |
 | `exit` | Tab hidden or closed | Furthest step reached + time spent → real drop-off |

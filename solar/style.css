@@ -500,9 +500,10 @@ a:hover { text-decoration: underline; }
   opacity: 1; visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
-/* On phones an anchored tooltip always runs off one edge, so present it as a
-   fixed bottom sheet instead — never clipped, and comfortable to read. */
-@media (max-width: 620px) {
+/* On phones (portrait or landscape) and tablets an anchored tooltip runs off
+   one edge and widens the page, so present it as a fixed bottom sheet
+   instead — never clipped, and comfortable to read. */
+@media (max-width: 900px), (hover: none) {
   .help .tip {
     position: fixed;
     left: 12px; right: 12px; bottom: 16px;
@@ -519,6 +520,11 @@ a:hover { text-decoration: underline; }
   /* Touch target: keep the badge small but give it ~40px of hit area. */
   .help { width: 18px; height: 18px; font-size: 11px; }
   .help::before { content: ""; position: absolute; inset: -11px; }
+
+  /* Finger-sized targets for the small links and the checkbox. */
+  .topnav a { padding: 10px 0; }
+  .linkbtn { padding: 8px 0; }
+  .param-toggle input { width: 20px; height: 20px; }
 }
 
 /* Finance card */
