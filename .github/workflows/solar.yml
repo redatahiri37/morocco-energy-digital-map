@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'docs/brand.css', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'docs/brand.css', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 jobs:
@@ -21,9 +21,15 @@ jobs:
           node --check solar/app.js
           node --check solar/analytics.js
 
-      # Both Pages projects ship their own copy of the shared brand sheet.
-      - name: brand.css is the same in both apps
-        run: cmp docs/brand.css solar/brand.css
+      # Both Pages projects ship their own copy of the shared identity:
+      # brand sheet, logo, favicon and fonts.
+      - name: Shared identity files are the same in both apps
+        run: |
+          set -e
+          cmp docs/brand.css solar/brand.css
+          cmp docs/mark.svg solar/mark.svg
+          cmp docs/favicon.svg solar/favicon.svg
+          diff -r docs/fonts solar/fonts
 
       - name: Worker tests
         working-directory: solar/proxy
@@ -50,7 +56,9 @@ jobs:
           set -e
           mkdir _site
           cp solar/index.html solar/app.js solar/analytics.js solar/style.css \
-             solar/brand.css solar/robots.txt solar/sitemap.xml _site/
+             solar/brand.css solar/mark.svg solar/favicon.svg \
+             solar/robots.txt solar/sitemap.xml _site/
+          cp -r solar/fonts _site/fonts
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
           V="${GITHUB_SHA::8}"

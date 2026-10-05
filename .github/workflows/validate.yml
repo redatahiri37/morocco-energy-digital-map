@@ -3,10 +3,10 @@ name: docs-validate
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   pull_request:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 jobs:
@@ -21,9 +21,15 @@ jobs:
           node --check docs/app.js
           node --check docs/countries.config.js
 
-      # Both Pages projects ship their own copy of the shared brand sheet.
-      - name: brand.css is the same in both apps
-        run: cmp docs/brand.css solar/brand.css
+      # Both Pages projects ship their own copy of the shared identity:
+      # brand sheet, logo, favicon and fonts.
+      - name: Shared identity files are the same in both apps
+        run: |
+          set -e
+          cmp docs/brand.css solar/brand.css
+          cmp docs/mark.svg solar/mark.svg
+          cmp docs/favicon.svg solar/favicon.svg
+          diff -r docs/fonts solar/fonts
 
       # Every country in countries.config.js: config fields, referenced files,
       # GeoJSON against DATA_SCHEMA.md, coordinates inside the country bounds.
