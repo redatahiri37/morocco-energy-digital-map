@@ -1,5 +1,10 @@
 # Secrets — never commit tokens or per-machine config
 docs/config.js
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
 
 # OS / editor
 .DS_Store

@@ -50,6 +50,35 @@ const BOUNDS = {
 
 const UPSTREAM_TIMEOUT_MS = 15000;
 
+// Plain decimals only: Number() also accepts "", "0x21", "1e1", " 33 ",
+// which would reach JRC as typed and split the edge cache.
+const DECIMAL = /^-?\d{1,3}(\.\d{1,8})?$/;
+
+// Used when the RATE_LIMITER binding is missing: a per-isolate counter is
+// weaker than the binding but never leaves the Worker unlimited.
+const RATE_LIMIT = 60;          // requests per minute per IP and route
+const fallbackHits = new Map(); // key → [windowStart, count]
+let warned = false;
+
+async function rateLimited(env, key) {
+  if (env.RATE_LIMITER) {
+    const { success } = await env.RATE_LIMITER.limit({ key });
+    return !success;
+  }
+  if (!warned) {
+    warned = true; // once per isolate: visible in `wrangler tail`
+    console.error("RATE_LIMITER binding missing — per-isolate fallback limit in use");
+  }
+  const now = Date.now();
+  const hit = fallbackHits.get(key);
+  if (!hit || now - hit[0] >= 60000) {
+    if (fallbackHits.size > 10000) fallbackHits.clear();
+    fallbackHits.set(key, [now, 1]);
+    return false;
+  }
+  return ++hit[1] > RATE_LIMIT;
+}
+
 function corsHeaders(request) {
   const origin = request.headers.get("Origin");
   const ok = ALLOWED_ORIGINS.includes(origin) ||
@@ -60,6 +89,7 @@ function corsHeaders(request) {
     "access-control-allow-origin": allowed,
     "access-control-allow-methods": "GET, POST, OPTIONS",
     "vary": "Origin",
+    "x-content-type-options": "nosniff",
   };
 }
 
@@ -77,17 +107,20 @@ function validate(searchParams) {
   for (const key of searchParams.keys()) {
     if (!ALLOWED_PARAMS.has(key)) return `Paramètre inconnu : ${key}`;
   }
+  for (const key of ["lat", "lon"]) {
+    if (searchParams.get(key) === null) return `Paramètre manquant : ${key}`;
+  }
   for (const [key, [min, max]] of Object.entries(BOUNDS)) {
     const raw = searchParams.get(key);
     if (raw === null) continue; // PVGIS has defaults for optional params
     const v = Number(raw);
-    if (!Number.isFinite(v) || v < min || v > max) {
-      return `Paramètre invalide : ${key}=${raw}`;
+    if (!DECIMAL.test(raw) || v < min || v > max) {
+      return `Paramètre invalide : ${key}=${raw.slice(0, 40)}`;
     }
   }
   const mounting = searchParams.get("mountingplace");
   if (mounting !== null && !["free", "building"].includes(mounting)) {
-    return `Paramètre invalide : mountingplace=${mounting}`;
+    return `Paramètre invalide : mountingplace=${mounting.slice(0, 40)}`;
   }
   return null;
 }
@@ -114,31 +147,55 @@ const EVENT_NAMES = new Set([
 ]);
 
 // Only these keys are ever read off the wire. Anything else is dropped.
-const EVENT_BLOBS = ["ref", "dev", "lang", "src", "field", "section"];
-const EVENT_DOUBLES = ["t", "w", "step", "dur", "lat", "lon", "bill", "kwp", "payback", "savings"];
+// Each value must match the shape analytics.js sends, or it is stored as
+// "other": the dataset is read by scripts and agents and ends up in
+// committed minutes, so free text (links, markdown, instructions) never
+// gets in.
+const EVENT_BLOBS = {
+  ref: /^[a-z0-9.-]{1,64}$/,       // referrer host, "direct" or "self"
+  dev: /^(mobile|tablet|desktop)$/,
+  lang: /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,4})?$/,
+  src: /^[a-z_]{1,24}$/,           // typed, chip, geoloc, osm, drawn…
+  field: /^[a-z_]{1,24}$/,         // peakpower, bill_chip…
+  section: /^[a-z_]{1,24}$/,       // financing, charts, method
+};
+// Bounds per number; outside them the value is stored as 0. Coordinates
+// are Morocco only and rounded here too (~11 km), so the privacy promise
+// in ANALYTICS.md does not rest on the client alone.
+const EVENT_DOUBLES = {
+  t: [0, 86400], w: [0, 10000], step: [0, 10], dur: [0, 86400],
+  lat: [20, 37], lon: [-18, 0], bill: [0, 20000], kwp: [0, 100],
+  payback: [0, 50], savings: [0, 1e6],
+};
+const COARSE = new Set(["lat", "lon"]);
+const SID = /^[a-z0-9]{1,16}$/;
 
 const MAX_EVENTS_PER_BEACON = 20;
-const MAX_BLOB_LEN = 64;
 const MAX_BODY_BYTES = 8192;
 
-function str(v) {
-  return typeof v === "string" ? v.slice(0, MAX_BLOB_LEN) : "";
+function blob(key, v) {
+  if (v === undefined || v === null || v === "") return "";
+  return typeof v === "string" && EVENT_BLOBS[key].test(v) ? v : "other";
 }
-function num(v) {
-  return Number.isFinite(v) ? v : 0;
+function dbl(key, v) {
+  const [min, max] = EVENT_DOUBLES[key];
+  if (!Number.isFinite(v) || v < min || v > max) return 0;
+  return COARSE.has(key) ? Math.round(v * 10) / 10 : v;
 }
 
 async function handleEvent(request, env) {
   // A malformed or oversized beacon is dropped silently — analytics must
   // never surface an error to the visitor.
-  const raw = await request.text();
-  if (raw.length > MAX_BODY_BYTES) return new Response(null, { status: 204, headers: corsHeaders(request) });
+  const done = () => new Response(null, { status: 204, headers: corsHeaders(request) });
+  if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) return done();
+  const raw = await readCapped(request, MAX_BODY_BYTES);
+  if (raw === null) return done();
 
   let payload;
   try { payload = JSON.parse(raw); } catch (e) { payload = null; }
 
   if (payload && Array.isArray(payload.ev) && env.SOLAR_ANALYTICS) {
-    const sid = str(payload.sid);
+    const sid = typeof payload.sid === "string" && SID.test(payload.sid) ? payload.sid : "other";
     for (const ev of payload.ev.slice(0, MAX_EVENTS_PER_BEACON)) {
       if (!ev || !EVENT_NAMES.has(ev.e)) continue;
       env.SOLAR_ANALYTICS.writeDataPoint({
@@ -146,13 +203,33 @@ async function handleEvent(request, env) {
         // rare events (geocode_fail, pvgis_fallback) are never sampled away
         // behind the common ones.
         indexes: [ev.e],
-        blobs: [ev.e, sid, ...EVENT_BLOBS.map((k) => str(ev[k]))],
-        doubles: EVENT_DOUBLES.map((k) => num(ev[k])),
+        blobs: [ev.e, sid, ...Object.keys(EVENT_BLOBS).map((k) => blob(k, ev[k]))],
+        doubles: Object.keys(EVENT_DOUBLES).map((k) => dbl(k, ev[k])),
       });
     }
   }
 
-  return new Response(null, { status: 204, headers: corsHeaders(request) });
+  return done();
+}
+
+// Reads the body as text, giving up (null) past `max` bytes without
+// buffering the rest.
+async function readCapped(request, max) {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) { reader.cancel().catch(() => {}); return null; }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) { all.set(c, at); at += c.byteLength; }
+  return new TextDecoder().decode(all);
 }
 
 export default {
@@ -166,10 +243,9 @@ export default {
       if (request.method !== "POST") {
         return errorResponse(request, 405, "Méthode non autorisée");
       }
-      if (env.RATE_LIMITER) {
-        const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-        const { success } = await env.RATE_LIMITER.limit({ key: ip });
-        if (!success) return new Response(null, { status: 204, headers: corsHeaders(request) });
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      if (await rateLimited(env, "e:" + ip)) {
+        return new Response(null, { status: 204, headers: corsHeaders(request) });
       }
       return handleEvent(request, env);
     }
@@ -186,21 +262,26 @@ export default {
       return errorResponse(request, 400, invalid);
     }
 
-    // Per-IP rate limit (60 req/min) via the Workers rate-limiting binding.
-    if (env.RATE_LIMITER) {
-      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-      const { success } = await env.RATE_LIMITER.limit({ key: ip });
-      if (!success) {
-        return errorResponse(request, 429, "Trop de requêtes — réessayez dans une minute");
-      }
+    // Per-IP rate limit (60 req/min), its own bucket apart from /e.
+    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    if (await rateLimited(env, "pv:" + ip)) {
+      return errorResponse(request, 429, "Trop de requêtes — réessayez dans une minute");
     }
 
     // Rebuild the upstream URL from the validated whitelist only, sorted so
     // the edge cache key is stable regardless of client param order.
+    // Numbers are forwarded normalised (coordinates to 4 decimals, ~11 m),
+    // never as the client typed them.
     const upstream = new URL(UPSTREAM);
     [...ALLOWED_PARAMS].sort().forEach((key) => {
       const v = url.searchParams.get(key);
-      if (v !== null) upstream.searchParams.set(key, v);
+      if (v === null) return;
+      if (key in BOUNDS) {
+        const n = Number(v);
+        upstream.searchParams.set(key, String(key === "lat" || key === "lon" ? +n.toFixed(4) : n));
+      } else {
+        upstream.searchParams.set(key, v);
+      }
     });
     upstream.searchParams.set("outputformat", "json");
 
@@ -208,16 +289,19 @@ export default {
     try {
       jrcResponse = await fetch(upstream, {
         signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-        cf: { cacheTtl: 86400, cacheEverything: true },
+        // Errors are never cached: a JRC outage must not outlive itself.
+        cf: { cacheEverything: true, cacheTtlByStatus: { "200-299": 86400, "400-599": 0 } },
       });
     } catch (e) {
       return errorResponse(request, 504, "PVGIS ne répond pas — réessayez dans quelques instants");
     }
 
     if (!jrcResponse.ok) {
-      const msg = jrcResponse.status >= 500
-        ? "PVGIS est indisponible — réessayez plus tard"
-        : "PVGIS a rejeté la requête — vérifiez les paramètres";
+      const msg = jrcResponse.status === 429
+        ? "PVGIS est saturé — réessayez dans une minute"
+        : jrcResponse.status >= 500
+          ? "PVGIS est indisponible — réessayez plus tard"
+          : "PVGIS a rejeté la requête — vérifiez les paramètres";
       return errorResponse(request, jrcResponse.status, msg);
     }
 

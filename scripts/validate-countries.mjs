@@ -32,6 +32,10 @@ const num = (v) => typeof v === "number" && Number.isFinite(v);
 const numOrNull = (v) => v === null || num(v);
 const str = (v) => typeof v === "string" && v.trim() !== "";
 
+// Optional fields that must be numbers whenever present, in every kind.
+const NUMERIC_OPTIONAL = ["investment_usd", "commissioning_year", "year", "units",
+  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw"];
+
 // Per kind: geometry types, required fields (with a test), recommended fields.
 export const SCHEMA = {
   power: {
@@ -166,6 +170,10 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       for (const field of schema.recommended) if (p[field] == null) missingRec[field] = (missingRec[field] || 0) + 1;
       if (p.id != null) { if (featIds.has(p.id)) fail(fat, `duplicate id "${p.id}"`); featIds.add(p.id); }
       if (p.source_url != null && !/^https?:\/\//.test(p.source_url)) fail(fat, "source_url must be an http(s) URL");
+      // The map writes these into HTML as numbers: a string here would be
+      // markup on the page.
+      for (const field of NUMERIC_OPTIONAL)
+        if (p[field] != null && !num(p[field])) fail(fat, `${field} must be a number, got ${JSON.stringify(p[field])}`);
       if (boundsOk) {
         // Points must sit in the country. Lines may cross borders
         // (interconnectors, export corridors) but must touch it.

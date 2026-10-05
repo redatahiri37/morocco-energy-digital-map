@@ -44,6 +44,28 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-05 (security audit and fixes)
+- Two audits (web apps; Worker, CI, secrets). No secret in history
+  (gitleaks, 178 commits). Fixes, see SECURITY.md:
+  - CSP and security headers in docs/_headers and solar/_headers. A new
+    host must be added there. CI checks the inline script hash.
+  - Map: fixed attribution text (the style's HTML could run script),
+    numbers and links checked before going into HTML, and the validator
+    type-checks investment_usd and the other numeric fields.
+  - Worker: values checked by shape before storage (the telemetry brief
+    goes to an agent and into minutes), coordinates rounded server-side,
+    normalised PVGIS parameters, rate limit even without the binding
+    (`[[ratelimits]]`), errors not edge-cached. **Needs `npx wrangler@4
+    deploy` in solar/proxy.**
+  - Solar: at most 400 panel slots (a stadium froze the page), bill slider
+    debounced, address label only in the "Partager" link, link label
+    cleaned, footer says which services see the address/position.
+  - CI: actions pinned by SHA, read-only token, gitleaks on every push.
+    Data downloads are pinned to commits and checked by sha256.
+- Owner to do (checklist in SECURITY.md): branch protection on main,
+  `production` environment for the Cloudflare secrets, Dependabot, record
+  revocation dates of old tokens.
+
 ## Session handoff — 2026-10-05 (France and Spain)
 - France and Spain added: power plants ≥ 10 MW from powerplantmatching
   v0.9.0 (CC BY 4.0, pinned commit c897656), units merged per site, built

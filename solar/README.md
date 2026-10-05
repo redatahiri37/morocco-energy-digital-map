@@ -40,8 +40,14 @@ solar/          (repo root — its own Cloudflare Pages project)
 ### External dependencies (all CDN, no build step, no tokens)
 - **Leaflet 1.9.4** — mini-map
 - **Chart.js 4.4.1** — monthly production + 25-yr cashflow
-- **OpenStreetMap tiles** — default basemap (open data, ODbL). Esri World Imagery available as an optional satellite toggle (token-free, not open data).
+- **Esri World Imagery** — default basemap, zoomed on the roof (token-free, not open data); OpenStreetMap tiles as the other layer (ODbL).
 - **Nominatim** — address geocoding (`countrycodes=ma`, French locale)
+- **Overpass API** — building footprint around the address
+
+These services see the visitor's IP with the address (Nominatim) or the
+house location (Overpass, Esri tiles, PVGIS via the Worker). The page footer
+says so. The share link carries the address (`n`); the hash written while
+browsing does not.
 - **PVGIS v5.2** (EU JRC) — annual + monthly kWh per (lat, lon, kWp, tilt, azimuth), via our Cloudflare Worker proxy
 
 ### Data sources

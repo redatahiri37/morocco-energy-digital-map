@@ -52,13 +52,21 @@ def pct(num, den):
     return f"{100.0 * num / den:.0f}% ({num}/{den})"
 
 
+def cell(v):
+    """Dataset values come from the public /e endpoint and end up in
+    committed minutes read by an agent: printed as inert code text, never
+    as markdown, links or terminal escapes."""
+    v = "".join(ch for ch in str(v) if ch.isprintable())[:64]
+    return "`" + v.replace("`", "'").replace("|", "/") + "`" if v else ""
+
+
 def table(rows, cols, headers):
     if not rows:
         return "_no data_\n"
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join(["---"] * len(cols)) + "|"]
     for r in rows:
-        out.append("| " + " | ".join(str(r.get(c, "")) for c in cols) + " |")
+        out.append("| " + " | ".join(cell(r.get(c, "")) for c in cols) + " |")
     return "\n".join(out) + "\n"
 
 

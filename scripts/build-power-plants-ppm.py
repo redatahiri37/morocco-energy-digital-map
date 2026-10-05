@@ -146,7 +146,9 @@ def build(key, iso2, country, ne, rows):
         datasets = []
         for u in us:
             datasets += [DATASETS.get(k, k) for k in u["ids"] if DATASETS.get(k, k) not in datasets]
-        osm = next((o for u in us for o in u["ids"].get("OSM", []) if o.startswith("OSM_plant:")), "")
+        # projectID holds Python sets, whose order changes between runs:
+        # sort so a rebuild picks the same OSM link.
+        osm = next((o for u in us for o in sorted(u["ids"].get("OSM", [])) if o.startswith("OSM_plant:")), "")
         years = [u["in"] for u in us if u["in"]]
         running = [u for u in us if not (u["in"] and u["in"] > RETIRED_BY)]
         tech = first["tech"]

@@ -52,6 +52,10 @@ const CONFIG = {
   PANEL_L_M: 2.28,
   ROOF_SETBACK_M: 1.0,
   ROW_SHADOW_SUN_ELEV_DEG: 33,
+  // Slots laid out at most (200 kWc, 20× the largest home system). A
+  // warehouse or a stadium would otherwise draw 100,000+ polygons and
+  // freeze the page.
+  MAX_PANEL_SLOTS: 400,
   // OpenStreetMap building lookup (Overpass API), radius around the address
   OVERPASS_URL: "https://overpass-api.de/api/interpreter",
   BUILDING_SEARCH_RADIUS_M: 25,
@@ -472,10 +476,12 @@ const Roof = {
     const ok = (p) => this.contains(pts, p) && this.distToEdges(pts, p) >= sb - 1e-6;
     const panels = [];
     // Start from the sunny edge (largest v = furthest toward the facing direction)
+    rows:
     for (let v = maxV - sb; v - depth >= minV + sb - 1e-6; v -= pitch) {
       for (let uu = minU + sb; uu + W <= maxU - sb + 1e-6; uu += W + 0.02) {
         const rect = [fromUV(uu, v), fromUV(uu + W, v), fromUV(uu + W, v - depth), fromUV(uu, v - depth)];
         if (rect.every(ok)) panels.push(rect);
+        if (panels.length >= CONFIG.MAX_PANEL_SLOTS) break rows;
       }
     }
     return panels;
@@ -713,7 +719,7 @@ const UI = {
       State.params.bill = parseFloat($("bill").value);
       this.syncBillPresets();
       this.renderParamLabels();
-      this.recalc();
+      recalcSoon();
     });
     document.querySelectorAll(".bill-chip").forEach(chip => {
       chip.addEventListener("click", () => {
@@ -770,7 +776,9 @@ const UI = {
 
   // The estimate lives in the URL hash, so it can be shared, bookmarked or
   // reopened as is. A hash never reaches a server, our analytics included.
-  syncUrl() {
+  // The address label (n) is added only when the visitor shares: otherwise
+  // the home address would sit in browser history for nothing.
+  syncUrl({ withLabel = false } = {}) {
     if (!State.location || !$("step2").classList.contains("active")) return;
     const p = State.params, l = State.location;
     const q = new URLSearchParams({
@@ -779,7 +787,7 @@ const UI = {
     });
     if (!State.sizeAuto) q.set("p", p.peakpower);
     if (p.exportAllowed) q.set("x", "1");
-    if (l.label) q.set("n", l.label);
+    if (withLabel && l.label) q.set("n", l.label.slice(0, 120));
     // Safari throws past ~100 calls in 30 s; a lost update is harmless.
     try { history.replaceState(null, "", "#" + q.toString()); } catch (e) { /* ignore */ }
   },
@@ -810,11 +818,14 @@ const UI = {
     this.syncBillPresets();
     this.renderParamLabels();
     State.candidates = [];
-    this.setLocationAndGo({ lat, lon, label: q.get("n") || "", src: "link" });
+    // A link can carry any text: keep it short and plain so it cannot pass
+    // for a message from us (phone numbers, offers…).
+    const label = (q.get("n") || "").replace(/[^\p{L}\p{N} ,.'’()-]/gu, "").replace(/(\d[\s.-]*){8,}/g, "").slice(0, 120).trim();
+    this.setLocationAndGo({ lat, lon, label, src: "link" });
   },
 
   async share() {
-    this.syncUrl();
+    this.syncUrl({ withLabel: true });
     const url = location.href;
     const text = `Toit solaire : environ ${fmtNum(State.savings)} MAD économisés par an, d'après Wattu.`;
     const btnLabel = $("share-btn-label");
@@ -947,6 +958,7 @@ const UI = {
       o, panels,
       areaM2: Roof.area(pts),
       capacityKw: panels.length * CONFIG.PANEL_KWP,
+      capped: panels.length >= CONFIG.MAX_PANEL_SLOTS,
     };
   },
 
@@ -985,8 +997,9 @@ const UI = {
     const shown = Math.min(needed, info.panels.length);
     $("st-area").textContent = `${fmtNum(info.areaM2)} m²`;
     $("st-area-sub").textContent = State.roof.src === "osm" ? "d'après OpenStreetMap" : "toit dessiné";
-    $("st-max").textContent = `${fmtNum(info.capacityKw)} kWc`;
-    $("st-max-sub").textContent = `${info.panels.length} panneaux`;
+    const plus = info.capped ? "+" : "";
+    $("st-max").textContent = `${fmtNum(info.capacityKw)}${plus} kWc`;
+    $("st-max-sub").textContent = `${info.panels.length}${plus} panneaux`;
     $("st-inst").textContent = `${fmtDec(p.peakpower, { trim: true })} kWc`;
     $("st-inst-sub").textContent = `${shown} panneau${shown > 1 ? "x" : ""} · ${fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
 

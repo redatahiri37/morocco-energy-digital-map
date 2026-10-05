@@ -23,8 +23,11 @@ every plant is marked `precision: approximate`, `status: operational`.
 Standard library only. Downloads are cached in scripts/.cache/ (git-ignored).
 """
 import csv
+import hashlib
 import json
 import math
+import os
+import shutil
 import sys
 import urllib.request
 from pathlib import Path
@@ -32,10 +35,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = Path(__file__).resolve().parent / ".cache"
 
-NE_URL = ("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/"
-          "geojson/ne_50m_admin_0_countries.geojson")
-GPPD_URL = ("https://raw.githubusercontent.com/wri/global-power-plant-database/master/"
-            "output_database/global_power_plant_database.csv")
+# Pinned to a commit, and each download checked against its sha256: a
+# rebuild uses exactly the files the published layers were built from. To
+# move to a newer upstream, change the commit and the hash together.
+NE_URL = ("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
+          "ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_50m_admin_0_countries.geojson")
+GPPD_URL = ("https://raw.githubusercontent.com/wri/global-power-plant-database/"
+            "7a91cfbb2a4e272597acbc00506d61fc1ec73b3d/output_database/global_power_plant_database.csv")
+SHA256 = {
+    "ne_50m_admin_0_countries.geojson": "3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb",
+    "gppd.csv": "4b1f93e0fd93664f18684d9b05d0a52ed9658c6a8cf0d21ff2520791379ba7fc",
+    "powerplantmatching.csv": "faddf9a165e227b7866a6b4f42485ffc22041f20a75a8638c38e405cfc786136",
+}
 GPPD_HOME = "https://datasets.wri.org/dataset/globalpowerplantdatabase"
 
 COAST_KM = 5
@@ -52,11 +63,22 @@ FUEL = {"Solar": "solar", "Wind": "wind", "Hydro": "hydro", "Coal": "coal",
 
 
 def fetch(url, name):
+    """Download once into scripts/.cache. A partial download never lands
+    under the final name, and a file whose hash is wrong is refused."""
     CACHE.mkdir(exist_ok=True)
     path = CACHE / name
     if not path.exists():
         print(f"downloading {url}", file=sys.stderr)
-        urllib.request.urlretrieve(url, path)
+        part = path.with_suffix(path.suffix + ".part")
+        with urllib.request.urlopen(url, timeout=60) as r, open(part, "wb") as fh:
+            shutil.copyfileobj(r, fh)
+        os.replace(part, path)
+    want = SHA256.get(name)
+    if want:
+        got = hashlib.sha256(path.read_bytes()).hexdigest()
+        if got != want:
+            sys.exit(f"{path}: sha256 {got}, expected {want}. Delete it and rerun, "
+                     "or update SHA256 if the source was moved on purpose.")
     return path
 
 

@@ -1,0 +1,10 @@
+# Security headers for solar.wattu.org (Cloudflare Pages reads this file;
+# solar.yml copies it into the deploy). The CSP lists every host the
+# estimator talks to: CDN libraries, map tiles, Nominatim, Overpass and our
+# Worker. A new host must be added here or the browser refuses it.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://unpkg.com/leaflet@1.9.4/dist/leaflet.js https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js; style-src 'self' https://unpkg.com/leaflet@1.9.4/dist/leaflet.css; img-src 'self' data: https://unpkg.com/leaflet@1.9.4/dist/images/ https://server.arcgisonline.com https://*.tile.openstreetmap.org; font-src 'self'; connect-src https://nominatim.openstreetmap.org https://overpass-api.de https://solar-pvgis.redatahiri.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Permissions-Policy: geolocation=(self), camera=(), microphone=(), interest-cohort=()
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000
