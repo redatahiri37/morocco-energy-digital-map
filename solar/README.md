@@ -59,9 +59,9 @@ What the Worker does:
 - **Edge-caches** JRC responses 24 h, keyed on the sorted param tuple. Repeat lookups never hit JRC.
 - **Rate-limits** 60 req/min/IP (degrades gracefully if the beta binding is unavailable).
 - **Maps errors** to `{ "error": "<message fr>", "status": <code> }` — the client shows the message inline.
-- **Scopes CORS** to `https://redatahiri37.github.io` and `http://localhost:8765`.
+- **Scopes CORS** to the Wattu origins (`ALLOWED_ORIGINS` in `proxy/worker.js`: solar.wattu.org, energy.wattu.org, the Pages addresses and localhost).
 
-Until the Worker URL is pasted into `CONFIG.PVGIS_WORKER_URL` in `app.js`, the client falls back to the `corsproxy.io` shim so the page keeps working pre-deploy.
+The client calls only the Worker (`CONFIG.PVGIS_WORKER_URL`); there is no third-party CORS proxy.
 
 ### Proxy operations
 

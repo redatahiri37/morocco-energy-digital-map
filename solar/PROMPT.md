@@ -68,7 +68,7 @@ The user should be able to say all of these after using the tool:
 - **Source.** PVGIS v5.2, endpoint `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc`.
 - **Radiation DB.** PVGIS-SARAH3 (default, covers MA).
 - **Default losses.** 14 % (soiling + inverter + wiring + mismatch + LID).
-- **Constraint.** PVGIS is **not CORS-enabled**. Calls route through our Cloudflare Worker (`solar/proxy/worker.js`) — edge-cached 24 h, rate-limited, French error mapping. Ops guide in `solar/README.md`. The client falls back to `corsproxy.io` only while `CONFIG.PVGIS_WORKER_URL` is still the placeholder.
+- **Constraint.** PVGIS is **not CORS-enabled**. Calls route through our Cloudflare Worker (`solar/proxy/worker.js`) — edge-cached 24 h, rate-limited, French error mapping. Ops guide in `solar/README.md`. The client calls only the Worker — no third-party CORS proxy.
 
 ### Tariff (ONEE residential LV, 2025, TTC incl. 18 % VAT)
 | Tranche (kWh/mo) | Prix (MAD/kWh) |
@@ -111,8 +111,8 @@ Selective billing above 150 kWh/mo (each tranche at its own price). PV displaces
 
 ## 9. Verification checklist (run before merging any change)
 
-1. Type a Moroccan address (e.g., "Rue Ibnou Sina, Rabat") → suggestions appear within 500 ms.
-2. Pick a suggestion or click a city chip → step 2 renders KPIs within 3 s.
+1. Type a Moroccan address (e.g., "Rue Ibnou Sina, Rabat") and press « Estimer » → step 2 renders KPIs within 3 s; other matches appear under « Pas la bonne adresse ? ». No request is sent while typing (Nominatim's usage policy forbids client-side autocomplete).
+2. Click a city chip → step 2 renders KPIs within 3 s.
 3. Drag "Puissance installée" slider → all four KPIs and both charts update without flicker.
 4. Toggle "Injection réseau" ON → savings increase by exactly `min(surplus, 0.20·annualPv) × 0.18`. Verify with `console` computation.
 5. Change "Consommation mensuelle" to 100 → auto-consommation ratio should approach 100 % and savings should scale correctly by top tranche.

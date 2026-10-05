@@ -119,32 +119,6 @@ a:hover { text-decoration: underline; }
 #estimate-btn:hover { background: var(--orange-2); }
 #estimate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.suggestions {
-  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--shadow-lg);
-  list-style: none; margin: 0; padding: 4px 0;
-  max-height: 280px; overflow-y: auto;
-  z-index: 100;
-  text-align: left;
-}
-.suggestions li {
-  padding: 10px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  border-bottom: 1px solid var(--border);
-}
-.suggestions li:last-child { border-bottom: none; }
-.suggestions li:hover, .suggestions li.active { background: var(--bg); }
-
-.hint {
-  text-align: center;
-  margin: 16px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-}
 .linkbtn {
   background: none; border: none; padding: 0;
   color: var(--navy); text-decoration: underline;
@@ -195,6 +169,16 @@ a:hover { text-decoration: underline; }
   display: flex; align-items: baseline; gap: 16px;
   margin-bottom: 14px;
 }
+.alt-addresses {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+  margin: -6px 0 14px; font-size: 13px; color: var(--muted);
+}
+.alt-btn {
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: 99px;
+  background: var(--card); color: var(--navy); font: inherit; cursor: pointer;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.alt-btn:hover, .alt-btn:focus-visible { border-color: var(--orange); color: var(--orange-2); }
 
 /* Hero result */
 .hero-result {
@@ -376,38 +360,6 @@ a:hover { text-decoration: underline; }
 .param-toggle input { accent-color: var(--orange); }
 
 /* KPIs */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-.kpi {
-  background: var(--card);
-  border-radius: var(--r-lg);
-  padding: 16px 18px;
-  box-shadow: var(--shadow);
-  border-top: 3px solid transparent;
-}
-.kpi.highlight { border-top-color: var(--orange); }
-.kpi-label {
-  font-size: 12px; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--muted);
-  margin-bottom: 6px;
-}
-.kpi-value {
-  font-size: 26px; font-weight: 700; color: var(--navy);
-  line-height: 1.1;
-}
-.kpi-value .unit {
-  font-size: 13px; color: var(--muted);
-  font-weight: 400; margin-left: 4px;
-}
-.kpi-sub {
-  margin-top: 6px;
-  font-size: 12px; color: var(--muted);
-  min-height: 1em;
-}
-
 /* Chart cards */
 .chart-card {
   background: var(--card);

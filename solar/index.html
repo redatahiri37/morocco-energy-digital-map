@@ -60,15 +60,15 @@
     <div class="hero">
       <h1>Combien vous rapporterait un toit solaire ?</h1>
 
-      <form id="address-form" class="address-form" autocomplete="off">
+      <form id="address-form" class="address-form">
         <div class="input-wrap">
           <input
             id="address-input"
             type="text"
             placeholder="Ex : Rue de la Liberté, Casablanca"
             aria-label="Adresse"
+            autocomplete="street-address"
             required>
-          <ul id="address-suggestions" class="suggestions" hidden></ul>
         </div>
         <button type="submit" id="estimate-btn">Estimer</button>
       </form>
@@ -95,6 +95,9 @@
       <div class="location-line">
         <button class="linkbtn" id="back-btn">← Changer d'adresse</button>
         <div id="location-label" class="location-label"></div>
+      </div>
+      <div id="alt-addresses" class="alt-addresses" hidden>
+        <span>Pas la bonne adresse ?</span>
       </div>
 
       <div id="step2-error" class="error" hidden></div>
