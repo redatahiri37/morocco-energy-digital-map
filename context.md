@@ -44,6 +44,18 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-05 (France and Spain)
+- France and Spain added: power plants ≥ 10 MW from powerplantmatching
+  v0.9.0 (CC BY 4.0, pinned commit c897656), units merged per site, built
+  by scripts/build-power-plants-ppm.py; Natural Earth outlines (France
+  metropolitan + Corsica; Spain incl. Balearics and Canaries). See
+  DATA_SOURCES.md for rules and the RTE/REE cross-check.
+- Dense layers (> 500 plants) cluster wider (radius 60, up to zoom 7).
+- Pending: data centres for FR/ES — owner to save
+  https://www.peeringdb.com/api/fac?country__in=FR,ES as JSON, then run
+  scripts/build-datacentres-peeringdb.py with FR=france ES=spain and add a
+  datacentres layer to PPM_COUNTRY_LAYERS.
+
 ## Session handoff — 2026-10-05 (Wattu identity + solar UX)
 - Identity in brand.css (identical in docs/ and solar/, CI checks it with
   mark.svg, favicon.svg and fonts/): night navy, orange = sun/actions,

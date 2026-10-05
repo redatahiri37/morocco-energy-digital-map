@@ -639,7 +639,10 @@
   function buildPowerLayer(L, fc){
     const srcId = "src-" + L.id, p = "lyr-" + L.id;
 
-    const clusterOpts = { cluster: true, clusterMaxZoom: 6, clusterRadius: 35 };
+    // Dense national fleets (France, Spain: 1,500+ plants) cluster wider so
+    // the bubbles don't tile the whole screen on a phone.
+    const dense = fc.features.length > 500;
+    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35 };
     addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
@@ -650,7 +653,7 @@
       filter:["has","point_count"],
       paint:{
         "circle-color":"rgba(245,158,11,0.85)",
-        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22],
+        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22, 50, 26, 200, 31],
         "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":1.5
       }

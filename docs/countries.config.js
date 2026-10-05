@@ -47,6 +47,26 @@ const GPPD_COUNTRY_LAYERS = [
     updated: "live" }
 ];
 
+// Layers for European countries built from powerplantmatching (see
+// scripts/build-power-plants-ppm.py). Data centres wait for a PeeringDB export.
+const PPM_COUNTRY_LAYERS = [
+  { id: "power-plants", file: "power-plants.geojson", kind: "power",
+    title: "Power plants ≥ 10 MW",
+    source: "powerplantmatching v0.9.0 (PyPSA / KIT, 2026-10-03, CC BY 4.0): ENTSO-E, JRC, Open Power System Data, Global Energy Monitor and others reconciled; units on one site merged; plants under 10 MW, rooftop solar included, left out; closures as dated by the dataset",
+    sourceUrl: "https://github.com/PyPSA/powerplantmatching",
+    updated: "2026-10" },
+  { id: "osm-plants", file: null, kind: "oim-plants",
+    title: "OSM power plants",
+    source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+    sourceUrl: "https://openinframap.org/",
+    updated: "live", visible: false },
+  { id: "oim-grid", file: null, kind: "oim",
+    title: "Transmission grid",
+    source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+    sourceUrl: "https://openinframap.org/",
+    updated: "live" }
+];
+
 window.COUNTRIES = {
   morocco: {
     label: "Morocco",
@@ -282,9 +302,37 @@ window.COUNTRIES = {
         updated: "live" }
     ]
   },
+  france: {
+    label: "France",
+    iso:   "FR",
+    center: [2.4, 46.4],
+    zoom:   5.4,
+    bounds: [[-5.0, 41.1], [9.8, 51.3]],
+    dataPath: "./data/france/",
+    snapshotSource: "powerplantmatching 2026, ≥ 10 MW",
+    credits: "powerplantmatching (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; metropolitan France and Corsica" },
+    layers: PPM_COUNTRY_LAYERS
+  },
+  spain: {
+    label: "Spain",
+    iso:   "ES",
+    center: [-3.7, 40.2],
+    zoom:   5.4,
+    bounds: [[-18.4, 27.4], [4.6, 44.0]],
+    dataPath: "./data/spain/",
+    snapshotSource: "powerplantmatching 2026, ≥ 10 MW",
+    credits: "powerplantmatching (CC BY 4.0)",
+    boundary: { source: "Natural Earth 1:50m Admin 0",
+                sourceUrl: "https://www.naturalearthdata.com/",
+                note: "public domain; peninsula, Balearic and Canary Islands" },
+    layers: PPM_COUNTRY_LAYERS
+  },
   namibia: { label: "Namibia", iso: "NA", center: [17.5, -22.5], zoom: 5.2,
              dataPath: "./data/namibia/", layers: [], placeholder: true }
 };
 
 window.COUNTRIES_ENABLED = ["morocco", "cote-divoire", "egypt", "ethiopia", "ghana",
-  "kenya", "nigeria", "rwanda", "senegal", "south-africa"];
+  "kenya", "nigeria", "rwanda", "senegal", "south-africa", "france", "spain"];

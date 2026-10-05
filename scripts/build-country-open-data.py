@@ -42,6 +42,9 @@ COAST_KM = 5
 # Islands further than this from the mainland are dropped from the outline
 # (e.g. South Africa's Prince Edward Islands), so bounds stay on the country.
 ISLAND_KM = 1000
+# ...except where those islands are the country: Spain's Canaries lie
+# ~1,700 km from the Iberian centroid and carry several GW of plants.
+ISLAND_KM_BY_ISO = {"ES": 2200}
 
 FUEL = {"Solar": "solar", "Wind": "wind", "Hydro": "hydro", "Coal": "coal",
         "Gas": "gas", "Oil": "oil", "Nuclear": "nuclear",
@@ -88,7 +91,10 @@ def centroid(ring):
 
 
 def outline(ne, iso2):
-    feats = [f for f in ne["features"] if f["properties"].get("ISO_A2") == iso2]
+    # Natural Earth codes a few countries -99 in ISO_A2 (France, Norway);
+    # ISO_A2_EH carries the code for those.
+    feats = [f for f in ne["features"]
+             if iso2 in (f["properties"].get("ISO_A2"), f["properties"].get("ISO_A2_EH"))]
     if len(feats) != 1:
         sys.exit(f"{iso2}: expected one Natural Earth feature, found {len(feats)}")
     f = feats[0]
@@ -96,7 +102,8 @@ def outline(ne, iso2):
     polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
     main = max(polys, key=lambda p: len(p[0]))
     cx, cy = centroid(main[0])
-    kept = [p for p in polys if haversine(cx, cy, *centroid(p[0])) <= ISLAND_KM]
+    limit = ISLAND_KM_BY_ISO.get(iso2, ISLAND_KM)
+    kept = [p for p in polys if haversine(cx, cy, *centroid(p[0])) <= limit]
     rnd = lambda ring: [[round(x, 4), round(y, 4)] for x, y in ring]
     kept = [[rnd(r) for r in p] for p in kept]
     return f["properties"]["NAME"], kept

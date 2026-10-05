@@ -24,6 +24,18 @@ or a PR on GitHub.*
 **Attribution template (for screenshots):**
 `Data: Global Energy Monitor · ONEE · MASEN · operator disclosures`
 
+### France and Spain (added 2026-10-05)
+
+| | |
+|---|---|
+| Source | [powerplantmatching](https://github.com/PyPSA/powerplantmatching) v0.9.0 (PyPSA / Karlsruhe Institute of Technology), `powerplants.csv` at commit `c897656` (2026-10-03) |
+| Licence | CC BY 4.0 |
+| What it is | Unit-level list reconciling ENTSO-E, the European Commission's JRC power plant database, Open Power System Data, Global Energy Monitor, WRI GPPD, OpenStreetMap and others; each plant's popup names the datasets that confirm it |
+| Build | `python3 scripts/build-power-plants-ppm.py france FR France spain ES Spain` |
+| Rules | ≥ 10 MW only (small and rooftop solar left out, so solar is undercounted, mostly in France); storage-only entries out; plants with a closure date on or before 2025 out; units on one site merged (Paluel 1–4 → Paluel, 4 units); 20 km coastal tolerance (Flamanville, Le Blayais sit just outside the 1:50m coastline); Ceuta and Melilla fall outside Natural Earth's Spain and are not shown |
+| Cross-check | Against RTE / REE 2024 statistics: France nuclear 65.7 GW (RTE 63 GW net), Spain nuclear 7.4 GW (REE 7.1), Spain wind 30.7 GW (REE 31), Spain CCGT 27.2 GW (REE 26.2) |
+| Known limits | Closure dates are the dataset's: Spanish coal (Aboño, Los Barrios, Soto de Ribera, Es Murterar) is shown until its listed closure even where units already stopped. No data-centre layer yet (needs a PeeringDB export for FR, ES). |
+
 ## Layer 2 — Transmission Grid
 **File:** `docs/data/morocco/grid-lines.geojson` (editorial overlay only)
 
