@@ -1,7 +1,9 @@
 /* =========================================================
    Wattu — shared brand tokens and chrome
-   Single source of truth for both apps (map and /solar/).
-   Loaded AFTER each app's own stylesheet so chrome rules win.
+   One sheet for both apps: docs/brand.css and solar/brand.css are
+   byte-identical copies (each Pages project ships its own) and CI fails
+   if they differ — edit both. Loaded AFTER each app's own stylesheet
+   so chrome rules win. App-specific chrome goes in that app's CSS.
 
    Scope: brand palette + the top bar only. Data colors
    (map layers) and app layouts stay in each app's own CSS.
@@ -27,22 +29,3 @@
 .topbar .brand strong,
 .topbar .brand-text strong { color: #fff; }
 .topbar .brand-text small { color: rgba(255, 255, 255, 0.65); }
-
-/* Map app chrome recolors (no effect on solar, which has no these ids) */
-.topbar .ghost-btn,
-.topbar .icon-btn {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-.topbar .ghost-btn:hover,
-.topbar .icon-btn:hover {
-  color: #fff;
-  border-color: var(--an-orange);
-  background: rgba(255, 107, 53, 0.15);
-}
-.topbar .country-switch label { color: rgba(255, 255, 255, 0.65); }
-.topbar .country-switch select {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
-}

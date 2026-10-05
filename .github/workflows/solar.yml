@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'docs/brand.css', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'docs/brand.css', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 jobs:
@@ -20,6 +20,10 @@ jobs:
           set -e
           node --check solar/app.js
           node --check solar/analytics.js
+
+      # Both Pages projects ship their own copy of the shared brand sheet.
+      - name: brand.css is the same in both apps
+        run: cmp docs/brand.css solar/brand.css
 
       - name: Worker tests
         working-directory: solar/proxy
