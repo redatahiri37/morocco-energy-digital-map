@@ -44,6 +44,21 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-05 (code review of both apps)
+- Solar: address search runs on « Estimer » only (Nominatim forbids
+  as-you-type autocomplete); other matches show in step 2 under « Pas la
+  bonne adresse ? ». PVGIS requests carry a sequence id (late ones dropped)
+  and tilt/orientation sliders are debounced. No corsproxy.io fallback.
+- Map: storage-blocked boot fixed, hover dimming no longer redone on every
+  mousemove, boot/country-switch race fixed, Escape closes popup/modal.
+- CDN libraries are pinned with SRI hashes. Upgrading MapLibre, Leaflet or
+  Chart.js means recomputing them (command in each index.html comment).
+- docs/brand.css and solar/brand.css must stay byte-identical (CI checks).
+- Removed: root Mapbox prototype (index.html, js/), deploy.sh, .DS_Store;
+  docs/CALC_ENGINE.md and docs/SUBSTACK_POST.md moved to the root (they
+  were published on energy.wattu.org).
+- Still manual: `wrangler deploy` of solar/proxy (the `roof` event).
+
 ## Session handoff — 2026-10-02 (solar: roof area + panels)
 Wattu Solar (`solar/`) now looks up the building under the address in
 OpenStreetMap (Overpass, `way["building"]` within 25 m), shows its footprint
