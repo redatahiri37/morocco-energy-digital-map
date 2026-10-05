@@ -31,7 +31,7 @@
       glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
       sources: {},
       layers: [{ id:"background", type:"background",
-                 paint:{ "background-color": theme === "dark" ? "#0e0e0d" : "#f5f4ef" } }]
+                 paint:{ "background-color": theme === "dark" ? "#070D1A" : "#F5F7FA" } }]
     };
   }
 
@@ -387,7 +387,7 @@
   // methodology intro, the data path it cites, and the report-an-error link.
   function renderCountryText(countryKey){
     const c = COUNTRIES[countryKey];
-    document.title = `Energy × Digital Nexus — ${c.label} Infrastructure Map`;
+    document.title = `Wattu Energy — ${c.label} infrastructure map`;
     document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = c.label; });
     document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? `Data: ${c.credits} · ` : ""; });
     document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
@@ -651,7 +651,7 @@
       paint:{
         "circle-color":"rgba(245,158,11,0.85)",
         "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22],
-        "circle-stroke-color": isDark() ? "#0e0e0d" : "#ffffff",
+        "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":1.5
       }
     }, "cluster");
@@ -664,7 +664,7 @@
         "text-size":11,
         "text-allow-overlap":true
       },
-      paint:{ "text-color":"#0e0e0d" }
+      paint:{ "text-color":"#070D1A" }
     });
 
     // Halo for announced/construction status
@@ -742,7 +742,7 @@
         "text-allow-overlap":false
       },
       paint:{
-        "text-color": isDark() ? "#f1efe9" : "#18181a",
+        "text-color": isDark() ? "#EEF2F8" : "#0A1628",
         "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)",
         "text-halo-width":1.5
       }
@@ -808,7 +808,7 @@
       paint:{
         "circle-color": CABLE_COLOR,
         "circle-radius":["interpolate",["linear"],["zoom"], 4, 4.5, 10, 7],
-        "circle-stroke-color": isDark() ? "#0e0e0d" : "#ffffff",
+        "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":2,
         "circle-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
       }

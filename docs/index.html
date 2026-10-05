@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Energy × Digital Nexus — Morocco Infrastructure Map</title>
+<title>Wattu Energy — Morocco infrastructure map</title>
 
 <meta name="description" content="Interactive map of power generation, transmission grid, industrial load and data centres in Morocco and nine other African markets. Open data, every feature sourced.">
 <meta name="author" content="Reda Tahiri">
-<meta property="og:title" content="Energy × Digital Nexus — Morocco Infrastructure Map">
+<meta property="og:title" content="Wattu Energy — power, grid, industry and data centres in Africa">
 <meta property="og:description" content="Power, grid, industry and data centers — on one transparent map.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://energy.wattu.org/">
@@ -20,9 +20,7 @@
     location.replace("https://energy.wattu.org" + location.pathname + location.search + location.hash);
 </script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
 
 <!-- Pinned versions with Subresource Integrity: a tampered CDN file is refused.
      New version → recompute: openssl dgst -sha384 -binary <file> | openssl base64 -A -->
@@ -36,18 +34,11 @@
 
 <!-- ───── TOP BAR ───── -->
 <header class="topbar">
-  <div class="brand">
-    <svg viewBox="0 0 28 28" width="22" height="22" aria-hidden="true">
-      <rect x="2" y="2" width="24" height="24" rx="4" fill="none" stroke="#FF6B35" stroke-width="1.5" opacity=".8"/>
-      <path d="M6 21V9l4 5 4-9 4 9 4-5v12" fill="none" stroke="#FF6B35" stroke-width="1.7" stroke-linejoin="round"/>
-      <line x1="6" y1="17" x2="22" y2="17" stroke="#00D4FF" stroke-width="0.6" opacity=".6"/>
-      <line x1="6" y1="20" x2="22" y2="20" stroke="#e5e4e0" stroke-width="0.5" opacity=".5"/>
-    </svg>
-    <span class="brand-text">
-      <strong>Energy × Digital Nexus</strong>
-      <small><span data-country-label>Morocco</span> Infrastructure Map · v1.0</small>
-    </span>
-  </div>
+  <a class="w-brand" href="./" aria-label="Wattu Energy — home">
+    <img class="w-mark" src="./mark.svg" alt="" width="26" height="26">
+    <span class="w-word">wattu</span>
+    <span class="w-product">Energy × Digital</span>
+  </a>
 
   <div class="country-switch">
     <label for="countrySelect">Country</label>
@@ -169,11 +160,11 @@
       <h3>Third-party requests on load</h3>
       <p>Loading this page contacts these external services. No login, account or personal data is involved — this is standard web-asset loading, disclosed here for transparency.</p>
       <ul class="bullets">
-        <li><strong>Google Fonts</strong> (<code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>) — serves the page typefaces (Inter, Newsreader, IBM Plex Mono).</li>
         <li><strong>unpkg.com</strong> — serves the MapLibre GL JS library and stylesheet that render the map.</li>
         <li><strong>OpenFreeMap</strong> (<code>tiles.openfreemap.org</code>) — serves the basemap style, vector tiles and label fonts, requested continuously as you pan and zoom.</li>
         <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
       </ul>
+      <p class="micro">The typefaces (Inter, Newsreader, IBM Plex Mono, SIL Open Font License) are served from this site, not from a font CDN.</p>
       <h3>Limits</h3>
       <ul class="bullets">
         <li>Transmission-line routing is indicative, not survey-grade. No sub-60 kV distribution network.</li>

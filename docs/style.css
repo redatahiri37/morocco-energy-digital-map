@@ -1,6 +1,8 @@
 /* =========================================================
-   Energy × Digital Nexus — Morocco Infrastructure Map v1.0
-   Palette is prescribed by the spec. Do not invent new hues.
+   Wattu Energy — infrastructure map
+   Identity tokens (fonts, brand colours) come from brand.css.
+   Data colours are fixed by the layer spec; --accent is the
+   interface colour (focus, toggles, links), never a data hue.
    ========================================================= */
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -8,26 +10,27 @@
 :root{
   /* Prescribed layer colors */
   --c-solar:   #F59E0B;  /* amber  — solar / thermal */
-  --c-wind:    #0D9488;  /* teal   — wind */
   --c-hydro:   #3B82F6;  /* blue   — hydro */
   --c-digital: #7C3AED;  /* purple */
 
-  /* Surfaces — dark default */
-  --bg-0:#0e0e0d;
-  --bg-1:#16161a;
-  --bg-2:#1d1d20;
-  --bg-3:#25252a;
-  --border:#2b2b30;
-  --border-hi:#3a3a41;
-  --text-0:#f1efe9;
-  --text-1:#c2bfb4;
-  --text-2:#8a877c;
-  --text-3:#5d5a52;
+  /* Surfaces — dark default: night navy, in the family of the top bar */
+  --bg-0:#070D1A;
+  --bg-1:#0B1426;
+  --bg-2:#101C33;
+  --bg-3:#16243F;
+  --border:#1C2A45;
+  --border-hi:#2A3B5E;
+  --text-0:#EEF2F8;
+  --text-1:#B8C2D3;
+  --text-2:#7F8BA0;
+  --text-3:#56627A;
+  --accent:var(--w-cyan, #22D3EE);
+  --on-accent:#04121F;
 
-  --font-ui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  /* Titles and figures: a light editorial serif; small labels: uppercase mono. */
-  --font-display:"Newsreader",Georgia,"Times New Roman",serif;
+  /* Titles and figures: editorial serif; small labels: uppercase mono. */
+  --font-ui:var(--w-font-ui);
+  --font-mono:var(--w-font-mono);
+  --font-display:var(--w-font-display);
 
   --panel-w:320px;
   --top-h:52px;
@@ -36,16 +39,18 @@
 }
 
 [data-theme="light"]{
-  --bg-0:#f5f4ef;
-  --bg-1:#ecebe5;
-  --bg-2:#e3e1dc;
-  --bg-3:#d7d5cf;
-  --border:#c8c5bd;
-  --border-hi:#b3b0a8;
-  --text-0:#18181a;
-  --text-1:#3b3b3f;
-  --text-2:#6a6a70;
-  --text-3:#8d8d93;
+  --bg-0:#F5F7FA;
+  --bg-1:#FFFFFF;
+  --bg-2:#EEF2F7;
+  --bg-3:#E3E8EF;
+  --border:#DCE2EA;
+  --border-hi:#B9C3D1;
+  --text-0:#0A1628;
+  --text-1:#2E3A4F;
+  --text-2:#5A6577;
+  --text-3:#8390A3;
+  --accent:#0E7490;
+  --on-accent:#FFFFFF;
 }
 
 html,body{
@@ -59,12 +64,12 @@ html,body{
   -webkit-font-smoothing:antialiased;
   overflow:hidden;
 }
-a{color:var(--c-wind);text-decoration:none}
+a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
 select,input{font-family:inherit;color:inherit}
 code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:1px 5px;border-radius:3px;color:var(--text-1)}
-::selection{background:var(--c-wind);color:#fff}
+::selection{background:var(--accent);color:var(--on-accent)}
 .hidden{display:none !important}
 .micro{font-size:10px;color:var(--text-3);letter-spacing:.03em}
 
@@ -77,10 +82,6 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   border-bottom:1px solid var(--border);
   position:relative;z-index:12;
 }
-.brand{display:flex;align-items:center;gap:10px}
-.brand-text{display:flex;flex-direction:column;line-height:1.1}
-.brand-text strong{font-size:14px;font-weight:600;letter-spacing:-0.015em}
-.brand-text small{font-family:var(--font-mono);font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.08em;font-weight:500;margin-top:2px}
 
 .country-switch{display:flex;align-items:center;gap:8px;padding-left:14px;border-left:1px solid var(--border)}
 .country-switch label{font-family:var(--font-mono);font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.08em;font-weight:500}
@@ -103,13 +104,9 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 }
 .icon-btn{padding:0;width:28px;height:28px;justify-content:center}
 .icon-btn.small{width:24px;height:24px}
-.ghost-btn:hover,.icon-btn:hover{background:var(--c-wind);border-color:var(--c-wind);color:#fff}
-.ghost-btn:focus-visible,.icon-btn:focus-visible{outline:2px solid var(--c-wind);outline-offset:2px}
+.ghost-btn:hover,.icon-btn:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 [data-theme="light"] .ghost-btn,[data-theme="light"] .icon-btn{
-  background:#fff;color:#18181a;border-color:#b3b0a8;
-}
-[data-theme="light"] .ghost-btn:hover,[data-theme="light"] .icon-btn:hover{
-  background:var(--c-wind);color:#fff;border-color:var(--c-wind);
+  background:#fff;color:var(--text-0);border-color:var(--border-hi);
 }
 
 /* ───────── LAYOUT ───────── */
@@ -145,7 +142,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   border:1px solid var(--border-hi);border-radius:4px;
   transition:background .1s, color .1s;
 }
-.panel-collapse:hover{background:var(--c-wind);color:#fff;border-color:var(--c-wind)}
+.panel-collapse:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 
 .panel-expand{
   position:absolute;top:50%;left:0;transform:translateY(-50%);
@@ -191,12 +188,12 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   display:inline-flex;align-items:center;justify-content:center;
   transition:background .12s,border-color .12s;
 }
-.layer-row input:checked + .check{background:var(--c-wind);border-color:var(--c-wind)}
-.layer-row input:focus-visible + .check{outline:2px solid var(--c-wind);outline-offset:2px}
+.layer-row input:checked + .check{background:var(--accent);border-color:var(--accent)}
+.layer-row input:focus-visible + .check{outline:2px solid var(--accent);outline-offset:2px}
 .layer-row input:checked + .check::after{
   content:"";
   width:7px;height:3px;
-  border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;
+  border-left:1.5px solid var(--on-accent);border-bottom:1.5px solid var(--on-accent);
   transform:rotate(-45deg) translate(1px,-1px);
 }
 .layer-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -210,7 +207,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{
-  background:var(--bg-2);border:1px solid var(--border);border-radius:4px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:8px;
   padding:9px 10px 8px;
 }
 .kpi .k{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);font-weight:500}
@@ -227,16 +224,16 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   font-size:11px;color:var(--text-1);
   padding:4px 0;
 }
-.panel-footer a:hover{color:var(--c-wind);text-decoration:none}
+.panel-footer a:hover{color:var(--accent);text-decoration:none}
 
 /* ───────── MAP ───────── */
-.map-wrap{position:relative;overflow:hidden;background:#090a0c}
+.map-wrap{position:relative;overflow:hidden;background:var(--bg-0)}
 #map{position:absolute;inset:0}
 
 /* Tooltip */
 .tooltip{
   position:absolute;pointer-events:none;z-index:8;
-  background:rgba(14,14,13,.96);
+  background:rgba(7,13,26,.96);
   border:1px solid var(--border-hi);
   border-radius:4px;
   padding:7px 10px;
@@ -394,7 +391,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 
 /* MapLibre control overrides */
 .maplibregl-ctrl-attrib{
-  font-size:10px !important;background:rgba(14,14,13,.78) !important;
+  font-size:10px !important;background:rgba(7,13,26,.78) !important;
   padding:2px 6px !important;border-radius:3px !important;
 }
 /* Compact mode (small maps): leave room for the (i) toggle on the left,
@@ -402,7 +399,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .maplibregl-ctrl-bottom-left>.maplibregl-ctrl-attrib.maplibregl-compact-show{padding:2px 8px 2px 28px !important}
 .maplibregl-ctrl-bottom-left>.maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show){padding:0 !important;min-width:24px}
 .maplibregl-ctrl-attrib,.maplibregl-ctrl-attrib a{color:var(--text-1) !important}
-.maplibregl-ctrl-attrib a:hover{color:var(--c-wind) !important}
+.maplibregl-ctrl-attrib a:hover{color:var(--accent) !important}
 .maplibregl-popup{display:none}
 .maplibregl-ctrl-group{
   background:var(--bg-1) !important;border:1px solid var(--border-hi) !important;
@@ -460,8 +457,6 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
     transform:translateY(calc(100% + 24px))}
   .popup.open{transform:translateY(0)}
   .topbar .country-switch{padding-left:8px}
-  .topbar .brand-text small{display:none}
-  .topbar .brand-text strong{white-space:nowrap}
   .bottombar{font-size:10px;padding:0 8px;gap:8px}
   .bb-center{display:none}
 }
@@ -480,7 +475,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 /* Phones: one-line top bar — logo, country, icon buttons. */
 @media (max-width: 640px){
   .topbar{gap:8px;padding:0 10px}
-  .topbar .brand-text,.country-switch label{display:none}
+  .topbar .w-word,.topbar .w-product,.country-switch label{display:none}
   .country-switch{padding-left:0;border-left:0;min-width:0}
   /* 16px: iOS Safari zooms the page on focus below that. */
   .country-switch select{max-width:46vw;font-size:16px;padding:4px 8px}
