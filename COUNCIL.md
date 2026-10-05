@@ -48,12 +48,13 @@ not set its objectives and does not spend the map's budget on it. Shared
 platform — the `solar-pvgis` Worker, Pages, DNS, secrets — is the only overlap,
 carried by `platform-engineer` and `security-engineer`.
 
-**Frozen — the root prototype.** `index.html` and `js/map.js`, `js/popups.js`,
-`js/layers.js` at the repo root are a Mapbox GL 3.4 prototype that **neither
-pipeline deploys**. A daily routine shipped work into it — including `2ed6340`,
-keyboard-accessible layer toggles — that no visitor has ever loaded. Do not
-spend a day there. *Porting* a specific piece of it into `docs/` is a
-legitimate objective; improving it in place is not.
+**Removed — the root prototype.** `index.html` and `js/map.js`, `js/popups.js`,
+`js/layers.js` at the repo root were a Mapbox GL 3.4 prototype that **neither
+pipeline deployed**; they were deleted on 2026-10-05 with `deploy.sh`. A
+daily routine had shipped work into it — including `2ed6340`,
+keyboard-accessible layer toggles — that no visitor ever loaded. *Porting* a
+piece of it into `docs/` is still a legitimate objective: read it from git
+history (`git show 2ed6340:js/map.js`).
 
 ### Stack of record (`docs/` — verify, never assume)
 

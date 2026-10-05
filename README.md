@@ -58,8 +58,8 @@ inspectable from the map tooltip.
 ## Quick start — run locally
 
 This is a static site. **No token, no account, no signup.** The basemap
-uses MapLibre GL + CARTO dark-matter / positron + OpenStreetMap tiles
-— all public.
+uses MapLibre GL + OpenFreeMap (Positron / Dark) vector tiles, the live
+grid OpenInfraMap tiles — all public.
 
 ```bash
 cd docs
@@ -75,24 +75,24 @@ See [DEBUGGING.md](./DEBUGGING.md) — paste a 4-field template and the
 ## Project structure
 
 ```
-morocco-map/
-├── docs/                          ← GitHub Pages root (main branch, /docs)
+morocco-energy-digital-map/
+├── docs/                          ← the map: energy.wattu.org (Pages project atlas-nexus;
+│   │                                also GitHub Pages /docs). Everything here is public.
 │   ├── index.html
 │   ├── style.css
+│   ├── brand.css                  ← shared with solar/ (CI checks the copies match)
 │   ├── app.js
-│   ├── config.example.js          ← committed template
-│   ├── config.js                  ← gitignored; unused, no key needed
 │   ├── countries.config.js        ← add a country here
-│   └── data/
-│       └── morocco/
-│           ├── power-plants.geojson
-│           ├── interconnectors.geojson
-│           ├── planned-corridors.geojson
-│           ├── industrial.geojson
-│           └── digital.geojson
-├── .gitignore
+│   └── data/<country>/*.geojson   ← boundary + one file per layer
+├── solar/                         ← the PV estimator: solar.wattu.org (atlas-solar);
+│   │                                only the page's files are published
+│   ├── index.html, app.js, analytics.js, style.css, brand.css
+│   └── proxy/                     ← Cloudflare Worker (PVGIS proxy + analytics)
+├── scripts/                       ← data builders and the config validator
+├── .github/workflows/             ← validate + deploy, one workflow per app
 ├── ASSUMPTIONS.md                 ← what was assumed, what is approximate
 ├── DATA_SOURCES.md                ← every source, URL, license
+├── DATA_SCHEMA.md                 ← fields each layer kind reads
 └── README.md
 ```
 
@@ -168,8 +168,9 @@ git rev-parse --show-toplevel    # → path to your clone
 Any directory inside the repo works; the relative path resolves against
 the repository root, not your current directory.
 
-`deploy.sh` runs `git add -A && git commit && git push` with nothing in
-between, and that path has shipped real credentials to GitHub before. The
+The old `deploy.sh` (removed 2026-10-05) ran `git add -A && git commit &&
+git push` with nothing in between, and that path shipped real credentials
+to GitHub before. The
 hook in `.githooks/pre-commit` blocks a commit whose staged lines look like
 a live credential (Mapbox/GitHub/AWS/Stripe/Slack/OpenAI keys, private-key
 blocks, assigned secrets, or a stray `.env`).

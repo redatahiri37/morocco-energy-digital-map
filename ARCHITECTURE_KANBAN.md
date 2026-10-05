@@ -448,8 +448,8 @@ Backlog (later)
 - [ ] HTTP caching headers for /data/*.geojson (Cache-Control, ETag)
 - [ ] Move OIM tiles fetch behind a CORS-proof proxy (currently breaks if
       OIM rate-limits a viewer)
-- [ ] Strip docs/SUBSTACK_POST.md and docs/CALC_ENGINE.md from production
-      build (they ship to Pages currently)
+- [x] Strip docs/SUBSTACK_POST.md and docs/CALC_ENGINE.md from production
+      build — moved to the repo root (MAP_SUBSTACK_POST.md, CALC_ENGINE.md)
 - [ ] Migrate to Astro/Vite — only when 3rd country is added (premature now)
 - [ ] Add e2e smoke test (Playwright) — load page, toggle each layer,
       assert no console errors
