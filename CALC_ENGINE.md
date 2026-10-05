@@ -51,7 +51,7 @@ Same mental model, lighter weight, fully open-source inputs.
   + `digital`, writes `docs/data/morocco/grid-graph.json`.
 - `docs/app.js` — "Click anywhere on map → popup shows nearest-node
   score, headroom, distance, dominant kV".
-- `docs/CALC_ENGINE.md` (this file) — kept in repo as the audit trail.
+- `CALC_ENGINE.md` (this file) — kept in repo as the audit trail.
 
 ## Explicit non-goals (still)
 

@@ -14,10 +14,10 @@
       "port": 8766
     },
     {
-      "name": "root-map",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "serve", "-p", "8000", "-L", "."],
-      "port": 8000
+      "name": "solar",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "solar"],
+      "port": 8765
     }
   ]
 }

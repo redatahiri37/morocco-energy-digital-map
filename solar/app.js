@@ -3,16 +3,18 @@
  * Modules:
  *   CONFIG        constants that are easy to update (tariffs, cost, CO2, etc.)
  *   Geocoder      Nominatim (OSM) address → {lat, lon, label}
- *   PVGIS         EU JRC PVcalc API → annual + monthly kWh
+ *   PVGIS         EU JRC PVcalc via our Worker → annual + monthly kWh
  *   Tariff        ONEE stepped tariff, avoided cost per kWh
  *   ROI           payback, cashflow, NPV
- *   Chart         Chart.js wrappers
- *   Map           Leaflet mini-map
+ *   Chart_        Chart.js wrappers
+ *   Roof          footprint geometry, panel layout, OSM building lookup
+ *   MapView       Leaflet map, roof overlay, roof drawing
  *   UI            DOM binding, state, transitions
+ *   Finance, Tooltips, Depth, helpers
+ * Analytics lives in analytics.js.
  */
 
 // ── CONFIG ─────────────────────────────────────────
-// Values marked TODO(agent) will be confirmed by the research agent.
 const CONFIG = {
   // ONEE residential LV monthly tranches (2025, TTC incl. 18% VAT)
   // Format: [upper_bound_kWh (Infinity for last), price_MAD_per_kWh_TTC]
@@ -40,12 +42,9 @@ const CONFIG = {
   LOAN_APR: 0.06,              // 6% annual
   LOAN_YEARS: 10,
 
-  // Panel physical assumption (for area hint only)
-  M2_PER_KWP: 5,               // ~5 m² per kWc
-
   // Roof layout (building footprint → panels drawn on the map).
-  // A 2025 mainstream module: 500 Wc, 1.13 m × 2.28 m (≈ 5.2 m²/kWc, in line
-  // with M2_PER_KWP). Panels keep ROOF_SETBACK_M from every roof edge
+  // A 2025 mainstream module: 500 Wc, 1.13 m × 2.28 m (≈ 5.2 m²/kWc).
+  // Panels keep ROOF_SETBACK_M from every roof edge
   // (parapet, access). Tilted rows are spaced so a row's shadow at
   // ROW_SHADOW_SUN_ELEV_DEG (≈ winter-noon sun at 30–35°N) misses the next row.
   PANEL_KWP: 0.5,
@@ -65,12 +64,7 @@ const CONFIG = {
 
   // PVGIS v5.2 is not CORS-enabled — calls go through our Cloudflare Worker
   // (source: solar/proxy/worker.js, ops: solar/README.md "Proxy operations").
-  // Paste the URL printed by `wrangler deploy` here. While the placeholder
-  // is unchanged, the client falls back to the corsproxy.io shim so the
-  // page keeps working pre-deploy.
   PVGIS_WORKER_URL: "https://solar-pvgis.redatahiri.workers.dev/pvcalc",
-  PVGIS_FALLBACK_ORIGIN: "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc",
-  PVGIS_FALLBACK_PROXY: "https://corsproxy.io/?url=",
   PVGIS_LOSS: 14,              // system losses %
   PVGIS_MOUNTING: "building",  // "building" = rooftop, "free" = ground
 
@@ -135,11 +129,7 @@ const PVGIS = {
       mountingplace: CONFIG.PVGIS_MOUNTING,
       outputformat: "json",
     });
-    const workerConfigured = !CONFIG.PVGIS_WORKER_URL.includes("<");
-    const url = workerConfigured
-      ? `${CONFIG.PVGIS_WORKER_URL}?${params.toString()}`
-      : CONFIG.PVGIS_FALLBACK_PROXY +
-        encodeURIComponent(`${CONFIG.PVGIS_FALLBACK_ORIGIN}?${params.toString()}`);
+    const url = `${CONFIG.PVGIS_WORKER_URL}?${params}`;
     let res;
     try {
       res = await fetch(url);
@@ -239,34 +229,9 @@ const Tariff = {
     return displaced > 0 ? totalAvoidedMAD / displaced : 0;
   },
 
-  // Weighted average retail price at a monthly consumption (for display / export)
-  averageRetailPrice(monthlyConsumptionKwh) {
-    let low = 0, sumMAD = 0;
-    for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
-      const span = Math.max(0, Math.min(upper, monthlyConsumptionKwh) - low);
-      sumMAD += span * price;
-      low = upper;
-      if (upper >= monthlyConsumptionKwh) break;
-    }
-    return monthlyConsumptionKwh > 0 ? sumMAD / monthlyConsumptionKwh : 0;
-  },
-
-  // Monthly bill (MAD TTC) for a given consumption — progressive tranches,
-  // same model as avoidedCostPerKwh (block-rate quirk below 150 kWh ignored
-  // for consistency and monotonicity).
-  costOf(monthlyConsumptionKwh) {
-    let low = 0, sum = 0;
-    for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
-      const span = Math.max(0, Math.min(upper, monthlyConsumptionKwh) - low);
-      sum += span * price;
-      low = upper;
-      if (upper >= monthlyConsumptionKwh) break;
-    }
-    return sum;
-  },
-
-  // Inverse: monthly consumption (kWh) from a monthly bill (MAD).
-  // Piecewise-linear, solved segment by segment.
+  // Monthly consumption (kWh) from a monthly bill (MAD TTC): the progressive
+  // tranches make the bill piecewise-linear, solved segment by segment
+  // (block-rate quirk below 150 kWh ignored, so the inverse stays monotonic).
   kwhFromBill(billMAD) {
     let low = 0, costAtLow = 0;
     for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
@@ -280,19 +245,6 @@ const Tariff = {
       costAtLow = costAtUpper;
     }
     return low;
-  },
-
-  activeTrancheLabel(monthlyConsumptionKwh) {
-    const tranches = CONFIG.ONEE_TRANCHES;
-    let low = 0;
-    for (const [upper, price] of tranches) {
-      if (monthlyConsumptionKwh <= upper) {
-        const upperLabel = upper === Infinity ? "∞" : upper;
-        return `Tranche ${low}–${upperLabel} kWh · ${price.toFixed(2)} MAD/kWh`;
-      }
-      low = upper;
-    }
-    return "";
   },
 };
 
@@ -366,7 +318,14 @@ const ROI = {
 };
 
 // ── Chart wrappers ─────────────────────────────────
+const CHART_INK = "#5A6577", CHART_GRID = "#EEF1F5";
 const Chart_ = {
+  // Brand type on every chart; called once Chart.js is there.
+  init() {
+    if (typeof Chart === "undefined" || !Chart.defaults) return;
+    Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue("--w-font-ui").trim() || "system-ui";
+    Chart.defaults.color = CHART_INK;
+  },
   monthly: null,
   cashflow: null,
 
@@ -379,8 +338,17 @@ const Chart_ = {
         labels: ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"],
         datasets: [{
           data: monthlyKwh,
-          backgroundColor: "#FF6B35",
-          borderRadius: 4,
+          backgroundColor: (c) => {
+            // Sunrise gradient down each bar
+            const { chartArea, ctx: g } = c.chart;
+            if (!chartArea) return "#FF6B35";
+            const grad = g.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "#FFB347");
+            grad.addColorStop(1, "#FF6B35");
+            return grad;
+          },
+          borderRadius: 6,
+          maxBarThickness: 34,
         }],
       },
       options: {
@@ -389,14 +357,14 @@ const Chart_ = {
           label: (c) => `${Math.round(c.parsed.y)} kWh`,
         }}},
         scales: {
-          x: { grid: { display: false }, ticks: { color: "#5A6577" } },
-          y: { grid: { color: "#F0F2F5" }, ticks: { color: "#5A6577", callback: v => v + " kWh" } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: CHART_INK } },
+          y: { grid: { color: CHART_GRID }, border: { display: false }, ticks: { color: CHART_INK, callback: v => v + " kWh" } },
         },
       },
     });
   },
 
-  renderCashflow(cashflow, paybackYr) {
+  renderCashflow(cashflow) {
     const ctx = document.getElementById("cashflow-chart").getContext("2d");
     if (this.cashflow) this.cashflow.destroy();
     this.cashflow = new Chart(ctx, {
@@ -406,7 +374,15 @@ const Chart_ = {
         datasets: [{
           data: cashflow.map(c => Math.round(c.cumulative)),
           borderColor: "#001F4D",
-          backgroundColor: "rgba(0,31,77,0.08)",
+          borderWidth: 2.5,
+          backgroundColor: (c) => {
+            const { chartArea, ctx: g } = c.chart;
+            if (!chartArea) return "rgba(0,31,77,0.08)";
+            const grad = g.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "rgba(255,107,53,0.22)");
+            grad.addColorStop(1, "rgba(0,31,77,0.02)");
+            return grad;
+          },
           fill: true,
           tension: 0.15,
           pointRadius: 0,
@@ -420,13 +396,13 @@ const Chart_ = {
           tooltip: { callbacks: {
             label: (c) => `${c.parsed.y.toLocaleString("fr-FR")} MAD`,
           }},
-          annotation: {},
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: "#5A6577", maxTicksLimit: 8 } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: CHART_INK, maxTicksLimit: 8 } },
           y: {
-            grid: { color: "#F0F2F5" },
-            ticks: { color: "#5A6577", callback: v => (v/1000).toFixed(0) + "k" },
+            grid: { color: CHART_GRID },
+            border: { display: false },
+            ticks: { color: CHART_INK, callback: v => (v/1000).toFixed(0) + "k" },
           },
         },
       },
@@ -457,9 +433,6 @@ const Roof = {
       a += pts[j][0] * pts[i][1] - pts[i][0] * pts[j][1];
     }
     return Math.abs(a) / 2;
-  },
-  areaOfLatLngs(latlngs) {
-    return this.area(this.toLocal(latlngs, this.origin(latlngs)));
   },
   contains(pts, [x, y]) {
     let inside = false;
@@ -563,7 +536,11 @@ const MapView = {
     }
     if (this.marker) this.marker.remove();
     this.marker = L.marker([lat, lon]).addTo(this.map);
-    if (label) this.marker.bindPopup(label);
+    if (label) {
+      const text = document.createElement("span");
+      text.textContent = label;   // OSM data: text, never HTML
+      this.marker.bindPopup(text);
+    }
     this.clearRoof();
     // Fix stale size when shown after being hidden
     setTimeout(() => this.map.invalidateSize(), 100);
@@ -648,11 +625,14 @@ const State = {
     exportAllowed: false,
   },
   sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
+  candidates: [],   // every geocoder match for the last typed address
   roof: null,       // { latlngs, src: "osm" | "drawn" } — building footprint, if known
   roofSearch: 0,    // id of the latest building lookup, so a stale one is ignored
+  pvSeq: 0,         // id of the latest PVGIS request, so a late older one is dropped
   lastPvKey: null,
   lastPerKw: null,  // cached 1 kWc PVGIS response for current (loc, angle, aspect)
   heroAnimated: false,
+  savings: 0,       // last annual savings shown, for the share text
 };
 
 const $ = (id) => document.getElementById(id);
@@ -665,17 +645,18 @@ const UI = {
       this.handleAddressSubmit();
     });
     $("address-input").addEventListener("input", () => Analytics.once("address_input", "address_input"));
-    $("address-input").addEventListener("input", debounce(() => this.showSuggestions(), 300));
 
     document.querySelectorAll(".chip").forEach(chip => {
       chip.addEventListener("click", () => {
         const lat = parseFloat(chip.dataset.lat);
         const lon = parseFloat(chip.dataset.lon);
+        State.candidates = [];
         this.setLocationAndGo({ lat, lon, label: chip.dataset.label, src: "chip" });
       });
     });
 
     // Step 2 params
+    const recalcSoon = debounce(() => this.recalc(), 300);
     ["peakpower", "angle", "aspect", "cost"].forEach(id => {
       const input = $(id);
       input.addEventListener("input", () => {
@@ -689,7 +670,8 @@ const UI = {
           $("size-auto-reset").hidden = false;
         }
         this.renderParamLabels();
-        this.recalc();
+        if (id === "angle" || id === "aspect") recalcSoon();
+        else this.recalc();
       });
     });
     // Roof: draw / finish / clear
@@ -744,9 +726,111 @@ const UI = {
       });
     });
 
-    $("back-btn").addEventListener("click", () => this.goToStep(1));
+    $("back-btn").addEventListener("click", () => {
+      this.goToStep(1);
+      try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
+    });
+    $("geo-btn").addEventListener("click", () => this.useMyPosition());
+    $("share-btn").addEventListener("click", () => this.share());
+    $("print-btn").addEventListener("click", () => window.print());
+    this.syncUrlSoon = debounce(() => this.syncUrl(), 400);
 
     this.renderParamLabels();
+    this.restoreFromUrl();
+  },
+
+  // "Utiliser ma position": on a phone, standing at home, this is the most
+  // precise address there is — and the roof lookup then lands on the house.
+  useMyPosition() {
+    this.clearStep1Error();
+    if (!("geolocation" in navigator)) {
+      this.showStep1Error("La géolocalisation n'est pas disponible sur cet appareil. Entrez votre adresse.");
+      return;
+    }
+    const btn = $("geo-btn"), label = $("geo-btn-label");
+    btn.disabled = true;
+    label.textContent = "Localisation…";
+    const reset = () => { btn.disabled = false; label.textContent = "Utiliser ma position"; };
+    navigator.geolocation.getCurrentPosition((pos) => {
+      reset();
+      const { latitude: lat, longitude: lon } = pos.coords;
+      if (!inMorocco(lat, lon)) {
+        this.showStep1Error("Votre position semble hors du Maroc. Entrez une adresse marocaine.");
+        return;
+      }
+      State.candidates = [];
+      this.setLocationAndGo({ lat, lon, label: "Ma position", src: "geoloc" });
+    }, (err) => {
+      reset();
+      this.showStep1Error(err.code === 1
+        ? "Localisation refusée. Autorisez-la dans votre navigateur, ou entrez votre adresse."
+        : "Position introuvable pour le moment. Entrez votre adresse.");
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  },
+
+  // The estimate lives in the URL hash, so it can be shared, bookmarked or
+  // reopened as is. A hash never reaches a server, our analytics included.
+  syncUrl() {
+    if (!State.location || !$("step2").classList.contains("active")) return;
+    const p = State.params, l = State.location;
+    const q = new URLSearchParams({
+      lat: l.lat.toFixed(5), lon: l.lon.toFixed(5),
+      f: p.bill, a: p.angle, o: p.aspect, c: p.cost,
+    });
+    if (!State.sizeAuto) q.set("p", p.peakpower);
+    if (p.exportAllowed) q.set("x", "1");
+    if (l.label) q.set("n", l.label);
+    // Safari throws past ~100 calls in 30 s; a lost update is harmless.
+    try { history.replaceState(null, "", "#" + q.toString()); } catch (e) { /* ignore */ }
+  },
+
+  restoreFromUrl() {
+    const q = new URLSearchParams(location.hash.slice(1));
+    const lat = parseFloat(q.get("lat")), lon = parseFloat(q.get("lon"));
+    if (!inMorocco(lat, lon)) return;
+    // Every value goes through its slider, so it is clamped and snapped
+    // to the slider's own range and step.
+    const take = (key, id, param) => {
+      if (!q.has(key) || !Number.isFinite(parseFloat(q.get(key)))) return;
+      $(id).value = q.get(key);
+      State.params[param] = parseFloat($(id).value);
+    };
+    take("f", "bill", "bill");
+    take("a", "angle", "angle");
+    take("o", "aspect", "aspect");
+    take("c", "cost", "cost");
+    if (q.has("p")) {
+      take("p", "peakpower", "peakpower");
+      State.sizeAuto = false;
+      $("size-auto-badge").hidden = true;
+      $("size-auto-reset").hidden = false;
+    }
+    State.params.exportAllowed = q.get("x") === "1";
+    $("export-toggle").checked = State.params.exportAllowed;
+    this.syncBillPresets();
+    this.renderParamLabels();
+    State.candidates = [];
+    this.setLocationAndGo({ lat, lon, label: q.get("n") || "", src: "link" });
+  },
+
+  async share() {
+    this.syncUrl();
+    const url = location.href;
+    const text = `Toit solaire : environ ${fmtNum(State.savings)} MAD économisés par an, d'après Wattu.`;
+    const btnLabel = $("share-btn-label");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Mon estimation solaire — Wattu", text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      $("share-btn").classList.add("done");
+      btnLabel.textContent = "Lien copié";
+      setTimeout(() => { $("share-btn").classList.remove("done"); btnLabel.textContent = "Partager"; }, 2000);
+    } catch (e) {
+      if (e && e.name === "AbortError") return;   // share sheet dismissed
+      window.prompt("Copiez ce lien :", url);
+    }
   },
 
   showStep1Error(msg) {
@@ -756,26 +840,23 @@ const UI = {
   },
   clearStep1Error() { $("step1-error").hidden = true; },
 
-  async showSuggestions() {
-    const q = $("address-input").value.trim();
-    const list = $("address-suggestions");
-    if (q.length < 3) { list.hidden = true; return; }
-    try {
-      const results = await Geocoder.search(q);
-      if (!results.length) { list.hidden = true; return; }
-      list.innerHTML = results.map((r, i) =>
-        `<li data-idx="${i}"><strong>${escapeHtml(r.short)}</strong><br><span style="color:#5A6577;font-size:12px">${escapeHtml(r.label)}</span></li>`
-      ).join("");
-      list.hidden = false;
-      list.querySelectorAll("li").forEach((li, i) => {
-        li.addEventListener("click", () => {
-          const r = results[i];
-          $("address-input").value = r.short;
-          list.hidden = true;
-          this.setLocationAndGo({ ...r, src: "suggestion" });
-        });
-      });
-    } catch (e) { list.hidden = true; }
+  // Other matches for the typed address, shown in step 2 so a visitor sent
+  // to the wrong "Rue de la Liberté" can switch in one tap.
+  renderAlternatives(current) {
+    const box = $("alt-addresses");
+    const others = State.candidates
+      .filter(c => c.lat !== current.lat || c.lon !== current.lon).slice(0, 4);
+    box.hidden = !others.length;
+    box.querySelectorAll("button").forEach(b => b.remove());
+    others.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "alt-btn";
+      b.textContent = c.short;
+      b.title = c.label;
+      b.addEventListener("click", () => this.setLocationAndGo({ ...c, src: "alternative" }));
+      box.appendChild(b);
+    });
   },
 
   async handleAddressSubmit() {
@@ -792,7 +873,8 @@ const UI = {
         this.showStep1Error("Adresse introuvable. Précisez la ville.");
         return;
       }
-      await this.setLocationAndGo({ ...results[0], src: "typed" });
+      State.candidates = results;
+      await this.setLocationAndGo(results[0]);
     } catch (e) {
       Analytics.track("geocode_fail", { src: "error" });
       this.showStep1Error("Erreur de géocodage. Réessayez.");
@@ -808,11 +890,12 @@ const UI = {
     // and the typed address is never transmitted.
     Analytics.setStep(2);
     Analytics.track("estimate", {
-      src: loc.src || "unknown",
+      src: loc.src || "typed",
       lat: Analytics.coarse(loc.lat),
       lon: Analytics.coarse(loc.lon),
     });
     State.location = loc;
+    this.renderAlternatives(loc);
     State.heroAnimated = false;   // replay the count-up for a new address
     this.goToStep(2);
     $("location-label").textContent = loc.label || `${loc.lat.toFixed(3)}, ${loc.lon.toFixed(3)}`;
@@ -904,7 +987,7 @@ const UI = {
     $("st-area-sub").textContent = State.roof.src === "osm" ? "d'après OpenStreetMap" : "toit dessiné";
     $("st-max").textContent = `${fmtNum(info.capacityKw)} kWc`;
     $("st-max-sub").textContent = `${info.panels.length} panneaux`;
-    $("st-inst").textContent = `${p.peakpower.toFixed(1).replace(".0", "")} kWc`;
+    $("st-inst").textContent = `${fmtDec(p.peakpower, { trim: true })} kWc`;
     $("st-inst-sub").textContent = `${shown} panneau${shown > 1 ? "x" : ""} · ${fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
 
     let html = `Panneaux de 500 Wc, ${CONFIG.ROOF_SETBACK_M} m de marge sur les bords, rangées espacées pour éviter l'ombre.`;
@@ -953,13 +1036,14 @@ const UI = {
     $("bill-val").textContent = fmtNum(p.bill) + " MAD";
     $("bill-consumption-hint").textContent =
       `soit environ ${Math.round(consumption)} kWh par mois`;
-    $("peakpower-val").textContent = p.peakpower.toFixed(1) + " kWc";
+    $("peakpower-val").textContent = fmtDec(p.peakpower) + " kWc";
     const nPanels = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
     $("peakpower-hint").textContent =
-      `${nPanels} panneaux de ${CONFIG.PANEL_KWP * 1000} Wc, ≈ ${Math.round(p.peakpower * CONFIG.M2_PER_KWP)} m²`;
+      `${nPanels} panneaux de ${CONFIG.PANEL_KWP * 1000} Wc, ≈ ${Math.round(nPanels * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
     $("angle-val").textContent = p.angle + "°";
     $("aspect-val").textContent = aspectLabel(p.aspect);
-    $("cost-val").textContent = p.cost.toFixed(1) + " MAD/Wc";
+    $("cost-val").textContent = fmtDec(p.cost) + " MAD/Wc";
+    $("next-cost").textContent = fmtDec(p.cost, { trim: true }) + " MAD/Wc";
     const capex = p.peakpower * 1000 * p.cost;
     $("capex-hint").textContent = `Investissement total : ${fmtMAD(capex)}`;
   },
@@ -976,23 +1060,28 @@ const UI = {
     ].join("|");
 
     if (force || key !== State.lastPvKey) {
+      const seq = ++State.pvSeq;
       this.setHeroLoading(true);
+      let perKw;
       try {
-        State.lastPerKw = await PVGIS.fetchPerKw({
+        perKw = await PVGIS.fetchPerKw({
           lat: State.location.lat,
           lon: State.location.lon,
           angle: p.angle,
           aspect: p.aspect,
         });
-        State.lastPvKey = key;
         $("step2-error").hidden = true;
       } catch (e) {
         console.error(e);
         Analytics.track("pvgis_fallback", {});
         // Degrade to the nearest-city estimate rather than a dead end.
-        State.lastPerKw = PVGIS.fallbackPerKw(State.location.lat, State.location.lon);
-        State.lastPvKey = key;
+        perKw = PVGIS.fallbackPerKw(State.location.lat, State.location.lon);
       }
+      // A newer request (new address or orientation) owns the result now;
+      // an older response arriving late must not overwrite it.
+      if (seq !== State.pvSeq) return;
+      State.lastPerKw = perKw;
+      State.lastPvKey = key;
       this.setHeroLoading(false);
     }
     if (!State.lastPerKw) return;
@@ -1028,13 +1117,14 @@ const UI = {
 
     // Hero
     const savings = Math.round(roi.annualSavingsMAD);
+    State.savings = savings;
     countUp($("hero-savings"), savings, State.heroAnimated ? 0 : 900);
     State.heroAnimated = true;
-    $("chip-size").textContent = p.peakpower.toFixed(1).replace(".0", "") + " kWc";
+    $("chip-size").textContent = fmtDec(p.peakpower, { trim: true }) + " kWc";
     $("chip-production").textContent = fmtNum(pv.annualKwh) + " kWh";
-    $("chip-payback").textContent = isFinite(roi.paybackYr) ? roi.paybackYr.toFixed(1) + " ans" : "—";
+    $("chip-payback").textContent = isFinite(roi.paybackYr) ? fmtDec(roi.paybackYr) + " ans" : "—";
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
-    $("chip-co2").textContent = co2Tons.toFixed(1) + " t";
+    $("chip-co2").textContent = fmtDec(co2Tons) + " t";
 
     // Financing card
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
@@ -1043,7 +1133,7 @@ const UI = {
     $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">MAD</span>`;
     $("fin-cash-net").textContent = `Économie an 1 : ${fmtMAD(cashflowY1)}`;
     $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
-      ? `Amorti en ${roi.paybackYr.toFixed(1)} ans`
+      ? `Amorti en ${fmtDec(roi.paybackYr)} ans`
       : `Non amorti sur 25 ans`;
 
     $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">MAD/mois</span>`;
@@ -1072,8 +1162,9 @@ const UI = {
       });
     }, 2500);
 
+    this.syncUrlSoon();
     Chart_.renderMonthly(pv.monthlyKwh);
-    Chart_.renderCashflow(roi.cashflow, roi.paybackYr);
+    Chart_.renderCashflow(roi.cashflow);
   },
 };
 
@@ -1092,23 +1183,49 @@ const Finance = {
 // Hover handles desktop. Touch needs an explicit toggle: :focus behaviour on
 // buttons is inconsistent across mobile browsers, so tapping must not depend
 // on it. Tap opens, tapping again / elsewhere / Escape closes.
+// On desktop a tip is placed against the viewport (position: fixed), so a
+// card with overflow: hidden or the scrolling summary column can't clip it,
+// and it is clamped inside the window. Phones keep the CSS bottom sheet.
 const Tooltips = {
+  desktop: window.matchMedia("(min-width: 901px) and (hover: hover)"),
+  place(btn) {
+    const tip = btn.querySelector(".tip");
+    if (!tip) return;
+    if (!this.desktop.matches) { tip.removeAttribute("style"); tip.classList.remove("below"); return; }
+    const r = btn.getBoundingClientRect();
+    Object.assign(tip.style, {
+      position: "fixed", width: "max-content", maxWidth: Math.min(260, innerWidth - 24) + "px",
+      transform: "none", bottom: "auto",
+    });
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    const left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 12));
+    const above = r.top - h - 10 >= 8;
+    tip.style.left = left + "px";
+    tip.style.top = (above ? r.top - h - 10 : r.bottom + 10) + "px";
+    tip.style.setProperty("--arrow-x", (r.left + r.width / 2 - left) + "px");
+    tip.classList.toggle("below", !above);
+  },
+  closeAll(except) {
+    document.querySelectorAll(".help.open").forEach(h => { if (h !== except) h.classList.remove("open"); });
+  },
   init() {
+    const placeFrom = (e) => { const b = e.target.closest && e.target.closest(".help"); if (b) this.place(b); };
+    document.addEventListener("mouseover", placeFrom);
+    document.addEventListener("focusin", placeFrom);
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".help");
-      document.querySelectorAll(".help.open").forEach(h => {
-        if (h !== btn) h.classList.remove("open");
-      });
+      this.closeAll(btn);
       if (btn) {
         e.preventDefault();
+        this.place(btn);
         btn.classList.toggle("open");
       }
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        document.querySelectorAll(".help.open").forEach(h => h.classList.remove("open"));
-      }
+      if (e.key === "Escape") this.closeAll();
     });
+    // A fixed tip would float away from its button on scroll.
+    window.addEventListener("scroll", () => this.closeAll(), { passive: true, capture: true });
   },
 };
 
@@ -1151,6 +1268,11 @@ function countUp(el, target, ms) {
 function fmtNum(n) {
   return Math.round(n).toLocaleString("fr-FR");
 }
+// One decimal with a French decimal comma: 2,5 · 10,2. Whole values drop
+// the ",0" when `trim` is set (3 kWc, not 3,0 kWc).
+function fmtDec(n, { trim = false } = {}) {
+  return n.toLocaleString("fr-FR", { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : 1, maximumFractionDigits: 1 });
+}
 function fmtMAD(n) {
   return fmtNum(n) + " MAD";
 }
@@ -1161,13 +1283,17 @@ function aspectLabel(a) {
   const dir = a < 0 ? "Est" : "Ouest";
   return `${Math.abs(a)}° ${dir} du Sud`;
 }
+// Morocco, Southern Provinces included.
+function inMorocco(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon) &&
+    lat >= 20.5 && lat <= 36.1 && lon >= -17.3 && lon <= -0.9;
+}
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 }
 
-// Boot when DOM + libs ready
 // Which sections visitors actually reach. Answers "is the financing card
 // worth the space it takes?" without anyone having to guess.
 const Depth = {
@@ -1184,8 +1310,11 @@ const Depth = {
   },
 };
 
-window.addEventListener("load", () => {
+// Boot. Every script tag is `defer`, so on DOMContentLoaded Leaflet, Chart.js
+// and analytics.js are already there; "load" would also wait for images.
+document.addEventListener("DOMContentLoaded", () => {
   Analytics.init();
+  Chart_.init();
   UI.init();
   Tooltips.init();
   Depth.init();

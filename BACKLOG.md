@@ -23,7 +23,7 @@ Last reshuffle: **2026-04-19**.
   `docs/data/morocco/transmission-lines.geojson` — not rendered,
   reserved as v0.2 calc-engine input (need real geometry for the
   graph, not rendered tiles).
-- **v0.2 calc-engine design doc** — `docs/CALC_ENGINE.md` scopes the
+- **v0.2 calc-engine design doc** — `CALC_ENGINE.md` scopes the
   node-capacity model using OSM Overpass as primary + WBG 2018 as
   cross-check. NOT YET BUILT.
 - **Tester agent upgrade** — new `GO-STATIC` verdict tier. Static-only
@@ -83,7 +83,7 @@ Last reshuffle: **2026-04-19**.
 - **Cross-border interconnectors** — ES–MA I/II (operational, 2×700 MW),
   ES–MA III (planned, 2030), DZ–MA (idle since 2021), Xlinks UK–MA
   HVDC (planned, 2031, 3.6 GW).
-- **Public launch prep** — Substack post draft (`docs/SUBSTACK_POST.md`),
+- **Public launch prep** — Substack post draft (`MAP_SUBSTACK_POST.md`),
   in-app About modal stays, README updated with new quick-start.
 
 ## 🟡 Next — picked up once "Now" ships

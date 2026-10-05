@@ -1,48 +1,123 @@
 /* =========================================================
-   Wattu — shared brand tokens and chrome
-   Single source of truth for both apps (map and /solar/).
-   Loaded AFTER each app's own stylesheet so chrome rules win.
-
-   Scope: brand palette + the top bar only. Data colors
-   (map layers) and app layouts stay in each app's own CSS.
+   Wattu — shared identity: fonts, tokens, top bar, brand lockup
+   One sheet for both apps: docs/brand.css and solar/brand.css are
+   byte-identical copies (each Pages project ships its own, with its
+   own fonts/ folder) and CI fails if they differ — edit both. Loaded
+   AFTER each app's own stylesheet so chrome rules win. App-specific
+   chrome goes in that app's CSS.
    ========================================================= */
 
+/* Self-hosted, latin subset, OFL (fonts/OFL-*.txt). No third-party
+   request, no layout shift beyond the swap. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("fonts/inter-latin-var.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/newsreader-latin-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-latin-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-latin-500.woff2") format("woff2");
+}
+
 :root {
-  --an-navy:     #001F4D;
-  --an-navy-2:   #0A2E6B;
-  --an-orange:   #FF6B35;
-  --an-orange-2: #E85A24;
-  --an-cyan:     #00D4FF;
-  --an-silver:   #E8E8E8;
+  /* Colour — navy is the ground, orange is the sun (actions, energy),
+     cyan is the signal (live data, focus). */
+  --w-night:    #050B18;
+  --w-navy:     #001F4D;
+  --w-navy-2:   #0A2E6B;
+  --w-ink:      #0A1628;
+  --w-orange:   #FF6B35;
+  --w-orange-2: #E85A24;
+  --w-amber:    #FFB347;
+  --w-cyan:     #22D3EE;
+  --w-paper:    #F5F7FA;
+  --w-line:     #E3E8EF;
+  --w-muted:    #5A6577;
+
+  /* Type — Inter for the interface, Newsreader for headlines and the
+     numbers that matter, IBM Plex Mono for labels and units. */
+  --w-font-ui:      "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --w-font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --w-font-mono:    "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --w-radius:      14px;
+  --w-radius-sm:   10px;
+  --w-radius-pill: 999px;
+  --w-ease:        cubic-bezier(.2, .7, .2, 1);
+
+  /* Legacy names, still read by older rules */
+  --an-navy:     var(--w-navy);
+  --an-navy-2:   var(--w-navy-2);
+  --an-orange:   var(--w-orange);
+  --an-orange-2: var(--w-orange-2);
+  --an-cyan:     var(--w-cyan);
   --an-charcoal: #2D2D2D;
 }
 
-/* Unified top bar — same navy band + orange rule on every app,
-   in both light and dark themes. */
+/* Top bar — the same night-navy band and sunrise rule on every app,
+   in every theme. */
 .topbar {
-  background: var(--an-navy) !important;
-  border-bottom: 3px solid var(--an-orange) !important;
+  background:
+    radial-gradient(120% 220% at 0% 0%, rgba(255, 107, 53, 0.10), transparent 45%),
+    linear-gradient(180deg, #06142E 0%, var(--w-night) 100%) !important;
+  border-bottom: 0 !important;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
   color: #fff;
+  position: relative;
 }
-.topbar .brand strong,
-.topbar .brand-text strong { color: #fff; }
-.topbar .brand-text small { color: rgba(255, 255, 255, 0.65); }
+.topbar::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--w-orange), var(--w-amber) 40%, rgba(255, 179, 71, 0) 85%);
+  pointer-events: none;
+}
 
-/* Map app chrome recolors (no effect on solar, which has no these ids) */
-.topbar .ghost-btn,
-.topbar .icon-btn {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.25);
+/* Brand lockup: mark · wordmark · product */
+.w-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  color: #fff; text-decoration: none; white-space: nowrap;
 }
-.topbar .ghost-btn:hover,
-.topbar .icon-btn:hover {
-  color: #fff;
-  border-color: var(--an-orange);
-  background: rgba(255, 107, 53, 0.15);
+.w-brand:hover { text-decoration: none; }
+.w-mark { width: 26px; height: 26px; flex-shrink: 0; display: block; }
+.w-word {
+  font-family: var(--w-font-ui);
+  font-size: 19px; font-weight: 700; letter-spacing: -0.035em;
+  color: #fff; line-height: 1;
 }
-.topbar .country-switch label { color: rgba(255, 255, 255, 0.65); }
-.topbar .country-switch select {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
+.w-product {
+  font-family: var(--w-font-mono);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase; line-height: 1;
+  color: rgba(255, 255, 255, 0.62);
+  padding-left: 10px; margin-left: 2px;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
+
+/* Mono kicker above a heading or a number */
+.w-kicker {
+  font-family: var(--w-font-mono);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* One focus ring everywhere */
+:focus-visible { outline: 2px solid var(--w-cyan); outline-offset: 2px; }

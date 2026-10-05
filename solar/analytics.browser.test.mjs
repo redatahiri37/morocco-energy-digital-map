@@ -23,9 +23,14 @@ const MIME = { ".html":"text/html", ".js":"text/javascript", ".css":"text/css", 
 const server = http.createServer((req, res) => {
   let f = path.join(ROOT, decodeURIComponent(req.url.split("?")[0]));
   if (f.endsWith("/")) f = path.join(f, "index.html");
-  fs.readFile(f, (e, d) => e
-    ? (res.writeHead(404), res.end("nf"))
-    : (res.writeHead(200, {"content-type": MIME[path.extname(f)] || "application/octet-stream"}), res.end(d)));
+  fs.readFile(f, (e, d) => {
+    if (e) return res.writeHead(404), res.end("nf");
+    // The CDN libraries are replaced by stubs below; their SRI hashes would
+    // (rightly) block the stubs, so the test page drops the integrity attributes.
+    if (f.endsWith(".html")) d = d.toString().replace(/ integrity="[^"]*"/g, "");
+    res.writeHead(200, {"content-type": MIME[path.extname(f)] || "application/octet-stream"});
+    res.end(d);
+  });
 });
 await new Promise(r => server.listen(8765, r));
 
@@ -42,7 +47,6 @@ await page.route("**/solar-pvgis.redatahiri.workers.dev/e", async (route) => {
 await page.route("**://nominatim.openstreetmap.org/**", r => r.abort());
 await page.route("**/pvcalc**", r => r.abort());
 await page.route("**://*.tile.openstreetmap.org/**", r => r.abort());
-await page.route("**://corsproxy.io/**", r => r.abort());
 // Stub the CDN libraries so the page behaves as it does in production
 // (they are unreachable from this sandbox's egress proxy).
 const stub = (body) => (r) => r.fulfill({ status:200, headers:{"content-type":"text/javascript"}, body });

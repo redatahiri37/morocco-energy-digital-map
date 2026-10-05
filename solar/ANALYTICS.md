@@ -11,7 +11,7 @@ is now measured, why each number was chosen, and how to run the loop.
 | `view` | Page loads | How many people show up, from where, on what device |
 | `address_input` | First keystroke in the address field | How many *intend* to estimate, vs. bounce off the landing copy |
 | `geocode_fail` | Nominatim returns nothing, or errors | How many people we lose at the door because we can't find their address |
-| `estimate` | The result view is reached | **Activation.** The number that matters most |
+| `estimate` | The result view is reached (`src`: `typed`, `alternative`, `chip`, `geoloc` « Utiliser ma position », `link` shared/bookmarked URL) | **Activation.** The number that matters most — and which entry point gets people there |
 | `pvgis_fallback` | PVGIS is down, approximate mode shown | How often we serve a degraded answer |
 | `param_change` | A control is first touched | Which inputs people care about — and which are dead weight |
 | `roof` | Building lookup ends (`src`: `osm` found / `none`), the user starts drawing (`draw_start`, once) or finishes (`drawn`) | How often OpenStreetMap knows the roof, and whether people bother drawing it |
