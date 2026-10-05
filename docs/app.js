@@ -1,14 +1,8 @@
 /* =============================================================
    Energy × Digital Nexus — Infrastructure Map (multi-country)
-   Single-file app logic: country switch, layer manifest, map,
-   tooltips, popups, methodology modal.
-
-   v1.1 — public basemap pass:
-     · Mapbox GL → MapLibre GL + OpenFreeMap vector basemap
-     · No token required (fully public, like enersite / Pawel)
-     · WS boundary filtered out of render
-     · DC bubble radius scales with capacity_estimate_mw
-     · Planned / announced DCs rendered with lower opacity
+   Single-file app logic: country switch, layers built from
+   countries.config.js by `kind`, KPIs, tooltips, popups, theme,
+   methodology modal. MapLibre GL + OpenFreeMap basemap, no token.
    ============================================================= */
 
 (function(){
@@ -18,7 +12,7 @@
   const ASSET_V = (()=>{ try{ return new URL(document.currentScript.src).search; }catch(e){ return ""; } })();
 
   // ---------- Config & country manifest ----------
-  const CFG = window.APP_CONFIG || { defaultCountry:"morocco" };
+  const DEFAULT_COUNTRY = "morocco";
 
   // Basemap: OpenFreeMap vector styles — open, no key, no account.
   // (CARTO's free tiles now arrive stamped "API KEY REQUIRED".) Positron
@@ -116,7 +110,7 @@
   let currentCountry = null;
   let layerData      = {};   // id -> GeoJSON
   let visibility     = {};   // id -> bool
-  let hoveredLayer   = null; // {layerId, featureId}
+  let hoveredLayer   = null; // { sourceId, dataLayerId, keepId } while a point is hovered
   let boundaryData   = null;
 
   // ---------- DOM refs ----------
@@ -126,12 +120,18 @@
   const noTokenCard = $("#noTokenCard");
 
   // ---------- Theme ----------
-  const savedTheme = localStorage.getItem("mg.theme") || "dark";
+  // localStorage throws when site data is blocked; the theme is a
+  // convenience and must never stop the map from booting.
+  const store = {
+    get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k, v){ try{ localStorage.setItem(k, v); }catch(e){ /* not remembered */ } }
+  };
+  const savedTheme = store.get("mg.theme") || "dark";
   document.body.dataset.theme = savedTheme;
   $("#themeToggle").addEventListener("click", ()=>{
     const next = document.body.dataset.theme === "dark" ? "light" : "dark";
     document.body.dataset.theme = next;
-    localStorage.setItem("mg.theme", next);
+    store.set("mg.theme", next);
     if(map){
       // Full reload, not a diff: diffing Positron→Dark patches the basemap in
       // place, which drops our layers and never fires "style.load", so they
@@ -178,6 +178,10 @@
     return "$" + v.toLocaleString();
   }
   function fmtCap(mw){ return mw == null ? "—" : mw.toLocaleString() + " MW"; }
+  function issueUrl(title, body){
+    return REPO_URL + "/issues/new?title=" + encodeURIComponent(title) +
+      (body ? "&body=" + encodeURIComponent(body) : "");
+  }
   function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
   function layerConfig(layerId){
     return ((COUNTRIES[currentCountry] || {}).layers || []).find(L=>L.id === layerId);
@@ -206,13 +210,11 @@
   }
 
   function boot(){
-    const initialCountry = ENABLED.includes(CFG.defaultCountry) ? CFG.defaultCountry : ENABLED[0];
+    const initialCountry = ENABLED.includes(DEFAULT_COUNTRY) ? DEFAULT_COUNTRY : ENABLED[0];
     countrySelect.value = initialCountry;
     currentCountry = initialCountry;
-    loadAllData(initialCountry).then(()=>{
-      renderLayerList(initialCountry);
-      renderKPIs(initialCountry);
-      renderMethodologySources(initialCountry);
+    loadAllData(initialCountry).then(committed=>{
+      if(committed) renderPanel(initialCountry);
       dataReady = true;
       tryBuild();
     });
@@ -253,7 +255,16 @@
     }
   }
 
+  // Panel, KPIs and methodology for a country whose data is loaded.
+  function renderPanel(countryKey){
+    renderLayerList(countryKey);
+    renderKPIs(countryKey);
+    renderMethodologySources(countryKey);
+  }
+
   // ---------- Data loading ----------
+  // Resolves true once the country's data is in place, false if the user
+  // switched to another country meanwhile (nothing is committed then).
   async function loadAllData(countryKey){
     const c = COUNTRIES[countryKey];
     // Per-country state starts clean: a country without a boundary file (or
@@ -283,10 +294,11 @@
       }
     });
     await Promise.all(promises);
-    if(countryKey !== currentCountry) return;
+    if(countryKey !== currentCountry) return false;
     layerData = data;
     visibility = vis;
     boundaryData = boundary;
+    return true;
   }
 
   // ---------- Panel: layer list ----------
@@ -379,7 +391,7 @@
     document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = c.label; });
     document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? `Data: ${c.credits} · ` : ""; });
     document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
-    if(reportErrorFooter) reportErrorFooter.href = REPO_URL + "/issues/new?title=" + encodeURIComponent(`${c.label} map — data correction`);
+    if(reportErrorFooter) reportErrorFooter.href = issueUrl(`${c.label} map — data correction`);
   }
 
   function renderMethodologySources(countryKey){
@@ -628,7 +640,7 @@
     const srcId = "src-" + L.id, p = "lyr-" + L.id;
 
     const clusterOpts = { cluster: true, clusterMaxZoom: 6, clusterRadius: 35 };
-    addOrReplace(srcId, { type:"geojson", data: fc, generateId: false, ...clusterOpts });
+    addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
@@ -671,20 +683,7 @@
       id: p+"-points", type:"circle", source:srcId,
       filter:["!",["has","point_count"]],
       paint:{
-        "circle-color":[
-          "match",["get","fuel_type"],
-          "solar", FUEL_COLOR.solar,
-          "wind",  FUEL_COLOR.wind,
-          "hydro", FUEL_COLOR.hydro,
-          "coal",  FUEL_COLOR.coal,
-          "gas",   FUEL_COLOR.gas,
-          "oil",   FUEL_COLOR.oil,
-          "nuclear",    FUEL_COLOR.nuclear,
-          "geothermal", FUEL_COLOR.geothermal,
-          "biomass",    FUEL_COLOR.biomass,
-          "waste",      FUEL_COLOR.waste,
-          "#888"
-        ],
+        "circle-color":["match",["get","fuel_type"], ...Object.entries(FUEL_COLOR).flat(), "#888"],
         "circle-radius":[
           "interpolate",["linear"],["zoom"],
           4, 4,
@@ -836,7 +835,7 @@
       if(!m || !f) return;
       map.getCanvas().style.cursor = "pointer";
       if(m.role === "point"){
-        setHoverDim(m.src, id, f.id);
+        setHoverDim(m.src, m.dataLayerId, f.id);
         showPointTooltip(m.dataLayerId, f, e.point);
       } else if(m.role === "line"){
         showLineTooltip(f, e.point);
@@ -869,26 +868,24 @@
   }
 
   // ---------- Hover dim: set `dim=true` on all OTHER features in a layer ----------
-  function setHoverDim(sourceId, layerId, keepId){
-    clearHoverDim();
-    const fc = map.getSource(sourceId) && map.getSource(sourceId)._data;
-    if(!fc || !fc.features) return;
+  function setDim(sourceId, dataLayerId, keepId, dim){
+    const fc = layerData[dataLayerId];
+    if(!fc || !map.getSource(sourceId)) return;   // live tiles, or a removed source
     fc.features.forEach(f=>{
-      if(f.id !== keepId && f.id != null){
-        map.setFeatureState({ source: sourceId, id: f.id }, { dim: true });
-      }
+      if(f.id != null && f.id !== keepId) map.setFeatureState({ source: sourceId, id: f.id }, { dim });
     });
-    hoveredLayer = { sourceId, keepId };
+  }
+  function setHoverDim(sourceId, dataLayerId, keepId){
+    const h = hoveredLayer;
+    if(h && h.sourceId === sourceId && h.keepId === keepId) return;
+    clearHoverDim();
+    setDim(sourceId, dataLayerId, keepId, true);
+    hoveredLayer = { sourceId, dataLayerId, keepId };
   }
   function clearHoverDim(){
     if(!hoveredLayer) return;
-    const { sourceId } = hoveredLayer;
-    const fc = map.getSource(sourceId) && map.getSource(sourceId)._data;
-    if(fc && fc.features){
-      fc.features.forEach(f=>{
-        if(f.id != null) map.setFeatureState({ source: sourceId, id: f.id }, { dim: false });
-      });
-    }
+    const { sourceId, dataLayerId } = hoveredLayer;
+    setDim(sourceId, dataLayerId, null, false);
     hoveredLayer = null;
   }
 
@@ -933,7 +930,7 @@
     const p = f.properties || {};
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
-      <div class="tt-metric">${p.voltage_kv} kV · ${escapeHtml(p.status || "")}</div>
+      <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(p.status || "")}</div>
       <div class="tt-meta">${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
@@ -989,7 +986,7 @@
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${p.region ? escapeHtml(p.region) + " · " : ""}${coords}</div>
-      <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
@@ -1004,7 +1001,7 @@
           // OSM data is fixed at the source, where every map using it benefits.
           ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">View on OpenInfraMap ↗</a>
              <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
-          : `<a href="${REPO_URL}/issues/new?title=${encodeURIComponent(COUNTRIES[currentCountry].label + ' map — correction: '+p.name)}&body=${encodeURIComponent('Feature id: '+(p.id || p.name)+'\n\nSuggested correction:\n')}" target="_blank" rel="noopener">Report an error</a>
+          : `<a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`, `Feature id: ${p.id || p.name}\n\nSuggested correction:\n`))}" target="_blank" rel="noopener">Report an error</a>
         ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
       </div>`;
     popup.classList.add("open");
@@ -1016,10 +1013,10 @@
     $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" style="background:${GRID_COLOR}"></span>Transmission line</span>`;
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
-      <div class="pop-sub">${p.voltage_kv} kV</div>
-      <span class="status-pill ${p.status || 'operational'}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
+      <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">
-        <div class="cell"><div class="k">Voltage</div><div class="v">${p.voltage_kv} kV</div></div>
+        <div class="cell"><div class="k">Voltage</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
         <div class="cell"><div class="k">Status</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.status)}</div></div>
         <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || "approximate")}</div></div>
         <div class="cell"><div class="k">Kind</div><div class="v">${p.kind === "hvdc_planned" ? "HVDC (planned)" : "AC"}</div></div>
@@ -1033,7 +1030,7 @@
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="${REPO_URL}/issues/new?title=${encodeURIComponent(COUNTRIES[currentCountry].label + ' map — correction: '+p.name)}" target="_blank" rel="noopener">Report an error</a>
+        <a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`))}" target="_blank" rel="noopener">Report an error</a>
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
@@ -1044,6 +1041,11 @@
     popup.setAttribute("aria-hidden","true");
   }
   $("#popupClose").addEventListener("click", closePopup);
+  document.addEventListener("keydown", (e)=>{
+    if(e.key !== "Escape") return;
+    if(!methModal.classList.contains("hidden")) methModal.classList.add("hidden");
+    else closePopup();
+  });
 
   // ---------- Country switch ----------
   countrySelect.addEventListener("change", async (e)=>{
@@ -1054,11 +1056,8 @@
     closePopup();
     hideTooltip();
     hoveredLayer = null;
-    await loadAllData(key);
-    if(key !== currentCountry) return; // superseded by a later switch
-    renderLayerList(key);
-    renderKPIs(key);
-    renderMethodologySources(key);
+    if(!(await loadAllData(key))) return; // superseded by a later switch
+    renderPanel(key);
     if(map && mapReady){
       map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
       buildMapLayers(key);
