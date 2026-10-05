@@ -318,7 +318,14 @@ const ROI = {
 };
 
 // ── Chart wrappers ─────────────────────────────────
+const CHART_INK = "#5A6577", CHART_GRID = "#EEF1F5";
 const Chart_ = {
+  // Brand type on every chart; called once Chart.js is there.
+  init() {
+    if (typeof Chart === "undefined" || !Chart.defaults) return;
+    Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue("--w-font-ui").trim() || "system-ui";
+    Chart.defaults.color = CHART_INK;
+  },
   monthly: null,
   cashflow: null,
 
@@ -331,8 +338,17 @@ const Chart_ = {
         labels: ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"],
         datasets: [{
           data: monthlyKwh,
-          backgroundColor: "#FF6B35",
-          borderRadius: 4,
+          backgroundColor: (c) => {
+            // Sunrise gradient down each bar
+            const { chartArea, ctx: g } = c.chart;
+            if (!chartArea) return "#FF6B35";
+            const grad = g.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "#FFB347");
+            grad.addColorStop(1, "#FF6B35");
+            return grad;
+          },
+          borderRadius: 6,
+          maxBarThickness: 34,
         }],
       },
       options: {
@@ -341,8 +357,8 @@ const Chart_ = {
           label: (c) => `${Math.round(c.parsed.y)} kWh`,
         }}},
         scales: {
-          x: { grid: { display: false }, ticks: { color: "#5A6577" } },
-          y: { grid: { color: "#F0F2F5" }, ticks: { color: "#5A6577", callback: v => v + " kWh" } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: CHART_INK } },
+          y: { grid: { color: CHART_GRID }, border: { display: false }, ticks: { color: CHART_INK, callback: v => v + " kWh" } },
         },
       },
     });
@@ -358,7 +374,15 @@ const Chart_ = {
         datasets: [{
           data: cashflow.map(c => Math.round(c.cumulative)),
           borderColor: "#001F4D",
-          backgroundColor: "rgba(0,31,77,0.08)",
+          borderWidth: 2.5,
+          backgroundColor: (c) => {
+            const { chartArea, ctx: g } = c.chart;
+            if (!chartArea) return "rgba(0,31,77,0.08)";
+            const grad = g.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "rgba(255,107,53,0.22)");
+            grad.addColorStop(1, "rgba(0,31,77,0.02)");
+            return grad;
+          },
           fill: true,
           tension: 0.15,
           pointRadius: 0,
@@ -374,10 +398,11 @@ const Chart_ = {
           }},
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: "#5A6577", maxTicksLimit: 8 } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: CHART_INK, maxTicksLimit: 8 } },
           y: {
-            grid: { color: "#F0F2F5" },
-            ticks: { color: "#5A6577", callback: v => (v/1000).toFixed(0) + "k" },
+            grid: { color: CHART_GRID },
+            border: { display: false },
+            ticks: { color: CHART_INK, callback: v => (v/1000).toFixed(0) + "k" },
           },
         },
       },
@@ -607,6 +632,7 @@ const State = {
   lastPvKey: null,
   lastPerKw: null,  // cached 1 kWc PVGIS response for current (loc, angle, aspect)
   heroAnimated: false,
+  savings: 0,       // last annual savings shown, for the share text
 };
 
 const $ = (id) => document.getElementById(id);
@@ -700,9 +726,111 @@ const UI = {
       });
     });
 
-    $("back-btn").addEventListener("click", () => this.goToStep(1));
+    $("back-btn").addEventListener("click", () => {
+      this.goToStep(1);
+      try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
+    });
+    $("geo-btn").addEventListener("click", () => this.useMyPosition());
+    $("share-btn").addEventListener("click", () => this.share());
+    $("print-btn").addEventListener("click", () => window.print());
+    this.syncUrlSoon = debounce(() => this.syncUrl(), 400);
 
     this.renderParamLabels();
+    this.restoreFromUrl();
+  },
+
+  // "Utiliser ma position": on a phone, standing at home, this is the most
+  // precise address there is — and the roof lookup then lands on the house.
+  useMyPosition() {
+    this.clearStep1Error();
+    if (!("geolocation" in navigator)) {
+      this.showStep1Error("La géolocalisation n'est pas disponible sur cet appareil. Entrez votre adresse.");
+      return;
+    }
+    const btn = $("geo-btn"), label = $("geo-btn-label");
+    btn.disabled = true;
+    label.textContent = "Localisation…";
+    const reset = () => { btn.disabled = false; label.textContent = "Utiliser ma position"; };
+    navigator.geolocation.getCurrentPosition((pos) => {
+      reset();
+      const { latitude: lat, longitude: lon } = pos.coords;
+      if (!inMorocco(lat, lon)) {
+        this.showStep1Error("Votre position semble hors du Maroc. Entrez une adresse marocaine.");
+        return;
+      }
+      State.candidates = [];
+      this.setLocationAndGo({ lat, lon, label: "Ma position", src: "geoloc" });
+    }, (err) => {
+      reset();
+      this.showStep1Error(err.code === 1
+        ? "Localisation refusée. Autorisez-la dans votre navigateur, ou entrez votre adresse."
+        : "Position introuvable pour le moment. Entrez votre adresse.");
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  },
+
+  // The estimate lives in the URL hash, so it can be shared, bookmarked or
+  // reopened as is. A hash never reaches a server, our analytics included.
+  syncUrl() {
+    if (!State.location || !$("step2").classList.contains("active")) return;
+    const p = State.params, l = State.location;
+    const q = new URLSearchParams({
+      lat: l.lat.toFixed(5), lon: l.lon.toFixed(5),
+      f: p.bill, a: p.angle, o: p.aspect, c: p.cost,
+    });
+    if (!State.sizeAuto) q.set("p", p.peakpower);
+    if (p.exportAllowed) q.set("x", "1");
+    if (l.label) q.set("n", l.label);
+    // Safari throws past ~100 calls in 30 s; a lost update is harmless.
+    try { history.replaceState(null, "", "#" + q.toString()); } catch (e) { /* ignore */ }
+  },
+
+  restoreFromUrl() {
+    const q = new URLSearchParams(location.hash.slice(1));
+    const lat = parseFloat(q.get("lat")), lon = parseFloat(q.get("lon"));
+    if (!inMorocco(lat, lon)) return;
+    // Every value goes through its slider, so it is clamped and snapped
+    // to the slider's own range and step.
+    const take = (key, id, param) => {
+      if (!q.has(key) || !Number.isFinite(parseFloat(q.get(key)))) return;
+      $(id).value = q.get(key);
+      State.params[param] = parseFloat($(id).value);
+    };
+    take("f", "bill", "bill");
+    take("a", "angle", "angle");
+    take("o", "aspect", "aspect");
+    take("c", "cost", "cost");
+    if (q.has("p")) {
+      take("p", "peakpower", "peakpower");
+      State.sizeAuto = false;
+      $("size-auto-badge").hidden = true;
+      $("size-auto-reset").hidden = false;
+    }
+    State.params.exportAllowed = q.get("x") === "1";
+    $("export-toggle").checked = State.params.exportAllowed;
+    this.syncBillPresets();
+    this.renderParamLabels();
+    State.candidates = [];
+    this.setLocationAndGo({ lat, lon, label: q.get("n") || "", src: "link" });
+  },
+
+  async share() {
+    this.syncUrl();
+    const url = location.href;
+    const text = `Toit solaire : environ ${fmtNum(State.savings)} MAD économisés par an, d'après Wattu.`;
+    const btnLabel = $("share-btn-label");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Mon estimation solaire — Wattu", text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      $("share-btn").classList.add("done");
+      btnLabel.textContent = "Lien copié";
+      setTimeout(() => { $("share-btn").classList.remove("done"); btnLabel.textContent = "Partager"; }, 2000);
+    } catch (e) {
+      if (e && e.name === "AbortError") return;   // share sheet dismissed
+      window.prompt("Copiez ce lien :", url);
+    }
   },
 
   showStep1Error(msg) {
@@ -859,7 +987,7 @@ const UI = {
     $("st-area-sub").textContent = State.roof.src === "osm" ? "d'après OpenStreetMap" : "toit dessiné";
     $("st-max").textContent = `${fmtNum(info.capacityKw)} kWc`;
     $("st-max-sub").textContent = `${info.panels.length} panneaux`;
-    $("st-inst").textContent = `${p.peakpower.toFixed(1).replace(".0", "")} kWc`;
+    $("st-inst").textContent = `${fmtDec(p.peakpower, { trim: true })} kWc`;
     $("st-inst-sub").textContent = `${shown} panneau${shown > 1 ? "x" : ""} · ${fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
 
     let html = `Panneaux de 500 Wc, ${CONFIG.ROOF_SETBACK_M} m de marge sur les bords, rangées espacées pour éviter l'ombre.`;
@@ -908,13 +1036,14 @@ const UI = {
     $("bill-val").textContent = fmtNum(p.bill) + " MAD";
     $("bill-consumption-hint").textContent =
       `soit environ ${Math.round(consumption)} kWh par mois`;
-    $("peakpower-val").textContent = p.peakpower.toFixed(1) + " kWc";
+    $("peakpower-val").textContent = fmtDec(p.peakpower) + " kWc";
     const nPanels = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
     $("peakpower-hint").textContent =
       `${nPanels} panneaux de ${CONFIG.PANEL_KWP * 1000} Wc, ≈ ${Math.round(nPanels * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
     $("angle-val").textContent = p.angle + "°";
     $("aspect-val").textContent = aspectLabel(p.aspect);
-    $("cost-val").textContent = p.cost.toFixed(1) + " MAD/Wc";
+    $("cost-val").textContent = fmtDec(p.cost) + " MAD/Wc";
+    $("next-cost").textContent = fmtDec(p.cost, { trim: true }) + " MAD/Wc";
     const capex = p.peakpower * 1000 * p.cost;
     $("capex-hint").textContent = `Investissement total : ${fmtMAD(capex)}`;
   },
@@ -988,13 +1117,14 @@ const UI = {
 
     // Hero
     const savings = Math.round(roi.annualSavingsMAD);
+    State.savings = savings;
     countUp($("hero-savings"), savings, State.heroAnimated ? 0 : 900);
     State.heroAnimated = true;
-    $("chip-size").textContent = p.peakpower.toFixed(1).replace(".0", "") + " kWc";
+    $("chip-size").textContent = fmtDec(p.peakpower, { trim: true }) + " kWc";
     $("chip-production").textContent = fmtNum(pv.annualKwh) + " kWh";
-    $("chip-payback").textContent = isFinite(roi.paybackYr) ? roi.paybackYr.toFixed(1) + " ans" : "—";
+    $("chip-payback").textContent = isFinite(roi.paybackYr) ? fmtDec(roi.paybackYr) + " ans" : "—";
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
-    $("chip-co2").textContent = co2Tons.toFixed(1) + " t";
+    $("chip-co2").textContent = fmtDec(co2Tons) + " t";
 
     // Financing card
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
@@ -1003,7 +1133,7 @@ const UI = {
     $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">MAD</span>`;
     $("fin-cash-net").textContent = `Économie an 1 : ${fmtMAD(cashflowY1)}`;
     $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
-      ? `Amorti en ${roi.paybackYr.toFixed(1)} ans`
+      ? `Amorti en ${fmtDec(roi.paybackYr)} ans`
       : `Non amorti sur 25 ans`;
 
     $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">MAD/mois</span>`;
@@ -1032,6 +1162,7 @@ const UI = {
       });
     }, 2500);
 
+    this.syncUrlSoon();
     Chart_.renderMonthly(pv.monthlyKwh);
     Chart_.renderCashflow(roi.cashflow);
   },
@@ -1052,23 +1183,49 @@ const Finance = {
 // Hover handles desktop. Touch needs an explicit toggle: :focus behaviour on
 // buttons is inconsistent across mobile browsers, so tapping must not depend
 // on it. Tap opens, tapping again / elsewhere / Escape closes.
+// On desktop a tip is placed against the viewport (position: fixed), so a
+// card with overflow: hidden or the scrolling summary column can't clip it,
+// and it is clamped inside the window. Phones keep the CSS bottom sheet.
 const Tooltips = {
+  desktop: window.matchMedia("(min-width: 901px) and (hover: hover)"),
+  place(btn) {
+    const tip = btn.querySelector(".tip");
+    if (!tip) return;
+    if (!this.desktop.matches) { tip.removeAttribute("style"); tip.classList.remove("below"); return; }
+    const r = btn.getBoundingClientRect();
+    Object.assign(tip.style, {
+      position: "fixed", width: "max-content", maxWidth: Math.min(260, innerWidth - 24) + "px",
+      transform: "none", bottom: "auto",
+    });
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    const left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 12));
+    const above = r.top - h - 10 >= 8;
+    tip.style.left = left + "px";
+    tip.style.top = (above ? r.top - h - 10 : r.bottom + 10) + "px";
+    tip.style.setProperty("--arrow-x", (r.left + r.width / 2 - left) + "px");
+    tip.classList.toggle("below", !above);
+  },
+  closeAll(except) {
+    document.querySelectorAll(".help.open").forEach(h => { if (h !== except) h.classList.remove("open"); });
+  },
   init() {
+    const placeFrom = (e) => { const b = e.target.closest && e.target.closest(".help"); if (b) this.place(b); };
+    document.addEventListener("mouseover", placeFrom);
+    document.addEventListener("focusin", placeFrom);
     document.addEventListener("click", (e) => {
       const btn = e.target.closest(".help");
-      document.querySelectorAll(".help.open").forEach(h => {
-        if (h !== btn) h.classList.remove("open");
-      });
+      this.closeAll(btn);
       if (btn) {
         e.preventDefault();
+        this.place(btn);
         btn.classList.toggle("open");
       }
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        document.querySelectorAll(".help.open").forEach(h => h.classList.remove("open"));
-      }
+      if (e.key === "Escape") this.closeAll();
     });
+    // A fixed tip would float away from its button on scroll.
+    window.addEventListener("scroll", () => this.closeAll(), { passive: true, capture: true });
   },
 };
 
@@ -1111,6 +1268,11 @@ function countUp(el, target, ms) {
 function fmtNum(n) {
   return Math.round(n).toLocaleString("fr-FR");
 }
+// One decimal with a French decimal comma: 2,5 · 10,2. Whole values drop
+// the ",0" when `trim` is set (3 kWc, not 3,0 kWc).
+function fmtDec(n, { trim = false } = {}) {
+  return n.toLocaleString("fr-FR", { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : 1, maximumFractionDigits: 1 });
+}
 function fmtMAD(n) {
   return fmtNum(n) + " MAD";
 }
@@ -1120,6 +1282,11 @@ function aspectLabel(a) {
   if (a === 90) return "Ouest";
   const dir = a < 0 ? "Est" : "Ouest";
   return `${Math.abs(a)}° ${dir} du Sud`;
+}
+// Morocco, Southern Provinces included.
+function inMorocco(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon) &&
+    lat >= 20.5 && lat <= 36.1 && lon >= -17.3 && lon <= -0.9;
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -1147,6 +1314,7 @@ const Depth = {
 // and analytics.js are already there; "load" would also wait for images.
 document.addEventListener("DOMContentLoaded", () => {
   Analytics.init();
+  Chart_.init();
   UI.init();
   Tooltips.init();
   Depth.init();

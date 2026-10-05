@@ -41,20 +41,22 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous" defer></script>
 
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#050B18">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="brand.css">
 </head>
 <body>
 
 <header class="topbar">
-  <a class="brand" href="./">
-    <span class="brand-dot"></span>
-    <span>Wattu</span>
-    <span class="brand-sub">Estimateur PV Maroc</span>
+  <a class="w-brand" href="./" aria-label="Wattu Solaire — accueil">
+    <img class="w-mark" src="mark.svg" alt="" width="26" height="26">
+    <span class="w-word">wattu</span>
+    <span class="w-product">Solaire</span>
   </a>
   <nav class="topnav">
-    <a href="https://energy.wattu.org/">Map</a>
-    <a href="#about">À propos</a>
+    <a href="https://energy.wattu.org/">Carte énergie</a>
+    <a href="#about">Méthode</a>
   </nav>
 </header>
 
@@ -62,34 +64,68 @@
 
   <!-- STEP 1: address + instant estimate -->
   <section id="step1" class="step active">
-    <div class="hero">
-      <h1>Combien vous rapporterait un toit solaire ?</h1>
+    <div class="landing">
+      <div class="hero">
+        <p class="w-kicker hero-tag"><span class="live-dot" aria-hidden="true"></span>Estimateur solaire · Maroc</p>
+        <h1>Combien vous rapporterait un toit solaire&nbsp;?</h1>
+        <p class="lede">Votre adresse suffit&nbsp;: production, économies en dirhams et amortissement, calculés pour votre toit en quelques secondes.</p>
 
-      <form id="address-form" class="address-form">
-        <div class="input-wrap">
-          <input
-            id="address-input"
-            type="text"
-            placeholder="Ex : Rue de la Liberté, Casablanca"
-            aria-label="Adresse"
-            autocomplete="street-address"
-            required>
+        <form id="address-form" class="address-form">
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <input
+              id="address-input"
+              type="text"
+              placeholder="Ex : Rue Ibnou Sina, Rabat"
+              aria-label="Adresse"
+              autocomplete="street-address"
+              required>
+          </div>
+          <button type="submit" id="estimate-btn">Estimer</button>
+        </form>
+
+        <div class="hero-alt">
+          <button type="button" id="geo-btn" class="geo-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span id="geo-btn-label">Utiliser ma position</span>
+          </button>
+          <span class="samples-label">ou essayez</span>
+          <div class="samples">
+            <button class="chip" data-lat="33.5731" data-lon="-7.5898" data-label="Casablanca">Casablanca</button>
+            <button class="chip" data-lat="31.6295" data-lon="-7.9811" data-label="Marrakech">Marrakech</button>
+            <button class="chip" data-lat="30.9335" data-lon="-6.9370" data-label="Ouarzazate">Ouarzazate</button>
+            <button class="chip" data-lat="34.0209" data-lon="-6.8416" data-label="Rabat">Rabat</button>
+            <button class="chip" data-lat="35.7595" data-lon="-5.8340" data-label="Tanger">Tanger</button>
+          </div>
         </div>
-        <button type="submit" id="estimate-btn">Estimer</button>
-      </form>
 
-      <p class="lede">Entrez votre adresse et obtenez une estimation en quelques secondes. Gratuit, sans inscription.</p>
+        <div id="step1-error" class="error" hidden></div>
+      </div>
 
-      <div id="step1-error" class="error" hidden></div>
-    </div>
+      <ul class="trust" aria-label="Sur quoi repose l'estimation">
+        <li><b>PVGIS</b><span>Production, Commission européenne</span></li>
+        <li><b>ONEE 2025</b><span>Tarifs résidentiels</span></li>
+        <li><b>Loi 82-21</b><span>Autoconsommation, revente</span></li>
+        <li><b>Gratuit</b><span>Sans inscription</span></li>
+      </ul>
 
-    <div class="samples">
-      <span>Essayez :</span>
-      <button class="chip" data-lat="33.5731" data-lon="-7.5898" data-label="Casablanca">Casablanca</button>
-      <button class="chip" data-lat="31.6295" data-lon="-7.9811" data-label="Marrakech">Marrakech</button>
-      <button class="chip" data-lat="30.9335" data-lon="-6.9370" data-label="Ouarzazate">Ouarzazate</button>
-      <button class="chip" data-lat="34.0209" data-lon="-6.8416" data-label="Rabat">Rabat</button>
-      <button class="chip" data-lat="35.7595" data-lon="-5.8340" data-label="Tanger">Tanger</button>
+      <ol class="how">
+        <li>
+          <span class="how-n">01</span>
+          <h2>Votre adresse</h2>
+          <p>Tapez-la, ou utilisez votre position si vous êtes chez vous.</p>
+        </li>
+        <li>
+          <span class="how-n">02</span>
+          <h2>Votre toit</h2>
+          <p>Le bâtiment est repéré sur OpenStreetMap et les panneaux sont placés dessus. Vous pouvez aussi le dessiner.</p>
+        </li>
+        <li>
+          <span class="how-n">03</span>
+          <h2>Vos économies</h2>
+          <p>Production à vos coordonnées, tarifs ONEE&nbsp;: gains par an, amortissement, comptant ou crédit.</p>
+        </li>
+      </ol>
     </div>
   </section>
 
@@ -97,9 +133,24 @@
   <section id="step2" class="step">
     <div class="results-wrap">
 
-      <div class="location-line">
-        <button class="linkbtn" id="back-btn">← Changer d'adresse</button>
-        <div id="location-label" class="location-label"></div>
+      <div class="results-head">
+        <button type="button" class="back-btn" id="back-btn" aria-label="Nouvelle adresse">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="loc">
+          <span class="w-kicker">Estimation pour</span>
+          <div id="location-label" class="location-label"></div>
+        </div>
+        <div class="results-actions">
+          <button type="button" class="action-btn" id="share-btn" aria-label="Partager cette estimation">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="share-btn-label">Partager</span>
+          </button>
+          <button type="button" class="action-btn" id="print-btn" aria-label="Enregistrer en PDF">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            <span>PDF</span>
+          </button>
+        </div>
       </div>
       <div id="alt-addresses" class="alt-addresses" hidden>
         <span>Pas la bonne adresse ?</span>
@@ -107,6 +158,8 @@
 
       <div id="step2-error" class="error" hidden></div>
 
+      <div class="results-layout">
+      <aside class="results-aside">
       <!-- Hero result -->
       <div class="hero-result">
         <div id="hero-loading" class="hero-loading">
@@ -114,10 +167,10 @@
           <div class="hero-loading-msg" id="hero-loading-msg">Analyse du gisement solaire…</div>
         </div>
         <div id="hero-content" hidden>
-          <div class="hero-kicker">Potentiel solaire de votre toit</div>
+          <div class="hero-kicker">Économies estimées</div>
           <div class="hero-headline">
             <span id="hero-savings" class="hero-number">0</span>
-            <span class="hero-unit">MAD économisés / an</span>
+            <span class="hero-unit">dirhams économisés par an</span>
           </div>
           <div class="hero-chips">
             <div class="chip-stat"><span id="chip-size">—</span><small>taille conseillée<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Dimensionnée pour couvrir environ 80 % de votre consommation annuelle. Modifiable dans les paramètres.</span></button></small></div>
@@ -183,6 +236,7 @@
 
         </div>
       </details>
+      </aside>
 
       <div class="main-panel">
 
@@ -272,17 +326,52 @@
         <div class="disclaimer">
           <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs ONEE résidentiels 2025. La part d'électricité que vous consommez directement est estimée à partir d'un profil de foyer type. Surface du toit : contour du bâtiment OpenStreetMap (via Overpass) ou tracé par vous, avec 1 m de marge sur les bords et des rangées espacées pour éviter l'ombrage. L'ombrage d'arbres ou de bâtiments voisins, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
         </div>
+
+        <div class="next-card">
+          <p class="w-kicker">Et maintenant&nbsp;?</p>
+          <ol class="next-steps">
+            <li><b>Faites vérifier votre toit</b><span>Un installateur confirme l'ombrage, la structure et l'emplacement des panneaux.</span></li>
+            <li><b>Comparez au moins trois devis</b><span>Cette estimation retient <span id="next-cost">11 MAD/Wc</span> posé&nbsp;; un devis très au-dessus mérite une question.</span></li>
+            <li><b>Déclarez l'installation</b><span>Loi 82-21&nbsp;: sous 11 kW, une simple déclaration suffit pour produire et consommer votre électricité.</span></li>
+          </ol>
+        </div>
+      </div>
       </div>
     </div>
   </section>
 
   <section id="about" class="about" data-depth="method">
-    <h2>Pourquoi cet outil</h2>
-    <p>Le Maroc a l'un des meilleurs ensoleillements au monde, mais le résidentiel reste si marginal qu'il n'apparaît même pas comme segment à part dans les statistiques nationales de capacité installée. La raison principale : personne ne sait combien ça rapporte réellement chez soi. Cet outil répond à cette question, gratuitement et sans inscription.</p>
-    <p>Fait partie de <a href="https://energy.wattu.org/">Wattu</a> — cartographie des infrastructures énergie × digital au Maroc.</p>
+    <p class="w-kicker">Méthode</p>
+    <h2>Une estimation sérieuse, en toute transparence</h2>
+    <div class="about-grid">
+      <div>
+        <h3>Pourquoi cet outil</h3>
+        <p>Le Maroc a l'un des meilleurs ensoleillements au monde, mais le solaire résidentiel y reste marginal. La raison principale&nbsp;: personne ne sait combien ça rapporte réellement chez soi. Cet outil répond à cette question, gratuitement et sans inscription.</p>
+      </div>
+      <div>
+        <h3>Comment c'est calculé</h3>
+        <p>Production PVGIS v5.2 (Commission européenne) à vos coordonnées, pour l'inclinaison et l'orientation choisies. Économies sur la grille tarifaire résidentielle ONEE 2025, en retirant d'abord les tranches les plus chères. Toit&nbsp;: contour OpenStreetMap ou tracé par vous.</p>
+      </div>
+      <div>
+        <h3>Ce qui n'est pas pris en compte</h3>
+        <p>L'ombrage des arbres et des immeubles voisins, l'état du toit et les prix de votre installateur. C'est une estimation pour décider, pas un devis.</p>
+      </div>
+    </div>
   </section>
 
 </main>
+
+<footer class="site-footer">
+  <a class="w-brand" href="./" aria-label="Wattu Solaire — accueil">
+    <img class="w-mark" src="mark.svg" alt="" width="22" height="22">
+    <span class="w-word">wattu</span>
+  </a>
+  <p>Données&nbsp;: PVGIS (Commission européenne) · ONEE · © contributeurs OpenStreetMap · Imagerie Esri.<br>Aucun cookie. Votre adresse n'est jamais transmise à nos statistiques.</p>
+  <nav>
+    <a href="https://energy.wattu.org/">Carte énergie × digital</a>
+    <a href="https://github.com/redatahiri37/morocco-energy-digital-map">Code source</a>
+  </nav>
+</footer>
 
 <script src="analytics.js" defer></script>
 <script src="app.js" defer></script>
