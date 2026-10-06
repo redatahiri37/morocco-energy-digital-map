@@ -78,7 +78,9 @@ npm install -g wrangler
 wrangler login
 ```
 
-Deploy (from `solar/proxy/`):
+Deploy: automatic. `.github/workflows/worker.yml` runs the Worker tests and
+deploys on every change to `solar/proxy/` on `main`; Actions › worker-deploy ›
+Run workflow redeploys it by hand. Without CI (from `solar/proxy/`):
 
 ```bash
 cd solar/proxy && wrangler deploy

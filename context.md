@@ -55,8 +55,8 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   - Worker: values checked by shape before storage (the telemetry brief
     goes to an agent and into minutes), coordinates rounded server-side,
     normalised PVGIS parameters, rate limit even without the binding
-    (`[[ratelimits]]`), errors not edge-cached. **Needs `npx wrangler@4
-    deploy` in solar/proxy.**
+    (`[[ratelimits]]`), errors not edge-cached. Deployed by the new
+    worker.yml on merge (token needs Workers Scripts › Edit).
   - Solar: at most 400 panel slots (a stadium froze the page), bill slider
     debounced, address label only in the "Partager" link, link label
     cleaned, footer says which services see the address/position.
@@ -101,7 +101,7 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
 - Removed: root Mapbox prototype (index.html, js/), deploy.sh, .DS_Store;
   docs/CALC_ENGINE.md and docs/SUBSTACK_POST.md moved to the root (they
   were published on energy.wattu.org).
-- Still manual: `wrangler deploy` of solar/proxy (the `roof` event).
+- Worker deploy: automatic since worker.yml (2026-10-06).
 
 ## Session handoff — 2026-10-02 (solar: roof area + panels)
 Wattu Solar (`solar/`) now looks up the building under the address in

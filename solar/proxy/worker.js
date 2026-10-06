@@ -9,7 +9,7 @@
  *   → 204. Cookieless usage events into the SOLAR_ANALYTICS Analytics Engine
  *     dataset. No IP, no address, no identifier is stored. See ../ANALYTICS.md.
  *
- * Deploy: `wrangler deploy` from this directory. See ../README.md "Proxy operations".
+ * Deploy: automatic on main (.github/workflows/worker.yml). See ../README.md "Proxy operations".
  */
 
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";

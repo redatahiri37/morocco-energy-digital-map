@@ -3,14 +3,14 @@ main = "worker.js"
 compatibility_date = "2026-07-01"
 
 # Workers Free plan is sufficient (100k req/day).
-# Deploy from this directory: `wrangler deploy`
+# Deployed by .github/workflows/worker.yml on every change to main
+# (or "Run workflow"). By hand: `npx wrangler@4 deploy` from this directory.
 # Logs: `wrangler tail`
 
 # Per-IP rate limit used by env.RATE_LIMITER in worker.js (60 req/min, one
 # bucket for /pvcalc and one for /e). Keep this block: without it the worker
 # falls back to a weaker per-isolate counter and logs
-# "RATE_LIMITER binding missing" in `wrangler tail`. Needs a current
-# wrangler 4 (`npx wrangler@4 deploy`).
+# "RATE_LIMITER binding missing" in `wrangler tail`. Needs wrangler 4.
 [[ratelimits]]
 name = "RATE_LIMITER"
 namespace_id = "1001"

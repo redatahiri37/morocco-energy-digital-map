@@ -43,7 +43,7 @@ jobs:
   # Publishes the estimator to the Cloudflare Pages project behind
   # solar.wattu.org (atlas-solar). Runs only on main, after the checks.
   # Same secrets as the map's deploy. The Worker in solar/proxy is not
-  # deployed here (`wrangler deploy` from solar/proxy).
+  # deployed here: worker.yml does it.
   deploy:
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

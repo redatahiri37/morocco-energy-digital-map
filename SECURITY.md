@@ -36,9 +36,9 @@ working exploit or a credential in a public issue.
       environment `production` with a required reviewer, then add
       `environment: production` to both deploy jobs.
 - [ ] Enable Dependabot alerts and security updates (GitHub Actions).
-- [ ] Redeploy the Worker (`npx wrangler@4 deploy` in `solar/proxy`) and
-      check in `wrangler tail` that "RATE_LIMITER binding missing" does not
-      appear.
+- [ ] Give the Cloudflare API token the permission
+      Account › Workers Scripts › Edit (Cloudflare dashboard › My Profile ›
+      API Tokens), so `worker-deploy` can publish the Worker.
 - [ ] Record here the date (never the value) on which each credential that
       was ever exposed was revoked: the old GitHub PAT, the old Mapbox
       token, and any token pasted into a chat.
