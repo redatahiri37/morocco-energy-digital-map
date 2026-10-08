@@ -1323,6 +1323,26 @@ const Depth = {
   },
 };
 
+// Installer showcase: shuffled on each visit so no listed company holds the
+// top slot, and outbound clicks counted (company id only) to know whether
+// the section is used. Selection method: INSTALLERS.md.
+const Installers = {
+  init() {
+    const list = $("installers-list");
+    if (!list) return;
+    const items = [...list.children];
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    items.forEach(li => list.appendChild(li));
+    list.addEventListener("click", (e) => {
+      const a = e.target.closest("a[data-installer]");
+      if (a) Analytics.track("installer_click", { src: a.dataset.installer });
+    });
+  },
+};
+
 // Boot. Every script tag is `defer`, so on DOMContentLoaded Leaflet, Chart.js
 // and analytics.js are already there; "load" would also wait for images.
 document.addEventListener("DOMContentLoaded", () => {
@@ -1331,4 +1351,5 @@ document.addEventListener("DOMContentLoaded", () => {
   UI.init();
   Tooltips.init();
   Depth.init();
+  Installers.init();
 });
