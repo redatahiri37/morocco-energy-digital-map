@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Vendored libraries are pinned by hash (SRI): store them byte for byte.
+docs/vendor/** -text
+solar/vendor/** -text

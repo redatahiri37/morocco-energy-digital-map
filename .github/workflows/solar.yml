@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -35,6 +35,10 @@ jobs:
           cmp docs/mark.svg solar/mark.svg
           cmp docs/favicon.svg solar/favicon.svg
           diff -r docs/fonts solar/fonts
+
+      # No code from another site; vendored libraries match their hashes.
+      - name: Page code is first-party and untampered
+        run: node scripts/check-sri.mjs solar/index.html
 
       - name: Worker tests
         working-directory: solar/proxy
@@ -69,6 +73,7 @@ jobs:
              solar/brand.css solar/mark.svg solar/favicon.svg \
              solar/robots.txt solar/sitemap.xml solar/_headers _site/
           cp -r solar/fonts _site/fonts
+          cp -r solar/vendor _site/vendor
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
           V="${GITHUB_SHA::8}"

@@ -132,5 +132,15 @@ console.error = origErr;
 ok("no binding → still limited (10 of 70 refused)", limited === 10, "got "+limited);
 ok("/e has its own bucket", r.status === 204 && written.length > 0);
 
+// 15. CORS: only Wattu origins get their own origin back
+for (const o of ["http://localhost:8765", "https://redatahiri37.github.io", "https://evil.example", "http://x.atlas-solar.pages.dev", "https://atlas-solar.pages.dev.evil.com"]) {
+  r = await worker.fetch(new Request("https://w.dev/e", { method:"OPTIONS", headers:{Origin:o} }), env);
+  ok("CORS refuses "+o, r.headers.get("access-control-allow-origin") === "https://solar.wattu.org", r.headers.get("access-control-allow-origin"));
+}
+for (const o of ["https://solar.wattu.org", "https://4090bafd.atlas-solar.pages.dev"]) {
+  r = await worker.fetch(new Request("https://w.dev/e", { method:"OPTIONS", headers:{Origin:o} }), env);
+  ok("CORS allows "+o, r.headers.get("access-control-allow-origin") === o);
+}
+
 console.log(fail ? "\n"+fail+" FAILURE(S)" : "\nall green");
 process.exit(fail ? 1 : 0);
