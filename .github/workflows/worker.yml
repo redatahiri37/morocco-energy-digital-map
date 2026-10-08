@@ -29,6 +29,11 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Cloudflare secrets live in the "production" environment, which only
+    # main may use: a workflow pushed on any other branch cannot read them.
+    environment:
+      name: production
+      url: https://solar-pvgis.redatahiri.workers.dev
     concurrency:
       group: worker-deploy-solar-pvgis
       cancel-in-progress: false
