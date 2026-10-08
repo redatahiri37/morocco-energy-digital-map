@@ -142,7 +142,8 @@ const EVENT_NAMES = new Set([
   "param_change",   // a control was tuned — tells us what people care about
   "outcome",        // the economics the visitor actually settled on
   "roof",           // roof found on OSM (src=osm), not found (none), drawing started/finished
-  "depth",          // scrolled to a section (financing, charts, method)
+  "depth",          // scrolled to a section (financing, charts, installers, method)
+  "installer_click", // opened a showcased installer's site (src = company id)
   "exit",           // session ended — furthest step + duration
 ]);
 

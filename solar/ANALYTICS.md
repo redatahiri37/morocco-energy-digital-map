@@ -16,6 +16,7 @@ is now measured, why each number was chosen, and how to run the loop.
 | `param_change` | A control is first touched | Which inputs people care about — and which are dead weight |
 | `roof` | Building lookup ends (`src`: `osm` found / `none`), the user starts drawing (`draw_start`, once) or finishes (`drawn`) | How often OpenStreetMap knows the roof, and whether people bother drawing it |
 | `depth` | A section scrolls into view | Whether the financing card and charts earn their space |
+| `installer_click` | A showcased installer's link is opened (`src`: company id) | Whether the « Trouver un installateur » section is used — and the evidence base before any partnership |
 | `outcome` | 2.5 s after the numbers settle | **What economics people actually see** — bill, size, payback, savings |
 | `exit` | Tab hidden or closed | Furthest step reached + time spent → real drop-off |
 

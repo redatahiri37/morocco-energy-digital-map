@@ -669,6 +669,40 @@ a:hover { text-decoration: underline; }
 .next-steps b { font-weight: 600; color: var(--text); font-size: 15px; }
 .next-steps li > span { color: var(--muted); font-size: 14px; line-height: 1.5; }
 
+/* Installers */
+.installers-card {
+  margin-top: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.installers-card > .w-kicker { color: var(--orange-2); margin: 0 0 8px; }
+.installers-intro { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.installers-intro b { color: var(--text); font-weight: 600; }
+.installers-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.installers-list a {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 12px; row-gap: 2px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: inherit; text-decoration: none;
+  transition: border-color .15s;
+}
+.installers-list a:hover, .installers-list a:focus-visible { border-color: var(--orange); }
+.inst-name { font-weight: 600; color: var(--text); font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.inst-badge {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+  padding: 2px 7px; border-radius: 999px;
+  background: rgba(255,107,53,0.12); color: var(--orange-2);
+}
+.inst-facts { grid-column: 1; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+.inst-link { grid-column: 2; grid-row: 1 / span 2; color: var(--orange-2); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.installers-note { margin: 14px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.installers-note a { color: var(--orange-2); }
+
 /* Method */
 .about {
   max-width: 1200px;
@@ -747,7 +781,7 @@ a:hover { text-decoration: underline; }
 /* Print / "PDF": the estimate, without the controls */
 @media print {
   .topbar, .results-actions, .back-btn, #alt-addresses, .advanced, .roof-actions,
-  #step1, .about, .site-footer nav, .help, .leaflet-control-container { display: none !important; }
+  #step1, .about, .installers-card, .site-footer nav, .help, .leaflet-control-container { display: none !important; }
   html, body { background: #fff; }
   .results-wrap { max-width: none; padding: 0; margin: 0; }
   .results-layout { display: block; }
