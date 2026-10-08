@@ -53,6 +53,18 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
 - New analytics event `installer_click` (src = company id), allowlisted in
   the Worker (deployed by worker.yml on merge).
 
+## Session handoff — 2026-10-08 (hardening by design)
+- No third-party code: MapLibre, Leaflet and Chart.js are vendored
+  (docs/vendor, solar/vendor) with SRI; scripts/check-sri.mjs fails CI on
+  an external script/stylesheet, a hash mismatch or any style="" / <style>.
+- CSP: scripts and styles 'self' only, no 'unsafe-inline' (map colours are
+  set through the DOM: paint() in docs/app.js); COOP, CORP, X-Frame-Options.
+- Worker CORS: Wattu origins only (localhost and github.io removed).
+- Dependabot for the pinned actions. SECURITY.md: accepted risks, owner
+  account settings (2FA, DNSSEC), how to update a vendored library.
+- Owner chose not to move the Cloudflare secrets into `production`
+  (accepted risk, recorded in SECURITY.md); don't ask again.
+
 ## Session handoff — 2026-10-05 (security audit and fixes)
 - Two audits (web apps; Worker, CI, secrets). No secret in history
   (gitleaks, 178 commits). Fixes, see SECURITY.md:
@@ -71,9 +83,12 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
     cleaned, footer says which services see the address/position.
   - CI: actions pinned by SHA, read-only token, gitleaks on every push.
     Data downloads are pinned to commits and checked by sha256.
-- Owner to do (checklist in SECURITY.md): branch protection on main,
-  `production` environment for the Cloudflare secrets, Dependabot, record
-  revocation dates of old tokens.
+- 2026-10-08: ruleset on main is live (PR + gitleaks required, 0
+  approvals). A PR must be up to date with main before it merges. Deploy
+  jobs use the `production` environment.
+- Owner to do (checklist in SECURITY.md): move the Cloudflare secrets into
+  `production` (main only), Dependabot, record revocation dates of old
+  tokens. The owner works from a phone during the day: give phone steps.
 
 ## Session handoff — 2026-10-05 (France and Spain)
 - France and Spain added: power plants ≥ 10 MW from powerplantmatching

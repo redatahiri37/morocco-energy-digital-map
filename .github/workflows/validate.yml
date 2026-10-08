@@ -3,10 +3,10 @@ name: docs-validate
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   pull_request:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -36,6 +36,10 @@ jobs:
           cmp docs/favicon.svg solar/favicon.svg
           diff -r docs/fonts solar/fonts
 
+      # No code from another site; vendored libraries match their hashes.
+      - name: Page code is first-party and untampered
+        run: node scripts/check-sri.mjs docs/index.html
+
       # docs/_headers allows the inline redirect script in index.html by its
       # hash. Edit the script without updating the hash and the browser
       # silently refuses it, so CI checks they agree.
@@ -57,13 +61,19 @@ jobs:
 
   # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.
-  # Needs two repository secrets:
-  #   CLOUDFLARE_API_TOKEN   — token with Account › Cloudflare Pages › Edit
+  # Needs two secrets in the "production" environment (see SECURITY.md):
+  #   CLOUDFLARE_API_TOKEN   — Account › Cloudflare Pages › Edit and
+  #                            Account › Workers Scripts › Edit
   #   CLOUDFLARE_ACCOUNT_ID  — shown on the Cloudflare dashboard sidebar
   deploy:
     needs: validate
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Cloudflare secrets live in the "production" environment, which only
+    # main may use: a workflow pushed on any other branch cannot read them.
+    environment:
+      name: production
+      url: https://energy.wattu.org
     concurrency:
       group: pages-deploy-atlas-nexus
       cancel-in-progress: false

@@ -32,14 +32,13 @@
 }
 </script>
 
-<!-- Pinned versions with Subresource Integrity: a tampered CDN file is refused.
-     chart.umd.js is Chart.js's own minified CDN build (chart.umd.min.js does
-     not exist in the package: jsDelivr minified it on the fly, so its bytes,
-     and any hash, could change). New version → recompute:
-     openssl dgst -sha384 -binary <file> | openssl base64 -A -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous" defer></script>
+<!-- Leaflet and Chart.js are served from this site (vendor/, copied from
+     their npm packages), so no third-party server can change or withhold the
+     code that runs here. Integrity hashes are checked by the browser and by
+     CI (scripts/check-sri.mjs). New version → see SECURITY.md. -->
+<link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H">
+<script src="vendor/leaflet-1.9.4/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" defer></script>
+<script src="vendor/chart.js-4.4.1/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" defer></script>
 
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#050B18">
