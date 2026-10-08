@@ -49,9 +49,9 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   (Econosol, Shamsiyah — owner's pick), shuffled per visit, no commission,
   link to the official Taqa Pro list. Hidden from the PDF print.
 - Method, scores and sources: solar/INSTALLERS.md (review every 6 months).
-  Websites were not opened during research — check them before merging.
-- New analytics event `installer_click` (src = company id). Needs a manual
-  `wrangler deploy` of solar/proxy, or the Worker drops it.
+  Websites were not opened during research — still to check.
+- New analytics event `installer_click` (src = company id), allowlisted in
+  the Worker (deployed by worker.yml on merge).
 
 ## Session handoff — 2026-10-05 (security audit and fixes)
 - Two audits (web apps; Worker, CI, secrets). No secret in history
