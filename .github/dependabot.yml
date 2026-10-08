@@ -1,0 +1,14 @@
+# Dependabot proposes a PR when an action used by the workflows has a new
+# release; the SHA pins and their "# vX.Y.Z" comments are updated together.
+# Each PR goes through the same checks and the owner's merge.
+# The vendored libraries (docs/vendor, solar/vendor) are not tracked here:
+# SECURITY.md says how to update them.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

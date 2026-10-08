@@ -22,10 +22,12 @@
 
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 
-<!-- Pinned versions with Subresource Integrity: a tampered CDN file is refused.
-     New version → recompute: openssl dgst -sha384 -binary <file> | openssl base64 -A -->
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V" crossorigin="anonymous">
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj" crossorigin="anonymous"></script>
+<!-- MapLibre is served from this site (vendor/, copied from the npm package),
+     so no third-party server can change or withhold the code that runs here.
+     Integrity hashes are checked by the browser and by CI
+     (scripts/check-sri.mjs). New version → see SECURITY.md. -->
+<link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V">
+<script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js" integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj"></script>
 
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./brand.css">
@@ -116,7 +118,7 @@
     </div>
 
     <!-- Hover tooltip -->
-    <div id="tooltip" class="tooltip" style="display:none"></div>
+    <div id="tooltip" class="tooltip"></div>
 
     <!-- Popup card -->
     <aside id="popup" class="popup" aria-hidden="true">
@@ -160,11 +162,10 @@
       <h3>Third-party requests on load</h3>
       <p>Loading this page contacts these external services. No login, account or personal data is involved — this is standard web-asset loading, disclosed here for transparency.</p>
       <ul class="bullets">
-        <li><strong>unpkg.com</strong> — serves the MapLibre GL JS library and stylesheet that render the map.</li>
         <li><strong>OpenFreeMap</strong> (<code>tiles.openfreemap.org</code>) — serves the basemap style, vector tiles and label fonts, requested continuously as you pan and zoom.</li>
         <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
       </ul>
-      <p class="micro">The typefaces (Inter, Newsreader, IBM Plex Mono, SIL Open Font License) are served from this site, not from a font CDN.</p>
+      <p class="micro">The map library (MapLibre GL JS, BSD-3-Clause) and the typefaces (Inter, Newsreader, IBM Plex Mono, SIL Open Font License) are served from this site, not from a CDN.</p>
       <h3>Limits</h3>
       <ul class="bullets">
         <li>Transmission-line routing is indicative, not survey-grade. No sub-60 kV distribution network.</li>

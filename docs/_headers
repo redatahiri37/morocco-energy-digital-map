@@ -1,11 +1,17 @@
 # Security headers for energy.wattu.org (Cloudflare Pages reads this file).
-# The CSP lists every host the map loads from. A new host (tiles, CDN, API)
-# must be added here or the browser refuses it. The sha256 is the inline
-# redirect script in index.html; CI recomputes it and fails if they differ.
-# 'unsafe-inline' styles: popups and the legend set style="" attributes.
+# Code (scripts, styles) comes only from this site; tiles and label fonts
+# from OpenFreeMap and OpenInfraMap. A new host must be added here or the
+# browser refuses it. The sha256 is the inline redirect script in
+# index.html; CI recomputes it and fails if they differ. No 'unsafe-inline'
+# anywhere: app.js sets colours through the DOM, never in style="".
+# COOP / CORP / X-Frame-Options: no other site can frame this page, hold a
+# handle on its window, or embed its files.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self' https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js 'sha256-MZf5REdWRhbgcXAzyYEdOi30/V9Z5Wk3njtPQ12Aj8Y='; style-src 'self' https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://tiles.openfreemap.org https://openinframap.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-MZf5REdWRhbgcXAzyYEdOi30/V9Z5Wk3njtPQ12Aj8Y='; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://tiles.openfreemap.org https://openinframap.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
   Permissions-Policy: geolocation=(), camera=(), microphone=(), interest-cohort=()
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000

@@ -206,6 +206,12 @@
   }
   function fmtCap(mw){ mw = num(mw); return mw == null ? "—" : mw.toLocaleString() + " MW"; }
   function num(v){ return typeof v === "number" && Number.isFinite(v) ? v : null; }
+  // Colours go in data-bg / data-border and are applied here, through the
+  // DOM: the CSP allows no style="" attribute in HTML (no 'unsafe-inline').
+  function paint(root){
+    root.querySelectorAll("[data-bg]").forEach(el=>{ el.style.background = el.dataset.bg; });
+    root.querySelectorAll("[data-border]").forEach(el=>{ el.style.borderColor = el.dataset.border; });
+  }
   // Links only for http(s): HTML escaping does not stop javascript: URLs.
   function safeUrl(u){
     try { const p = new URL(u).protocol; return p === "https:" || p === "http:" ? u : ""; }
@@ -353,8 +359,8 @@
         kind==="digital"    ? DIGITAL_COLOR : "#999"
       );
       const swatch = kind==="grid" || kind==="oim"
-        ? `<span class="layer-line${planned ? " dashed" : ""}" style="border-color:${dotColor}"></span>`
-        : `<span class="layer-dot" style="background:${dotColor}"></span>`;
+        ? `<span class="layer-line${planned ? " dashed" : ""}" data-border="${escapeHtml(dotColor)}"></span>`
+        : `<span class="layer-dot" data-bg="${escapeHtml(dotColor)}"></span>`;
       const row = document.createElement("label");
       row.className = "layer-row";
       row.dataset.layer = L.id;
@@ -366,6 +372,7 @@
         <span class="layer-name">${escapeHtml(L.title)}</span>
         <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : fc.features.length}</span>
       `;
+      paint(row);
       row.querySelector("input").addEventListener("change", (e)=>{
         const on = e.target.checked;
         visibility[L.id] = on;
@@ -954,12 +961,13 @@
       }
     }
     tooltip.innerHTML = `
-      <div class="tt-name">${dot ? `<span class="tt-dot" style="background:${dot}"></span>` : ""}${escapeHtml(p.name)}</div>
+      <div class="tt-name">${dot ? `<span class="tt-dot" data-bg="${escapeHtml(dot)}"></span>` : ""}${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
         ${p.commissioning_year || p.year ? " · " + escapeHtml(p.commissioning_year || p.year) : ""}
       </div>`;
+    paint(tooltip);
     positionTooltip(point);
   }
   function showLineTooltip(f, point){
@@ -993,18 +1001,18 @@
     if(kind === "power"){
       stats = `
         <div class="cell"><div class="k">Capacity</div><div class="v">${fmtCap(p.capacity_mw)}</div></div>
-        <div class="cell"><div class="k">Fuel</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.fuel_type)}</div></div>
-        <div class="cell"><div class="k">Technology</div><div class="v" style="font-size:12px">${escapeHtml(p.tech || "—")}</div></div>
+        <div class="cell"><div class="k">Fuel</div><div class="v cap">${escapeHtml(p.fuel_type)}</div></div>
+        <div class="cell"><div class="k">Technology</div><div class="v sm">${escapeHtml(p.tech || "—")}</div></div>
         <div class="cell"><div class="k">${p.status==="operational"?"Commissioned":"Target year"}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>`;
     } else if(kind === "industrial"){
       stats = `
-        <div class="cell"><div class="k">Sector</div><div class="v" style="font-size:12px">${escapeHtml(p.sector)}</div></div>
+        <div class="cell"><div class="k">Sector</div><div class="v sm">${escapeHtml(p.sector)}</div></div>
         <div class="cell"><div class="k">Est. demand</div><div class="v">${fmtCap(p.estimated_demand_mw)}</div></div>
-        <div class="cell"><div class="k">Grid connection</div><div class="v" style="font-size:11.5px">${escapeHtml(p.grid_connection || "—")}</div></div>
-        <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || "—")}</div></div>`;
+        <div class="cell"><div class="k">Grid connection</div><div class="v xs">${escapeHtml(p.grid_connection || "—")}</div></div>
+        <div class="cell"><div class="k">Precision</div><div class="v cap">${escapeHtml(p.precision || "—")}</div></div>`;
     } else if(kind === "digital"){
       stats = `
-        <div class="cell"><div class="k">Operator</div><div class="v" style="font-size:12px">${escapeHtml(p.operator || "—")}</div></div>
+        <div class="cell"><div class="k">Operator</div><div class="v sm">${escapeHtml(p.operator || "—")}</div></div>
         <div class="cell"><div class="k">Capacity</div><div class="v">${p.capacity_estimate_mw!=null ? fmtCap(p.capacity_estimate_mw) : "—"}</div></div>
         <div class="cell"><div class="k">Investment</div><div class="v">${fmtInvestment(p.investment_usd)}</div></div>
         <div class="cell"><div class="k">${p.status==="operational"?"Energised":"Target year"}</div><div class="v">${escapeHtml(p.year || "—")}</div></div>`;
@@ -1018,7 +1026,8 @@
                    : badgeClass==='digital'    ? (p.category==='cable_landing' ? CABLE_COLOR : DIGITAL_COLOR)
                    : GRID_COLOR;
 
-    $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}"><span class="dot" style="background:${dotColor}"></span>${badgeLabel}</span>`;
+    $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}"><span class="dot" data-bg="${escapeHtml(dotColor)}"></span>${badgeLabel}</span>`;
+    paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${p.region ? escapeHtml(p.region) + " · " : ""}${coords}</div>
@@ -1046,15 +1055,16 @@
 
   function openLinePopup(f){
     const p = f.properties || {};
-    $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" style="background:${GRID_COLOR}"></span>Transmission line</span>`;
+    $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>Transmission line</span>`;
+    paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
       <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
       <div class="stat-grid">
         <div class="cell"><div class="k">Voltage</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
-        <div class="cell"><div class="k">Status</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.status)}</div></div>
-        <div class="cell"><div class="k">Precision</div><div class="v" style="text-transform:capitalize">${escapeHtml(p.precision || "approximate")}</div></div>
+        <div class="cell"><div class="k">Status</div><div class="v cap">${escapeHtml(p.status)}</div></div>
+        <div class="cell"><div class="k">Precision</div><div class="v cap">${escapeHtml(p.precision || "approximate")}</div></div>
         <div class="cell"><div class="k">Kind</div><div class="v">${p.kind === "hvdc_planned" ? "HVDC (planned)" : "AC"}</div></div>
       </div>
       <div class="source-row">

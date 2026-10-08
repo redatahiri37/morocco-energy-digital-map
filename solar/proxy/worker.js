@@ -19,10 +19,11 @@ const ALLOWED_ORIGINS = [
   "https://energy.wattu.org",            // map — custom domain
   "https://atlas-solar.pages.dev",       // solar tool — its own Pages project
   "https://atlas-nexus-69o.pages.dev",   // map (kept: /solar/ 301s from here)
-  "https://redatahiri37.github.io",
-  "http://localhost:8765",
-  "http://localhost:8766",
 ];
+// No localhost and no github.io: the solar tool is only served from the
+// origins above, and local runs mock the Worker (analytics.browser.test.mjs)
+// or use `wrangler dev`. Any other origin gets solar.wattu.org back and the
+// browser refuses to hand it the response.
 
 // Cloudflare Pages per-deployment preview URLs
 // (e.g. https://4090bafd.atlas-solar.pages.dev)
