@@ -71,9 +71,12 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
     cleaned, footer says which services see the address/position.
   - CI: actions pinned by SHA, read-only token, gitleaks on every push.
     Data downloads are pinned to commits and checked by sha256.
-- Owner to do (checklist in SECURITY.md): branch protection on main,
-  `production` environment for the Cloudflare secrets, Dependabot, record
-  revocation dates of old tokens.
+- 2026-10-08: ruleset on main is live (PR + gitleaks required, 0
+  approvals). A PR must be up to date with main before it merges. Deploy
+  jobs use the `production` environment.
+- Owner to do (checklist in SECURITY.md): move the Cloudflare secrets into
+  `production` (main only), Dependabot, record revocation dates of old
+  tokens. The owner works from a phone during the day: give phone steps.
 
 ## Session handoff — 2026-10-05 (France and Spain)
 - France and Spain added: power plants ≥ 10 MW from powerplantmatching

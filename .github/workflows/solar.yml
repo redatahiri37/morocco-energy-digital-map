@@ -48,6 +48,11 @@ jobs:
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Cloudflare secrets live in the "production" environment, which only
+    # main may use: a workflow pushed on any other branch cannot read them.
+    environment:
+      name: production
+      url: https://solar.wattu.org
     concurrency:
       group: pages-deploy-atlas-solar
       cancel-in-progress: false

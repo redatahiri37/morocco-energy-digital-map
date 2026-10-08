@@ -57,13 +57,19 @@ jobs:
 
   # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.
-  # Needs two repository secrets:
-  #   CLOUDFLARE_API_TOKEN   — token with Account › Cloudflare Pages › Edit
+  # Needs two secrets in the "production" environment (see SECURITY.md):
+  #   CLOUDFLARE_API_TOKEN   — Account › Cloudflare Pages › Edit and
+  #                            Account › Workers Scripts › Edit
   #   CLOUDFLARE_ACCOUNT_ID  — shown on the Cloudflare dashboard sidebar
   deploy:
     needs: validate
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Cloudflare secrets live in the "production" environment, which only
+    # main may use: a workflow pushed on any other branch cannot read them.
+    environment:
+      name: production
+      url: https://energy.wattu.org
     concurrency:
       group: pages-deploy-atlas-nexus
       cancel-in-progress: false

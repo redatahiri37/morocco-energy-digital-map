@@ -30,15 +30,29 @@ working exploit or a credential in a public issue.
 
 ## Settings only the owner can change (GitHub and Cloudflare)
 
-- [ ] Branch protection on `main`: require a pull request and the checks
-      `validate`, `check` and `gitleaks`; block force-pushes.
-- [ ] Move `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` into a GitHub
-      environment `production` with a required reviewer, then add
-      `environment: production` to both deploy jobs.
+- [x] 2026-10-08 — ruleset "main" (Settings › Rules › Rulesets) on the
+      default branch only: pull request required (0 approvals: the owner
+      merges their own PRs), `gitleaks` must pass, no deletion, no
+      force-push. Only `gitleaks` is required because the other checks run
+      only when their folders change; a required check that never runs
+      would block the PR.
+- [ ] Cloudflare secrets in the GitHub environment `production`. The three
+      deploy jobs already name it; until it holds the secrets they fall back
+      to the repository secrets. Steps:
+      1. Settings › Environments › `production` › Deployment branches and
+         tags: « Selected branches and tags » › add `main`.
+      2. Cloudflare › My Profile › API Tokens › the GitHub token › Roll, and
+         copy the new value (Cloudflare shows a token only once).
+      3. In `production`, add the environment secrets `CLOUDFLARE_API_TOKEN`
+         (the new value) and `CLOUDFLARE_ACCOUNT_ID`.
+      4. Settings › Secrets and variables › Actions: delete the two
+         repository secrets of the same names.
+      5. Actions › worker-deploy › Run workflow, to check a deploy works.
+      Optional: « Required reviewers » on the environment makes every
+      deploy wait for a tap on « Approve ».
 - [ ] Enable Dependabot alerts and security updates (GitHub Actions).
-- [ ] Give the Cloudflare API token the permission
-      Account › Workers Scripts › Edit (Cloudflare dashboard › My Profile ›
-      API Tokens), so `worker-deploy` can publish the Worker.
+- [x] 2026-10-08 — the Cloudflare API token has
+      Account › Workers Scripts › Edit; `worker-deploy` publishes the Worker.
 - [ ] Record here the date (never the value) on which each credential that
       was ever exposed was revoked: the old GitHub PAT, the old Mapbox
       token, and any token pasted into a chat.
