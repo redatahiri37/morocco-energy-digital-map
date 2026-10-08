@@ -9,11 +9,16 @@ on:
     paths: ['solar/**', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
+# Read-only token for every job: deploys use the Cloudflare secrets, not
+# the GitHub token.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Syntax-check the page scripts
         run: |
@@ -38,7 +43,7 @@ jobs:
   # Publishes the estimator to the Cloudflare Pages project behind
   # solar.wattu.org (atlas-solar). Runs only on main, after the checks.
   # Same secrets as the map's deploy. The Worker in solar/proxy is not
-  # deployed here (`wrangler deploy` from solar/proxy).
+  # deployed here: worker.yml does it.
   deploy:
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -47,7 +52,7 @@ jobs:
       group: pages-deploy-atlas-solar
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # Only what the page loads: keeps the Worker source, tests and notes
       # off the public site.
@@ -57,7 +62,7 @@ jobs:
           mkdir _site
           cp solar/index.html solar/app.js solar/analytics.js solar/style.css \
              solar/brand.css solar/mark.svg solar/favicon.svg \
-             solar/robots.txt solar/sitemap.xml _site/
+             solar/robots.txt solar/sitemap.xml solar/_headers _site/
           cp -r solar/fonts _site/fonts
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
@@ -66,8 +71,9 @@ jobs:
           test "$(grep -c "?v=$V" _site/index.html)" -eq 4
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
+          wranglerVersion: "3.90.0"   # the version v3.15.0 installs by default, pinned
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy _site --project-name=atlas-solar --branch=main --commit-dirty=true

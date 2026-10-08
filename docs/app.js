@@ -44,7 +44,15 @@
   // OpenInfraMap vector tiles — transmission grid, substations, plants.
   // Data is OSM under ODbL; attribution is mandatory.
   const OIM_TILES = "https://openinframap.org/tiles/{z}/{x}/{y}.pbf";
-  const OIM_ATTR  = '<a href="https://openinframap.org" target="_blank">OpenInfraMap</a> (ODbL)';
+  const OIM_ATTR  = '<a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> (ODbL)';
+  // Our own attribution text. MapLibre's control renders each source's
+  // `attribution` as HTML, and the basemap style is third-party JSON
+  // fetched at runtime, outside SRI: a tampered style would run script here.
+  const ATTRIBUTION =
+    '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> ' +
+    '<a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> ' +
+    'Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ' +
+    OIM_ATTR + ' · <a href="https://maplibre.org/" target="_blank" rel="noopener">MapLibre</a>';
   const COUNTRIES = window.COUNTRIES || {};
   const ENABLED   = (window.COUNTRIES_ENABLED || ["morocco"]).filter(k=>COUNTRIES[k]);
   const REPO_URL  = "https://github.com/redatahiri37/morocco-energy-digital-map";
@@ -171,13 +179,38 @@
   methModal.addEventListener("click", (e)=>{ if(e.target === methModal) methModal.classList.add("hidden"); });
 
   // ---------- Utility ----------
+  // Same markup and classes as MapLibre's compact control, fixed text.
+  function staticAttribution(){
+    let el;
+    return {
+      onAdd(){
+        el = document.createElement("details");
+        el.className = "maplibregl-ctrl maplibregl-ctrl-attrib maplibregl-compact";
+        el.open = true;
+        el.innerHTML = '<summary class="maplibregl-ctrl-attrib-button" title="Toggle attribution" aria-label="Toggle attribution"></summary>' +
+          '<div class="maplibregl-ctrl-attrib-inner">' + ATTRIBUTION + '</div>';
+        el.firstChild.addEventListener("click", (e)=>{ e.preventDefault(); el.classList.toggle("maplibregl-compact-show"); });
+        return el;
+      },
+      onRemove(){ el.remove(); }
+    };
+  }
+  // Values below go into innerHTML: anything that is not a finite number
+  // (a string slipped into the data) renders as "—", never as markup.
   function fmtInvestment(v){
+    v = num(v);
     if(v == null) return "—";
     if(v >= 1e9) return "$" + (v/1e9).toFixed(1).replace(/\.0$/,"") + "B";
     if(v >= 1e6) return "$" + Math.round(v/1e6) + "M";
     return "$" + v.toLocaleString();
   }
-  function fmtCap(mw){ return mw == null ? "—" : mw.toLocaleString() + " MW"; }
+  function fmtCap(mw){ mw = num(mw); return mw == null ? "—" : mw.toLocaleString() + " MW"; }
+  function num(v){ return typeof v === "number" && Number.isFinite(v) ? v : null; }
+  // Links only for http(s): HTML escaping does not stop javascript: URLs.
+  function safeUrl(u){
+    try { const p = new URL(u).protocol; return p === "https:" || p === "http:" ? u : ""; }
+    catch(e){ return ""; }
+  }
   function issueUrl(title, body){
     return REPO_URL + "/issues/new?title=" + encodeURIComponent(title) +
       (body ? "&body=" + encodeURIComponent(body) : "");
@@ -232,7 +265,7 @@
         attributionControl: false
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass:false }), "bottom-right");
-      map.addControl(new maplibregl.AttributionControl({ compact:true }), "bottom-left");
+      map.addControl(staticAttribution(), "bottom-left");
 
       map.on("load", ()=>{ mapReady = true; tryBuild(); });
       map.on("click", (e)=>{
@@ -357,12 +390,12 @@
     if(snap) snap.textContent = c.snapshotSource ? "source: " + c.snapshotSource : "";
     const fcPower = { features: featuresOfKind(countryKey, "power") };
     const fcDC    = { features: featuresOfKind(countryKey, "digital") };
-    const totalMW = fcPower.features.reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
+    const totalMW = fcPower.features.reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
     const renewMW = fcPower.features.filter(f=>RENEWABLE_FUELS.includes(f.properties.fuel_type))
-                    .reduce((s,f)=>s + (f.properties.capacity_mw || 0), 0);
+                    .reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
     const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
-    const dcMW = fcDC.features.reduce((s,f)=>s + (f.properties.capacity_estimate_mw || 0), 0);
-    const dcInvest = fcDC.features.reduce((s,f)=>s + (f.properties.investment_usd || 0), 0);
+    const dcMW = fcDC.features.reduce((s,f)=>s + (num(f.properties.capacity_estimate_mw) || 0), 0);
+    const dcInvest = fcDC.features.reduce((s,f)=>s + (num(f.properties.investment_usd) || 0), 0);
     // A country with no layer of a kind shows "—", not a zero that reads as a finding.
     const hasPower = fcPower.features.length > 0, hasDC = fcDC.features.length > 0;
     // Registries such as PeeringDB list sites without MW or investment
@@ -570,7 +603,7 @@
     return {
       name: p.name || "Unnamed plant (OSM)",
       capacity_mw: typeof p.output === "number" ? Math.round(p.output * 10) / 10 : null,
-      fuel_type: OSM_FUEL[p.source] || p.source || "unknown",
+      fuel_type: (Object.hasOwn(OSM_FUEL, p.source) && OSM_FUEL[p.source]) || p.source || "unknown",
       status: p.construction ? "construction" : p.disused ? "idle" : "operational",
       commissioning_year: p.start_date || null,
       source: "OpenStreetMap contributors via OpenInfraMap",
@@ -639,7 +672,10 @@
   function buildPowerLayer(L, fc){
     const srcId = "src-" + L.id, p = "lyr-" + L.id;
 
-    const clusterOpts = { cluster: true, clusterMaxZoom: 6, clusterRadius: 35 };
+    // Dense national fleets (France, Spain: 1,500+ plants) cluster wider so
+    // the bubbles don't tile the whole screen on a phone.
+    const dense = fc.features.length > 500;
+    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35 };
     addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
@@ -650,7 +686,7 @@
       filter:["has","point_count"],
       paint:{
         "circle-color":"rgba(245,158,11,0.85)",
-        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22],
+        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22, 50, 26, 200, 31],
         "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":1.5
       }
@@ -921,7 +957,7 @@
       <div class="tt-name">${dot ? `<span class="tt-dot" style="background:${dot}"></span>` : ""}${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
-        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
         ${p.commissioning_year || p.year ? " · " + escapeHtml(p.commissioning_year || p.year) : ""}
       </div>`;
     positionTooltip(point);
@@ -931,7 +967,7 @@
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(p.status || "")}</div>
-      <div class="tt-meta">${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
+      <div class="tt-meta">${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
   function positionTooltip(point){
@@ -990,7 +1026,7 @@
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
-        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
         <summary>Raw data</summary>
@@ -999,10 +1035,10 @@
       <div class="pop-actions">
         ${p.osm
           // OSM data is fixed at the source, where every map using it benefits.
-          ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">View on OpenInfraMap ↗</a>
+          ? `<a href="${escapeHtml(safeUrl(p.source_url))}" target="_blank" rel="noopener">View on OpenInfraMap ↗</a>
              <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
           : `<a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`, `Feature id: ${p.id || p.name}\n\nSuggested correction:\n`))}" target="_blank" rel="noopener">Report an error</a>
-        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
       </div>`;
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
@@ -1023,7 +1059,7 @@
       </div>
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}</span>
-        ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
         <summary>Raw data</summary>

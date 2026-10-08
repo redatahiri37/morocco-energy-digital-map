@@ -9,11 +9,16 @@ on:
     paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
+# Read-only token for every job: deploys use the Cloudflare secrets, not
+# the GitHub token.
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Syntax-check app.js and countries.config.js
         run: |
@@ -30,6 +35,15 @@ jobs:
           cmp docs/mark.svg solar/mark.svg
           cmp docs/favicon.svg solar/favicon.svg
           diff -r docs/fonts solar/fonts
+
+      # docs/_headers allows the inline redirect script in index.html by its
+      # hash. Edit the script without updating the hash and the browser
+      # silently refuses it, so CI checks they agree.
+      - name: CSP hash matches the inline script
+        run: |
+          set -e
+          H=$(node -e 'const s=require("fs").readFileSync("docs/index.html","utf8");const m=s.match(/<script>([\s\S]*?)<\/script>/);process.stdout.write(require("crypto").createHash("sha256").update(m[1]).digest("base64"))')
+          grep -qF "'sha256-$H'" docs/_headers || { echo "docs/_headers needs 'sha256-$H'"; exit 1; }
 
       # Every country in countries.config.js: config fields, referenced files,
       # GeoJSON against DATA_SCHEMA.md, coordinates inside the country bounds.
@@ -54,7 +68,7 @@ jobs:
       group: pages-deploy-atlas-nexus
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # Cloudflare's browser cache keeps style.css / app.js for hours, so a
       # phone got the new index.html with the old stylesheet. A per-deploy
@@ -67,8 +81,9 @@ jobs:
           test "$(grep -c "?v=$V" docs/index.html)" -eq 4
 
       - name: Deploy docs/ to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
+          wranglerVersion: "3.90.0"   # the version v3.15.0 installs by default, pinned
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy docs --project-name=atlas-nexus --branch=main --commit-dirty=true

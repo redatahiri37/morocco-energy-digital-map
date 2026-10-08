@@ -57,12 +57,18 @@ brief ("cookieless, no PII").
 - The session id is a random token in `sessionStorage`. It dies with the
   tab and exists only to stitch one visit's funnel together.
 - **The address a visitor types is never transmitted.** Only coordinates
-  rounded to 0.1° (~11 km — city scale in Morocco).
+  rounded to 0.1° (~11 km — city scale in Morocco). The Worker rounds them
+  again and keeps them only inside Morocco, so this holds even for a
+  client that sends more.
 - **No IP is stored.** The request IP is used for the rate limit and
   discarded; it is never written to the dataset.
 - The Worker reads a fixed whitelist of keys (`EVENT_BLOBS` /
   `EVENT_DOUBLES`) and a fixed whitelist of event names. Anything else on
   the wire is dropped — a future client bug cannot leak a new field.
+  Each kept value must match its expected shape (a host name, a known
+  device, a short lower-case code, a number within bounds) or it is stored
+  as `other` / `0`: the dataset is read by scripts and an agent, so free
+  text (links, markdown, instructions) never gets in.
 - `navigator.doNotTrack` and `globalPrivacyControl` disable collection
   entirely.
 - No third party. Events go to our own Worker, on our own account.

@@ -1,0 +1,44 @@
+name: worker-deploy
+
+# Deploys the solar-pvgis Worker (solar/proxy) when it changes on main, after
+# its tests pass. "Run workflow" redeploys it by hand, from a phone too.
+# Uses the same secrets as the Pages deploys; the API token needs
+# Account › Workers Scripts › Edit in addition to Cloudflare Pages › Edit.
+on:
+  push:
+    branches: [main]
+    paths: ['solar/proxy/**', '.github/workflows/worker.yml']
+  pull_request:
+    branches: [main]
+    paths: ['solar/proxy/**', '.github/workflows/worker.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Worker tests
+        working-directory: solar/proxy
+        run: node worker.test.mjs
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: worker-deploy-solar-pvgis
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Deploy the Worker
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
+        with:
+          wranglerVersion: "4.147.0"   # [[ratelimits]] in wrangler.toml needs wrangler 4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: solar/proxy
+          command: deploy

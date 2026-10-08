@@ -44,6 +44,40 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-05 (security audit and fixes)
+- Two audits (web apps; Worker, CI, secrets). No secret in history
+  (gitleaks, 178 commits). Fixes, see SECURITY.md:
+  - CSP and security headers in docs/_headers and solar/_headers. A new
+    host must be added there. CI checks the inline script hash.
+  - Map: fixed attribution text (the style's HTML could run script),
+    numbers and links checked before going into HTML, and the validator
+    type-checks investment_usd and the other numeric fields.
+  - Worker: values checked by shape before storage (the telemetry brief
+    goes to an agent and into minutes), coordinates rounded server-side,
+    normalised PVGIS parameters, rate limit even without the binding
+    (`[[ratelimits]]`), errors not edge-cached. Deployed by the new
+    worker.yml on merge (token needs Workers Scripts › Edit).
+  - Solar: at most 400 panel slots (a stadium froze the page), bill slider
+    debounced, address label only in the "Partager" link, link label
+    cleaned, footer says which services see the address/position.
+  - CI: actions pinned by SHA, read-only token, gitleaks on every push.
+    Data downloads are pinned to commits and checked by sha256.
+- Owner to do (checklist in SECURITY.md): branch protection on main,
+  `production` environment for the Cloudflare secrets, Dependabot, record
+  revocation dates of old tokens.
+
+## Session handoff — 2026-10-05 (France and Spain)
+- France and Spain added: power plants ≥ 10 MW from powerplantmatching
+  v0.9.0 (CC BY 4.0, pinned commit c897656), units merged per site, built
+  by scripts/build-power-plants-ppm.py; Natural Earth outlines (France
+  metropolitan + Corsica; Spain incl. Balearics and Canaries). See
+  DATA_SOURCES.md for rules and the RTE/REE cross-check.
+- Dense layers (> 500 plants) cluster wider (radius 60, up to zoom 7).
+- Pending: data centres for FR/ES — owner to save
+  https://www.peeringdb.com/api/fac?country__in=FR,ES as JSON, then run
+  scripts/build-datacentres-peeringdb.py with FR=france ES=spain and add a
+  datacentres layer to PPM_COUNTRY_LAYERS.
+
 ## Session handoff — 2026-10-05 (Wattu identity + solar UX)
 - Identity in brand.css (identical in docs/ and solar/, CI checks it with
   mark.svg, favicon.svg and fonts/): night navy, orange = sun/actions,
@@ -67,7 +101,7 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
 - Removed: root Mapbox prototype (index.html, js/), deploy.sh, .DS_Store;
   docs/CALC_ENGINE.md and docs/SUBSTACK_POST.md moved to the root (they
   were published on energy.wattu.org).
-- Still manual: `wrangler deploy` of solar/proxy (the `roof` event).
+- Worker deploy: automatic since worker.yml (2026-10-06).
 
 ## Session handoff — 2026-10-02 (solar: roof area + panels)
 Wattu Solar (`solar/`) now looks up the building under the address in

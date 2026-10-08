@@ -40,8 +40,9 @@ Slack token	xox[abprs]-[0-9A-Za-z-]{10,}
 Stripe secret key	sk_live_[0-9A-Za-z]{24,}
 OpenAI / Anthropic key	sk-(ant-)?[A-Za-z0-9_-]{32,}
 Private key block	-----BEGIN [A-Z ]*PRIVATE KEY-----
-Cloudflare API token	CLOUDFLARE_API_TOKEN[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9_-]{30,}
-Generic assigned secret	(api[_-]?key|secret|passwd|password|access[_-]?token)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9/+_-]{24,}['\"]
+Cloudflare API token	(CLOUDFLARE|CF)_API_TOKEN[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9_-]{30,}
+Generic assigned secret	(api[_-]?key|secret|passwd|password|access[_-]?token|auth[_-]?token)['\"]?[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9/+_-]{24,}['\"]
+Credentials in a URL	https?://[^/[:space:]:@]+:[^/[:space:]@]{8,}@
 EOF
 
 staged=$(git diff --cached --name-only --diff-filter=ACM)
@@ -58,10 +59,10 @@ report() {
 
 # Scan only ADDED lines of the staged diff, per file, so we report a path.
 while IFS= read -r file; do
-  # Skip this hook itself — it necessarily contains the patterns it matches.
-  case "$file" in .githooks/pre-commit) continue ;; esac
-
-  added=$(git diff --cached -U0 -- "$file" | sed -n 's/^+\([^+].*\)/\1/p; s/^+$//p')
+  # Every added line, including one whose content starts with "+"; only
+  # the "+++ b/<file>" header is skipped. No file is exempt, this hook
+  # included: its patterns do not match their own text.
+  added=$(git diff --cached -U0 -- "$file" | sed -n '/^+++ /d; s/^+//p')
   [ -z "$added" ] && continue
   # Honour an explicit per-line allowlist marker.
   added=$(printf '%s\n' "$added" | grep -v 'pragma: allowlist secret')
@@ -81,6 +82,8 @@ while IFS= read -r file; do
   case "$(basename "$file")" in
     .env|.env.*) [ "$(basename "$file")" = ".env.example" ] || \
       report "Environment file staged  →  $file" "commit .env.example instead" ;;
+    .dev.vars|.dev.vars.*)
+      report "Wrangler secrets file staged  →  $file" "keep Worker secrets in wrangler secret put" ;;
   esac
 done <<< "$staged"
 
