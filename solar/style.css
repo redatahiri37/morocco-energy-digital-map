@@ -726,12 +726,11 @@ a:hover { text-decoration: underline; }
 .site-footer {
   max-width: 1200px; margin: 56px auto 0; padding: 24px 24px 40px;
   border-top: 1px solid var(--border);
-  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 28px;
   font-size: 13px; color: var(--muted);
 }
 .site-footer .w-brand { gap: 8px; }
 .site-footer .w-word { color: var(--text); font-size: 17px; }
-.site-footer p { margin: 0; flex: 1; min-width: 260px; line-height: 1.6; }
 .site-footer nav { display: flex; gap: 18px; }
 .site-footer nav a { color: var(--text); font-weight: 500; }
 
