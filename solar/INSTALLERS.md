@@ -1,6 +1,6 @@
 # « Trouver un installateur » — selection method
 
-The results page shows three installers after « Et maintenant ? ». Wattu has
+The results page shows two installers, **Econosol** and **Shamsiyah**, after « Et maintenant ? ». Wattu has
 no commercial link with any of them. This file is the audit trail: how they
 were picked, the scores and the sources. Review it every six months, or
 sooner if a listed company changes owner, stops serving homes or loses its
@@ -51,15 +51,14 @@ or well known but utility, C&I, pumping or rural off-grid — no home offer
 found); Energy Transfo (on the label list, but sources show a transformer
 manufacturer).
 
-**Weak spot:** Shamsiyah ranks third on reliability but its home offer is
-not confirmed. Replace it with the next labelled company that confirms home
-installations.
+**Shown:** Econosol and Shamsiyah, the owner's pick among the top three
+(October 2026). Cleanergy Maroc stays eligible as first replacement.
+**Weak spot:** Shamsiyah's home offer is not confirmed by the sources.
 
 ## Before each review (and before the first deploy)
 
 - [ ] Each company still on the official Taqa Pro list.
-- [ ] Each website opens (`cleanergymaroc.com`, `www.econosol.ma`,
-      `shamsiyah.ma`). They were taken from directories and could not be
+- [ ] Each website opens (`www.econosol.ma`, `shamsiyah.ma`). They were taken from directories and could not be
       opened from the research environment.
 - [ ] One phone call each: do you install < 11 kW on homes, and where?
 - [ ] Recent Google Maps reviews, read for after-sales service complaints.

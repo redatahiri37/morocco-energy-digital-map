@@ -45,8 +45,8 @@ grid economics, infrastructure finance.
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
-- New card after « Et maintenant ? »: three Taqa Pro-labelled installers
-  (Cleanergy Maroc, Econosol, Shamsiyah), shuffled per visit, no commission,
+- New card after « Et maintenant ? »: two Taqa Pro-labelled installers
+  (Econosol, Shamsiyah — owner's pick), shuffled per visit, no commission,
   link to the official Taqa Pro list. Hidden from the PDF print.
 - Method, scores and sources: solar/INSTALLERS.md (review every 6 months).
   Websites were not opened during research — check them before merging.
