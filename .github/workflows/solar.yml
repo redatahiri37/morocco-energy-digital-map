@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -49,7 +49,9 @@ jobs:
           mkdir _check
           cp solar/*.css solar/*.svg _check/
           node scripts/build-solar-cities.mjs _check --offline
-          node scripts/check-sri.mjs _check/villes/index.html _check/ville/*/index.html
+          node scripts/check-sri.mjs _check/villes/index.html _check/ville/*/index.html \
+            _check/guide/index.html _check/guide/*/index.html
+          node --check scripts/indexnow-ping.mjs
 
       - name: Worker tests
         working-directory: solar/proxy
@@ -109,3 +111,10 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy _site --project-name=atlas-solar --branch=main --commit-dirty=true
+
+      # Tell Bing and the other IndexNow engines which pages changed, so they
+      # recrawl now rather than in days. Never blocks or fails the deploy.
+      - name: Notify IndexNow
+        continue-on-error: true
+        timeout-minutes: 3
+        run: node scripts/indexnow-ping.mjs _site
