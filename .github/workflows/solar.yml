@@ -18,7 +18,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Syntax-check the page scripts
         run: |
@@ -74,7 +74,7 @@ jobs:
       group: pages-deploy-atlas-solar
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Only what the page loads: keeps the Worker source, tests and notes
       # off the public site.
@@ -105,7 +105,7 @@ jobs:
         run: node scripts/build-solar-cities.mjs _site --version "${GITHUB_SHA::8}"
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
           wranglerVersion: "3.90.0"   # the version v3.15.0 installs by default, pinned
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
