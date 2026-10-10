@@ -693,6 +693,10 @@ a:hover { text-decoration: underline; }
 }
 .installers-list a:hover, .installers-list a:focus-visible { border-color: var(--orange); }
 .inst-name { font-weight: 600; color: var(--text); font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Same visual weight for both: wide wordmarks are capped by width, compact
+   marks by height. Files are self-hosted (CSP img-src 'self'). */
+.inst-logo { display: block; width: auto; height: 26px; }
+.inst-logo-shamsiyah { height: 50px; }
 .inst-badge {
   font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
   padding: 2px 7px; border-radius: 999px;

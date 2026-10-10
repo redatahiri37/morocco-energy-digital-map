@@ -16,8 +16,10 @@ Last review: **October 2026**.
   independent quality signal for PV installers in Morocco. No independent
   ranking or review database exists; testimonials on installers' own sites
   are excluded.
-- **Display:** random order on each visit, identical text-only cards (no
-  logos), « Wattu ne perçoit aucune commission » on the page, links
+- **Display:** random order on each visit, identical cards where the
+  company's logo stands for its name (self-hosted in `solar/installers/`,
+  sized to the same visual weight), « Wattu ne perçoit aucune commission »
+  on the page, links
   `rel="nofollow noopener"` with no affiliate parameters.
 - **Future partners:** a paid or commission relationship gets a visible
   « Partenaire » tag and does not change the order. A partner that does not
