@@ -88,6 +88,7 @@ jobs:
           cp solar/google2c002ad2b9798cb9.html solar/BingSiteAuth.xml _site/
           cp -r solar/fonts _site/fonts
           cp -r solar/vendor _site/vendor
+          cp -r solar/installers _site/installers
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
           V="${GITHUB_SHA::8}"
