@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -40,6 +40,17 @@ jobs:
       - name: Page code is first-party and untampered
         run: node scripts/check-sri.mjs solar/index.html
 
+      # City pages: built offline here (no PVGIS call on pull requests),
+      # only to prove the generator runs and its pages pass the same
+      # code rules. The deploy job builds them again with PVGIS figures.
+      - name: City pages build and are first-party
+        run: |
+          set -e
+          mkdir _check
+          cp solar/*.css solar/*.svg _check/
+          node scripts/build-solar-cities.mjs _check --offline
+          node scripts/check-sri.mjs _check/villes/index.html _check/ville/*/index.html
+
       - name: Worker tests
         working-directory: solar/proxy
         run: node worker.test.mjs
@@ -71,7 +82,7 @@ jobs:
           mkdir _site
           cp solar/index.html solar/app.js solar/analytics.js solar/style.css \
              solar/brand.css solar/mark.svg solar/favicon.svg \
-             solar/robots.txt solar/sitemap.xml solar/_headers _site/
+             solar/pages.css solar/robots.txt solar/_headers _site/
           cp -r solar/fonts _site/fonts
           cp -r solar/vendor _site/vendor
           # New asset URLs on every deploy: Cloudflare's browser cache would
@@ -79,6 +90,13 @@ jobs:
           V="${GITHUB_SHA::8}"
           sed -i -E 's#((href|src)="(style\.css|brand\.css|app\.js|analytics\.js))"#\1?v='"$V"'"#g' _site/index.html
           test "$(grep -c "?v=$V" _site/index.html)" -eq 4
+
+      # One static page per city (ville/<slug>/), the comparison table
+      # (villes/), sitemap.xml and llms.txt, with PVGIS figures fetched now
+      # and the estimator's own engine. A PVGIS failure stops the deploy:
+      # the live site keeps its previous pages rather than approximate ones.
+      - name: Build the city pages
+        run: node scripts/build-solar-cities.mjs _site --version "${GITHUB_SHA::8}"
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
