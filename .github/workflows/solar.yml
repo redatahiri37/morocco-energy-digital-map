@@ -83,6 +83,9 @@ jobs:
           cp solar/index.html solar/app.js solar/analytics.js solar/style.css \
              solar/brand.css solar/mark.svg solar/favicon.svg \
              solar/pages.css solar/robots.txt solar/_headers _site/
+          # Search engine ownership proofs (Google Search Console, Bing
+          # Webmaster Tools): they must stay at the site root for good.
+          cp solar/google2c002ad2b9798cb9.html solar/BingSiteAuth.xml _site/
           cp -r solar/fonts _site/fonts
           cp -r solar/vendor _site/vendor
           # New asset URLs on every deploy: Cloudflare's browser cache would
