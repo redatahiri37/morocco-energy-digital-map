@@ -48,7 +48,15 @@ writes static HTML with the same figures:
 - `/ville/<slug>/` — one page per city in `data/cities.json`: yield per kWc,
   savings and payback for four bills, monthly production, FAQ, method.
 - `/villes/` — all cities ranked, linked from the page footer.
+- `/guide/<slug>/` — answers to the questions people search for: how many
+  panels for a bill, installed price, ONEE tariff, law 82-21, Taqa Pro. Figures
+  from the same engine and PVGIS runs (median city); facts from "Data sources"
+  below and `INSTALLERS.md`. `/guide/` lists them.
 - `/sitemap.xml` and `/llms.txt` — generated with them (no sitemap in the repo).
+- IndexNow: after each deploy, `scripts/indexnow-ping.mjs` submits every
+  sitemap URL to Bing and the other IndexNow engines. The key in
+  `indexnow-key.txt` is public by design (served at `/<key>.txt`); a failed
+  ping never fails the deploy.
 
 Figures come from PVGIS at each city centre and the estimator's own engine
 (`CONFIG`, `Tariff`, `ROI` read from `app.js`), so a page and the tool
