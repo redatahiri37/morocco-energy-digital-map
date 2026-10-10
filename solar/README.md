@@ -34,8 +34,29 @@ solar/          (repo root — its own Cloudflare Pages project)
 ├── style.css        Wattu brand (navy #001F4D / orange #FF6B35)
 ├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
 ├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
+├── pages.css        Style of the generated city pages
+├── data/cities.json Cities that get a page under /ville/<slug>/
 └── README.md
 ```
+
+### City pages (search engines and AI assistants)
+
+The estimator computes everything in the browser after an address is typed,
+so crawlers see none of it. At deploy, `scripts/build-solar-cities.mjs`
+writes static HTML with the same figures:
+
+- `/ville/<slug>/` — one page per city in `data/cities.json`: yield per kWc,
+  savings and payback for four bills, monthly production, FAQ, method.
+- `/villes/` — all cities ranked, linked from the page footer.
+- `/sitemap.xml` and `/llms.txt` — generated with them (no sitemap in the repo).
+
+Figures come from PVGIS at each city centre and the estimator's own engine
+(`CONFIG`, `Tariff`, `ROI` read from `app.js`), so a page and the tool
+always agree: change a tariff in `CONFIG` and the pages follow on the next
+deploy. If PVGIS fails, the deploy stops and the live pages stay as they
+were. To add a city, add a line to `data/cities.json`. Local preview
+without network: `node scripts/build-solar-cities.mjs /tmp/out --offline`
+(approximate yields, pages marked noindex).
 
 ### External dependencies (all CDN, no build step, no tokens)
 - **Leaflet 1.9.4** — mini-map
