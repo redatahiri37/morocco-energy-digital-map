@@ -172,7 +172,6 @@ ${body}
   <nav>
     <a href="${up}villes/">Rentabilité par ville</a>
     <a href="https://energy.wattu.org/">Carte énergie × digital</a>
-    <a href="https://github.com/redatahiri37/morocco-energy-digital-map">Code source</a>
   </nav>
 </footer>
 </body>
