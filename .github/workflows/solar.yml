@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/render-og.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/render-og.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -68,7 +68,7 @@ jobs:
           set -e
           mkdir _check
           cp solar/*.css solar/*.svg _check/
-          node scripts/build-solar-cities.mjs _check --offline
+          node scripts/build-solar-cities.mjs _check --offline --og-src _og
           node scripts/check-sri.mjs _check/villes/index.html _check/ville/*/index.html \
             _check/guide/index.html _check/guide/*/index.html \
             _check/ar/villes/index.html _check/ar/ville/*/index.html \
@@ -87,6 +87,15 @@ jobs:
           cp solar/app.js solar/analytics.js _check/
           node scripts/build-solar-i18n.mjs _check
           node scripts/check-sri.mjs _check/ar/index.html _check/en/index.html
+
+      # Share images (og:image): every card renders to a 1200×630 PNG with
+      # the runner's Chrome. Arabic cards need an Arabic font.
+      - name: Share images render
+        run: |
+          set -e
+          fc-list :lang=ar | grep -qi noto || { sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-core; }
+          node scripts/render-og.mjs _og _check/og
+          test "$(find _check/og -name '*.png' | wc -l)" -eq "$(find _og -name '*.html' | wc -l)"
 
       - name: Worker tests
         working-directory: solar/proxy
@@ -140,7 +149,15 @@ jobs:
       # and the estimator's own engine. A PVGIS failure stops the deploy:
       # the live site keeps its previous pages rather than approximate ones.
       - name: Build the city pages
-        run: node scripts/build-solar-cities.mjs _site --version "${GITHUB_SHA::8}"
+        run: node scripts/build-solar-cities.mjs _site --version "${GITHUB_SHA::8}" --og-src _og
+
+      # One 1200×630 share image per city and language, plus one generic card
+      # per language, with the figures just computed (og:image of every page).
+      - name: Render the share images
+        run: |
+          set -e
+          fc-list :lang=ar | grep -qi noto || { sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-core; }
+          node scripts/render-og.mjs _og _site/og
 
       # The simulator in Moroccan Arabic (/ar/) and English (/en/), from
       # index.html and solar/i18n/simulator.mjs.

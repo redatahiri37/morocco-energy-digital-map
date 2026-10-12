@@ -26,7 +26,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import vm from "node:vm";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -38,8 +38,10 @@ const AUTHOR = "Reda Tahiri";
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 
 const args = process.argv.slice(2);
-const out = args.find(a => !a.startsWith("--"));
+const out = args.find((a, i) => !a.startsWith("--") && !["--version", "--og-src"].includes(args[i - 1]));
 const offline = args.includes("--offline");
+const ogIdx = args.indexOf("--og-src");
+const ogSrc = ogIdx >= 0 ? args[ogIdx + 1] : "";   // where share-card HTML goes (scripts/render-og.mjs)
 const vIdx = args.indexOf("--version");
 const version = vIdx >= 0 ? args[vIdx + 1] : "";
 if (!out) {
@@ -132,7 +134,7 @@ function toolLink(c, bill, name = c.name) {
 const LANG_LABEL = { fr: "Français", ar: "العربية", en: "English" };
 const altCity = (c) => ({ fr: `/ville/${c.slug}/`, ar: `/ar/ville/${c.slug}/`, en: `/en/city/${c.slug}/` });
 const ALT_INDEX = { fr: "/villes/", ar: "/ar/villes/", en: "/en/cities/" };
-function layout({ title, description, canonical, depth, body, jsonLd, lang = "fr", alt = null }) {
+function layout({ title, description, canonical, depth, body, jsonLd, lang = "fr", alt = null, image = null }) {
   const up = "../".repeat(depth);
   const ar = lang === "ar";
   const hreflang = alt ? Object.entries(alt).map(([l, path]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${path}">`).join("\n")
@@ -177,7 +179,12 @@ ${hreflang}
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:locale" content="${{ fr: "fr_MA", ar: "ar_MA", en: "en_US" }[lang]}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${image || ogUrl(lang, "home")}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(title)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${image || ogUrl(lang, "home")}">
 <meta name="theme-color" content="#050B18">
 <script type="application/ld+json">
 ${ldJson(jsonLd)}
@@ -361,6 +368,7 @@ ${faq.map(([q, a]) => `    <h3>${esc(q)}</h3>\n    <p>${esc(a)}</p>`).join("\n")
     body,
     jsonLd,
     alt: altCity(c),
+    image: ogUrl("fr", c.slug),
   });
 }
 
@@ -394,6 +402,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
       </tbody>
     </table>
     </div>
+    <p class="cp-note"><a href="../${CSV_PATH}" download>Télécharger les données des ${all.length} villes (CSV)</a>&nbsp;: production mois par mois, économies et amortissement pour quatre factures. Réutilisables librement en citant Wattu (licence CC BY 4.0).</p>
   </section>
 
   ${methodHtml().replace("au centre-ville", "au centre de chaque ville")}
@@ -411,6 +420,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
         dateModified: today,
         creator: { "@type": "Person", name: AUTHOR },
         license: "https://creativecommons.org/licenses/by/4.0/",
+        distribution: [{ "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: CSV_URL }],
         spatialCoverage: { "@type": "Country", name: "Maroc" },
         variableMeasured: ["Production photovoltaïque annuelle (kWh/kWc)", "Économie annuelle (MAD)", "Durée d'amortissement (années)"],
         isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
@@ -580,7 +590,7 @@ ${faq.map(([q, a]) => `    <h3>${esc(q)}</h3>\n    <p>${esc(a)}</p>`).join("\n")
   return layout({
     title: `الطاقة الشمسية ${fi(name)}: شحال كتنتج البلاكات وشحال كتربح (${new Date().getUTCFullYear()}) | Wattu`,
     description: answer, canonical: url, depth: 3, body, jsonLd,
-    lang: "ar", alt: altCity(c),
+    lang: "ar", alt: altCity(c), image: ogUrl("ar", c.slug),
   });
 }
 
@@ -614,6 +624,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
       </tbody>
     </table>
     </div>
+    <p class="cp-note"><a href="../../${CSV_PATH}" download>نزّل المعطيات ديال ${all.length} مدينة (CSV)</a>: الإنتاج كل شهر، التوفير وفوقاش كترجع فلوسك لأربعة ديال الفواتير. تقدر تعاود تستعملهم بحرية مع ذكر Wattu (رخصة CC BY 4.0).</p>
   </section>
 
   ${methodHtmlAr("فوسط كل مدينة")}
@@ -628,6 +639,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
         description: answer, url, inLanguage: "ar-MA", dateModified: today,
         creator: { "@type": "Person", name: AUTHOR },
         license: "https://creativecommons.org/licenses/by/4.0/",
+        distribution: [{ "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: CSV_URL }],
         spatialCoverage: { "@type": "Country", name: "المغرب" },
         isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
       },
@@ -784,7 +796,7 @@ ${faq.map(([q, a]) => `    <h3>${esc(q)}</h3>\n    <p>${esc(a)}</p>`).join("\n")
   return layout({
     title: `Solar panels in ${name}, Morocco: output, cost, payback (${new Date().getUTCFullYear()}) | Wattu`,
     description: answer, canonical: url, depth: 3, body, jsonLd,
-    lang: "en", alt: altCity(c),
+    lang: "en", alt: altCity(c), image: ogUrl("en", c.slug),
   });
 }
 
@@ -818,6 +830,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
       </tbody>
     </table>
     </div>
+    <p class="cp-note"><a href="../../${CSV_PATH}" download>Download the data for the ${all.length} cities (CSV)</a>: monthly output, savings and payback for four bill levels. Free to reuse with credit to Wattu (CC BY 4.0 licence).</p>
   </section>
 
   ${methodHtmlEn("at each city centre")}
@@ -832,6 +845,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
         description: answer, url, inLanguage: "en", dateModified: today,
         creator: { "@type": "Person", name: AUTHOR },
         license: "https://creativecommons.org/licenses/by/4.0/",
+        distribution: [{ "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: CSV_URL }],
         spatialCoverage: { "@type": "Country", name: "Morocco" },
         variableMeasured: ["Yearly PV output (kWh/kWp)", "Yearly savings (MAD)", "Payback (years)"],
         isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
@@ -873,6 +887,7 @@ function llmsTxt(all, guideList) {
 
 - [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise (aussi en [arabe](${SITE}/ar/) et en [anglais](${SITE}/en/))
 - [Rentabilité par ville](${SITE}/villes/): tableau comparatif de ${all.length} villes marocaines
+- [Données en CSV](${CSV_URL}): production, économies et amortissement des ${all.length} villes, licence CC BY 4.0
 - [الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة](${SITE}/ar/villes/): les mêmes pages villes en arabe marocain (darija)
 - [Solar panel payback in Morocco, city by city](${SITE}/en/cities/): the same city pages in English
 - [شروحات البلاكات الشمسية فالمغرب](${SITE}/ar/guide/) · [Solar panel guides for Morocco](${SITE}/en/guide/): the guides below in Arabic and English
@@ -1508,6 +1523,114 @@ ${list.map(g => `  <section class="cp-section">
   return layout({ title: L.title, description: L.answer, canonical: url, depth: L.depth, body, jsonLd, lang, alt: ALT_GUIDE_INDEX });
 }
 
+// ── Share images and open data ──────────────────────
+// Every page names a 1200×630 share image (og:image): one per city and
+// language with its figures, and one generic card per language. The cards
+// are written as HTML to --og-src and rendered to PNG by
+// scripts/render-og.mjs (headless Chrome) into <out>/og/<lang>/.
+// The figures behind the city pages are published as one CSV.
+const ogUrl = (lang, name) => `${SITE}/og/${lang}/${name}.png`;
+const CSV_PATH = "data/barometre-solaire-maroc.csv";
+const CSV_URL = `${SITE}/${CSV_PATH}`;
+const MARK_SVG = readFileSync(join(ROOT, "solar/mark.svg"), "utf8");
+const FONT_URL = (f) => pathToFileURL(join(ROOT, "solar/fonts", f)).href;
+
+function ogCard({ lang, kicker, title, stats, foot, titleSize = 84 }) {
+  const ar = lang === "ar";
+  const arabic = `"Noto Sans Arabic", "Noto Naskh Arabic", "DejaVu Sans", sans-serif`;
+  return `<!doctype html>
+<html lang="${lang}"${ar ? ' dir="rtl"' : ""}><head><meta charset="utf-8">
+<style>
+@font-face { font-family: "Inter"; font-weight: 300 800; src: url("${FONT_URL("inter-latin-var.woff2")}") format("woff2"); }
+@font-face { font-family: "Newsreader"; src: url("${FONT_URL("newsreader-latin-400.woff2")}") format("woff2"); }
+@font-face { font-family: "Plex Mono"; font-weight: 500; src: url("${FONT_URL("ibm-plex-mono-latin-500.woff2")}") format("woff2"); }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1200px; height: 630px; overflow: hidden; }
+body {
+  background: radial-gradient(90% 120% at ${ar ? "100%" : "0%"} 0%, rgba(255,107,53,.28), transparent 55%), #050B18;
+  color: #fff; font-family: "Inter", ${arabic}; padding: 56px 64px 0;
+  display: flex; flex-direction: column;
+}
+.brand { display: flex; align-items: center; gap: 14px; direction: ltr; ${ar ? "justify-content: flex-end;" : ""} }
+.brand svg { width: 46px; height: 46px; }
+.word { font-weight: 800; font-size: 40px; letter-spacing: -0.02em; }
+.prod { font-family: "Plex Mono", monospace; font-size: 17px; letter-spacing: .16em; color: #A9B4C6; border-left: 1px solid #33415A; padding-left: 14px; }
+.kicker { margin-top: 40px; font-family: ${ar ? arabic : `"Plex Mono", monospace`}; font-size: 22px; color: #FFB347; ${ar ? "" : "letter-spacing: .08em; text-transform: uppercase;"} }
+h1 { margin-top: 10px; font-family: ${ar ? arabic : `"Newsreader", Georgia, serif`}; font-weight: 400; font-size: ${titleSize}px; line-height: 1.05; letter-spacing: ${ar ? 0 : "-0.01em"}; }
+.stats { margin-top: 34px; display: flex; gap: 22px; }
+.stat { flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; padding: 20px 24px; }
+.v { font-family: "Newsreader", ${arabic}; font-size: 56px; line-height: 1; white-space: nowrap; }
+.l { margin-top: 10px; font-size: 21px; line-height: 1.3; color: #C3CCDA; }
+.foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 0 0 26px; font-size: 21px; color: #A9B4C6; }
+.url { color: #22D3EE; font-weight: 600; direction: ltr; }
+.sun { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: linear-gradient(90deg, #FF6B35, #FFB347); }
+</style></head>
+<body>
+<div class="brand">${MARK_SVG}<span class="word">wattu</span><span class="prod">SOLAIRE</span></div>
+<div class="kicker">${esc(kicker)}</div>
+<h1>${esc(title)}</h1>
+<div class="stats">${stats.map(([value, label]) => `<div class="stat"><div class="v">${esc(value)}</div><div class="l">${esc(label)}</div></div>`).join("")}</div>
+<div class="foot"><span>${esc(foot)}</span><span class="url">solar.wattu.org</span></div>
+<div class="sun"></div>
+</body></html>
+`;
+}
+
+function ogCityCards(c) {
+  const r = c.result, ref = r.profiles.find(p => p.bill === REFERENCE_BILL);
+  return {
+    fr: ogCard({ lang: "fr", kicker: `Panneaux solaires · ${c.region}`, title: c.name,
+      stats: [[num(r.yieldPerKw), "kWh par kWc et par an"], [years(ref.payback), `pour amortir, facture ${REFERENCE_BILL} MAD`], [`${num(ref.savings)} MAD`, "économisés par an"]],
+      foot: "PVGIS (Commission européenne) · tarifs ONEE" }),
+    ar: ogCard({ lang: "ar", kicker: `البلاكات الشمسية · ${c.region_ar}`, title: c.name_ar,
+      stats: [[num(r.yieldPerKw), `${KWH} لكل ${KWC} فالعام`], [yearsAr(ref.payback), `باش ترجع فلوسك (فاتورة ${REFERENCE_BILL} ${MAD_AR})`], [`${num(ref.savings)} ${MAD_AR}`, "كتوفرهم فالعام"]],
+      foot: "PVGIS (المفوضية الأوروبية) · تعريفة ONEE" }),
+    en: ogCard({ lang: "en", kicker: `Home solar · ${c.region}`, title: `${c.name_en}, Morocco`,
+      stats: [[numEn(r.yieldPerKw), "kWh per kWp per year"], [yearsEn(ref.payback), `to pay back (${REFERENCE_BILL} MAD bill)`], [`${numEn(ref.savings)} MAD`, "saved a year"]],
+      foot: "PVGIS (European Commission) · ONEE tariffs" }),
+  };
+}
+
+function ogHomeCards(all) {
+  const ys = all.map(c => c.result.yieldPerKw);
+  const pbs = all.map(c => c.result.profiles.find(p => p.bill === REFERENCE_BILL).payback).filter(Number.isFinite);
+  const [yMin, yMax, pMin, pMax] = [Math.min(...ys), Math.max(...ys), Math.min(...pbs), Math.max(...pbs)];
+  return {
+    fr: ogCard({ lang: "fr", kicker: "Simulateur solaire · Maroc", title: "Combien vous rapporterait un toit solaire ?", titleSize: 64,
+      stats: [[`${all.length} villes`, "comparées, du nord au sud"], [`${num(yMin)}–${num(yMax)}`, "kWh par kWc et par an"], [`${dec(pMin)}–${dec(pMax)} ans`, `pour amortir, facture ${REFERENCE_BILL} MAD`]],
+      foot: "Gratuit, sans inscription · PVGIS · tarifs ONEE" }),
+    ar: ogCard({ lang: "ar", kicker: "حاسبة الطاقة الشمسية · المغرب", title: "شحال غادي يربحك سطح شمسي؟", titleSize: 72,
+      stats: [[`${all.length} مدينة`, "مقارنة من الشمال للجنوب"], [`${num(yMin)}–${num(yMax)}`, `${KWH} لكل ${KWC} فالعام`], [`${dec(pMin)}–${dec(pMax)} عام`, `باش ترجع فلوسك (فاتورة ${REFERENCE_BILL} ${MAD_AR})`]],
+      foot: "مجاني، بلا تسجيل · PVGIS · تعريفة ONEE" }),
+    en: ogCard({ lang: "en", kicker: "Solar calculator · Morocco", title: "How much would a solar roof save you?", titleSize: 64,
+      stats: [[`${all.length} cities`, "compared, north to south"], [`${numEn(yMin)}–${numEn(yMax)}`, "kWh per kWp per year"], [`${decEn(pMin)}–${decEn(pMax)} years`, `to pay back (${REFERENCE_BILL} MAD bill)`]],
+      foot: "Free, no sign-up · PVGIS · ONEE tariffs" }),
+  };
+}
+
+// One row per city: location, PVGIS output (year and months), then for
+// each bill the sizing, cost, output, savings, payback and 25-year gain.
+// Dot decimals and comma separators (RFC 4180), UTF-8 with a BOM so that
+// spreadsheet software reads the accents and the Arabic names.
+function barometerCsv(all) {
+  const q = (v) => typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : String(v);
+  const r0 = (n) => Math.round(n), r1 = (n) => Number.isFinite(n) ? Math.round(n * 10) / 10 : "";
+  const head = ["slug", "ville", "ville_ar", "city_en", "region", "latitude", "longitude",
+    "production_kwh_par_kwc_an", "irradiation_kwh_m2_an",
+    ...MONTHS_EN.map(m => `production_kwh_par_kwc_${m.toLowerCase()}`),
+    ...BILLS.flatMap(b => [`puissance_kwc_${b}`, `panneaux_${b}`, `investissement_mad_${b}`, `production_kwh_an_${b}`, `economie_an1_mad_${b}`, `amortissement_ans_${b}`, `gain_net_25ans_mad_${b}`]),
+    "mise_a_jour"];
+  const rows = all.map(c => {
+    const r = c.result;
+    return [c.slug, c.name, c.name_ar, c.name_en, c.region, c.lat, c.lon,
+      r0(r.yieldPerKw), r.radiationAnnual ? r0(r.radiationAnnual) : "",
+      ...r.monthlyPerKw.map(r0),
+      ...r.profiles.flatMap(p => [p.kwp, p.panels, r0(p.capex), r0(p.annualKwh), r0(p.savings), r1(p.payback), r0(p.lifetime)]),
+      today].map(q).join(",");
+  });
+  return "﻿" + [head.join(","), ...rows].join("\r\n") + "\r\n";
+}
+
 // ── Build ───────────────────────────────────────────
 const { cities } = JSON.parse(readFileSync(join(ROOT, "solar/data/cities.json"), "utf8"));
 const slugs = new Set();
@@ -1547,7 +1670,13 @@ for (const [list, lang, dir] of [[guideList, "fr", "guide"], [guideListAr, "ar",
 }
 write("sitemap.xml", sitemap(cities, guideList, guideListAr, guideListEn));
 write("llms.txt", llmsTxt(cities, guideList));
+write(CSV_PATH, barometerCsv(cities));
+if (ogSrc) {
+  const card = (lang, name, html) => { const p = join(ogSrc, lang, `${name}.html`); mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, html); };
+  for (const c of cities) for (const [lang, html] of Object.entries(ogCityCards(c))) card(lang, c.slug, html);
+  for (const [lang, html] of Object.entries(ogHomeCards(cities))) card(lang, "home", html);
+}
 // IndexNow ownership proof (scripts/indexnow-ping.mjs): /<key>.txt holds the key.
 const indexNowKey = readFileSync(join(ROOT, "solar/indexnow-key.txt"), "utf8").trim();
 write(`${indexNowKey}.txt`, indexNowKey);
-console.log(`wrote ${cities.length} city pages (fr + ar + en), villes/, ar/villes/, en/cities/, ${guideList.length} guides × 3 languages, sitemap.xml, llms.txt to ${out}`);
+console.log(`wrote ${cities.length} city pages (fr + ar + en), villes/, ar/villes/, en/cities/, ${guideList.length} guides × 3 languages, sitemap.xml, llms.txt, ${CSV_PATH}${ogSrc ? `, share cards in ${ogSrc}` : ""} to ${out}`);
