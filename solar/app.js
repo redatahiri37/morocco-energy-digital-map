@@ -937,7 +937,17 @@ const UI = {
     }
   },
 
-  setRoofInfo(html) { $("roof-info").innerHTML = html; },
+  // Text only, with an optional warning in front: never parsed as HTML.
+  setRoofInfo(text, warn = "") {
+    const el = $("roof-info");
+    el.textContent = text;
+    if (warn) {
+      const w = document.createElement("span");
+      w.className = "roof-warn";
+      w.textContent = warn;
+      el.prepend(w, " ");
+    }
+  },
 
   setRoofDrawing(on) {
     $("roof-draw-btn").hidden = on;
@@ -1003,11 +1013,11 @@ const UI = {
     $("st-inst").textContent = `${fmtDec(p.peakpower, { trim: true })} kWc`;
     $("st-inst-sub").textContent = `${shown} panneau${shown > 1 ? "x" : ""} · ${fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
 
-    let html = `Panneaux de 500 Wc, ${CONFIG.ROOF_SETBACK_M} m de marge sur les bords, rangées espacées pour éviter l'ombre.`;
-    if (needed > info.panels.length) {
-      html = `<span class="roof-warn">Votre toit ne permet que ${info.panels.length} des ${needed} panneaux de cette installation.</span> ` + html;
-    }
-    this.setRoofInfo(html);
+    this.setRoofInfo(
+      `Panneaux de 500 Wc, ${CONFIG.ROOF_SETBACK_M} m de marge sur les bords, rangées espacées pour éviter l'ombre.`,
+      needed > info.panels.length
+        ? `Votre toit ne permet que ${info.panels.length} des ${needed} panneaux de cette installation.`
+        : "");
   },
 
   setHeroLoading(on) {
@@ -1102,7 +1112,7 @@ const UI = {
     // Approximate-mode notice (fallback data in use)
     const srcEl = document.querySelector(".hero-source");
     if (State.lastPerKw.approximate && srcEl) {
-      srcEl.innerHTML = `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${escapeHtml(State.lastPerKw.referenceCity)}.`;
+      srcEl.textContent = `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${State.lastPerKw.referenceCity}.`;
     }
 
     // Derive consumption from the bill; auto-size the system if not overridden
@@ -1143,13 +1153,13 @@ const UI = {
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
     const pvMonthlySavings = roi.annualSavingsMAD / 12;
     const cashflowY1 = roi.annualSavingsMAD - capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
-    $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">MAD</span>`;
+    setAmount($("fin-cash-capex"), fmtNum(capexMAD), "MAD");
     $("fin-cash-net").textContent = `Économie an 1 : ${fmtMAD(cashflowY1)}`;
     $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
       ? `Amorti en ${fmtDec(roi.paybackYr)} ans`
       : `Non amorti sur 25 ans`;
 
-    $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">MAD/mois</span>`;
+    setAmount($("fin-loan-monthly"), fmtNum(loanMonthly), "MAD/mois");
     $("fin-loan-savings").textContent = `Économies PV : ${fmtNum(pvMonthlySavings)} MAD/mois`;
     const balance = pvMonthlySavings - loanMonthly;
     if (balance >= 0) {
@@ -1301,10 +1311,12 @@ function inMorocco(lat, lon) {
   return Number.isFinite(lat) && Number.isFinite(lon) &&
     lat >= 20.5 && lat <= 36.1 && lon >= -17.3 && lon <= -0.9;
 }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
+// "12 345 MAD", the unit in its own span as in the page's markup.
+function setAmount(el, value, unit) {
+  const u = document.createElement("span");
+  u.className = "unit";
+  u.textContent = unit;
+  el.replaceChildren(value + " ", u);
 }
 
 // Which sections visitors actually reach. Answers "is the financing card
