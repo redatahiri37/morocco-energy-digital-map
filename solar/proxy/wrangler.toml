@@ -8,7 +8,7 @@ compatibility_date = "2026-07-01"
 # Logs: `wrangler tail`
 
 # Per-IP rate limit used by env.RATE_LIMITER in worker.js (60 req/min, one
-# bucket for /pvcalc and one for /e). Keep this block: without it the worker
+# bucket each for /pvcalc, /e and /csp). Keep this block: without it the worker
 # falls back to a weaker per-isolate counter and logs
 # "RATE_LIMITER binding missing" in `wrangler tail`. Needs wrangler 4.
 [[ratelimits]]
@@ -26,3 +26,10 @@ namespace_id = "1001"
 [[analytics_engine_datasets]]
 binding = "SOLAR_ANALYTICS"
 dataset = "solar_events"
+
+# Content-Security-Policy violation reports written by POST /csp (see
+# ../../SECURITY.md › "Reading the CSP reports"). Without this block the
+# worker accepts the reports and drops them.
+[[analytics_engine_datasets]]
+binding = "CSP_REPORTS"
+dataset = "solar_csp"

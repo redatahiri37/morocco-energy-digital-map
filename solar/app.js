@@ -1083,7 +1083,17 @@ const UI = {
     }
   },
 
-  setRoofInfo(html) { $("roof-info").innerHTML = html; },
+  // Text only, with an optional warning in front: never parsed as HTML.
+  setRoofInfo(text, warn = "") {
+    const el = $("roof-info");
+    el.textContent = text;
+    if (warn) {
+      const w = document.createElement("span");
+      w.className = "roof-warn";
+      w.textContent = warn;
+      el.prepend(w, " ");
+    }
+  },
 
   setRoofDrawing(on) {
     $("roof-draw-btn").hidden = on;
@@ -1149,11 +1159,9 @@ const UI = {
     $("st-inst").textContent = bidi(`${fmtDec(p.peakpower, { trim: true })} ${STR.kwc}`);
     $("st-inst-sub").textContent = STR.instSub(shown, fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M));
 
-    let html = escapeHtml(STR.roofInfo(CONFIG.PANEL_KWP * 1000, CONFIG.ROOF_SETBACK_M));
-    if (needed > info.panels.length) {
-      html = `<span class="roof-warn">${escapeHtml(STR.roofWarn(info.panels.length, needed))}</span> ` + html;
-    }
-    this.setRoofInfo(html);
+    this.setRoofInfo(
+      STR.roofInfo(CONFIG.PANEL_KWP * 1000, CONFIG.ROOF_SETBACK_M),
+      needed > info.panels.length ? STR.roofWarn(info.panels.length, needed) : "");
   },
 
   setHeroLoading(on) {
@@ -1285,13 +1293,13 @@ const UI = {
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
     const pvMonthlySavings = roi.annualSavingsMAD / 12;
     const cashflowY1 = roi.annualSavingsMAD - capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
-    $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">${STR.mad}</span>`;
+    setAmount($("fin-cash-capex"), fmtNum(capexMAD), STR.mad);
     $("fin-cash-net").textContent = STR.finCashNet(fmtMAD(cashflowY1));
     $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
       ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr)
       : STR.notAmortized(CONFIG.LIFETIME_YR);
 
-    $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">${STR.madMonth}</span>`;
+    setAmount($("fin-loan-monthly"), fmtNum(loanMonthly), STR.madMonth);
     $("fin-loan-savings").textContent = STR.finLoanSavings(fmtNum(pvMonthlySavings));
     const balance = pvMonthlySavings - loanMonthly;
     if (balance >= 0) {
@@ -1443,10 +1451,12 @@ function inMorocco(lat, lon) {
   return Number.isFinite(lat) && Number.isFinite(lon) &&
     lat >= 20.5 && lat <= 36.1 && lon >= -17.3 && lon <= -0.9;
 }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
+// "12 345 MAD", the unit in its own span as in the page's markup.
+function setAmount(el, value, unit) {
+  const u = document.createElement("span");
+  u.className = "unit";
+  u.textContent = unit;
+  el.replaceChildren(value + " ", u);
 }
 
 // Which sections visitors actually reach. Answers "is the financing card

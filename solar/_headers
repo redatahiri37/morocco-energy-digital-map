@@ -4,8 +4,11 @@
 # Worker, nothing else. A new host must be added here or the browser
 # refuses it. COOP / CORP / X-Frame-Options: no other site can frame this
 # page, hold a handle on its window, or embed its files.
+# Every refusal is reported to the Worker's /csp (report-to, and report-uri
+# for browsers without the Reporting API): SECURITY.md says how to read them.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://server.arcgisonline.com https://*.tile.openstreetmap.org; font-src 'self'; connect-src https://nominatim.openstreetmap.org https://overpass-api.de https://solar-pvgis.redatahiri.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://server.arcgisonline.com https://*.tile.openstreetmap.org; font-src 'self'; connect-src https://nominatim.openstreetmap.org https://overpass-api.de https://solar-pvgis.redatahiri.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests; report-uri https://solar-pvgis.redatahiri.workers.dev/csp; report-to csp
+  Reporting-Endpoints: csp="https://solar-pvgis.redatahiri.workers.dev/csp"
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), interest-cohort=()
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff

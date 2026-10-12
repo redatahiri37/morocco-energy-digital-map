@@ -2,9 +2,11 @@
 
 ## Reporting a problem
 
-Open a GitHub issue without the details, or write to the repository owner
-through GitHub, and say a private channel is needed. Please do not post a
-working exploit or a credential in a public issue.
+Use GitHub's private reporting: the repository's Security tab › « Report a
+vulnerability »
+(<https://github.com/redatahiri37/morocco-energy-digital-map/security/advisories/new>).
+Please do not post a working exploit or a credential in a public issue.
+`solar.wattu.org/.well-known/security.txt` (RFC 9116) points here too.
 
 ## What protects the two sites
 
@@ -23,7 +25,13 @@ working exploit or a credential in a public issue.
     Worker) is listed, and anything else is refused;
   - no other site can frame the pages, hold a handle on their window or
     embed their files (`frame-ancestors`, `X-Frame-Options`, COOP, CORP);
-  - HTTPS only (HSTS), no MIME sniffing, no camera or microphone.
+  - HTTPS only (HSTS), no MIME sniffing, no camera or microphone;
+  - on the solar site, every refusal is reported to the Worker (below,
+    « Reading the CSP reports »).
+- **The solar page never parses a string as HTML**: `app.js` builds its
+  elements with `textContent` / `createElement`, and `solar.yml` fails if
+  `innerHTML`, `outerHTML`, `insertAdjacentHTML` or `document.write`
+  appears in it.
 - **The map never renders third-party HTML**: its attribution is fixed text,
   numbers from the data are written only if they are numbers, and links
   only if they are http(s). `scripts/validate-countries.mjs` checks the
@@ -31,8 +39,9 @@ working exploit or a credential in a public issue.
 - **The Worker** (`solar/proxy/worker.js`) forwards only whitelisted,
   normalised PVGIS parameters to one fixed host, rate-limits per IP even
   without its binding, stores analytics values only when they have the
-  expected shape (see `solar/ANALYTICS.md`), and answers CORS only for the
-  Wattu origins (no localhost, no github.io).
+  expected shape (see `solar/ANALYTICS.md`), keeps CSP reports to
+  directive, host and path, and answers CORS only for the Wattu origins
+  (no localhost, no github.io).
 - **CI**: actions pinned to commit SHAs and kept current by Dependabot
   (`.github/dependabot.yml`), read-only `GITHUB_TOKEN`, gitleaks on every
   push and PR (`.github/workflows/secrets.yml`), deploys from `main` only,
@@ -58,6 +67,13 @@ working exploit or a credential in a public issue.
 - [ ] DNSSEC on wattu.org (Cloudflare › wattu.org › DNS › Settings ›
       Enable DNSSEC), so nobody can redirect the domain by forging DNS
       answers.
+- [ ] Private vulnerability reporting (Settings › Security › Private
+      vulnerability reporting › Enable). `security.txt` and « Reporting a
+      problem » above point to it; until it is on, the link shows nothing
+      to fill in.
+- [ ] `solar/.well-known/security.txt` expires on 2027-09-30: set a new
+      `Expires` (under a year ahead) before then. `solar.yml` warns in the
+      last 60 days and fails once the date has passed.
 
 - [x] 2026-10-08 — ruleset "main" (Settings › Rules › Rulesets) on the
       default branch only: pull request required (0 approvals: the owner
@@ -93,13 +109,53 @@ working exploit or a credential in a public issue.
       was ever exposed was revoked: the old GitHub PAT, the old Mapbox
       token, and any token pasted into a chat.
 
+## Reading the CSP reports
+
+`solar/_headers` sends the browser's Content-Security-Policy refusals to the
+Worker's `/csp`, which writes them to the `solar_csp` Analytics Engine
+dataset: directive, what was blocked (a host, or `inline`, `eval`, a scheme
+such as `chrome-extension`), the page and the script (host and path, never
+the query), the line number. Same read-only token as
+`scripts/solar-stats.sh` (`solar/ANALYTICS.md` › Setup):
+
+```bash
+curl -sS "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/analytics_engine/sql" \
+  -H "Authorization: Bearer $CF_API_TOKEN" --data "
+  SELECT blob1 AS directive, blob2 AS blocked, blob5 AS page,
+         blob6 AS script_host, blob7 AS script, SUM(_sample_interval) AS reports
+  FROM solar_csp WHERE timestamp > NOW() - INTERVAL '7' DAY
+  GROUP BY directive, blocked, page, script_host, script ORDER BY reports DESC"
+```
+
+Columns: blob1 directive, blob2 blocked host or keyword, blob3 blocked path,
+blob4 page host, blob5 page path, blob6 script host, blob7 script path,
+blob8 `enforce` or `report`; double1 line number.
+
+How to read it:
+
+- `script_host` = solar.wattu.org (our own file) blocking a host: our code
+  needs a host the policy does not list. Add it to `solar/_headers` or
+  remove the call.
+- `blocked` = `inline` or `eval`, or a host nobody added: something
+  injected code into the page, or an edge feature did
+  (Cloudflare Web Analytics, Rocket Loader, Email Obfuscation all inject
+  scripts). Find which before allowing anything.
+- `chrome-extension`, `moz-extension`, `safari-web-extension`: visitors'
+  extensions. Noise.
+
+Browsers with the Reporting API (Chrome, Edge) send one batch per page
+(`report-to`), the others one request per refusal (`report-uri`); both
+count against the Worker's daily quota (below). If they ever eat it, drop
+`report-uri` from `solar/_headers` first.
+
 ## Accepted risks
 
 - **Cloudflare secrets as repository secrets** (above).
 - **Worker quota.** The Worker runs on the Workers Free plan (100,000
   requests a day). A flood from many addresses could use it up for the
-  day; the per-IP limit does not stop that. The estimator then shows its
-  approximate mode (no PVGIS), it does not break. Moving the Worker to a
+  day; the per-IP limit does not stop that. CSP reports count against the
+  same quota. The estimator then shows its approximate mode (no PVGIS), it
+  does not break. Moving the Worker to a
   route on wattu.org would allow Cloudflare WAF rules if this happens.
 - **Third-party data services** (OpenFreeMap, OpenInfraMap, Nominatim,
   Overpass, PVGIS, Esri tiles) can be slow or down; each failure degrades

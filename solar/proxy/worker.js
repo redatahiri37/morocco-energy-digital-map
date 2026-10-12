@@ -9,6 +9,10 @@
  *   → 204. Cookieless usage events into the SOLAR_ANALYTICS Analytics Engine
  *     dataset. No IP, no address, no identifier is stored. See ../ANALYTICS.md.
  *
+ *   POST /csp  (Content-Security-Policy violation reports, both formats)
+ *   → 204. What the browser refused, reduced to directive, host and path,
+ *     into the CSP_REPORTS dataset. See ../../SECURITY.md.
+ *
  * Deploy: automatic on main (.github/workflows/worker.yml). See ../README.md "Proxy operations".
  */
 
@@ -89,6 +93,9 @@ function corsHeaders(request) {
   return {
     "access-control-allow-origin": allowed,
     "access-control-allow-methods": "GET, POST, OPTIONS",
+    // Chrome preflights its CSP reports (application/reports+json) and
+    // drops them unless content-type is allowed here.
+    "access-control-allow-headers": "content-type",
     "vary": "Origin",
     "x-content-type-options": "nosniff",
   };
@@ -188,13 +195,7 @@ function dbl(key, v) {
 async function handleEvent(request, env) {
   // A malformed or oversized beacon is dropped silently — analytics must
   // never surface an error to the visitor.
-  const done = () => new Response(null, { status: 204, headers: corsHeaders(request) });
-  if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) return done();
-  const raw = await readCapped(request, MAX_BODY_BYTES);
-  if (raw === null) return done();
-
-  let payload;
-  try { payload = JSON.parse(raw); } catch (e) { payload = null; }
+  const payload = await readJson(request, MAX_BODY_BYTES);
 
   if (payload && Array.isArray(payload.ev) && env.SOLAR_ANALYTICS) {
     const sid = typeof payload.sid === "string" && SID.test(payload.sid) ? payload.sid : "other";
@@ -211,7 +212,90 @@ async function handleEvent(request, env) {
     }
   }
 
-  return done();
+  return new Response(null, { status: 204, headers: corsHeaders(request) });
+}
+
+/* ── CSP violation reports ──────────────────────────────────────────────
+ * solar/_headers sends the pages' violation reports here: report-to
+ * (Reporting API, a JSON array) and report-uri ({"csp-report": …}) for
+ * browsers without it. A report means the browser refused something: an
+ * injected script, an extension, or a host our own code uses and the
+ * policy forgot.
+ *
+ * Same rule as /e: only short values of a known shape are kept. URLs are
+ * cut to host and path (never query or fragment), other schemes to their
+ * name ("chrome-extension"), and the script sample is never read.
+ */
+const CSP_DIRECTIVE = /^[a-z-]{1,32}$/;
+const CSP_KEYWORD = /^[a-z-]{1,24}$/;      // inline, eval, data, blob…
+const CSP_HOST = /^[a-z0-9.-]{1,64}$/;
+const CSP_PATH = /^\/[a-z0-9/._-]{0,80}$/;
+const MAX_REPORTS_PER_POST = 20;
+const MAX_CSP_BYTES = 32768;               // a batch carries the policy per report
+
+// Both report formats, as [{ directive, blocked, page, source, disposition, line }].
+function cspReports(payload) {
+  if (Array.isArray(payload)) {
+    return payload.filter((r) => r && r.type === "csp-violation" && r.body).map(({ body: b }) => ({
+      directive: b.effectiveDirective, blocked: b.blockedURL, page: b.documentURL,
+      source: b.sourceFile, disposition: b.disposition, line: b.lineNumber,
+    }));
+  }
+  const r = payload && payload["csp-report"];
+  if (!r || typeof r !== "object") return [];
+  return [{
+    // Old browsers send only violated-directive, with its sources after it.
+    directive: r["effective-directive"] || String(r["violated-directive"] || "").split(" ")[0],
+    blocked: r["blocked-uri"], page: r["document-uri"],
+    source: r["source-file"], disposition: r.disposition, line: r["line-number"],
+  }];
+}
+
+// "inline" stays "inline"; https://x.tld/a?b → ["x.tld", "/a"];
+// chrome-extension://id/… → ["chrome-extension", ""].
+function cspUrl(v) {
+  if (typeof v !== "string" || v === "") return ["", ""];
+  if (CSP_KEYWORD.test(v)) return [v, ""];
+  let u;
+  try { u = new URL(v); } catch (e) { return ["other", ""]; }
+  if (u.protocol !== "https:" && u.protocol !== "http:") {
+    const scheme = u.protocol.slice(0, -1);
+    return [CSP_KEYWORD.test(scheme) ? scheme : "other", ""];
+  }
+  return [
+    CSP_HOST.test(u.hostname) ? u.hostname : "other",
+    CSP_PATH.test(u.pathname) ? u.pathname : "other",
+  ];
+}
+
+async function handleCspReport(request, env) {
+  const payload = await readJson(request, MAX_CSP_BYTES);
+  if (payload && env.CSP_REPORTS) {
+    for (const r of cspReports(payload).slice(0, MAX_REPORTS_PER_POST)) {
+      const directive = typeof r.directive === "string" && CSP_DIRECTIVE.test(r.directive) ? r.directive : "other";
+      const [blocked, blockedPath] = cspUrl(r.blocked);
+      const [pageHost, pagePath] = cspUrl(r.page);
+      const [sourceHost, sourcePath] = cspUrl(r.source);
+      env.CSP_REPORTS.writeDataPoint({
+        indexes: [directive],
+        blobs: [
+          directive, blocked, blockedPath, pageHost, pagePath, sourceHost, sourcePath,
+          r.disposition === "report" ? "report" : "enforce",
+        ],
+        doubles: [Number.isInteger(r.line) && r.line >= 0 && r.line <= 1e6 ? r.line : 0],
+      });
+    }
+  }
+  return new Response(null, { status: 204, headers: corsHeaders(request) });
+}
+
+// Parses a JSON body of at most `max` bytes; null when it is larger or
+// not JSON.
+async function readJson(request, max) {
+  if (Number(request.headers.get("content-length")) > max) return null;
+  const raw = await readCapped(request, max);
+  if (raw === null) return null;
+  try { return JSON.parse(raw); } catch (e) { return null; }
 }
 
 // Reads the body as text, giving up (null) past `max` bytes without
@@ -250,6 +334,17 @@ export default {
         return new Response(null, { status: 204, headers: corsHeaders(request) });
       }
       return handleEvent(request, env);
+    }
+
+    if (url.pathname === "/csp") {
+      if (request.method !== "POST") {
+        return errorResponse(request, 405, "Méthode non autorisée");
+      }
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      if (await rateLimited(env, "csp:" + ip)) {
+        return new Response(null, { status: 204, headers: corsHeaders(request) });
+      }
+      return handleCspReport(request, env);
     }
 
     if (request.method !== "GET") {

@@ -61,7 +61,7 @@ jobs:
 
   # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.
-  # Needs two secrets in the "production" environment (see SECURITY.md):
+  # Needs two secrets (see SECURITY.md):
   #   CLOUDFLARE_API_TOKEN   — Account › Cloudflare Pages › Edit and
   #                            Account › Workers Scripts › Edit
   #   CLOUDFLARE_ACCOUNT_ID  — shown on the Cloudflare dashboard sidebar
@@ -69,8 +69,10 @@ jobs:
     needs: validate
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    # Cloudflare secrets live in the "production" environment, which only
-    # main may use: a workflow pushed on any other branch cannot read them.
+    # Named so the Cloudflare secrets can move to the "production"
+    # environment, readable from main only. Until they do (SECURITY.md,
+    # accepted risk) they are repository secrets, which a workflow pushed
+    # on any branch can read.
     environment:
       name: production
       url: https://energy.wattu.org
@@ -93,7 +95,7 @@ jobs:
       - name: Deploy docs/ to Cloudflare Pages
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
-          wranglerVersion: "3.90.0"   # the version v3.15.0 installs by default, pinned
+          wranglerVersion: "4.147.0"   # same pin as worker.yml; Dependabot does not bump it
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy docs --project-name=atlas-nexus --branch=main --commit-dirty=true
