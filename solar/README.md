@@ -32,8 +32,11 @@ The map links to this tool and vice versa, but only by absolute URL. The old
 solar/          (repo root — its own Cloudflare Pages project)
 ├── index.html       Page shell — two <section class="step"> views
 ├── style.css        Wattu brand (navy #001F4D / orange #FF6B35)
-├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
+├── engine.js        The figures: CONFIG, PV, Tariff, ROI, Finance, Sizing (shared with the city pages and the chat)
+├── app.js           The simulator: Geocoder, PVGIS, Chart_, Roof, MapView, UI
 ├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
+├── chat/            Chat assistant page (prototype, private link)
+├── proxy/           Cloudflare Worker: PVGIS proxy, /e, /csp, /chat
 ├── pages.css        Style of the generated city pages
 ├── data/cities.json Cities that get a page under /ville/<slug>/, and the list
 │                    offered when an address is not found (deployed as is)
@@ -84,7 +87,7 @@ writes static HTML with the same figures:
   ping never fails the deploy.
 
 Figures come from PVGIS at each city centre and the estimator's own engine
-(`CONFIG`, `Tariff`, `ROI` read from `app.js`), so a page and the tool
+(`engine.js`, the file the simulator loads), so a page and the tool
 always agree: change a tariff in `CONFIG` and the pages follow on the next
 deploy. If PVGIS fails, the deploy stops and the live pages stay as they
 were. To add a city, add a line to `data/cities.json`. Local preview
@@ -152,6 +155,47 @@ The deploy output prints the live URL. Currently deployed at
 - **Verify cache:** `curl -sI "<worker-url>/pvcalc?lat=33.57&lon=-7.59&peakpower=3&angle=30&aspect=0"` twice — second response has `cf-cache-status: HIT`
 - **Rename/rotate subdomain:** change `name` in `wrangler.toml`, redeploy, update `CONFIG.PVGIS_WORKER_URL`
 - **If deploy rejects the rate-limit binding** (open beta): delete the `[[unsafe.bindings]]` block in `wrangler.toml` and redeploy — the worker runs without rate limiting.
+
+## Chat assistant (prototype)
+
+`chat/` is a page where a visitor asks questions in French, Darija or
+English. The Worker's `POST /chat` (`proxy/chat.js`) sends the
+conversation to Claude (`claude-opus-5-5`, adaptive thinking at medium
+effort, refusals re-run on Anthropic's recommended fallback model) with
+two tools that run in the Worker on `engine.js`:
+
+- `estimate_solar` — PVGIS at a city (`data/cities.json`) or any point in
+  Morocco, then the simulator's sizing, cost, savings, payback, 25-year
+  gain and loan, and a link that opens the simulator with those values;
+- `onee_bill` — bill ↔ kWh with the detail by tranche.
+
+The system prompt forbids figures that do not come from a tool, and the
+tests check that the tool's figures equal the simulator's. The answer
+streams back as NDJSON; the page shows each estimate as a card. Nothing
+is stored: the page keeps the conversation in memory and sends it with
+each question (10 exchanges at most).
+
+**Switch it on** (once, from `solar/proxy/`):
+
+```bash
+npx wrangler@4 secret put ANTHROPIC_API_KEY   # a key from console.anthropic.com
+npx wrangler@4 secret put CHAT_ACCESS_KEY     # any long random string, e.g. `openssl rand -hex 24`
+```
+
+Then open `https://solar.wattu.org/chat/#k=<CHAT_ACCESS_KEY>` (add `&l=ar`
+or `&l=en` for another language). The browser keeps the key and removes
+it from the address bar. Until both secrets exist, `/chat` answers 503.
+
+- **Cost**: a few US cents per answer at Opus 5.5 prices (system prompt
+  and tools are prompt-cached). Set a monthly limit on the key's
+  workspace in the Anthropic Console. A cheaper model: add
+  `[vars] CHAT_MODEL = "claude-sonnet-5-5"` to `wrangler.toml`.
+- **Limits**: 10 answers a minute per IP (`CHAT_LIMITER`), 5 model calls
+  per answer, 1,500 characters per question.
+- **Logs**: `wrangler tail` shows each call's model, stop reason and
+  tokens, never the text.
+- **Tests**: `npm ci && npm test` in `proxy/` plays the API's event stream
+  through the real SDK, without a key.
 
 ## Long-term architecture
 

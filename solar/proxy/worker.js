@@ -13,8 +13,14 @@
  *   → 204. What the browser refused, reduced to directive, host and path,
  *     into the CSP_REPORTS dataset. See ../../SECURITY.md.
  *
+ *   POST /chat  { key, lang, messages }
+ *   → the assistant's answer, streamed as NDJSON. Prototype behind an
+ *     access key; contract and setup in chat.js.
+ *
  * Deploy: automatic on main (.github/workflows/worker.yml). See ../README.md "Proxy operations".
  */
+
+import { handleChat } from "./chat.js";
 
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 
@@ -63,16 +69,18 @@ const DECIMAL = /^-?\d{1,3}(\.\d{1,8})?$/;
 // weaker than the binding but never leaves the Worker unlimited.
 const RATE_LIMIT = 60;          // requests per minute per IP and route
 const fallbackHits = new Map(); // key → [windowStart, count]
-let warned = false;
+const warned = new Set();
 
-async function rateLimited(env, key) {
-  if (env.RATE_LIMITER) {
-    const { success } = await env.RATE_LIMITER.limit({ key });
+// `binding` names the [[ratelimits]] binding (wrangler.toml) and `limit`
+// the per-minute count of its fallback: /chat has its own, much lower one.
+async function rateLimited(env, key, { binding = "RATE_LIMITER", limit = RATE_LIMIT } = {}) {
+  if (env[binding]) {
+    const { success } = await env[binding].limit({ key });
     return !success;
   }
-  if (!warned) {
-    warned = true; // once per isolate: visible in `wrangler tail`
-    console.error("RATE_LIMITER binding missing — per-isolate fallback limit in use");
+  if (!warned.has(binding)) {
+    warned.add(binding); // once per isolate: visible in `wrangler tail`
+    console.error(`${binding} binding missing — per-isolate fallback limit in use`);
   }
   const now = Date.now();
   const hit = fallbackHits.get(key);
@@ -81,15 +89,19 @@ async function rateLimited(env, key) {
     fallbackHits.set(key, [now, 1]);
     return false;
   }
-  return ++hit[1] > RATE_LIMIT;
+  return ++hit[1] > limit;
+}
+
+function originAllowed(request) {
+  const origin = request.headers.get("Origin");
+  return ALLOWED_ORIGINS.includes(origin) ||
+    (!!origin && origin.startsWith("https://") &&
+     ALLOWED_ORIGIN_SUFFIXES.some(s => origin.endsWith(s)));
 }
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin");
-  const ok = ALLOWED_ORIGINS.includes(origin) ||
-    (origin && origin.startsWith("https://") &&
-     ALLOWED_ORIGIN_SUFFIXES.some(s => origin.endsWith(s)));
-  const allowed = ok ? origin : ALLOWED_ORIGINS[0];
+  const allowed = originAllowed(request) ? origin : ALLOWED_ORIGINS[0];
   return {
     "access-control-allow-origin": allowed,
     "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -318,8 +330,32 @@ async function readCapped(request, max) {
   return new TextDecoder().decode(all);
 }
 
+// Validated parameters → JRC. Rebuilt from the whitelist only, sorted so the
+// edge cache key is stable regardless of the caller's order, numbers
+// normalised (coordinates to 4 decimals, ~11 m), never as typed. /pvcalc
+// and the chat's estimate tool share this path, and so its cache.
+function fetchJrc(searchParams) {
+  const upstream = new URL(UPSTREAM);
+  [...ALLOWED_PARAMS].sort().forEach((key) => {
+    const v = searchParams.get(key);
+    if (v === null) return;
+    if (key in BOUNDS) {
+      const n = Number(v);
+      upstream.searchParams.set(key, String(key === "lat" || key === "lon" ? +n.toFixed(4) : n));
+    } else {
+      upstream.searchParams.set(key, v);
+    }
+  });
+  upstream.searchParams.set("outputformat", "json");
+  return fetch(upstream, {
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    // Errors are never cached: a JRC outage must not outlive itself.
+    cf: { cacheEverything: true, cacheTtlByStatus: { "200-299": 86400, "400-599": 0 } },
+  });
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(request) });
     }
@@ -347,6 +383,12 @@ export default {
       return handleCspReport(request, env);
     }
 
+    if (url.pathname === "/chat") {
+      return handleChat(request, env, ctx, {
+        corsHeaders, errorResponse, originAllowed, rateLimited, readJson, fetchJrc,
+      });
+    }
+
     if (request.method !== "GET") {
       return errorResponse(request, 405, "Méthode non autorisée");
     }
@@ -365,30 +407,9 @@ export default {
       return errorResponse(request, 429, "Trop de requêtes — réessayez dans une minute");
     }
 
-    // Rebuild the upstream URL from the validated whitelist only, sorted so
-    // the edge cache key is stable regardless of client param order.
-    // Numbers are forwarded normalised (coordinates to 4 decimals, ~11 m),
-    // never as the client typed them.
-    const upstream = new URL(UPSTREAM);
-    [...ALLOWED_PARAMS].sort().forEach((key) => {
-      const v = url.searchParams.get(key);
-      if (v === null) return;
-      if (key in BOUNDS) {
-        const n = Number(v);
-        upstream.searchParams.set(key, String(key === "lat" || key === "lon" ? +n.toFixed(4) : n));
-      } else {
-        upstream.searchParams.set(key, v);
-      }
-    });
-    upstream.searchParams.set("outputformat", "json");
-
     let jrcResponse;
     try {
-      jrcResponse = await fetch(upstream, {
-        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-        // Errors are never cached: a JRC outage must not outlive itself.
-        cf: { cacheEverything: true, cacheTtlByStatus: { "200-299": 86400, "400-599": 0 } },
-      });
+      jrcResponse = await fetchJrc(url.searchParams);
     } catch (e) {
       return errorResponse(request, 504, "PVGIS ne répond pas — réessayez dans quelques instants");
     }

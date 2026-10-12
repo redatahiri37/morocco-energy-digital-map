@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistant Wattu Solaire (prototype)</title>
+<!-- Prototype reached by a private link (#k=<access key>): kept out of
+     search engines, the sitemap and llms.txt. See solar/proxy/chat.js. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#050B18">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../brand.css">
+<link rel="stylesheet" href="chat.css">
+</head>
+<body class="chat-page">
+
+<header class="topbar">
+  <a class="w-brand" id="chat-home" href="../" aria-label="Wattu Solaire — simulateur">
+    <img class="w-mark" src="../mark.svg" alt="" width="26" height="26">
+    <span class="w-word">wattu</span>
+    <span class="w-product" data-i18n="product">Solaire</span>
+  </a>
+  <nav class="topnav chat-langs" aria-label="Langue">
+    <button type="button" class="chat-lang" data-lang="fr" lang="fr" aria-pressed="true">FR</button>
+    <button type="button" class="chat-lang" data-lang="ar" lang="ar" aria-pressed="false">العربية</button>
+    <button type="button" class="chat-lang" data-lang="en" lang="en" aria-pressed="false">EN</button>
+  </nav>
+</header>
+
+<main class="chat-main">
+  <section class="chat-intro">
+    <span class="w-kicker chat-kicker" data-i18n="kicker">Assistant · prototype</span>
+    <h1 data-i18n="title">Votre question sur le solaire, en clair</h1>
+    <p class="chat-lede" data-i18n="lede">Dites votre ville et votre facture d'électricité : l'assistant calcule avec le moteur du simulateur Wattu (PVGIS, tarifs ONEE) et répond en français, en darija ou en anglais.</p>
+  </section>
+
+  <p class="chat-locked" id="chat-locked" hidden data-i18n="locked">Ce prototype s'ouvre avec un lien d'accès privé.</p>
+
+  <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
+
+  <div class="chat-suggest" id="chat-suggest"></div>
+
+  <form class="chat-form" id="chat-form" novalidate>
+    <label class="chat-sr" for="chat-input" data-i18n="label">Votre question</label>
+    <textarea id="chat-input" rows="2" maxlength="1500" dir="auto" placeholder="Ex. : ma facture est de 600 DH à Casablanca, ça vaut le coup ?"></textarea>
+    <div class="chat-actions">
+      <button type="button" class="chat-reset" id="chat-reset" data-i18n="reset">Nouvelle conversation</button>
+      <button type="submit" class="chat-send" id="chat-send" data-i18n="send">Envoyer</button>
+    </div>
+  </form>
+
+  <p class="chat-privacy" data-i18n="privacy">Prototype. Vos messages sont envoyés à Claude (Anthropic) pour rédiger la réponse ; Wattu ne les enregistre pas. N'indiquez ni nom, ni téléphone, ni adresse exacte. Les chiffres sont des estimations, pas un devis.</p>
+</main>
+
+<script src="chat.js" defer></script>
+</body>
+</html>
