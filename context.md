@@ -44,6 +44,26 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-12 (solar: UX review, blocks 1 and 2)
+- Fixed: browser/Android Back from the results now returns to the address
+  (pushState on entering the results, popstate back); score tooltip no
+  longer one unreadable line that also scrolled the desktop page sideways;
+  « service indisponible » notice clears when PVGIS answers again.
+- Results card: price (investissement) replaces CO₂ (now a line under the
+  monthly chart); « pour une facture de X MAD par mois · c'est la vôtre ? »
+  under the headline until the visitor sets their bill. Bill presets and
+  default aligned on the city pages: 300/500/800/1 200, default 500 (was 400).
+- Address not found → « Choisissez votre ville » (data/cities.json, now
+  deployed; CSP connect-src gains 'self'), map at zoom 15, no OSM lookup,
+  the drawn roof becomes the location. Analytics: estimate src `city`,
+  param_change field `bill_ask`.
+- PDF button in the installers card; top bar = Villes · Guides · Méthode ·
+  العربية · English (Méthode hidden on phones); focus/aria-live/aria-valuetext/
+  aria-pressed; « Dernier point » while drawing a roof.
+- Next (owner's call): simulator in Darija/English, a lifestyle question for
+  self-consumption (calc-engine), summer/winter bills, shorter phone page,
+  3D view of the installation.
+
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers
   (Econosol, Shamsiyah — owner's pick), shuffled per visit, no commission,

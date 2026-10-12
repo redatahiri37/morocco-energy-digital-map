@@ -54,8 +54,11 @@
     <span class="w-product">Solaire</span>
   </a>
   <nav class="topnav">
-    <a href="https://energy.wattu.org/">Carte énergie</a>
-    <a href="#about">Méthode</a>
+    <a href="villes/">Villes</a>
+    <a href="guide/">Guides</a>
+    <a class="nav-method" href="#about">Méthode</a>
+    <a class="nav-lang" href="ar/villes/" lang="ar" hreflang="ar">العربية</a>
+    <a class="nav-lang" href="en/cities/" lang="en" hreflang="en">English</a>
   </nav>
 </header>
 
@@ -99,6 +102,12 @@
         </div>
 
         <div id="step1-error" class="error" hidden></div>
+        <div id="city-fallback" class="city-fallback" hidden>
+          <label for="city-select">Choisissez votre ville&nbsp;: vous placerez ensuite votre toit sur la carte.</label>
+          <select id="city-select">
+            <option value="">Votre ville…</option>
+          </select>
+        </div>
       </div>
 
       <ul class="trust" aria-label="Sur quoi repose l'estimation">
@@ -138,7 +147,7 @@
         </button>
         <div class="loc">
           <span class="w-kicker">Estimation pour</span>
-          <div id="location-label" class="location-label"></div>
+          <h2 id="location-label" class="location-label" tabindex="-1"></h2>
         </div>
         <div class="results-actions">
           <button type="button" class="action-btn" id="share-btn" aria-label="Partager cette estimation">
@@ -156,6 +165,7 @@
       </div>
 
       <div id="step2-error" class="error" hidden></div>
+      <p id="sr-summary" class="sr-only" aria-live="polite"></p>
 
       <div class="results-layout">
       <aside class="results-aside">
@@ -170,28 +180,30 @@
           <div class="hero-headline">
             <span id="hero-savings" class="hero-number">0</span>
             <span class="hero-unit">dirhams économisés par an</span>
+            <p class="hero-basis" id="hero-basis">pour une facture de <b id="hero-bill">500 MAD</b> par mois<span id="hero-bill-ask"> · <button type="button" class="hero-basis-btn" id="hero-bill-btn">c'est la vôtre&nbsp;?</button></span></p>
           </div>
           <div class="hero-chips">
             <div class="chip-stat"><span id="chip-size">—</span><small>taille conseillée<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Dimensionnée pour couvrir environ 80 % de votre consommation annuelle. Modifiable dans les paramètres.</span></button></small></div>
             <div class="chip-stat"><span id="chip-production">—</span><small>production / an</small></div>
             <div class="chip-stat"><span id="chip-payback">—</span><small>amortissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Temps nécessaire pour que les économies remboursent l'investissement de départ.</span></button></small></div>
-            <div class="chip-stat"><span id="chip-co2">—</span><small>CO₂ évité / an</small></div>
+            <div class="chip-stat"><span id="chip-capex">—</span><small>investissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Prix posé estimé, matériel et pose compris, à <span id="capex-tip-cost">11 MAD/Wc</span>. Modifiable dans les paramètres.</span></button></small></div>
           </div>
 
           <div class="bill-block">
             <label for="bill">Votre facture d'électricité mensuelle
-              <span class="pval" id="bill-val">400 MAD</span></label>
+              <span class="pval" id="bill-val">500 MAD</span></label>
             <div class="bill-presets">
-              <button type="button" class="bill-chip" data-bill="200">200 MAD</button>
-              <button type="button" class="bill-chip active" data-bill="400">400 MAD</button>
-              <button type="button" class="bill-chip" data-bill="700">700 MAD</button>
-              <button type="button" class="bill-chip" data-bill="1200">1 200 MAD</button>
+              <button type="button" class="bill-chip" data-bill="300" aria-pressed="false">300 MAD</button>
+              <button type="button" class="bill-chip active" data-bill="500" aria-pressed="true">500 MAD</button>
+              <button type="button" class="bill-chip" data-bill="800" aria-pressed="false">800 MAD</button>
+              <button type="button" class="bill-chip" data-bill="1200" aria-pressed="false">1 200 MAD</button>
             </div>
-            <input type="range" id="bill" min="100" max="3000" step="25" value="400">
+            <input type="range" id="bill" min="100" max="3000" step="25" value="500">
             <div class="param-hint" id="bill-consumption-hint"></div>
           </div>
 
-          <div class="hero-source">Données PVGIS (Commission européenne) et tarifs ONEE<button type="button" class="help light" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production estimée par PVGIS v5.2 à vos coordonnées exactes. Économies calculées sur la grille tarifaire résidentielle ONEE 2025.</span></button></div>
+          <p class="hero-approx" id="hero-approx" hidden></p>
+          <div class="hero-source" id="hero-source">Données PVGIS (Commission européenne) et tarifs ONEE<button type="button" class="help light" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production estimée par PVGIS v5.2 à vos coordonnées exactes. Économies calculées sur la grille tarifaire résidentielle ONEE 2025.</span></button></div>
         </div>
       </div>
 
@@ -274,6 +286,7 @@
             <p class="roof-info" id="roof-info" aria-live="polite"></p>
             <div class="roof-actions">
               <button type="button" class="linkbtn small" id="roof-draw-btn">✎ Dessiner mon toit</button>
+              <button type="button" class="linkbtn small" id="roof-undo-btn" hidden disabled>↶ Dernier point</button>
               <button type="button" class="linkbtn small" id="roof-done-btn" hidden disabled>Terminer</button>
               <button type="button" class="linkbtn small" id="roof-cancel-btn" hidden>Annuler</button>
             </div>
@@ -310,6 +323,7 @@
           <div class="chart-wrap">
             <canvas id="monthly-chart"></canvas>
           </div>
+          <p class="chart-foot" id="co2-line"></p>
         </div>
 
         <div class="chart-card">
@@ -338,7 +352,11 @@
         <!-- Selection method, scores and sources: solar/INSTALLERS.md -->
         <div class="installers-card" data-depth="installers">
           <p class="w-kicker">Trouver un installateur</p>
-          <p class="installers-intro">Deux entreprises labellisées <b>Taqa Pro</b>, le label qualité de l'AMEE et de l'AMISOLE. Demandez-leur un devis avec votre estimation en main (bouton PDF en haut).</p>
+          <p class="installers-intro">Deux entreprises labellisées <b>Taqa Pro</b>, le label qualité de l'AMEE et de l'AMISOLE. Demandez-leur un devis avec votre estimation en main.</p>
+          <button type="button" class="pdf-btn" id="print-btn-2">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Télécharger mon estimation (PDF)
+          </button>
           <ul class="installers-list" id="installers-list">
             <li>
               <a href="https://www.econosol.ma" target="_blank" rel="nofollow noopener" data-installer="econosol">

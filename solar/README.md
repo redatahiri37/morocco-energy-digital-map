@@ -35,7 +35,8 @@ solar/          (repo root — its own Cloudflare Pages project)
 ├── app.js           All logic, modular namespaces (CONFIG, Geocoder, PVGIS, Tariff, ROI, Chart_, MapView, UI)
 ├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
 ├── pages.css        Style of the generated city pages
-├── data/cities.json Cities that get a page under /ville/<slug>/
+├── data/cities.json Cities that get a page under /ville/<slug>/, and the list
+│                    offered when an address is not found (deployed as is)
 └── README.md
 ```
 

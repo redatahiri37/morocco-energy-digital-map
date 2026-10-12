@@ -95,6 +95,9 @@ jobs:
           cp -r solar/fonts _site/fonts
           cp -r solar/vendor _site/vendor
           cp -r solar/installers _site/installers
+          # City list for « Choisissez votre ville » when an address is not found
+          mkdir _site/data
+          cp solar/data/cities.json _site/data/
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
           V="${GITHUB_SHA::8}"

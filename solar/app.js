@@ -515,10 +515,12 @@ const Roof = {
 const MapView = {
   map: null,
   marker: null,
-  set(lat, lon, label) {
+  // zoom 18 shows one house; a city picked from the list opens wider so
+  // the visitor can find their street.
+  set(lat, lon, label, zoom = 18) {
     if (!this.map) {
       this.map = L.map("map", { zoomControl: true, attributionControl: true })
-        .setView([lat, lon], 18);
+        .setView([lat, lon], zoom);
       // Default: satellite (Esri World Imagery — token-free, roof-level detail
       // so the user recognises their own house). OSM plan as the alternative.
       const satellite = L.tileLayer(
@@ -538,7 +540,7 @@ const MapView = {
         { position: "topright" }
       ).addTo(this.map);
     } else {
-      this.map.setView([lat, lon], 18);
+      this.map.setView([lat, lon], zoom);
     }
     if (this.marker) this.marker.remove();
     this.marker = L.marker([lat, lon]).addTo(this.map);
@@ -586,20 +588,28 @@ const MapView = {
     if (!this.map) return;
     this.cancelDraw();
     this.clearRoof();
-    const pts = [];
+    const pts = [], marks = [];
     const line = L.polyline([], { color: "#FF6B35", weight: 2, dashArray: "4 4", interactive: false }).addTo(this.map);
     const dots = L.layerGroup().addTo(this.map);
     const onClick = (e) => {
       pts.push([e.latlng.lat, e.latlng.lng]);
       line.setLatLngs(pts);
-      L.circleMarker(e.latlng, { radius: 4, color: "#FF6B35", fillOpacity: 1, interactive: false }).addTo(dots);
+      marks.push(L.circleMarker(e.latlng, { radius: 4, color: "#FF6B35", fillOpacity: 1, interactive: false }).addTo(dots));
       if (this.draw.onChange) this.draw.onChange(pts.length);
     };
     this.map.on("click", onClick);
     this.map.getContainer().classList.add("drawing");
     this.map.doubleClickZoom.disable();
-    this.draw = { pts, line, dots, onClick, onDone, onChange: null };
+    this.draw = { pts, marks, line, dots, onClick, onDone, onChange: null };
     return this.draw;
+  },
+  // A finger that slipped: remove the last corner placed.
+  undoDraw() {
+    if (!this.draw || !this.draw.pts.length) return;
+    this.draw.pts.pop();
+    this.draw.line.setLatLngs(this.draw.pts);
+    this.draw.dots.removeLayer(this.draw.marks.pop());
+    if (this.draw.onChange) this.draw.onChange(this.draw.pts.length);
   },
   finishDraw() {
     if (!this.draw) return;
@@ -623,7 +633,7 @@ const MapView = {
 const State = {
   location: null,   // { lat, lon, label }
   params: {
-    bill: 400,      // MAD/month — the primary user input
+    bill: 500,      // MAD/month — the primary user input (the city pages' reference home)
     peakpower: 3,
     angle: 30,
     aspect: 0,
@@ -631,6 +641,7 @@ const State = {
     exportAllowed: false,
   },
   sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
+  billTouched: false, // until the visitor sets their bill, the headline says which bill it assumes
   candidates: [],   // every geocoder match for the last typed address
   roof: null,       // { latlngs, src: "osm" | "drawn" } — building footprint, if known
   roofSearch: 0,    // id of the latest building lookup, so a stale one is ignored
@@ -686,13 +697,24 @@ const UI = {
       const d = MapView.startDraw((pts) => {
         State.roof = { latlngs: pts, src: "drawn" };
         Analytics.track("roof", { src: "drawn" });
+        // A city picked from the list stood in for the address: the roof
+        // now says where the house is, so production is fetched there.
+        if (State.location.src === "city") {
+          const o = Roof.origin(pts);
+          State.location = { ...State.location, lat: o.lat, lon: o.lon };
+          $("coords-label").textContent = coordsText(o.lat, o.lon);
+        }
         this.setRoofDrawing(false);
         this.recalc({ fitRoof: true });
       });
       if (!d) return;
-      d.onChange = (n) => { $("roof-done-btn").disabled = n < 3; };
+      d.onChange = (n) => {
+        $("roof-done-btn").disabled = n < 3;
+        $("roof-undo-btn").disabled = n < 1;
+      };
       this.setRoofDrawing(true);
     });
+    $("roof-undo-btn").addEventListener("click", () => MapView.undoDraw());
     $("roof-done-btn").addEventListener("click", () => MapView.finishDraw());
     $("roof-cancel-btn").addEventListener("click", () => {
       MapView.cancelDraw();
@@ -716,6 +738,7 @@ const UI = {
     // Bill — slider + presets
     $("bill").addEventListener("input", () => {
       Analytics.once("param_change:bill", "param_change", { field: "bill" });
+      State.billTouched = true;
       State.params.bill = parseFloat($("bill").value);
       this.syncBillPresets();
       this.renderParamLabels();
@@ -724,6 +747,7 @@ const UI = {
     document.querySelectorAll(".bill-chip").forEach(chip => {
       chip.addEventListener("click", () => {
         Analytics.once("param_change:bill_chip", "param_change", { field: "bill_chip" });
+        State.billTouched = true;
         State.params.bill = parseFloat(chip.dataset.bill);
         $("bill").value = State.params.bill;
         this.syncBillPresets();
@@ -732,13 +756,45 @@ const UI = {
       });
     });
 
+    // « c'est la vôtre ? » under the headline: take the visitor to the bill.
+    $("hero-bill-btn").addEventListener("click", () => {
+      Analytics.once("param_change:bill_ask", "param_change", { field: "bill_ask" });
+      const block = document.querySelector(".bill-block");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      block.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+      $("bill").focus({ preventScroll: true });
+      block.classList.remove("flash");
+      void block.offsetWidth;   // restart the highlight
+      block.classList.add("flash");
+    });
+
+    // Back, in the page or the browser's (Android's back gesture included),
+    // returns to the address. Entering the results from the address pushes
+    // a history entry (syncUrl push); a shared link opens without one, so
+    // Back there still leads to wherever the link was.
     $("back-btn").addEventListener("click", () => {
-      this.goToStep(1);
+      if (history.state && history.state.wattu === "results") { history.back(); return; }
+      this.leaveResults();
       try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
+    });
+    window.addEventListener("popstate", () => {
+      const inResults = $("step2").classList.contains("active");
+      const hasEstimate = new URLSearchParams(location.hash.slice(1)).has("lat");
+      // "#about" (Méthode) is an in-page anchor, not a way out of the results.
+      if (inResults && !location.hash) this.leaveResults();
+      else if (!inResults && hasEstimate) this.restoreFromUrl();
+    });
+    $("city-select").addEventListener("change", (e) => {
+      const c = this._cityList && this._cityList[e.target.value];
+      if (!c) return;
+      e.target.value = "";   // back on this page, the same city can be picked again
+      State.candidates = [];
+      this.setLocationAndGo({ lat: c.lat, lon: c.lon, label: c.name, src: "city" });
     });
     $("geo-btn").addEventListener("click", () => this.useMyPosition());
     $("share-btn").addEventListener("click", () => this.share());
     $("print-btn").addEventListener("click", () => window.print());
+    $("print-btn-2").addEventListener("click", () => window.print());
     this.syncUrlSoon = debounce(() => this.syncUrl(), 400);
 
     this.renderParamLabels();
@@ -778,7 +834,7 @@ const UI = {
   // reopened as is. A hash never reaches a server, our analytics included.
   // The address label (n) is added only when the visitor shares: otherwise
   // the home address would sit in browser history for nothing.
-  syncUrl({ withLabel = false } = {}) {
+  syncUrl({ withLabel = false, push = false } = {}) {
     if (!State.location || !$("step2").classList.contains("active")) return;
     const p = State.params, l = State.location;
     const q = new URLSearchParams({
@@ -789,7 +845,11 @@ const UI = {
     if (p.exportAllowed) q.set("x", "1");
     if (withLabel && l.label) q.set("n", l.label.slice(0, 120));
     // Safari throws past ~100 calls in 30 s; a lost update is harmless.
-    try { history.replaceState(null, "", "#" + q.toString()); } catch (e) { /* ignore */ }
+    // replaceState keeps the entry's state, so Back still knows it.
+    try {
+      if (push) history.pushState({ wattu: "results" }, "", "#" + q.toString());
+      else history.replaceState(history.state, "", "#" + q.toString());
+    } catch (e) { /* ignore */ }
   },
 
   restoreFromUrl() {
@@ -849,7 +909,33 @@ const UI = {
     el.textContent = msg;
     el.hidden = false;
   },
-  clearStep1Error() { $("step1-error").hidden = true; },
+  clearStep1Error() { $("step1-error").hidden = true; $("city-fallback").hidden = true; },
+
+  // OpenStreetMap misses many Moroccan addresses (derbs, new lotissements).
+  // Rather than a dead end: pick the city, then draw the roof on the map.
+  // The list is the city pages' own (data/cities.json); if it cannot be
+  // read, the offline fallback cities do.
+  async showCityFallback() {
+    const box = $("city-fallback"), select = $("city-select");
+    box.hidden = false;
+    if (this._cityList) return;
+    let list;
+    try {
+      const res = await fetch("data/cities.json");
+      if (!res.ok) throw new Error("cities " + res.status);
+      list = (await res.json()).cities.map(c => ({ name: c.name, lat: c.lat, lon: c.lon }));
+    } catch (e) {
+      list = PVGIS.FALLBACK_CITIES.map(c => ({ name: c.name, lat: c.lat, lon: c.lon }));
+    }
+    list = list.filter(c => inMorocco(c.lat, c.lon)).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    this._cityList = list;
+    list.forEach((c, i) => {
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = c.name;
+      select.appendChild(o);
+    });
+  },
 
   // Other matches for the typed address, shown in step 2 so a visitor sent
   // to the wrong "Rue de la Liberté" can switch in one tap.
@@ -881,14 +967,16 @@ const UI = {
       if (!results.length) {
         // The query itself is never sent — only the fact that it failed.
         Analytics.track("geocode_fail", { src: "no_result" });
-        this.showStep1Error("Adresse introuvable. Précisez la ville.");
+        this.showStep1Error("Adresse introuvable sur OpenStreetMap. Essayez la rue et la ville.");
+        this.showCityFallback();
         return;
       }
       State.candidates = results;
       await this.setLocationAndGo(results[0]);
     } catch (e) {
       Analytics.track("geocode_fail", { src: "error" });
-      this.showStep1Error("Erreur de géocodage. Réessayez.");
+      this.showStep1Error("La recherche d'adresse ne répond pas. Réessayez dans un instant.");
+      this.showCityFallback();
     } finally {
       $("estimate-btn").disabled = false;
       $("estimate-btn").textContent = "Estimer";
@@ -905,15 +993,30 @@ const UI = {
       lat: Analytics.coarse(loc.lat),
       lon: Analytics.coarse(loc.lon),
     });
+    const fromLanding = $("step1").classList.contains("active");
     State.location = loc;
     this.renderAlternatives(loc);
     State.heroAnimated = false;   // replay the count-up for a new address
     this.goToStep(2);
+    if (fromLanding && loc.src !== "link") this.syncUrl({ push: true });
     $("location-label").textContent = loc.label || `${loc.lat.toFixed(3)}, ${loc.lon.toFixed(3)}`;
-    $("coords-label").textContent = `${loc.lat.toFixed(4)}°N, ${Math.abs(loc.lon).toFixed(4)}°${loc.lon < 0 ? "W" : "E"}`;
-    MapView.set(loc.lat, loc.lon, loc.label);
+    // The results' heading takes the focus: the button pressed is gone, and
+    // a screen reader now says where the estimate is for.
+    $("location-label").focus({ preventScroll: true });
+    $("coords-label").textContent = coordsText(loc.lat, loc.lon);
+    MapView.cancelDraw();
+    this.setRoofDrawing(false);
     State.roof = null;
-    this.detectRoof(loc);   // runs alongside the PVGIS call; recalcs when it lands
+    if (loc.src === "city") {
+      // A city centre is nobody's roof: no building lookup, the visitor
+      // finds the house and draws it.
+      MapView.set(loc.lat, loc.lon, loc.label, 15);
+      State.roofSearch++;
+      this.setRoofInfo(`Vous avez choisi une ville, pas une adresse&nbsp;: zoomez jusqu'à votre maison, puis « Dessiner mon toit » et cliquez sur ses coins. D'ici là, les chiffres valent pour le centre de ${escapeHtml(loc.label)}.`);
+    } else {
+      MapView.set(loc.lat, loc.lon, loc.label);
+      this.detectRoof(loc);   // runs alongside the PVGIS call; recalcs when it lands
+    }
     await this.recalc({ force: true });
   },
 
@@ -942,8 +1045,10 @@ const UI = {
   setRoofDrawing(on) {
     $("roof-draw-btn").hidden = on;
     $("roof-done-btn").hidden = !on;
+    $("roof-undo-btn").hidden = !on;
     $("roof-cancel-btn").hidden = !on;
     $("roof-done-btn").disabled = true;
+    $("roof-undo-btn").disabled = true;
     if (on) this.setRoofInfo("Cliquez sur chaque coin de votre toit, puis « Terminer ».");
   },
 
@@ -1032,6 +1137,13 @@ const UI = {
     }
   },
 
+  // Back to the address: a roof being drawn is dropped with the results.
+  leaveResults() {
+    MapView.cancelDraw();
+    this.setRoofDrawing(false);
+    this.goToStep(1);
+  },
+
   goToStep(n) {
     $("step1").classList.toggle("active", n === 1);
     $("step2").classList.toggle("active", n === 2);
@@ -1039,8 +1151,11 @@ const UI = {
   },
 
   syncBillPresets() {
-    document.querySelectorAll(".bill-chip").forEach(c =>
-      c.classList.toggle("active", parseFloat(c.dataset.bill) === State.params.bill));
+    document.querySelectorAll(".bill-chip").forEach(c => {
+      const on = parseFloat(c.dataset.bill) === State.params.bill;
+      c.classList.toggle("active", on);
+      c.setAttribute("aria-pressed", String(on));
+    });
   },
 
   renderParamLabels() {
@@ -1057,8 +1172,20 @@ const UI = {
     $("aspect-val").textContent = aspectLabel(p.aspect);
     $("cost-val").textContent = fmtDec(p.cost) + " MAD/Wc";
     $("next-cost").textContent = fmtDec(p.cost, { trim: true }) + " MAD/Wc";
+    $("capex-tip-cost").textContent = fmtDec(p.cost, { trim: true }) + " MAD/Wc";
     const capex = p.peakpower * 1000 * p.cost;
     $("capex-hint").textContent = `Investissement total : ${fmtMAD(capex)}`;
+    $("hero-bill").textContent = fmtMAD(p.bill);
+    $("hero-bill-ask").hidden = State.billTouched;
+    // What a screen reader says for each slider: the value with its unit.
+    const say = {
+      bill: `${fmtNum(p.bill)} MAD par mois`,
+      peakpower: `${fmtDec(p.peakpower, { trim: true })} kWc`,
+      angle: `${p.angle} degrés`,
+      aspect: aspectLabel(p.aspect),
+      cost: `${fmtDec(p.cost)} MAD par Wc`,
+    };
+    for (const [id, text] of Object.entries(say)) $(id).setAttribute("aria-valuetext", text);
   },
 
   async recalc({ force = false, fitRoof = false } = {}) {
@@ -1099,10 +1226,12 @@ const UI = {
     }
     if (!State.lastPerKw) return;
 
-    // Approximate-mode notice (fallback data in use)
-    const srcEl = document.querySelector(".hero-source");
-    if (State.lastPerKw.approximate && srcEl) {
-      srcEl.innerHTML = `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${escapeHtml(State.lastPerKw.referenceCity)}.`;
+    // Approximate-mode notice (fallback data in use), cleared once PVGIS answers again
+    const approx = !!State.lastPerKw.approximate;
+    $("hero-approx").hidden = !approx;
+    $("hero-source").hidden = approx;
+    if (approx) {
+      $("hero-approx").textContent = `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${State.lastPerKw.referenceCity}.`;
     }
 
     // Derive consumption from the bill; auto-size the system if not overridden
@@ -1136,8 +1265,16 @@ const UI = {
     $("chip-size").textContent = fmtDec(p.peakpower, { trim: true }) + " kWc";
     $("chip-production").textContent = fmtNum(pv.annualKwh) + " kWh";
     $("chip-payback").textContent = isFinite(roi.paybackYr) ? fmtDec(roi.paybackYr) + " ans" : "—";
+    $("chip-capex").textContent = fmtMAD(capexMAD);
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
-    $("chip-co2").textContent = fmtDec(co2Tons) + " t";
+    $("co2-line").textContent = `Soit environ ${fmtDec(co2Tons)} t de CO₂ évitées par an (réseau ONEE : ${CONFIG.CO2_KG_PER_KWH.toLocaleString("fr-FR")} kg par kWh).`;
+
+    // One sentence for screen readers, once the numbers settle.
+    clearTimeout(this._srTimer);
+    this._srTimer = setTimeout(() => {
+      $("sr-summary").textContent = `Économies estimées : ${fmtNum(savings)} dirhams par an pour une facture de ${fmtNum(p.bill)} MAD par mois. ` +
+        `Investissement ${fmtMAD(capexMAD)}, ` + (isFinite(roi.paybackYr) ? `amorti en ${fmtDec(roi.paybackYr)} ans.` : "non amorti sur 25 ans.");
+    }, 1000);
 
     // Financing card
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
@@ -1288,6 +1425,9 @@ function fmtDec(n, { trim = false } = {}) {
 }
 function fmtMAD(n) {
   return fmtNum(n) + " MAD";
+}
+function coordsText(lat, lon) {
+  return `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? "W" : "E"}`;
 }
 function aspectLabel(a) {
   if (a === 0) return "Sud";
