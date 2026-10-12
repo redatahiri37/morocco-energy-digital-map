@@ -185,6 +185,41 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
   }
 
+  // National electricity mix (scripts/build-country-mix.py): the panel's bar
+  // writes every number into the page, so each must be a number.
+  if (c.mix === undefined) { if (ENABLED.includes(key)) warn(at, "no `mix` file: the Electricity mix panel is hidden"); }
+  else if (!str(c.mix) || !existsSync(join(dir, c.mix))) fail(`${at}.mix`, `${c.dataPath}${c.mix} does not exist`);
+  else {
+    const mat = `${c.dataPath}${c.mix}`;
+    let m = null;
+    try { m = JSON.parse(readFileSync(join(dir, c.mix), "utf8")); }
+    catch (e) { fail(mat, `not valid JSON: ${e.message}`); }
+    if (m) {
+      if (!Number.isInteger(m.year)) fail(mat, "year must be an integer");
+      if (!str(m.source) || !/^https:\/\//.test(m.source_url || "")) fail(mat, "needs source and an https source_url");
+      for (const f of ["generation_twh", "capacity_gw", "renewables_pct_generation"])
+        if (!num(m[f])) fail(mat, `${f} must be a number, got ${JSON.stringify(m[f])}`);
+      for (const f of ["demand_twh", "net_imports_twh", "co2_intensity_g_per_kwh", "renewables_pct_capacity"])
+        if (m[f] !== undefined && !numOrNull(m[f])) fail(mat, `${f} must be a number or null, got ${JSON.stringify(m[f])}`);
+      if (!Array.isArray(m.capacity_gaps) || !m.capacity_gaps.every((g) => FUELS.includes(g)))
+        fail(mat, "capacity_gaps must list fuels from the schema");
+      if (!Array.isArray(m.fuels) || m.fuels.length === 0) fail(mat, "fuels must be a non-empty list");
+      else {
+        const seen = new Set();
+        for (const f of m.fuels) {
+          const fat = `${mat} fuel ${JSON.stringify(f.fuel)}`;
+          if (!FUELS.includes(f.fuel)) fail(fat, "fuel must be one of the schema's fuel types");
+          if (seen.has(f.fuel)) fail(fat, "listed twice"); seen.add(f.fuel);
+          if (!str(f.label)) fail(fat, "label missing");
+          for (const k of ["generation_twh", "generation_pct", "capacity_gw"])
+            if (!num(f[k]) || f[k] < 0) fail(fat, `${k} must be a number ≥ 0, got ${JSON.stringify(f[k])}`);
+        }
+        const total = m.fuels.reduce((s, f) => s + (num(f.generation_pct) ? f.generation_pct : 0), 0);
+        if (Math.abs(total - 100) > 1) fail(mat, `generation shares add up to ${total.toFixed(1)}%, not 100%`);
+      }
+    }
+  }
+
   const bpath = join(dir, "boundary.geojson");
   if (existsSync(bpath)) {
     try {

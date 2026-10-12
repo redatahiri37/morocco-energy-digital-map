@@ -44,6 +44,25 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-12 (map: electricity mix per country)
+- New "Electricity mix" block at the top of the map panel, for all 12
+  countries: national generation / capacity by fuel (toggle), renewables
+  share of each, net imports or exports, CO₂ intensity, from Ember's yearly
+  data (CC BY 4.0). Built by scripts/build-country-mix.py into
+  docs/data/<key>/mix.json (Ember release 2026-06-23, sha256 pinned);
+  validated by validate-countries.mjs (4 new self-test cases).
+- The legend is the fuel colour key for the plant dots and filters the
+  plant layers (and OSM plants) to one fuel; KPI tiles and layer counts
+  follow the filter. A coverage line compares the mapped plants with
+  Ember's national capacity (Morocco 71 %, Ethiopia 40 %, Egypt 54 %).
+- KPI tiles: "Tracked capacity" + "Renewables share*" (capacity of mapped
+  plants incl. announced ones, footnote missing) replaced by "In service"
+  and "Pipeline". Morocco's snapshot credit no longer says "ONEE 2025".
+- Next UX steps, in order: bubble size ∝ MW and clusters in GW; status
+  filter; shareable URL (country, plant); plant search; FR/EN; Africa/Europe
+  overview coloured by mix; mobile mix sheet. The fuel palette fails the
+  dataviz validator (gas/oil too close); changing it changes the map dots.
+
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers
   (Econosol, Shamsiyah — owner's pick), shuffled per visit, no commission,

@@ -214,6 +214,57 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .kpi .v{font-family:var(--font-display);font-size:22px;font-weight:400;line-height:1.1;margin-top:4px;letter-spacing:-0.02em;font-variant-numeric:lining-nums tabular-nums}
 .kpi .v small{font-family:var(--font-ui);font-size:11px;color:var(--text-2);font-weight:500;margin-left:2px}
 
+/* Electricity mix — fuel colours come from the plant layer (FUEL_COLOR in
+   app.js) and are set through the DOM; text keeps the text tokens. */
+.mix-section[hidden],.mix-section [hidden]{display:none}
+.mix-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.seg{display:inline-flex;border:1px solid var(--border-hi);border-radius:5px;overflow:hidden;flex-shrink:0}
+.seg-btn{
+  font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;
+  padding:4px 8px;color:var(--text-1);
+}
+.seg-btn:hover{color:var(--text-0);background:var(--bg-2)}
+.seg-btn[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.seg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.mix-total{font-family:var(--font-mono);font-size:10.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 2px gaps show the panel between segments; rounded data ends. */
+.mix-bar{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;margin-bottom:10px}
+.mix-seg{min-width:1px;cursor:pointer;transition:opacity .12s}
+.mix-section.has-filter .mix-seg:not(.picked),
+.mix-section.has-hot .mix-seg:not(.hot){opacity:.35}
+.mix-section.has-hot .mix-seg.hot{opacity:1}
+
+.mix-legend{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-bottom:8px}
+.mix-key{
+  display:flex;align-items:center;gap:6px;width:100%;min-height:24px;
+  padding:4px 5px;border-radius:4px;
+  font-size:11.5px;color:var(--text-0);text-align:left;
+  transition:background .1s,opacity .1s;
+}
+.mix-key:hover,.mix-key.hot{background:var(--bg-2)}
+.mix-key.picked{background:var(--bg-3);box-shadow:inset 0 0 0 1px var(--accent)}
+.mix-section.has-filter .mix-key:not(.picked):not(.hot){opacity:.55}
+.mix-key:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mix-swatch{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.mix-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mix-val{font-family:var(--font-mono);font-size:10.5px;color:var(--text-1);font-variant-numeric:tabular-nums}
+
+.mix-filter{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:11px;color:var(--text-1);
+  background:var(--bg-2);border:1px solid var(--border);border-radius:5px;
+  padding:5px 8px;margin-bottom:8px;
+}
+.link-btn{color:var(--accent);font-size:11px;text-decoration:underline;flex-shrink:0}
+
+.mix-facts{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:11.5px;margin-bottom:8px}
+.mix-facts dt{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);padding-top:2px;white-space:nowrap}
+.mix-facts dd{color:var(--text-0);font-variant-numeric:tabular-nums}
+.mix-note{font-size:10.5px;line-height:1.45;color:var(--text-2)}
+.mix-note a{color:var(--text-1);text-decoration:underline}
+.mix-gap{color:var(--text-1)}
+
 .bullets{padding-left:14px}
 .bullets li{margin-top:4px}
 

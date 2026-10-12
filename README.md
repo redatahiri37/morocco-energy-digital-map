@@ -51,6 +51,12 @@ config entry per country.
 | 4 | Digital infrastructure | points | Datacentermap.com · OSM · DCD · press |
 | 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas  EU Commission PHOTOVOLTAIC GEOGRAPHICAL INFORMATION SYSTEM | 
 
+Above the layers, each country shows its **national electricity mix**:
+generation and capacity by fuel, imports and CO₂ intensity, from Ember's
+yearly data (CC BY 4.0, `docs/data/<country>/mix.json`, built by
+`scripts/build-country-mix.py`). Its legend is the fuel colour key and
+filters the plant layers to one fuel.
+
 All source URLs are in [DATA_SOURCES.md](./DATA_SOURCES.md). Every
 feature carries a `source` and `source_url` property so provenance is
 inspectable from the map tooltip.

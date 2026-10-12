@@ -62,8 +62,6 @@
     coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A",
     nuclear:"#DB2777", geothermal:"#DC2626", biomass:"#65A30D", waste:"#78716C"
   };
-  // Counted in the "Renewables share" KPI.
-  const RENEWABLE_FUELS = ["solar", "wind", "hydro", "geothermal", "biomass"];
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
   const CABLE_COLOR      = "#2DD4BF";  // teal — was orange, collided with industrial
@@ -120,6 +118,8 @@
   let visibility     = {};   // id -> bool
   let hoveredLayer   = null; // { sourceId, dataLayerId, keepId } while a point is hovered
   let boundaryData   = null;
+  let mixData        = null;   // national mix (mix.json) of the current country
+  let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -296,6 +296,7 @@
 
   // Panel, KPIs and methodology for a country whose data is loaded.
   function renderPanel(countryKey){
+    renderMix();
     renderLayerList(countryKey);
     renderKPIs(countryKey);
     renderMethodologySources(countryKey);
@@ -311,11 +312,17 @@
     // locals and committed at the end, so a slower load for a country the
     // user has already switched away from can't overwrite the newer one.
     const data = {}, vis = {};
-    let boundary = null;
+    let boundary = null, mix = null;
     try{
       const r = await fetch(c.dataPath + "boundary.geojson" + ASSET_V);
       if(r.ok) boundary = await r.json();
     } catch(e){ /* no boundary for this country */ }
+    if(c.mix){
+      try{
+        const r = await fetch(c.dataPath + c.mix + ASSET_V);
+        if(r.ok) mix = await r.json();
+      } catch(e){ console.warn("[MoroccoMap] failed to load", c.mix, e); }
+    }
 
     const promises = c.layers.map(async (L, idx)=>{
       vis[L.id] = L.visible !== false;
@@ -337,6 +344,7 @@
     layerData = data;
     visibility = vis;
     boundaryData = boundary;
+    mixData = mix;
     return true;
   }
 
@@ -348,6 +356,7 @@
     c.layers.forEach(L=>{
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
+      const shown = plantData(L).features.length;
       const planned = kind==="grid" && isPlannedGrid(L.id);
       const dotColor = (
         planned             ? PLANNED_COLOR :
@@ -370,7 +379,7 @@
         <span class="check"></span>
         ${swatch}
         <span class="layer-name">${escapeHtml(L.title)}</span>
-        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : fc.features.length}</span>
+        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : shown === fc.features.length ? shown : `${shown} / ${fc.features.length}`}</span>
       `;
       paint(row);
       row.querySelector("input").addEventListener("change", (e)=>{
@@ -390,31 +399,43 @@
       .flatMap(L=>(layerData[L.id] || { features:[] }).features);
   }
 
+  // Statuses counted as not yet built in the "Pipeline" tile.
+  const PIPELINE_STATUS = ["construction", "announced", "planned"];
+  function fmtPower(mw){
+    return mw >= 1000 ? `${(mw/1000).toFixed(1)}<small> GW</small>` : `${Math.round(mw)}<small> MW</small>`;
+  }
+
+  // Figures summed from the layers on the map, so they follow the fuel picked
+  // in the mix legend. National totals are in the Electricity mix above.
   function renderKPIs(countryKey){
     const host = $("#kpiGrid");
     const c = COUNTRIES[countryKey];
     const snap = $("#snapshotSource");
-    if(snap) snap.textContent = c.snapshotSource ? "source: " + c.snapshotSource : "";
-    const fcPower = { features: featuresOfKind(countryKey, "power") };
+    if(snap) snap.textContent = c.snapshotSource ? "plants: " + c.snapshotSource : "";
+    const allPlants = featuresOfKind(countryKey, "power");
+    const plants = fuelFilter ? allPlants.filter(f=>plantFuels(fuelFilter).includes(f.properties.fuel_type)) : allPlants;
     const fcDC    = { features: featuresOfKind(countryKey, "digital") };
-    const totalMW = fcPower.features.reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
-    const renewMW = fcPower.features.filter(f=>RENEWABLE_FUELS.includes(f.properties.fuel_type))
-                    .reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
-    const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
+    const mw = (fs)=>fs.reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
+    const inService = mw(plants.filter(f=>f.properties.status === "operational"));
+    const pipeline  = mw(plants.filter(f=>PIPELINE_STATUS.includes(f.properties.status)));
     const dcMW = fcDC.features.reduce((s,f)=>s + (num(f.properties.capacity_estimate_mw) || 0), 0);
     const dcInvest = fcDC.features.reduce((s,f)=>s + (num(f.properties.investment_usd) || 0), 0);
     // A country with no layer of a kind shows "—", not a zero that reads as a finding.
-    const hasPower = fcPower.features.length > 0, hasDC = fcDC.features.length > 0;
+    const hasPower = allPlants.length > 0, hasDC = fcDC.features.length > 0;
+    // Sources such as WRI's database list built plants only: no pipeline to show.
+    const tracksPipeline = allPlants.some(f=>PIPELINE_STATUS.includes(f.properties.status));
     // Registries such as PeeringDB list sites without MW or investment
     // figures: show the site count and "—" rather than 0.0 GW / $0.
     const hasDCmw = fcDC.features.some(f=>f.properties.capacity_estimate_mw != null);
     const hasDCinv = fcDC.features.some(f=>f.properties.investment_usd != null);
     const NA = "—";
+    const fuel = fuelFilter && mixFuel(fuelFilter);
+    const prefix = fuel ? escapeHtml(fuel.label) + " · " : "";
     host.innerHTML = `
-      <div class="kpi"><div class="k">Tracked capacity</div>
-        <div class="v">${hasPower ? `${(totalMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
-      <div class="kpi"><div class="k">Renewables share*</div>
-        <div class="v">${hasPower ? `${renewShare}<small>%</small>` : NA}</div></div>
+      <div class="kpi" title="Plants on the map that are operating"><div class="k">${prefix}In service</div>
+        <div class="v">${hasPower ? fmtPower(inService) : NA}</div></div>
+      <div class="kpi" title="Plants on the map under construction or announced. — means the plant source lists built plants only."><div class="k">${prefix}Pipeline</div>
+        <div class="v">${hasPower && tracksPipeline ? fmtPower(pipeline) : NA}</div></div>
       <div class="kpi"><div class="k">${hasDC && !hasDCmw ? "Data centres" : "DC pipeline"}</div>
         <div class="v">${!hasDC ? NA : hasDCmw ? `${(dcMW/1000).toFixed(1)}<small> GW</small>`
                                                : `${fcDC.features.length}<small> sites</small>`}</div></div>
@@ -441,9 +462,193 @@
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
-    ).join("") + (c.boundary ? `<li><strong>Boundary:</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
+    ).join("") + (mixData ? `<li><strong>Electricity mix:</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(mixData.year)} figures; national, not summed from the map)</span></li>` : "") +
+    (c.boundary ? `<li><strong>Boundary:</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
     `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.</li>`;
   }
+
+  // ---------- Electricity mix ----------
+  // The plant layers are nameplate capacity, and only the plants we map. The
+  // mix is the country's own generation and capacity by fuel, from Ember's
+  // yearly data (scripts/build-country-mix.py). Its legend is also the colour
+  // key for the plant dots: picking a fuel narrows the plant layers to it.
+  let mixMeasure = "generation";   // or "capacity"
+  // A mix fuel → the plant fuel_type values it covers on the map.
+  const MIX_PLANT_FUELS = { biomass: ["biomass", "waste"] };
+  const plantFuels = (fuel)=>MIX_PLANT_FUELS[fuel] || [fuel];
+  const mixFuel = (fuel)=>mixData && mixData.fuels.find(f=>f.fuel === fuel);
+
+  // A plant layer's data as drawn: every feature, or the picked fuel's only.
+  function plantData(L){
+    const fc = layerData[L.id] || { type:"FeatureCollection", features:[] };
+    if(!fuelFilter || L.kind !== "power") return fc;
+    const keep = plantFuels(fuelFilter);
+    return { type:"FeatureCollection", features: fc.features.filter(f=>keep.includes(f.properties.fuel_type)) };
+  }
+
+  // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
+  const fmtShare = (v)=>v >= 0.95 ? Math.round(v) + "%" : v >= 0.1 ? v.toFixed(1) + "%" : v > 0 ? "<0.1%" : "—";
+  const fmtAmount = (v, unit)=>(v >= 100 ? Math.round(v).toLocaleString("en") : v >= 0.1 ? v.toFixed(1) : "<0.1") + " " + unit;
+  // Plant capacity in text: MW under 1 GW, as the tiles show it.
+  const fmtGW = (gw)=>gw >= 1 ? fmtAmount(gw, "GW") : Math.round(gw * 1000) + " MW";
+  function el(tag, cls, text){
+    const e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(text != null) e.textContent = text;
+    return e;
+  }
+
+  // Built with DOM nodes, not HTML strings: every value is data.
+  function renderMix(){
+    const section = $("#mixSection");
+    const m = mixData;
+    section.hidden = !m;
+    if(!m) return;
+    const cap = mixMeasure === "capacity";
+    const total = cap ? m.capacity_gw : m.generation_twh;
+    const value = (f)=>cap ? f.capacity_gw : f.generation_twh;
+    const share = (f)=>cap ? (total ? 100 * f.capacity_gw / total : 0) : f.generation_pct;
+    const amount = (f)=>fmtAmount(value(f), cap ? "GW" : "TWh");
+
+    $("#mixYear").textContent = "· " + m.year;
+    $("#mixTotal").textContent = fmtAmount(total, cap ? "GW installed" : "TWh generated");
+    section.querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.measure === mixMeasure)));
+    section.classList.toggle("has-filter", !!fuelFilter);
+    section.classList.remove("has-hot");   // a tap's hover must not outlive the rebuild
+
+    const bar = $("#mixBar"), legend = $("#mixLegend");
+    bar.replaceChildren(); legend.replaceChildren();
+    m.fuels.forEach(f=>{
+      const color = FUEL_COLOR[f.fuel] || "#888";
+      const picked = fuelFilter === f.fuel;
+      const tip = `${f.label}: ${amount(f)}, ${fmtShare(share(f))}`;
+      if(value(f) > 0){
+        const seg = el("span", "mix-seg" + (picked ? " picked" : ""));
+        seg.dataset.fuel = f.fuel;
+        seg.title = tip;
+        seg.style.flexGrow = String(value(f));
+        seg.style.background = color;
+        seg.addEventListener("click", ()=>setFuelFilter(f.fuel));
+        bar.appendChild(seg);
+      }
+      const li = el("li");
+      const btn = el("button", "mix-key" + (picked ? " picked" : ""));
+      btn.type = "button";
+      btn.dataset.fuel = f.fuel;
+      btn.title = tip + (picked ? ". Pick again to show every plant." : ". Show only these plants on the map.");
+      btn.setAttribute("aria-pressed", String(picked));
+      const sw = el("span", "mix-swatch"); sw.style.background = color;
+      btn.append(sw, el("span", "mix-label", f.label), el("span", "mix-val", fmtShare(share(f))));
+      btn.addEventListener("click", ()=>setFuelFilter(f.fuel));
+      li.appendChild(btn);
+      legend.appendChild(li);
+    });
+
+    renderMixFilter();
+    renderMixFacts(m);
+    renderMixNote(m, cap);
+  }
+
+  // "Showing wind plants only · 12 on the map · Show all"
+  function renderMixFilter(){
+    const host = $("#mixFilter");
+    const f = fuelFilter && mixFuel(fuelFilter);
+    host.hidden = !f;
+    host.replaceChildren();
+    if(!f) return;
+    const n = COUNTRIES[currentCountry].layers.filter(L=>L.kind === "power")
+      .reduce((s, L)=>s + plantData(L).features.length, 0);
+    host.append(el("span", null, `Map: ${f.label.toLowerCase()} plants only · ${n} mapped`));
+    const all = el("button", "link-btn", "Show all");
+    all.type = "button";
+    all.addEventListener("click", ()=>setFuelFilter(null));
+    host.appendChild(all);
+  }
+
+  function renderMixFacts(m){
+    const dl = $("#mixFacts");
+    dl.replaceChildren();
+    const row = (k, v)=>{ dl.append(el("dt", null, k), el("dd", null, v)); };
+    row("Renewables", `${fmtShare(m.renewables_pct_generation)} of generation` +
+      (m.renewables_pct_capacity != null ? ` · ${fmtShare(m.renewables_pct_capacity)} of capacity` : ""));
+    const imp = m.net_imports_twh;
+    if(imp != null){
+      if(Math.abs(imp) < 0.05) row("Trade", "Imports and exports balance");
+      else if(imp > 0) row("Net imports", `${fmtAmount(imp, "TWh")}` +
+        (m.demand_twh ? ` · ${fmtShare(100 * imp / m.demand_twh)} of demand` : ""));
+      else row("Net exports", `${fmtAmount(-imp, "TWh")} · ${fmtShare(100 * -imp / m.generation_twh)} of generation`);
+    }
+    if(m.co2_intensity_g_per_kwh != null) row("CO₂ intensity", `${Math.round(m.co2_intensity_g_per_kwh)} g/kWh`);
+  }
+
+  // How much of the national fleet the plant layer holds, a capacity gap in
+  // the source if any, and the citation.
+  function renderMixNote(m, cap){
+    const host = $("#mixNote");
+    host.replaceChildren();
+    const f = fuelFilter && mixFuel(fuelFilter);
+    const keep = f ? plantFuels(f.fuel) : null;
+    const mappedMW = featuresOfKind(currentCountry, "power")
+      .filter(p=>p.properties.status === "operational" && (!keep || keep.includes(p.properties.fuel_type)))
+      .reduce((s, p)=>s + (num(p.properties.capacity_mw) || 0), 0);
+    const nationalGW = f ? f.capacity_gw : m.capacity_gw;
+    const plantLayer = COUNTRIES[currentCountry].layers.find(L=>L.kind === "power");
+    // A national total missing a fuel (capacity_gaps) would overstate coverage.
+    const comparable = f ? !m.capacity_gaps.includes(f.fuel) : !m.capacity_gaps.length;
+    if(plantLayer && nationalGW > 0 && comparable){
+      const pct = 100 * mappedMW / 1000 / nationalGW;
+      host.append(el("span", null, `${plantLayer.title} layer${f ? ", " + f.label.toLowerCase() : ""}: ` +
+        `${fmtGW(mappedMW / 1000)} in service, ` +
+        (pct <= 100 ? `${Math.round(pct)}% of the ${fmtGW(nationalGW)} installed. `
+                    : `against ${fmtGW(nationalGW)} installed per Ember. `)));
+    }
+    if(cap && m.capacity_gaps.length){
+      const names = m.capacity_gaps.map(g=>(mixFuel(g) || { label:g }).label).join(", ");
+      host.append(el("span", "mix-gap", `The source lists no ${names} capacity though it generates power: this view undercounts it. `));
+    }
+    host.append(el("span", null, "Source: "));
+    const a = el("a", null, `Ember ${m.year}`);
+    a.href = safeUrl(m.source_url); a.target = "_blank"; a.rel = "noopener";
+    host.append(a, el("span", null, " (CC BY 4.0)."));
+  }
+
+  // Narrows the plant layers to one fuel (null: all). Picking the shown fuel
+  // again clears it. Turns the plant layers on, so the pick is visible.
+  function setFuelFilter(fuel){
+    // The legend is rebuilt: keep keyboard focus on the fuel just used.
+    const a = document.activeElement;
+    const refocus = a && a.closest && a.closest("#mixSection") ? (fuel || fuelFilter) : null;
+    fuelFilter = fuel && fuel !== fuelFilter ? fuel : null;
+    const c = COUNTRIES[currentCountry];
+    if(fuelFilter) c.layers.filter(L=>L.kind === "power").forEach(L=>{ visibility[L.id] = true; });
+    renderMix();
+    if(refocus){
+      const key = [...document.querySelectorAll("#mixLegend .mix-key")].find(k=>k.dataset.fuel === refocus);
+      if(key) key.focus();
+    }
+    renderLayerList(currentCountry);
+    renderKPIs(currentCountry);
+    if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+  }
+
+  $("#mixSection").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>{
+    if(mixMeasure === b.dataset.measure) return;
+    mixMeasure = b.dataset.measure;
+    renderMix();
+  }));
+  // Hovering a fuel lights it in both the bar and the legend. Pointer only:
+  // focus moves back to the legend after a pick, and lighting the focused
+  // key would read as a pick that "Show all" just cleared.
+  function hotFuel(fuel){
+    const section = $("#mixSection");
+    section.classList.toggle("has-hot", !!fuel);
+    section.querySelectorAll("[data-fuel]").forEach(e=>e.classList.toggle("hot", e.dataset.fuel === fuel));
+  }
+  $("#mixSection").addEventListener("mouseover", (e)=>{
+    const t = e.target.closest && e.target.closest("[data-fuel]");
+    hotFuel(t ? t.dataset.fuel : null);
+  });
+  $("#mixSection").addEventListener("mouseleave", ()=>hotFuel(null));
 
   // ---------- Layer ID bookkeeping ----------
   // Each data layer produces a set of MapLibre layers, registered in
@@ -495,7 +700,7 @@
       oim:        (L)=>buildOimLayer(L),
       "oim-plants": (L)=>buildOimPlantsLayer(L),
       grid:       (L)=>buildLineLayer(L, layerData[L.id] || { features:[] }),
-      power:      (L)=>buildPowerLayer(L, layerData[L.id] || { features:[] }),
+      power:      (L)=>buildPowerLayer(L, plantData(L)),
       industrial: (L)=>buildIndustrialLayer(L, layerData[L.id] || { features:[] }),
       digital:    (L)=>buildDigitalLayer(L, layerData[L.id] || { features:[] })
     };
@@ -591,7 +796,7 @@
     const fuelExpr = ["match", ["get","source"]];
     Object.entries(OSM_FUEL).forEach(([osm, fuel])=>fuelExpr.push(osm, FUEL_COLOR[fuel]));
     fuelExpr.push(OSM_PLANT_SWATCH);
-    addLayer(L, {
+    const spec = {
       id: "lyr-" + L.id + "-points", type:"circle", source: OIM_SRC, "source-layer":"power_plant_point",
       paint:{
         "circle-color": fuelExpr,
@@ -600,7 +805,12 @@
         "circle-stroke-color": isDark() ? "rgba(241,239,233,0.8)" : "rgba(24,24,26,0.7)",
         "circle-stroke-width":1
       }
-    }, "point");
+    };
+    if(fuelFilter){
+      const keep = plantFuels(fuelFilter);
+      spec.filter = ["in", ["get","source"], ["literal", Object.keys(OSM_FUEL).filter(k=>keep.includes(OSM_FUEL[k]))]];
+    }
+    addLayer(L, spec, "point");
   }
 
   // Maps an OpenInfraMap plant's tile fields onto the curated power schema,
@@ -687,12 +897,15 @@
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
-    // Cluster bubbles
+    // Cluster bubbles: amber, or the picked fuel's colour when the mix
+    // legend narrows the layer to one fuel.
+    const pickedColor = fuelFilter && FUEL_COLOR[fuelFilter];
     addLayer(L, {
       id: p+"-clusters", type:"circle", source:srcId,
       filter:["has","point_count"],
       paint:{
-        "circle-color":"rgba(245,158,11,0.85)",
+        "circle-color": pickedColor || "rgba(245,158,11,0.85)",
+        "circle-opacity": pickedColor ? 0.85 : 1,
         "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22, 50, 26, 200, 31],
         "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":1.5
@@ -707,7 +920,7 @@
         "text-size":11,
         "text-allow-overlap":true
       },
-      paint:{ "text-color":"#070D1A" }
+      paint:{ "text-color": pickedColor && !isLight(pickedColor) ? "#FFFFFF" : "#070D1A" }
     });
 
     // Halo for announced/construction status
@@ -769,6 +982,12 @@
     addLabelLayer(L, p + "-labels", sourceId + "-text", "name", 7, 1.1);
   }
 
+  // Relative luminance above ~0.18, where dark text out-contrasts white.
+  function isLight(hex){
+    const [r, g, b] = [1, 3, 5].map(i=>parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map(c=>c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.18;
+  }
   const POINT_STROKE = () => isDark() ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.9)";
 
   // Name labels live on a separate text-only source: MapLibre drops every
@@ -1102,6 +1321,7 @@
     closePopup();
     hideTooltip();
     hoveredLayer = null;
+    fuelFilter = null;
     if(!(await loadAllData(key))) return; // superseded by a later switch
     renderPanel(key);
     if(map && mapReady){

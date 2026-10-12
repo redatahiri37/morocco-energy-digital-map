@@ -1,0 +1,61 @@
+{
+  "country": "kenya",
+  "iso3": "KEN",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 14.04,
+  "demand_twh": 15.58,
+  "net_imports_twh": 1.54,
+  "co2_intensity_g_per_kwh": 95.44,
+  "renewables_pct_generation": 90.0,
+  "capacity_gw": 2.62,
+  "renewables_pct_capacity": null,
+  "capacity_gaps": [
+    "geothermal"
+  ],
+  "fuels": [
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 1.4,
+      "generation_pct": 10.0,
+      "capacity_gw": 0.57
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 2.94,
+      "generation_pct": 20.9,
+      "capacity_gw": 0.89
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 2.3,
+      "generation_pct": 16.4,
+      "capacity_gw": 0.44
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.65,
+      "generation_pct": 4.6,
+      "capacity_gw": 0.55
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.3,
+      "generation_pct": 2.1,
+      "capacity_gw": 0.17
+    },
+    {
+      "fuel": "geothermal",
+      "label": "Geothermal & other",
+      "generation_twh": 6.45,
+      "generation_pct": 45.9,
+      "capacity_gw": 0.0
+    }
+  ]
+}

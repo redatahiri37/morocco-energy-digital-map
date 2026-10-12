@@ -75,6 +75,24 @@
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
 
+    <!-- National mix from Ember (data/<country>/mix.json). The legend is
+         also the fuel colour key for the plant dots, and filters them. -->
+    <section class="panel-section mix-section" id="mixSection" aria-labelledby="mixTitle" hidden>
+      <h2 class="panel-title" id="mixTitle">Electricity mix <span id="mixYear"></span></h2>
+      <div class="mix-head">
+        <div class="seg" role="group" aria-label="Measure">
+          <button type="button" class="seg-btn" data-measure="generation" aria-pressed="true">Generation</button>
+          <button type="button" class="seg-btn" data-measure="capacity" aria-pressed="false">Capacity</button>
+        </div>
+        <span class="mix-total" id="mixTotal"></span>
+      </div>
+      <div class="mix-bar" id="mixBar" aria-hidden="true"></div>
+      <ul class="mix-legend" id="mixLegend" aria-label="Share by fuel. Pick one to show only those plants on the map."></ul>
+      <p class="mix-filter" id="mixFilter" hidden></p>
+      <dl class="mix-facts" id="mixFacts"></dl>
+      <p class="mix-note" id="mixNote"></p>
+    </section>
+
     <section class="panel-section">
       <h2 class="panel-title">Layers</h2>
       <div id="layerList" class="layer-list"></div>
@@ -82,8 +100,8 @@
 
     <section class="panel-section">
       <div class="panel-subhead">
-        <h3>Snapshot</h3>
-        <span class="micro" id="snapshotSource">source: ONEE 2025</span>
+        <h3>Mapped assets</h3>
+        <span class="micro" id="snapshotSource"></span>
       </div>
       <div class="kpi-grid" id="kpiGrid"></div>
     </section>
@@ -169,7 +187,7 @@
       <h3>Limits</h3>
       <ul class="bullets">
         <li>Transmission-line routing is indicative, not survey-grade. No sub-60 kV distribution network.</li>
-        <li>Capacity factors are not applied — figures are nameplate.</li>
+        <li>Plant figures are nameplate capacity. The electricity mix is national (Ember's yearly generation and capacity), not a sum of the plants on the map, which miss some.</li>
         <li>Industrial demand is estimated from public disclosures, not audited.</li>
         <li>Announced DC capacity is the headline, not energised capacity.</li>
         <li>No live data feeds — everything except the OpenInfraMap grid is static GeoJSON.</li>
