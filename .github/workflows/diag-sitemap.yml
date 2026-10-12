@@ -1,0 +1,21 @@
+name: diag-sitemap
+# Temporary: shows what Googlebot gets for the two sitemaps. Delete after use.
+on:
+  pull_request:
+    paths: ['.github/workflows/diag-sitemap.yml']
+permissions:
+  contents: read
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch as Googlebot
+        run: |
+          UA="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+          for u in https://energy.wattu.org/sitemap.xml https://energy.wattu.org/robots.txt https://energy.wattu.org/ http://energy.wattu.org/sitemap.xml https://solar.wattu.org/sitemap.xml; do
+            echo "================ $u"
+            curl -sS -o body.txt -D - -A "$UA" --max-time 20 "$u" || echo "curl failed: $?"
+            echo "--- first 300 bytes:"; head -c 300 body.txt; echo
+          done
+          echo "================ DNS"
+          getent hosts energy.wattu.org solar.wattu.org || true
