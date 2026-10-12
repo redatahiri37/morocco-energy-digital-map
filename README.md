@@ -57,6 +57,10 @@ yearly data (CC BY 4.0, `docs/data/<country>/mix.json`, built by
 `scripts/build-country-mix.py`). Its legend is the fuel colour key and
 filters the plant layers to one fuel.
 
+The URL keeps the view: country, map position, filters, layers and the open
+feature, so a link (top-bar **Share**, or **Copy link** in a popup) reopens
+the same map.
+
 All source URLs are in [DATA_SOURCES.md](./DATA_SOURCES.md). Every
 feature carries a `source` and `source_url` property so provenance is
 inspectable from the map tooltip.

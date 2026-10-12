@@ -148,6 +148,7 @@
   let mixData        = null;   // national mix (mix.json) of the current country
   let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
   let statusView     = "all";  // key of STATUS_VIEWS; kept across country switches
+  let selected       = null;   // { layer, id } of the feature whose popup is open, if linkable
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -272,16 +273,28 @@
   // against empty layerData, so nothing rendered. Track both readiness
   // signals explicitly and only build when both are true.
   let dataReady = false, mapReady = false;
+  // A shared link's view and feature wait for the map and the data.
+  let initialView = null, pendingFeature = null;
   function tryBuild(){
-    if(dataReady && mapReady) buildMapLayers(currentCountry);
+    if(!(dataReady && mapReady)) return;
+    buildMapLayers(currentCountry);
+    if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
+    urlReady = true;
   }
 
   function boot(){
-    const initialCountry = ENABLED.includes(DEFAULT_COUNTRY) ? DEFAULT_COUNTRY : ENABLED[0];
+    const link = readLink();
+    const initialCountry = ENABLED.includes(link.country) ? link.country
+      : ENABLED.includes(DEFAULT_COUNTRY) ? DEFAULT_COUNTRY : ENABLED[0];
     countrySelect.value = initialCountry;
     currentCountry = initialCountry;
+    initialView = link.country === initialCountry ? link.view : null;
     loadAllData(initialCountry).then(committed=>{
-      if(committed) renderPanel(initialCountry);
+      if(committed){
+        applyLinkState(link);
+        renderPanel(initialCountry);
+        pendingFeature = link.feature;
+      }
       dataReady = true;
       tryBuild();
     });
@@ -295,13 +308,15 @@
       map = new maplibregl.Map({
         container: "map",
         style: basemapStyle(document.body.dataset.theme),
-        center: c.center, zoom: c.zoom,
+        center: initialView ? initialView.center : c.center,
+        zoom: initialView ? initialView.zoom : c.zoom,
         attributionControl: false
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass:false }), "bottom-right");
       map.addControl(staticAttribution(), "bottom-left");
 
       map.on("load", ()=>{ mapReady = true; tryBuild(); });
+      map.on("moveend", ()=>syncUrl());
       let sizeKeyFrame = 0;
       map.on("zoom", ()=>{
         if(sizeKeyFrame) return;
@@ -422,6 +437,7 @@
         visibility[L.id] = on;
         row.classList.toggle("muted", !on);
         applyLayerVisibility(L.id, on);
+        syncUrl();
       });
       if(visibility[L.id] === false) row.classList.add("muted");
       host.appendChild(row);
@@ -582,6 +598,7 @@
     renderLayerList(currentCountry);
     renderMixFilter();
     if(map && mapReady && dataReady){ hoveredLayer = null; closePopup(); buildMapLayers(currentCountry); }
+    syncUrl();
   }
   $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
 
@@ -728,12 +745,14 @@
     renderLayerList(currentCountry);
     renderKPIs(currentCountry);
     if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    syncUrl();
   }
 
   $("#mixSection").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>{
     if(mixMeasure === b.dataset.measure) return;
     mixMeasure = b.dataset.measure;
     renderMix();
+    syncUrl();
   }));
   // Hovering a fuel lights it in both the bar and the legend. Pointer only:
   // focus moves back to the legend after a pick, and lighting the focused
@@ -1246,7 +1265,7 @@
         openPointPopup(m.dataLayerId, f);
         map.easeTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 7), duration: 600 });
       } else if(m.role === "line"){
-        openLinePopup(f);
+        openLinePopup(m.dataLayerId, f);
       }
     });
   }
@@ -1337,6 +1356,8 @@
   // ---------- Popup ----------
   function openPointPopup(dataLayerId, f){
     let p = f.properties || {};
+    // OSM plants have no stable id of ours: the link keeps the view only.
+    selected = layerKind(dataLayerId) !== "oim-plants" && p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
     let kind = layerKind(dataLayerId);
     if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     const badgeClass = kind === "power" ? "power" : kind === "industrial" ? "industrial" : kind === "digital" ? "digital" : "grid";
@@ -1396,13 +1417,17 @@
              <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
           : `<a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`, `Feature id: ${p.id || p.name}\n\nSuggested correction:\n`))}" target="_blank" rel="noopener">Report an error</a>
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
+        ${selected ? `<button type="button" class="pop-share">Copy link</button>` : ""}
       </div>`;
+    wirePopupShare();
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
+    syncUrl();
   }
 
-  function openLinePopup(f){
+  function openLinePopup(dataLayerId, f){
     const p = f.properties || {};
+    selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
     $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>Transmission line</span>`;
     paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
@@ -1425,15 +1450,136 @@
       </details>
       <div class="pop-actions">
         <a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`))}" target="_blank" rel="noopener">Report an error</a>
+        ${selected ? `<button type="button" class="pop-share">Copy link</button>` : ""}
       </div>`;
+    wirePopupShare();
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
+    syncUrl();
   }
 
   function closePopup(){
+    const wasOpen = popup.classList.contains("open");
     popup.classList.remove("open");
     popup.setAttribute("aria-hidden","true");
+    selected = null;
+    if(wasOpen) syncUrl();
   }
+  function wirePopupShare(){
+    const b = popup.querySelector(".pop-share");
+    if(b) b.addEventListener("click", shareView);
+  }
+
+  // ---------- Shareable link ----------
+  // The view lives in the URL hash, so a link reopens the same map:
+  //   #country=france&map=7.20/45.7600/4.8400&status=pipeline&fuel=wind
+  //    &measure=capacity&layers=power-plants,oim-grid&feature=power-plants:ppm-fr-2265
+  // Defaults are left out. Written with replaceState (no history entry per
+  // pan); a pasted or edited hash is applied on hashchange.
+  let urlReady = false;      // false until a shared link has been applied
+  const LINK_SAFE = (v)=>encodeURIComponent(v).replace(/%2C/g, ",").replace(/%2F/g, "/").replace(/%3A/g, ":");
+
+  function readLink(){
+    const q = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const link = { country: q.get("country"), status: q.get("status"), fuel: q.get("fuel"),
+                   measure: q.get("measure"), layers: null, view: null, feature: null };
+    const v = (q.get("map") || "").split("/").map(Number);
+    if(v.length === 3 && v.every(Number.isFinite) && Math.abs(v[1]) <= 90 && Math.abs(v[2]) <= 180)
+      link.view = { zoom: Math.min(Math.max(v[0], 1), 18), center: [v[2], v[1]] };
+    if(q.has("layers")) link.layers = q.get("layers").split(",").filter(Boolean);
+    const f = q.get("feature");
+    if(f && f.includes(":")){ const i = f.indexOf(":"); link.feature = { layer: f.slice(0, i), id: f.slice(i + 1) }; }
+    return link;
+  }
+
+  // Filters and layer choices from a link, for the country now loaded.
+  // Unknown values fall back to the defaults.
+  function applyLinkState(link){
+    statusView = STATUS_VIEWS[link.status] ? link.status : "all";
+    mixMeasure = link.measure === "capacity" ? "capacity" : "generation";
+    fuelFilter = link.fuel && mixFuel(link.fuel) ? link.fuel : null;
+    if(link.layers) COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = link.layers.includes(L.id); });
+  }
+
+  function writeLink(){
+    const c = COUNTRIES[currentCountry];
+    const parts = [["country", currentCountry]];
+    if(map){
+      const ctr = map.getCenter();
+      parts.push(["map", `${map.getZoom().toFixed(2)}/${ctr.lat.toFixed(4)}/${ctr.lng.toFixed(4)}`]);
+    }
+    if(statusView !== "all") parts.push(["status", statusView]);
+    if(fuelFilter) parts.push(["fuel", fuelFilter]);
+    if(mixMeasure !== "generation") parts.push(["measure", mixMeasure]);
+    if(c.layers.some(L=>(visibility[L.id] !== false) !== (L.visible !== false)))
+      parts.push(["layers", c.layers.filter(L=>visibility[L.id] !== false).map(L=>L.id).join(",")]);
+    if(selected) parts.push(["feature", `${selected.layer}:${selected.id}`]);
+    return "#" + parts.map(([k, v])=>`${k}=${LINK_SAFE(v)}`).join("&");
+  }
+  function syncUrl(force){
+    if(!urlReady && !force) return;
+    const hash = writeLink();
+    if(hash !== location.hash){
+      try{ history.replaceState(null, "", hash); } catch(e){ /* sandboxed frame: the link stays as it was */ }
+    }
+  }
+
+  // Opens the popup of a linked feature; `fly` centres the map on it when the
+  // link carried no view of its own.
+  function openLinkedFeature(ref, fly){
+    const L = layerConfig(ref.layer);
+    const fc = layerData[ref.layer];
+    const f = L && fc && fc.features.find(x=>String(x.properties.id) === ref.id);
+    if(!f) return;
+    if(L.kind === "grid"){
+      openLinePopup(L.id, f);
+      if(fly){
+        const pts = (f.geometry.type === "LineString" ? f.geometry.coordinates : f.geometry.coordinates.flat());
+        const lng = pts.map(p=>p[0]), lat = pts.map(p=>p[1]);
+        map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, duration: 0 });
+      }
+    } else {
+      openPointPopup(L.id, f);
+      if(fly) map.jumpTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 8) });
+    }
+  }
+
+  // Share: the system sheet on phones, the clipboard elsewhere.
+  const toast = $("#toast");
+  let toastTimer = 0;
+  function showToast(text){
+    toast.textContent = text;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toast.hidden = true; }, 2600);
+  }
+  async function shareView(){
+    syncUrl(true);
+    const url = location.href;
+    if(navigator.share && matchMedia("(hover: none)").matches){
+      try{ await navigator.share({ title: document.title, url }); return; }
+      catch(e){ if(e && e.name === "AbortError") return; }
+    }
+    try{ await navigator.clipboard.writeText(url); showToast("Link copied"); }
+    catch(e){ showToast("Copy the link from the address bar"); }
+  }
+  $("#shareBtn").addEventListener("click", shareView);
+
+  // A link pasted into this tab, or an edited hash.
+  window.addEventListener("hashchange", ()=>{
+    if(location.hash === writeLink()) return;
+    const link = readLink();
+    if(ENABLED.includes(link.country) && link.country !== currentCountry){ switchCountry(link.country, link); return; }
+    closePopup();
+    applyLinkState(link);
+    renderPanel(currentCountry);
+    if(map && mapReady && dataReady){
+      hoveredLayer = null;
+      buildMapLayers(currentCountry);
+      if(link.view) map.jumpTo(link.view);
+      if(link.feature) openLinkedFeature(link.feature, !link.view);
+    }
+  });
   $("#popupClose").addEventListener("click", closePopup);
   document.addEventListener("keydown", (e)=>{
     if(e.key !== "Escape") return;
@@ -1442,22 +1588,30 @@
   });
 
   // ---------- Country switch ----------
-  countrySelect.addEventListener("change", async (e)=>{
-    const key = e.target.value;
+  // `link`: the shared link being applied, if the switch comes from one.
+  async function switchCountry(key, link){
     if(!ENABLED.includes(key)) return;
     currentCountry = key;
+    countrySelect.value = key;
     const c = COUNTRIES[key];
     closePopup();
     hideTooltip();
     hoveredLayer = null;
     fuelFilter = null;
     if(!(await loadAllData(key))) return; // superseded by a later switch
+    if(link) applyLinkState(link);
     renderPanel(key);
     if(map && mapReady){
-      map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
+      if(link && link.view) map.jumpTo(link.view);
+      else map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
       buildMapLayers(key);
+      if(link && link.feature) openLinkedFeature(link.feature, !link.view);
+    } else if(link){
+      pendingFeature = link.feature;
     }
-  });
+    syncUrl();
+  }
+  countrySelect.addEventListener("change", (e)=>switchCountry(e.target.value, null));
 
   boot();
 })();

@@ -227,7 +227,7 @@ Interaction & Filtering
   • files: docs/app.js (search component)
   • verify: type "Noor" → autocomplete shows Noor Ouarzazate → click flies to it
 
-- [ ] Implement URL-state sync (#lng/lat/zoom&layers=pg,dc&fuel=solar)
+- [x] Implement URL-state sync (#lng/lat/zoom&layers=pg,dc&fuel=solar) — done 2026-10-12 (PR #95; country, view, filters, layers, open feature)
   • why: map state is ephemeral. Users can't bookmark or share a
     specific filtered view.
   • impact: 3
@@ -235,7 +235,7 @@ Interaction & Filtering
   • files: docs/app.js (URL hash read/write)
   • verify: apply filters → URL updates → paste URL in new tab → same view
 
-- [ ] Add "share this view" button (copy URL to clipboard)
+- [x] Add "share this view" button (copy URL to clipboard) — done 2026-10-12 (PR #95; share sheet on phones)
   • why: completes the URL-state sync story for non-technical users.
   • impact: 2
   • effort: S (depends on URL-state sync)

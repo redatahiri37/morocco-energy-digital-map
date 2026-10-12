@@ -68,8 +68,16 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   OSM plants (construction / disused tags); kept across country switches.
   Only Morocco, France and Spain have a pipeline in their files; elsewhere
   the note says the sources list built assets only.
-- Next UX steps, in order: shareable URL (country, plant); plant search;
-  FR/EN; Africa/Europe overview coloured by mix; mobile mix sheet. The fuel palette fails the
+- Shareable link: the URL hash holds the country, map view, status view,
+  fuel, mix measure, layers (when not the default) and the open feature
+  (#country=france&map=8.00/50.1880/1.0270&status=pipeline&fuel=wind
+  &feature=power-plants:ppm-fr-15839). Written with replaceState once the
+  page has applied any incoming link; a plain visit keeps a clean URL until
+  the first action. "Share" in the top bar (share sheet on phones, else
+  clipboard) and "Copy link" in each popup. On phones the GitHub button
+  makes room for Share (GitHub stays in the panel footer and bottom bar).
+- Next UX steps, in order: plant search; FR/EN; Africa/Europe overview
+  coloured by mix; mobile mix sheet. The fuel palette fails the
   dataviz validator (gas/oil too close); changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
