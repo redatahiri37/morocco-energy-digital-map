@@ -105,8 +105,17 @@ html:lang(ar) .cp-table thead th { font-family: inherit; letter-spacing: 0; text
 html:lang(ar) .cp p, html:lang(ar) .cp li { line-height: 1.8; }
 
 @media (max-width: 620px) {
+  /* Three page links plus two language links do not fit a phone's top
+     bar: the simulator link goes (the logo leads there too) and the
+     links tighten. */
+  .cp .topnav .nav-sim { display: none; }
+  .cp .topnav a { padding: 6px 5px; }
   .cp-main { padding: 20px 16px 0; }
   .cp-figures { grid-template-columns: 1fr 1fr; }
   .cp-fig { font-size: 26px; }
   .cp-answer { font-size: 16px; }
+}
+@media (max-width: 360px) {
+  .cp .topnav a { padding: 6px 3px; font-size: 12px; }
+  .cp .topbar .w-word { font-size: 18px; }
 }

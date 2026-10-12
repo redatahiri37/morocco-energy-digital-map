@@ -56,6 +56,8 @@ writes static HTML with the same figures:
   panels for a bill, installed price, ONEE tariff, law 82-21, Taqa Pro. Figures
   from the same engine and PVGIS runs (median city); facts from "Data sources"
   below and `INSTALLERS.md`. `/guide/` lists them.
+  The same guides in Arabic (`/ar/guide/<slug>/`, Darija headings and
+  questions) and English (`/en/guide/<english-slug>/`), `hreflang`-linked.
 - `/sitemap.xml` and `/llms.txt` — generated with them (no sitemap in the repo).
 - IndexNow: after each deploy, `scripts/indexnow-ping.mjs` submits every
   sitemap URL to Bing and the other IndexNow engines. The key in
