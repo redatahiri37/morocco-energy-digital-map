@@ -35,6 +35,17 @@ jobs:
             exit 1
           fi
 
+      # RFC 9116: a security.txt past its Expires date must be ignored by
+      # whoever reads it. Warns in the last 60 days, fails once past.
+      - name: security.txt has not expired
+        run: |
+          E=$(sed -n 's/^Expires: //p' solar/.well-known/security.txt)
+          node -e '
+            const left = (new Date(process.argv[1]) - Date.now()) / 864e5;
+            if (!(left > 0)) { console.error("solar/.well-known/security.txt: Expires " + process.argv[1] + " has passed, set a date under a year ahead"); process.exit(1); }
+            if (left < 60) console.log("::warning::solar/.well-known/security.txt expires in " + Math.floor(left) + " days");
+          ' "$E"
+
       # Both Pages projects ship their own copy of the shared identity:
       # brand sheet, logo, favicon and fonts.
       - name: Shared identity files are the same in both apps
@@ -104,6 +115,7 @@ jobs:
           cp -r solar/fonts _site/fonts
           cp -r solar/vendor _site/vendor
           cp -r solar/installers _site/installers
+          cp -r solar/.well-known _site/.well-known
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
           V="${GITHUB_SHA::8}"

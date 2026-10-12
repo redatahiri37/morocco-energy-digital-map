@@ -1,0 +1,8 @@
+# Wattu solar estimator (solar.wattu.org). How to report a security
+# problem, and what protects the site: the Policy link below.
+# Renew Expires before it passes: solar-deploy CI fails once it has.
+Contact: https://github.com/redatahiri37/morocco-energy-digital-map/security/advisories/new
+Expires: 2027-09-30T00:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://solar.wattu.org/.well-known/security.txt
+Policy: https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/SECURITY.md
