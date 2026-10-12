@@ -204,6 +204,14 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layer-row.muted{opacity:.45}
 .layer-row.muted .layer-name{color:var(--text-2)}
 
+/* Plant size key — dots drawn at the map's current scale */
+.size-key[hidden]{display:none}
+.size-key{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 8px 0;border-top:1px dashed var(--border)}
+.size-key-title{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);padding-bottom:2px}
+.size-key-items{display:flex;align-items:flex-end;gap:12px}
+.size-key-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--font-mono);font-size:10px;color:var(--text-2)}
+.size-key-dot{display:block;border-radius:50%;background:var(--bg-3);border:1px solid var(--text-3)}
+
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{

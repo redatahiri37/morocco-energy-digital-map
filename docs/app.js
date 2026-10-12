@@ -62,6 +62,33 @@
     coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A",
     nuclear:"#DB2777", geothermal:"#DC2626", biomass:"#65A30D", waste:"#78716C"
   };
+  // Plant dots: area tracks capacity (radius ∝ √MW, with a floor so a 10 MW
+  // plant stays visible) and grows with zoom. plantRadius() is the same curve
+  // in JS, for the size key under the layer list.
+  const PLANT_R_MIN = 3, PLANT_R_PER_SQRT_MW = 0.3;
+  const PLANT_ZOOM_SCALE = [[4, 0.6], [7, 1], [10, 1.3]];
+  function zoomScale(zoom){
+    const s = PLANT_ZOOM_SCALE;
+    if(zoom <= s[0][0]) return s[0][1];
+    for(let i = 1; i < s.length; i++){
+      if(zoom <= s[i][0]){
+        const t = (zoom - s[i-1][0]) / (s[i][0] - s[i-1][0]);
+        return s[i-1][1] + t * (s[i][1] - s[i-1][1]);
+      }
+    }
+    return s[s.length-1][1];
+  }
+  const plantRadius = (mw, zoom)=>zoomScale(zoom) * (PLANT_R_MIN + PLANT_R_PER_SQRT_MW * Math.sqrt(Math.max(0, mw)));
+  // The same curve as a MapLibre expression on a feature's MW field; `out`
+  // turns the radius into another value (halo radius, label offset).
+  function plantRadiusExpr(mwField, out){
+    const r = (f)=>["*", f, ["+", PLANT_R_MIN,
+      ["*", PLANT_R_PER_SQRT_MW, ["sqrt", ["max", 0, ["to-number", ["get", mwField], 0]]]]]];
+    return ["interpolate", ["linear"], ["zoom"], ...PLANT_ZOOM_SCALE.flatMap(([z, f])=>[z, out ? out(r(f)) : r(f)])];
+  }
+  // Capacity in a cluster or tooltip: "850 MW", "4.2 GW".
+  const fmtMW = (mw)=>mw >= 1000 ? (mw/1000).toFixed(1).replace(/\.0$/, "") + " GW" : Math.round(mw) + " MW";
+
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
   const CABLE_COLOR      = "#2DD4BF";  // teal — was orange, collided with industrial
@@ -274,6 +301,11 @@
       map.addControl(staticAttribution(), "bottom-left");
 
       map.on("load", ()=>{ mapReady = true; tryBuild(); });
+      let sizeKeyFrame = 0;
+      map.on("zoom", ()=>{
+        if(sizeKeyFrame) return;
+        sizeKeyFrame = requestAnimationFrame(()=>{ sizeKeyFrame = 0; if(currentCountry) renderSizeKey(); });
+      });
       map.on("click", (e)=>{
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
@@ -298,6 +330,7 @@
   function renderPanel(countryKey){
     renderMix();
     renderLayerList(countryKey);
+    renderSizeKey();
     renderKPIs(countryKey);
     renderMethodologySources(countryKey);
   }
@@ -390,6 +423,31 @@
       });
       if(visibility[L.id] === false) row.classList.add("muted");
       host.appendChild(row);
+    });
+  }
+
+  // Three reference dots drawn with the map's own curve at the current zoom,
+  // so they match the plants on screen. Redrawn as the map zooms.
+  const SIZE_KEY_MW = [100, 1000, 5000];
+  function renderSizeKey(){
+    const host = $("#sizeKey");
+    const hasPlants = COUNTRIES[currentCountry].layers.some(L=>L.kind === "power" || L.kind === "oim-plants");
+    host.hidden = !hasPlants;
+    if(!hasPlants) return;
+    const zoom = map ? map.getZoom() : COUNTRIES[currentCountry].zoom;
+    const items = $("#sizeKeyItems");
+    items.replaceChildren();
+    SIZE_KEY_MW.forEach(mw=>{
+      const d = 2 * plantRadius(mw, zoom);
+      const item = document.createElement("span");
+      item.className = "size-key-item";
+      const dot = document.createElement("span");
+      dot.className = "size-key-dot";
+      dot.style.width = dot.style.height = d.toFixed(1) + "px";
+      const label = document.createElement("span");
+      label.textContent = fmtMW(mw);
+      item.append(dot, label);
+      items.appendChild(item);
     });
   }
 
@@ -798,9 +856,10 @@
     fuelExpr.push(OSM_PLANT_SWATCH);
     const spec = {
       id: "lyr-" + L.id + "-points", type:"circle", source: OIM_SRC, "source-layer":"power_plant_point",
+      layout:{ "circle-sort-key": ["-", ["to-number", ["get","output"], 0]] },
       paint:{
         "circle-color": fuelExpr,
-        "circle-radius":["interpolate",["linear"],["coalesce",["get","output"],0], 0,3.5, 50,5, 300,8, 1000,11],
+        "circle-radius": plantRadiusExpr("output"),
         "circle-opacity":0.75,
         "circle-stroke-color": isDark() ? "rgba(241,239,233,0.8)" : "rgba(24,24,26,0.7)",
         "circle-stroke-width":1
@@ -892,7 +951,9 @@
     // Dense national fleets (France, Spain: 1,500+ plants) cluster wider so
     // the bubbles don't tile the whole screen on a phone.
     const dense = fc.features.length > 500;
-    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35 };
+    // Clusters carry their summed MW, shown instead of a plant count.
+    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35,
+      clusterProperties: { mw: ["+", ["to-number", ["get","capacity_mw"], 0]] } };
     addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
@@ -906,7 +967,9 @@
       paint:{
         "circle-color": pickedColor || "rgba(245,158,11,0.85)",
         "circle-opacity": pickedColor ? 0.85 : 1,
-        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22, 50, 26, 200, 31],
+        // Same scale as a plant of the summed MW, never smaller than its
+        // label ("999 MW") and capped so a national cluster stays on screen.
+        "circle-radius": plantRadiusExpr("mw", (r)=>["max", 21, ["min", 56, r]]),
         "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":1.5
       }
@@ -915,9 +978,12 @@
       id: p+"-cluster-count", type:"symbol", source:srcId + "-text",
       filter:["has","point_count"],
       layout:{
-        "text-field":["get","point_count_abbreviated"],
+        // Rounded by hand: same text as fmtMW() ("850 MW", "4.2 GW").
+        "text-field":["case", [">=", ["get","mw"], 1000],
+          ["concat", ["to-string", ["/", ["round", ["/", ["get","mw"], 100]], 10]], " GW"],
+          ["concat", ["to-string", ["round", ["get","mw"]]], " MW"]],
         "text-font":FONT_BOLD,
-        "text-size":11,
+        "text-size":9.5,
         "text-allow-overlap":true
       },
       paint:{ "text-color": pickedColor && !isLight(pickedColor) ? "#FFFFFF" : "#070D1A" }
@@ -929,34 +995,35 @@
       filter:["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
       paint:{
         "circle-color":"rgba(245,158,11,0.25)",
-        "circle-radius":11,
+        "circle-radius": plantRadiusExpr("capacity_mw", (r)=>["+", r, 4]),
         "circle-blur":0.3
       }
     });
 
-    // Individual plants, color by fuel
+    // Individual plants, colour by fuel, area by capacity. Small plants are
+    // drawn last so a large neighbour never hides them.
     addLayer(L, {
       id: p+"-points", type:"circle", source:srcId,
       filter:["!",["has","point_count"]],
+      layout:{ "circle-sort-key": ["-", ["to-number", ["get","capacity_mw"], 0]] },
       paint:{
         "circle-color":["match",["get","fuel_type"], ...Object.entries(FUEL_COLOR).flat(), "#888"],
-        "circle-radius":[
-          "interpolate",["linear"],["zoom"],
-          4, 4,
-          7, 6,
-          10, 8
-        ],
+        "circle-radius": plantRadiusExpr("capacity_mw"),
         "circle-stroke-color": POINT_STROKE(),
         "circle-stroke-width":1.5,
         "circle-opacity":[
           "case",
           ["boolean",["feature-state","dim"],false], 0.3,
-          1
+          0.9
         ]
       }
     }, "point");
 
-    addLabelLayer(L, p+"-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]]);
+    // Labels sit just below each dot, whatever its size.
+    addLabelLayer(L, p+"-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]], {
+      "text-variable-anchor": ["top"],
+      "text-radial-offset": plantRadiusExpr("capacity_mw", (r)=>["/", ["+", r, 2], 10.5])
+    });
   }
 
   // Industrial consumers — coloured by the country's sector palette
@@ -992,7 +1059,9 @@
 
   // Name labels live on a separate text-only source: MapLibre drops every
   // layer of a source whose glyphs fail to load, and points must survive that.
-  function addLabelLayer(L, id, sourceId, field, minzoom, offset, filter){
+  // `layout` adds or overrides layout properties; a text-radial-offset
+  // replaces the fixed text-offset.
+  function addLabelLayer(L, id, sourceId, field, minzoom, offset, filter, layout){
     const spec = {
       id, type:"symbol", source: sourceId, minzoom,
       layout:{
@@ -1010,6 +1079,10 @@
       }
     };
     if(filter) spec.filter = filter;
+    if(layout){
+      if("text-radial-offset" in layout){ delete spec.layout["text-offset"]; delete spec.layout["text-anchor"]; }
+      Object.assign(spec.layout, layout);
+    }
     addLayer(L, spec);
   }
 
@@ -1101,6 +1174,8 @@
         showPointTooltip(m.dataLayerId, f, e.point);
       } else if(m.role === "line"){
         showLineTooltip(f, e.point);
+      } else if(m.role === "cluster"){
+        showClusterTooltip(f, e.point);
       }
     });
     map.on("mouseleave", id, ()=>{
@@ -1195,6 +1270,13 @@
       <div class="tt-name">${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(p.status || "")}</div>
       <div class="tt-meta">${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
+    positionTooltip(point);
+  }
+  function showClusterTooltip(f, point){
+    const p = f.properties || {};
+    tooltip.innerHTML = `
+      <div class="tt-name">${escapeHtml(num(p.point_count))} plants · ${escapeHtml(fmtMW(num(p.mw) || 0))}</div>
+      <div class="tt-metric">Click to zoom in</div>`;
     positionTooltip(point);
   }
   function positionTooltip(point){

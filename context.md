@@ -58,9 +58,14 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
 - KPI tiles: "Tracked capacity" + "Renewables share*" (capacity of mapped
   plants incl. announced ones, footnote missing) replaced by "In service"
   and "Pipeline". Morocco's snapshot credit no longer says "ONEE 2025".
-- Next UX steps, in order: bubble size ∝ MW and clusters in GW; status
-  filter; shareable URL (country, plant); plant search; FR/EN; Africa/Europe
-  overview coloured by mix; mobile mix sheet. The fuel palette fails the
+- Plant dots now scale with capacity (area ∝ MW, floor for small plants,
+  grows with zoom; OSM plants on the same curve; small drawn on top).
+  Clusters show their summed MW/GW and size on the same scale (floor so the
+  label fits, cap at 56 px); hover gives "N plants · X GW". A size key under
+  the layer list redraws with the zoom.
+- Next UX steps, in order: status filter; shareable URL (country, plant);
+  plant search; FR/EN; Africa/Europe overview coloured by mix; mobile mix
+  sheet. The fuel palette fails the
   dataviz validator (gas/oil too close); changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
