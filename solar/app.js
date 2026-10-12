@@ -85,6 +85,153 @@ const CONFIG = {
   },
 };
 
+// ── Strings ────────────────────────────────────────
+// The page's <html lang> picks the language: solar.wattu.org/ is French,
+// /ar/ (Moroccan Arabic) and /en/ are generated from index.html by
+// scripts/build-solar-i18n.mjs. Every text this script writes comes from
+// here; numbers use NUM_LOCALE (Arabic keeps French formatting, as the
+// Arabic city pages do).
+const LANG = ["ar", "en"].includes(globalThis.document?.documentElement?.lang)
+  ? globalThis.document.documentElement.lang : "fr";
+const NUM_LOCALE = LANG === "en" ? "en-US" : "fr-FR";
+const arYears = (n) => n <= 10 ? "سنين" : "عام";
+const arPanels = (n, plus = "") => n === 1 && !plus ? "بلاكة وحدة" : n === 2 && !plus ? "جوج بلاكات" : `${n}${plus} ${n <= 10 ? "بلاكات" : "بلاكة"}`;
+const I18N = {
+  fr: {
+    acceptLanguage: "fr",
+    mad: "MAD", madWc: "MAD/Wc", madMonth: "MAD/mois", kwc: "kWc", tonnes: "t",
+    months: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"],
+    yearLabel: (y) => "An " + y,
+    layers: { satellite: "Satellite", plan: "Plan (OSM)" },
+    pvgisConnect: "Connexion au service PVGIS impossible — vérifiez votre réseau et réessayez.",
+    geoUnavailable: "La géolocalisation n'est pas disponible sur cet appareil. Entrez votre adresse.",
+    geoLocating: "Localisation…",
+    geoButton: "Utiliser ma position",
+    geoOutside: "Votre position semble hors du Maroc. Entrez une adresse marocaine.",
+    myPosition: "Ma position",
+    geoDenied: "Localisation refusée. Autorisez-la dans votre navigateur, ou entrez votre adresse.",
+    geoNotFound: "Position introuvable pour le moment. Entrez votre adresse.",
+    shareText: (s) => `Toit solaire : environ ${s} MAD économisés par an, d'après Wattu.`,
+    shareTitle: "Mon estimation solaire — Wattu",
+    linkCopied: "Lien copié", share: "Partager", copyPrompt: "Copiez ce lien :",
+    addrNotFound: "Adresse introuvable. Précisez la ville.",
+    geocodeError: "Erreur de géocodage. Réessayez.",
+    searching: "Recherche…", estimate: "Estimer",
+    roofSearching: "Recherche du bâtiment sur OpenStreetMap…",
+    roofNone: "Aucun bâtiment trouvé à cette adresse sur OpenStreetMap. Cliquez sur « Dessiner mon toit » et placez les coins de votre toit sur la carte.",
+    roofDrawHint: "Cliquez sur chaque coin de votre toit, puis « Terminer ».",
+    roofSrcOsm: "d'après OpenStreetMap", roofSrcDrawn: "toit dessiné",
+    panels: (n, plus = "") => `${n}${plus} panneaux`,
+    instSub: (n, m2) => `${n} panneau${n > 1 ? "x" : ""} · ${m2} m²`,
+    roofInfo: (w, setback) => `Panneaux de ${w} Wc, ${setback} m de marge sur les bords, rangées espacées pour éviter l'ombre.`,
+    roofWarn: (have, needed) => `Votre toit ne permet que ${have} des ${needed} panneaux de cette installation.`,
+    loading: ["Analyse du gisement solaire…", "Interrogation de PVGIS (Commission européenne)…", "Calcul de votre rentabilité…"],
+    consumptionHint: (k) => `soit environ ${k} kWh par mois`,
+    peakpowerHint: (n, w, m2) => `${n} panneaux de ${w} Wc, ≈ ${m2} m²`,
+    capexHint: (v) => `Investissement total : ${v}`,
+    pvgisFallback: (city) => `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${city}.`,
+    years: (y) => `${y} ans`,
+    finCashNet: (v) => `Économie an 1 : ${v}`,
+    amortized: (y) => `Amorti en ${y} ans`,
+    notAmortized: (n) => `Non amorti sur ${n} ans`,
+    finLoanSavings: (v) => `Économies PV : ${v} MAD/mois`,
+    cashflowPositive: (v) => `Cash-flow positif dès le 1er mois : +${v} MAD/mois`,
+    effortNet: (a, yrs, b) => `Effort net ${a} MAD/mois pendant ${yrs} ans, puis +${b} MAD/mois`,
+    rateNote: (r, y) => `${r} % sur ${y} ans`,
+    aspect: { south: "Sud", east: "Est", west: "Ouest", off: (a, dir) => `${a}° ${dir} du Sud` },
+  },
+  ar: {
+    acceptLanguage: "ar,fr",
+    mad: "درهم", madWc: "درهم/واط", madMonth: "درهم/الشهر", kwc: "kWc", tonnes: "طن",
+    months: ["يناير", "فبراير", "مارس", "أبريل", "ماي", "يونيو", "يوليوز", "غشت", "شتنبر", "أكتوبر", "نونبر", "دجنبر"],
+    yearLabel: (y) => "العام " + y,
+    layers: { satellite: "ساتليت", plan: "خريطة (OSM)" },
+    pvgisConnect: "ما قدرناش نتاصلو ب PVGIS — شوف الإنترنت ديالك وعاود جرب.",
+    geoUnavailable: "تحديد البلاصة ما متوفرش فهاد الجهاز. دخل العنوان ديالك.",
+    geoLocating: "كنقلبو على البلاصة…",
+    geoButton: "استعمل البلاصة ديالي",
+    geoOutside: "البلاصة ديالك باينة برا المغرب. دخل عنوان فالمغرب.",
+    myPosition: "البلاصة ديالي",
+    geoDenied: "ما سمحتيش بتحديد البلاصة. سمح بيه فالمتصفح ديالك، ولا دخل العنوان ديالك.",
+    geoNotFound: "ما لقيناش البلاصة دابا. دخل العنوان ديالك.",
+    shareText: (s) => `سطح شمسي: تقريبا ${s} درهم كتوفرهم فالعام، حسب Wattu.`,
+    shareTitle: "الحساب الشمسي ديالي — Wattu",
+    linkCopied: "تنسخ الرابط", share: "بارطاجي", copyPrompt: "نسخ هاد الرابط:",
+    addrNotFound: "ما لقيناش العنوان. زيد المدينة.",
+    geocodeError: "وقع مشكل فالبحث على العنوان. عاود جرب.",
+    searching: "كنقلبو…", estimate: "حسب",
+    roofSearching: "كنقلبو على الدار فـ OpenStreetMap…",
+    roofNone: "ما لقينا حتى دار فهاد العنوان فـ OpenStreetMap. كليكي على « رسم السطح ديالي » وحط الزوايا ديال السطح على الخريطة.",
+    roofDrawHint: "كليكي على كل زاوية من السطح ديالك، ومن بعد « ساليت ».",
+    roofSrcOsm: "من OpenStreetMap", roofSrcDrawn: "السطح اللي رسمتي",
+    panels: (n, plus = "") => arPanels(n, plus),
+    instSub: (n, m2) => `${arPanels(n)} · ${m2} م²`,
+    roofInfo: (w, setback) => `بلاكات ديال ${w} واط، ${setback} م ديال الهامش فالجناب، وصفوف متباعدين باش ما يكونش الظل.`,
+    roofWarn: (have, needed) => `السطح ديالك كيساع غير ${have} من ${needed} ديال البلاكات ديال هاد التركيب.`,
+    loading: ["كنحللو الشمس فالبلاصة ديالك…", "كنسولو PVGIS (المفوضية الأوروبية)…", "كنحسبو شحال غادي تربح…"],
+    consumptionHint: (k) => `يعني تقريبا ${bidi(k + " kWh")} فالشهر`,
+    peakpowerHint: (n, w, m2) => `${arPanels(n)} ديال ${w} واط، ≈ ${m2} م²`,
+    capexHint: (v) => `الثمن الكامل ديال التركيب: ${v}`,
+    pvgisFallback: (city) => `⚠ خدمة الحساب ما خدامةش دابا — تقدير تقريبي على حساب مدينة ${{ "Casablanca": "الدار البيضاء", "Rabat": "الرباط", "Marrakech": "مراكش", "Ouarzazate": "ورزازات", "Tanger": "طنجة", "Agadir": "أكادير", "Fès": "فاس", "Oujda": "وجدة", "Laâyoune": "العيون", "Errachidia": "الرشيدية" }[city] || city}.`,
+    years: (y, n) => `${y} ${arYears(n)}`,
+    finCashNet: (v) => `التوفير فالعام الأول: ${v}`,
+    amortized: (y, n) => `كترجع فلوسك ف${y} ${arYears(n)}`,
+    notAmortized: (n) => `ما كترجعش الفلوس ف${n} عام`,
+    finLoanSavings: (v) => `التوفير ديال البلاكات: ${v} درهم/الشهر`,
+    cashflowPositive: (v) => `رابح من الشهر الأول: +${v} درهم/الشهر`,
+    effortNet: (a, yrs, b) => `كتزيد ${a} درهم/الشهر لمدة ${yrs} ${arYears(yrs)}، ومن بعد +${b} درهم/الشهر`,
+    rateNote: (r, y) => `${r}% على ${y} ${arYears(y)}`,
+    aspect: { south: "الجنوب", east: "الشرق", west: "الغرب", off: (a, dir) => `الجنوب، ${a}° لجهة ${dir}` },
+  },
+  en: {
+    acceptLanguage: "en,fr",
+    mad: "MAD", madWc: "MAD/Wp", madMonth: "MAD/month", kwc: "kWp", tonnes: "t",
+    months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    yearLabel: (y) => "Year " + y,
+    layers: { satellite: "Satellite", plan: "Map (OSM)" },
+    pvgisConnect: "Could not reach the PVGIS service — check your connection and try again.",
+    geoUnavailable: "Location is not available on this device. Enter your address.",
+    geoLocating: "Locating…",
+    geoButton: "Use my location",
+    geoOutside: "Your location seems to be outside Morocco. Enter a Moroccan address.",
+    myPosition: "My location",
+    geoDenied: "Location refused. Allow it in your browser, or enter your address.",
+    geoNotFound: "Location not found for now. Enter your address.",
+    shareText: (s) => `Solar roof: about ${s} MAD saved a year, according to Wattu.`,
+    shareTitle: "My solar estimate — Wattu",
+    linkCopied: "Link copied", share: "Share", copyPrompt: "Copy this link:",
+    addrNotFound: "Address not found. Add the city.",
+    geocodeError: "Address lookup failed. Try again.",
+    searching: "Searching…", estimate: "Estimate",
+    roofSearching: "Looking for the building on OpenStreetMap…",
+    roofNone: "No building found at this address on OpenStreetMap. Click “Draw my roof” and place your roof's corners on the map.",
+    roofDrawHint: "Click each corner of your roof, then “Done”.",
+    roofSrcOsm: "from OpenStreetMap", roofSrcDrawn: "drawn roof",
+    panels: (n, plus = "") => `${n}${plus} panels`,
+    instSub: (n, m2) => `${n} panel${n > 1 ? "s" : ""} · ${m2} m²`,
+    roofInfo: (w, setback) => `${w} Wp panels, ${setback} m margin at the edges, rows spaced to avoid shade.`,
+    roofWarn: (have, needed) => `Your roof only fits ${have} of the ${needed} panels of this system.`,
+    loading: ["Analysing the sunshine at your address…", "Querying PVGIS (European Commission)…", "Working out your payback…"],
+    consumptionHint: (k) => `about ${k} kWh a month`,
+    peakpowerHint: (n, w, m2) => `${n} panels of ${w} Wp, ≈ ${m2} m²`,
+    capexHint: (v) => `Total investment: ${v}`,
+    pvgisFallback: (city) => `⚠ Calculation service briefly unavailable — approximate estimate based on ${{ "Marrakech": "Marrakesh", "Tanger": "Tangier", "Fès": "Fez", "Laâyoune": "Laayoune" }[city] || city}.`,
+    years: (y) => `${y} years`,
+    finCashNet: (v) => `Year-1 savings: ${v}`,
+    amortized: (y) => `Pays back in ${y} years`,
+    notAmortized: (n) => `Does not pay back within ${n} years`,
+    finLoanSavings: (v) => `Solar savings: ${v} MAD/month`,
+    cashflowPositive: (v) => `Cash-positive from month one: +${v} MAD/month`,
+    effortNet: (a, yrs, b) => `Net cost ${a} MAD/month for ${yrs} years, then +${b} MAD/month`,
+    rateNote: (r, y) => `${r}% over ${y} years`,
+    aspect: { south: "South", east: "East", west: "West", off: (a, dir) => `${a}° ${dir} of South` },
+  },
+};
+const STR = I18N[LANG];
+// A number followed by a Latin unit ("2,5 kWc") is read right to left in
+// Arabic and comes out reversed ("kWc 2,5"): isolate it as left-to-right.
+const bidi = (s) => LANG === "ar" ? `\u2066${s}\u2069` : s;
+
 // ── Geocoder (Nominatim) ───────────────────────────
 const Geocoder = {
   async search(query) {
@@ -96,7 +243,7 @@ const Geocoder = {
     url.searchParams.set("limit", "5");
     url.searchParams.set("addressdetails", "1");
     const res = await fetch(url, {
-      headers: { "Accept-Language": "fr" },
+      headers: { "Accept-Language": STR.acceptLanguage },
     });
     if (!res.ok) throw new Error("Geocoding failed");
     const data = await res.json();
@@ -138,7 +285,7 @@ const PVGIS = {
     try {
       res = await fetch(url);
     } catch (_) {
-      throw new Error("Connexion au service PVGIS impossible — vérifiez votre réseau et réessayez.");
+      throw new Error(STR.pvgisConnect);
     }
     if (!res.ok) {
       // Worker errors carry { error: "<message fr>", status } — surface the message.
@@ -339,7 +486,7 @@ const Chart_ = {
     this.monthly = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"],
+        labels: STR.months,
         datasets: [{
           data: monthlyKwh,
           backgroundColor: (c) => {
@@ -358,11 +505,11 @@ const Chart_ = {
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: { callbacks: {
-          label: (c) => `${Math.round(c.parsed.y)} kWh`,
+          label: (c) => bidi(`${Math.round(c.parsed.y)} kWh`),
         }}},
         scales: {
           x: { grid: { display: false }, border: { display: false }, ticks: { color: CHART_INK } },
-          y: { grid: { color: CHART_GRID }, border: { display: false }, ticks: { color: CHART_INK, callback: v => v + " kWh" } },
+          y: { grid: { color: CHART_GRID }, border: { display: false }, ticks: { color: CHART_INK, callback: v => bidi(v + " kWh") } },
         },
       },
     });
@@ -374,7 +521,7 @@ const Chart_ = {
     this.cashflow = new Chart(ctx, {
       type: "line",
       data: {
-        labels: cashflow.map(c => "An " + c.year),
+        labels: cashflow.map(c => STR.yearLabel(c.year)),
         datasets: [{
           data: cashflow.map(c => Math.round(c.cumulative)),
           borderColor: "#001F4D",
@@ -398,7 +545,7 @@ const Chart_ = {
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: {
-            label: (c) => `${c.parsed.y.toLocaleString("fr-FR")} MAD`,
+            label: (c) => `${c.parsed.y.toLocaleString(NUM_LOCALE)} ${STR.mad}`,
           }},
         },
         scales: {
@@ -406,7 +553,7 @@ const Chart_ = {
           y: {
             grid: { color: CHART_GRID },
             border: { display: false },
-            ticks: { color: CHART_INK, callback: v => (v/1000).toFixed(0) + "k" },
+            ticks: { color: CHART_INK, callback: v => bidi((v/1000).toFixed(0) + "k") },
           },
         },
       },
@@ -533,7 +680,7 @@ const MapView = {
         attribution: "© OpenStreetMap contributors",
       });
       L.control.layers(
-        { "Satellite": satellite, "Plan (OSM)": osm },
+        { [STR.layers.satellite]: satellite, [STR.layers.plan]: osm },
         null,
         { position: "topright" }
       ).addTo(this.map);
@@ -750,27 +897,27 @@ const UI = {
   useMyPosition() {
     this.clearStep1Error();
     if (!("geolocation" in navigator)) {
-      this.showStep1Error("La géolocalisation n'est pas disponible sur cet appareil. Entrez votre adresse.");
+      this.showStep1Error(STR.geoUnavailable);
       return;
     }
     const btn = $("geo-btn"), label = $("geo-btn-label");
     btn.disabled = true;
-    label.textContent = "Localisation…";
-    const reset = () => { btn.disabled = false; label.textContent = "Utiliser ma position"; };
+    label.textContent = STR.geoLocating;
+    const reset = () => { btn.disabled = false; label.textContent = STR.geoButton; };
     navigator.geolocation.getCurrentPosition((pos) => {
       reset();
       const { latitude: lat, longitude: lon } = pos.coords;
       if (!inMorocco(lat, lon)) {
-        this.showStep1Error("Votre position semble hors du Maroc. Entrez une adresse marocaine.");
+        this.showStep1Error(STR.geoOutside);
         return;
       }
       State.candidates = [];
-      this.setLocationAndGo({ lat, lon, label: "Ma position", src: "geoloc" });
+      this.setLocationAndGo({ lat, lon, label: STR.myPosition, src: "geoloc" });
     }, (err) => {
       reset();
       this.showStep1Error(err.code === 1
-        ? "Localisation refusée. Autorisez-la dans votre navigateur, ou entrez votre adresse."
-        : "Position introuvable pour le moment. Entrez votre adresse.");
+        ? STR.geoDenied
+        : STR.geoNotFound);
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
   },
 
@@ -827,20 +974,20 @@ const UI = {
   async share() {
     this.syncUrl({ withLabel: true });
     const url = location.href;
-    const text = `Toit solaire : environ ${fmtNum(State.savings)} MAD économisés par an, d'après Wattu.`;
+    const text = STR.shareText(fmtNum(State.savings));
     const btnLabel = $("share-btn-label");
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Mon estimation solaire — Wattu", text, url });
+        await navigator.share({ title: STR.shareTitle, text, url });
         return;
       }
       await navigator.clipboard.writeText(url);
       $("share-btn").classList.add("done");
-      btnLabel.textContent = "Lien copié";
-      setTimeout(() => { $("share-btn").classList.remove("done"); btnLabel.textContent = "Partager"; }, 2000);
+      btnLabel.textContent = STR.linkCopied;
+      setTimeout(() => { $("share-btn").classList.remove("done"); btnLabel.textContent = STR.share; }, 2000);
     } catch (e) {
       if (e && e.name === "AbortError") return;   // share sheet dismissed
-      window.prompt("Copiez ce lien :", url);
+      window.prompt(STR.copyPrompt, url);
     }
   },
 
@@ -875,23 +1022,23 @@ const UI = {
     const q = $("address-input").value.trim();
     if (!q) return;
     $("estimate-btn").disabled = true;
-    $("estimate-btn").textContent = "Recherche…";
+    $("estimate-btn").textContent = STR.searching;
     try {
       const results = await Geocoder.search(q);
       if (!results.length) {
         // The query itself is never sent — only the fact that it failed.
         Analytics.track("geocode_fail", { src: "no_result" });
-        this.showStep1Error("Adresse introuvable. Précisez la ville.");
+        this.showStep1Error(STR.addrNotFound);
         return;
       }
       State.candidates = results;
       await this.setLocationAndGo(results[0]);
     } catch (e) {
       Analytics.track("geocode_fail", { src: "error" });
-      this.showStep1Error("Erreur de géocodage. Réessayez.");
+      this.showStep1Error(STR.geocodeError);
     } finally {
       $("estimate-btn").disabled = false;
-      $("estimate-btn").textContent = "Estimer";
+      $("estimate-btn").textContent = STR.estimate;
     }
   },
 
@@ -921,7 +1068,7 @@ const UI = {
   // the estimate: if it fails or finds nothing, the user can draw the roof.
   async detectRoof(loc) {
     const id = ++State.roofSearch;
-    this.setRoofInfo("Recherche du bâtiment sur OpenStreetMap…");
+    this.setRoofInfo(STR.roofSearching);
     let latlngs = null;
     try { latlngs = await Roof.findBuilding(loc.lat, loc.lon); }
     catch (e) { console.warn("[roof] building lookup failed", e); }
@@ -932,8 +1079,7 @@ const UI = {
       State.roof = { latlngs, src: "osm" };
       this.recalc({ fitRoof: true });
     } else {
-      this.setRoofInfo("Aucun bâtiment trouvé à cette adresse sur OpenStreetMap. " +
-        "Cliquez sur « Dessiner mon toit » et placez les coins de votre toit sur la carte.");
+      this.setRoofInfo(STR.roofNone);
     }
   },
 
@@ -944,7 +1090,7 @@ const UI = {
     $("roof-done-btn").hidden = !on;
     $("roof-cancel-btn").hidden = !on;
     $("roof-done-btn").disabled = true;
-    if (on) this.setRoofInfo("Cliquez sur chaque coin de votre toit, puis « Terminer ».");
+    if (on) this.setRoofInfo(STR.roofDrawHint);
   },
 
   // Footprint area and the panels that fit for the current tilt/orientation.
@@ -996,16 +1142,16 @@ const UI = {
 
     const shown = Math.min(needed, info.panels.length);
     $("st-area").textContent = `${fmtNum(info.areaM2)} m²`;
-    $("st-area-sub").textContent = State.roof.src === "osm" ? "d'après OpenStreetMap" : "toit dessiné";
+    $("st-area-sub").textContent = State.roof.src === "osm" ? STR.roofSrcOsm : STR.roofSrcDrawn;
     const plus = info.capped ? "+" : "";
-    $("st-max").textContent = `${fmtNum(info.capacityKw)}${plus} kWc`;
-    $("st-max-sub").textContent = `${info.panels.length}${plus} panneaux`;
-    $("st-inst").textContent = `${fmtDec(p.peakpower, { trim: true })} kWc`;
-    $("st-inst-sub").textContent = `${shown} panneau${shown > 1 ? "x" : ""} · ${fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
+    $("st-max").textContent = bidi(`${fmtNum(info.capacityKw)}${plus} ${STR.kwc}`);
+    $("st-max-sub").textContent = STR.panels(info.panels.length, plus);
+    $("st-inst").textContent = bidi(`${fmtDec(p.peakpower, { trim: true })} ${STR.kwc}`);
+    $("st-inst-sub").textContent = STR.instSub(shown, fmtNum(shown * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M));
 
-    let html = `Panneaux de 500 Wc, ${CONFIG.ROOF_SETBACK_M} m de marge sur les bords, rangées espacées pour éviter l'ombre.`;
+    let html = escapeHtml(STR.roofInfo(CONFIG.PANEL_KWP * 1000, CONFIG.ROOF_SETBACK_M));
     if (needed > info.panels.length) {
-      html = `<span class="roof-warn">Votre toit ne permet que ${info.panels.length} des ${needed} panneaux de cette installation.</span> ` + html;
+      html = `<span class="roof-warn">${escapeHtml(STR.roofWarn(info.panels.length, needed))}</span> ` + html;
     }
     this.setRoofInfo(html);
   },
@@ -1014,11 +1160,7 @@ const UI = {
     $("hero-loading").hidden = !on;
     $("hero-content").hidden = on;
     if (on) {
-      const msgs = [
-        "Analyse du gisement solaire…",
-        "Interrogation de PVGIS (Commission européenne)…",
-        "Calcul de votre rentabilité…",
-      ];
+      const msgs = STR.loading;
       let i = 0;
       $("hero-loading-msg").textContent = msgs[0];
       clearInterval(this._loadingTicker);
@@ -1046,19 +1188,19 @@ const UI = {
   renderParamLabels() {
     const p = State.params;
     const consumption = Tariff.kwhFromBill(p.bill);
-    $("bill-val").textContent = fmtNum(p.bill) + " MAD";
+    $("bill-val").textContent = fmtMAD(p.bill);
     $("bill-consumption-hint").textContent =
-      `soit environ ${Math.round(consumption)} kWh par mois`;
-    $("peakpower-val").textContent = fmtDec(p.peakpower) + " kWc";
+      STR.consumptionHint(fmtNum(consumption));
+    $("peakpower-val").textContent = bidi(fmtDec(p.peakpower) + " " + STR.kwc);
     const nPanels = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
     $("peakpower-hint").textContent =
-      `${nPanels} panneaux de ${CONFIG.PANEL_KWP * 1000} Wc, ≈ ${Math.round(nPanels * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M)} m²`;
+      STR.peakpowerHint(nPanels, CONFIG.PANEL_KWP * 1000, Math.round(nPanels * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M));
     $("angle-val").textContent = p.angle + "°";
     $("aspect-val").textContent = aspectLabel(p.aspect);
-    $("cost-val").textContent = fmtDec(p.cost) + " MAD/Wc";
-    $("next-cost").textContent = fmtDec(p.cost, { trim: true }) + " MAD/Wc";
+    $("cost-val").textContent = fmtDec(p.cost) + " " + STR.madWc;
+    $("next-cost").textContent = fmtDec(p.cost, { trim: true }) + " " + STR.madWc;
     const capex = p.peakpower * 1000 * p.cost;
-    $("capex-hint").textContent = `Investissement total : ${fmtMAD(capex)}`;
+    $("capex-hint").textContent = STR.capexHint(fmtMAD(capex));
   },
 
   async recalc({ force = false, fitRoof = false } = {}) {
@@ -1102,7 +1244,7 @@ const UI = {
     // Approximate-mode notice (fallback data in use)
     const srcEl = document.querySelector(".hero-source");
     if (State.lastPerKw.approximate && srcEl) {
-      srcEl.innerHTML = `⚠ Service de calcul momentanément indisponible — estimation approximative basée sur la ville de ${escapeHtml(State.lastPerKw.referenceCity)}.`;
+      srcEl.textContent = STR.pvgisFallback(State.lastPerKw.referenceCity);
     }
 
     // Derive consumption from the bill; auto-size the system if not overridden
@@ -1133,33 +1275,33 @@ const UI = {
     State.savings = savings;
     countUp($("hero-savings"), savings, State.heroAnimated ? 0 : 900);
     State.heroAnimated = true;
-    $("chip-size").textContent = fmtDec(p.peakpower, { trim: true }) + " kWc";
-    $("chip-production").textContent = fmtNum(pv.annualKwh) + " kWh";
-    $("chip-payback").textContent = isFinite(roi.paybackYr) ? fmtDec(roi.paybackYr) + " ans" : "—";
+    $("chip-size").textContent = bidi(fmtDec(p.peakpower, { trim: true }) + " " + STR.kwc);
+    $("chip-production").textContent = bidi(fmtNum(pv.annualKwh) + " kWh");
+    $("chip-payback").textContent = isFinite(roi.paybackYr) ? STR.years(fmtDec(roi.paybackYr), roi.paybackYr) : "—";
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
-    $("chip-co2").textContent = fmtDec(co2Tons) + " t";
+    $("chip-co2").textContent = fmtDec(co2Tons) + " " + STR.tonnes;
 
     // Financing card
     const loanMonthly = Finance.monthlyPayment(capexMAD, CONFIG.LOAN_APR, CONFIG.LOAN_YEARS);
     const pvMonthlySavings = roi.annualSavingsMAD / 12;
     const cashflowY1 = roi.annualSavingsMAD - capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
-    $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">MAD</span>`;
-    $("fin-cash-net").textContent = `Économie an 1 : ${fmtMAD(cashflowY1)}`;
+    $("fin-cash-capex").innerHTML = `${fmtNum(capexMAD)} <span class="unit">${STR.mad}</span>`;
+    $("fin-cash-net").textContent = STR.finCashNet(fmtMAD(cashflowY1));
     $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
-      ? `Amorti en ${fmtDec(roi.paybackYr)} ans`
-      : `Non amorti sur 25 ans`;
+      ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr)
+      : STR.notAmortized(CONFIG.LIFETIME_YR);
 
-    $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">MAD/mois</span>`;
-    $("fin-loan-savings").textContent = `Économies PV : ${fmtNum(pvMonthlySavings)} MAD/mois`;
+    $("fin-loan-monthly").innerHTML = `${fmtNum(loanMonthly)} <span class="unit">${STR.madMonth}</span>`;
+    $("fin-loan-savings").textContent = STR.finLoanSavings(fmtNum(pvMonthlySavings));
     const balance = pvMonthlySavings - loanMonthly;
     if (balance >= 0) {
-      $("fin-loan-note").textContent = `Cash-flow positif dès le 1er mois : +${fmtNum(balance)} MAD/mois`;
+      $("fin-loan-note").textContent = STR.cashflowPositive(fmtNum(balance));
     } else {
       const after = CONFIG.LOAN_YEARS;
-      $("fin-loan-note").textContent = `Effort net ${fmtNum(-balance)} MAD/mois pendant ${after} ans, puis +${fmtNum(pvMonthlySavings)} MAD/mois`;
+      $("fin-loan-note").textContent = STR.effortNet(fmtNum(-balance), after, fmtNum(pvMonthlySavings));
     }
     $("fin-rate-note").textContent =
-      `${(CONFIG.LOAN_APR * 100).toFixed(0)} % sur ${CONFIG.LOAN_YEARS} ans`;
+      STR.rateNote((CONFIG.LOAN_APR * 100).toFixed(0), CONFIG.LOAN_YEARS);
 
     // Queued before the charts render: if Chart.js failed to load from its
     // CDN the calls below throw, and that is precisely the session we most
@@ -1279,22 +1421,22 @@ function countUp(el, target, ms) {
   }, ms + 150);
 }
 function fmtNum(n) {
-  return Math.round(n).toLocaleString("fr-FR");
+  return Math.round(n).toLocaleString(NUM_LOCALE);
 }
 // One decimal with a French decimal comma: 2,5 · 10,2. Whole values drop
 // the ",0" when `trim` is set (3 kWc, not 3,0 kWc).
 function fmtDec(n, { trim = false } = {}) {
-  return n.toLocaleString("fr-FR", { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : 1, maximumFractionDigits: 1 });
+  return n.toLocaleString(NUM_LOCALE, { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : 1, maximumFractionDigits: 1 });
 }
 function fmtMAD(n) {
-  return fmtNum(n) + " MAD";
+  return fmtNum(n) + " " + STR.mad;
 }
 function aspectLabel(a) {
-  if (a === 0) return "Sud";
-  if (a === -90) return "Est";
-  if (a === 90) return "Ouest";
-  const dir = a < 0 ? "Est" : "Ouest";
-  return `${Math.abs(a)}° ${dir} du Sud`;
+  const A = STR.aspect;
+  if (a === 0) return A.south;
+  if (a === -90) return A.east;
+  if (a === 90) return A.west;
+  return A.off(Math.abs(a), a < 0 ? A.east : A.west);
 }
 // Morocco, Southern Provinces included.
 function inMorocco(lat, lon) {
