@@ -55,7 +55,7 @@
 .cp-note { font-size: 14px; color: var(--muted); }
 .cp-meta { font-size: 13px; color: var(--muted); margin-top: 14px; }
 .cp-near { font-size: 14px; line-height: 1.9; }
-.cp-method { padding-left: 20px; line-height: 1.6; }
+.cp-method { padding-inline-start: 20px; line-height: 1.6; }
 .cp-method li { margin-bottom: 8px; }
 
 /* Wide tables scroll inside their own box, never the page */
@@ -68,14 +68,14 @@
 .cp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .cp-table caption {
   caption-side: bottom;
-  text-align: left;
+  text-align: start;
   font-size: 12px;
   color: var(--muted);
   padding: 10px 14px;
 }
 .cp-table th, .cp-table td {
   padding: 10px 10px;
-  text-align: right;
+  text-align: end;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -91,9 +91,18 @@
   white-space: normal;
   vertical-align: bottom;
 }
-.cp-table th[scope="row"], .cp-table td:first-child { text-align: left; }
+.cp-table th[scope="row"], .cp-table td:first-child { text-align: start; }
 .cp-table tbody tr:last-child > * { border-bottom: 0; }
 .cp-months th, .cp-months td, .cp-months td:first-child { text-align: center; }
+
+/* Arabic pages (/ar/…, dir="rtl"). The Latin fonts have no Arabic
+   glyphs: Arabic text falls back to the system's Arabic face. Letter
+   spacing and capitals are dropped, since spacing breaks Arabic joining. */
+html:lang(ar) body.cp { font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", system-ui, sans-serif; }
+html:lang(ar) .cp h1 { font-family: "Noto Naskh Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, serif; line-height: 1.35; }
+html:lang(ar) .cp .w-kicker,
+html:lang(ar) .cp-table thead th { font-family: inherit; letter-spacing: 0; text-transform: none; font-size: 12px; }
+html:lang(ar) .cp p, html:lang(ar) .cp li { line-height: 1.8; }
 
 @media (max-width: 620px) {
   .cp-main { padding: 20px 16px 0; }

@@ -2,6 +2,8 @@
 /* Builds the static city pages of solar.wattu.org:
  *   <out>/ville/<slug>/index.html   one page per city in solar/data/cities.json
  *   <out>/villes/index.html         the comparison table linking them all
+ *   <out>/ar/ville/<slug>/, ar/villes/  the same pages in Moroccan Arabic (right to left)
+ *   <out>/en/city/<slug>/, en/cities/   the same pages in English (all three hreflang-linked)
  *   <out>/sitemap.xml               home + every page above
  *   <out>/llms.txt                  plain-text map of the site for AI crawlers
  *   <out>/guide/, guide/<slug>/      answers to common questions (price, panels, ONEE tariff, law 82-21, Taqa Pro)
@@ -122,22 +124,51 @@ function toolLink(c, bill) {
   return `../../#${q.toString()}`;
 }
 
-function layout({ title, description, canonical, depth, body, jsonLd }) {
+// alt = { fr, ar, en }: root-relative paths of the same page in each
+// language, for hreflang and the language links. Arabic is right to left.
+const LANG_LABEL = { fr: "Français", ar: "العربية", en: "English" };
+const altCity = (c) => ({ fr: `/ville/${c.slug}/`, ar: `/ar/ville/${c.slug}/`, en: `/en/city/${c.slug}/` });
+const ALT_INDEX = { fr: "/villes/", ar: "/ar/villes/", en: "/en/cities/" };
+function layout({ title, description, canonical, depth, body, jsonLd, lang = "fr", alt = null }) {
   const up = "../".repeat(depth);
+  const ar = lang === "ar";
+  const hreflang = alt ? Object.entries(alt).map(([l, path]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${path}">`).join("\n")
+    + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${alt.fr}">\n` : "";
+  const langLinks = alt ? Object.entries(alt).filter(([l]) => l !== lang)
+    .map(([l, path]) => `\n    <a href="${path}" lang="${l}" hreflang="${l}">${LANG_LABEL[l]}</a>`).join("") : "";
+  const home = { fr: "Wattu Solaire — accueil", ar: "Wattu — الصفحة الرئيسية", en: "Wattu Solar — home" }[lang];
+  const nav = {
+    fr: `    <a href="${up}villes/">Villes</a>
+    <a href="${up}guide/">Guides</a>
+    <a href="${up}">Simulateur</a>`,
+    ar: `    <a href="${up}ar/villes/">المدن</a>
+    <a href="${up}">المحاكي</a>`,
+    en: `    <a href="${up}en/cities/">Cities</a>
+    <a href="${up}">Simulator</a>`,
+  }[lang] + langLinks;
+  const footNav = {
+    fr: `    <a href="${up}villes/">Rentabilité par ville</a>
+    <a href="${up}guide/">Guides</a>
+    <a href="https://energy.wattu.org/">Carte énergie × digital</a>`,
+    ar: `    <a href="${up}ar/villes/">شحال كتربح فكل مدينة</a>`,
+    en: `    <a href="${up}en/cities/">Solar payback by city</a>
+    <a href="https://energy.wattu.org/">Energy × digital map</a>`,
+  }[lang];
   return `<!doctype html>
-<html lang="fr">
+<html lang="${lang}"${ar ? ' dir="rtl"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 ${offline ? '<meta name="robots" content="noindex">\n' : ""}<link rel="canonical" href="${canonical}">
+${hreflang}
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Wattu">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${canonical}">
-<meta property="og:locale" content="fr_MA">
+<meta property="og:locale" content="${{ fr: "fr_MA", ar: "ar_MA", en: "en_US" }[lang]}">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#050B18">
 <script type="application/ld+json">
@@ -151,15 +182,13 @@ ${ldJson(jsonLd)}
 <body class="cp">
 
 <header class="topbar">
-  <a class="w-brand" href="${up}" aria-label="Wattu Solaire — accueil">
+  <a class="w-brand" href="${up}" aria-label="${home}">
     <img class="w-mark" src="${up}mark.svg" alt="" width="26" height="26">
     <span class="w-word">wattu</span>
     <span class="w-product">Solaire</span>
   </a>
   <nav class="topnav">
-    <a href="${up}villes/">Villes</a>
-    <a href="${up}guide/">Guides</a>
-    <a href="${up}">Simulateur</a>
+${nav}
   </nav>
 </header>
 
@@ -168,14 +197,12 @@ ${body}
 </main>
 
 <footer class="site-footer">
-  <a class="w-brand" href="${up}" aria-label="Wattu Solaire — accueil">
+  <a class="w-brand" href="${up}" aria-label="${home}">
     <img class="w-mark" src="${up}mark.svg" alt="" width="22" height="22">
     <span class="w-word">wattu</span>
   </a>
   <nav>
-    <a href="${up}villes/">Rentabilité par ville</a>
-    <a href="${up}guide/">Guides</a>
-    <a href="https://energy.wattu.org/">Carte énergie × digital</a>
+${footNav}
   </nav>
 </footer>
 </body>
@@ -325,6 +352,7 @@ ${faq.map(([q, a]) => `    <h3>${esc(q)}</h3>\n    <p>${esc(a)}</p>`).join("\n")
     depth: 2,
     body,
     jsonLd,
+    alt: altCity(c),
   });
 }
 
@@ -396,12 +424,431 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
     depth: 1,
     body,
     jsonLd,
+    alt: ALT_INDEX,
+  });
+}
+
+// ── Arabic pages (/ar/ville/<slug>/, /ar/villes/) ──
+// Same figures as the French pages, written the Moroccan way: headings,
+// questions and the lead in Darija (the words people type: البلاكات,
+// فاتورة الضو, شحال, واش, فوقاش), the method in plain Arabic. Right to
+// left; Western digits and Moroccan month names, as Moroccan media print them.
+const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "ماي", "يونيو", "يوليوز", "غشت", "شتنبر", "أكتوبر", "نونبر", "دجنبر"];
+const todayAr = new Date().toLocaleDateString("ar-MA-u-nu-latn", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+// Darija counts: سنين up to 10, عام beyond; بلاكات up to 10, بلاكة beyond.
+const yearsAr = (n) => !Number.isFinite(n) ? "كثر من 25 عام" : `${dec(n)} ${n <= 10 ? "سنين" : "عام"}`;
+const panelsAr = (n) => n === 1 ? "بلاكة وحدة" : n === 2 ? "جوج بلاكات" : n <= 10 ? `${n} بلاكات` : `${n} بلاكة`;
+// Darija prepositions glued to a name: ف + فاس is written apart (ف فاس);
+// ل + الداخلة drops the alef (للداخلة).
+const fi = (n) => n.startsWith("ف") ? `ف ${n}` : `ف${n}`;
+const li = (n) => n.startsWith("ال") ? `لل${n.slice(2)}` : `ل${n}`;
+const KWH = "كيلوواط ساعة", KWC = "كيلوواط ذروة", MAD_AR = "درهم";
+
+const methodHtmlAr = (where) => `
+<section class="cp-section" id="methode">
+  <h2>كيفاش حسبنا</h2>
+  <ul class="cp-method">
+    <li><strong>الإنتاج:</strong> PVGIS v5.2 ديال المفوضية الأوروبية، ${where}، بلاكات فوق السطح مايلين ب${ANGLE}° لجهة الجنوب، مع ${CONFIG.PVGIS_LOSS}% ديال الضياع.</li>
+    <li><strong>التوفير:</strong> تعريفة الضو ديال الديور (الجهد المنخفض) ديال المكتب الوطني للكهرباء والماء الصالح للشرب، حسب الأشطر ومع الضرائب. البلاكات كتعوض الأول الكيلوواط الغالي. الجزء اللي كتستهلك من الإنتاج ديالك محسوب حسب الحجم ديال التركيب، بلا ما تبيع الفائض.</li>
+    <li><strong>الحجم:</strong> تركيب كيغطي تقريبا ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}% من الاستهلاك ديال العام، مقرّب لنص ${KWC}، ببلاكات ديال ${CONFIG.PANEL_KWP * 1000} واط.</li>
+    <li><strong>الثمن:</strong> ${num(COST)} ${MAD_AR} للواط مركّب (فرضية، بدّلها بالدوفي ديال المركّب ديالك). الصيانة ${Math.round(CONFIG.OPEX_PCT_CAPEX_YR * 100)}% فالعام، المردود كينقص ${dec(CONFIG.DEGRADATION_PCT_YR * 100)}% فالعام، التعريفة كتزيد ${Math.round(CONFIG.TARIFF_INFLATION_YR * 100)}% فالعام، على ${CONFIG.LIFETIME_YR} عام.</li>
+  </ul>
+  <p class="cp-meta">تحدّث نهار <time datetime="${today}">${todayAr}</time> من طرف <span lang="fr">${AUTHOR}</span>، خبير فالبنيات التحتية ديال الطاقة والرقمي فالمغرب. الحسابات كتعاود مع كل تحديث ديال المحاكي. <span lang="fr">Wattu</span> ما كتبيعش التركيبات وما كتاخد حتى عمولة.</p>
+</section>`;
+
+function cityPageAr(c, all) {
+  const r = c.result;
+  const ref = r.profiles.find(p => p.bill === REFERENCE_BILL);
+  const url = `${SITE}/ar/ville/${c.slug}/`;
+  const nationalAvg = all.reduce((a, x) => a + x.result.yieldPerKw, 0) / all.length;
+  const diff = (r.yieldPerKw / nationalAvg - 1) * 100;
+  const name = c.name_ar;
+  const diffTxt = Math.abs(diff) < 1 ? "قريب من المعدل ديال المدن المغربية"
+    : `${diff > 0 ? "كثر" : "قل"} ب${num(Math.abs(diff))}% من المعدل ديال ${all.length} مدينة اللي درسنا`;
+  const rank = [...all].sort((a, b) => b.result.yieldPerKw - a.result.yieldPerKw).indexOf(c) + 1;
+  const best = Math.max(...r.monthlyPerKw), worst = Math.min(...r.monthlyPerKw);
+
+  const answer = `${fi(name)}، كل ${KWC} ديال البلاكات الشمسية (الألواح الشمسية) كينتج تقريبا ${num(r.yieldPerKw)} ${KWH} فالعام. إلا كانت فاتورة الضو ديالك ${REFERENCE_BILL} ${MAD_AR} فالشهر، تركيب ديال ${kw(ref.kwp)} ${KWC} كيكلف تقريبا ${num(ref.capex)} ${MAD_AR}، كيوفر ليك قريب ${num(ref.savings)} ${MAD_AR} فالعام، وكترجع فلوسك ف${yearsAr(ref.payback)}.`;
+
+  const faq = [
+    [`شحال كتنتج البلاكة الشمسية ${fi(name)}؟`,
+      `بلاكة ديال ${CONFIG.PANEL_KWP * 1000} واط، إلا كانت مقادة مزيان، كتنتج تقريبا ${num(r.yieldPerKw * CONFIG.PANEL_KWP)} ${KWH} فالعام ${fi(name)}، يعني ${num(r.yieldPerKw)} ${KWH} لكل ${KWC} (حسب PVGIS، سطح مايل ب${ANGLE}° لجهة الجنوب). فالشهر الضعيف كتنتج ${num(worst)} ${KWH} لكل ${KWC}، وفالشهر القوي ${num(best)}.`],
+    [`شحال كيكلف تركيب الطاقة الشمسية ${fi(name)}؟`,
+      `لدار فيها فاتورة ديال ${REFERENCE_BILL} ${MAD_AR} فالشهر، خاصك تقريبا ${kw(ref.kwp)} ${KWC}، يعني ${panelsAr(ref.panels)}، والميزانية قريبة ل${num(ref.capex)} ${MAD_AR} على حساب ${num(COST)} ${MAD_AR} للواط. الثمن الحقيقي كيتبدل حسب المركّب، السلعة والسطح.`],
+    [`واش الطاقة الشمسية كتربح ${fi(name)}؟`,
+      `إيه، لأغلب الديور: بفاتورة ديال ${REFERENCE_BILL} ${MAD_AR} فالشهر، كترجع فلوسك ف${yearsAr(ref.payback)} وكتربح تقريبا ${num(ref.lifetime)} ${MAD_AR} صافية ف${CONFIG.LIFETIME_YR} عام. وكلما كانت الفاتورة كبيرة، كترجع فلوسك بالزربة، حيت البلاكات كتعوض الأول الأشطر الغالية فالفاتورة.`],
+    [`واش نقدر نبيع الضو الزايد للشبكة ${fi(name)}؟`,
+      `القانون 82-21 ديال الإنتاج الذاتي كيسمح تدخّل الفائض للشبكة، ولكن ماشي كثر من ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}% من الإنتاج ديال العام. والثمن اللي غادي يشريو بيه الفائض من الديور مازال ما تنشرش، داكشي علاش الأرقام ديال هاد الصفحة ما حاسباهش: هادي تقديرات محتاطة.`],
+  ];
+
+  const sameRegion = all.filter(x => x !== c && x.region === c.region);
+  const others = all.filter(x => x !== c && x.region !== c.region);
+
+  const body = `
+<nav class="cp-crumbs" aria-label="فين كاين"><a href="../../../">Wattu</a> ‹ <a href="../../villes/">المدن</a> ‹ <span>${esc(name)}</span></nav>
+
+<article>
+  <header class="cp-head">
+    <p class="w-kicker">الطاقة الشمسية فالدار · ${esc(c.region_ar)}</p>
+    <h1>البلاكات الشمسية ${esc(fi(name))}: شحال كتنتج، شحال كتكلف، وفوقاش كترجع فلوسك</h1>
+    <p class="cp-answer">${esc(answer)}</p>
+    <a class="cp-cta" href="${esc("../" + toolLink(c, REFERENCE_BILL))}">حسب لدارك ${esc(fi(name))} ←</a>
+    <p class="cp-note">المحاكي متوفر دابا غير بالفرنسية.</p>
+  </header>
+
+  <section class="cp-figures" aria-label="الأرقام المهمة">
+    <div><span class="cp-fig">${num(r.yieldPerKw)}</span><span class="cp-unit">${KWH} لكل ${KWC} فالعام</span></div>
+    <div><span class="cp-fig">${r.radiationAnnual ? num(r.radiationAnnual) : "—"}</span><span class="cp-unit">${KWH}/م² ديال الشمس على البلاكة فالعام</span></div>
+    <div><span class="cp-fig">${rank}</span><span class="cp-unit">الرتبة ديالها من بين ${all.length} مدينة فالإنتاج</span></div>
+    <div><span class="cp-fig">${dec(ref.payback)}</span><span class="cp-unit">${ref.payback <= 10 ? "سنين" : "عام"} باش ترجع فلوسك (فاتورة ${REFERENCE_BILL} ${MAD_AR})</span></div>
+  </section>
+  <p class="cp-note">الإنتاج الشمسي ${esc(fi(name))} ${diffTxt}.</p>
+
+  <section class="cp-section">
+    <h2>شحال كتربح حسب فاتورة الضو ديالك</h2>
+    <div class="cp-scroll">
+    <table class="cp-table">
+      <caption>تركيب فوق السطح ${esc(fi(name))}، مايل ب${ANGLE}° لجهة الجنوب، ${num(COST)} ${MAD_AR} للواط، بلا ما تبيع الفائض</caption>
+      <thead><tr><th scope="col">فاتورة الضو</th><th scope="col">الاستهلاك</th><th scope="col">القوة اللي خاصك</th><th scope="col">ثمن التركيب</th><th scope="col">الإنتاج</th><th scope="col">التوفير فالعام الأول</th><th scope="col">فوقاش كترجع فلوسك</th><th scope="col">الربح الصافي ف${CONFIG.LIFETIME_YR} عام</th></tr></thead>
+      <tbody>
+${r.profiles.map(p => `        <tr><th scope="row">${num(p.bill)} ${MAD_AR}/الشهر</th><td>${num(p.consumption)} ${KWH}/الشهر</td><td>${kw(p.kwp)} ${KWC} (${panelsAr(p.panels)})</td><td>${num(p.capex)} ${MAD_AR}</td><td>${num(p.annualKwh)} ${KWH}/العام</td><td>${num(p.savings)} ${MAD_AR}</td><td>${yearsAr(p.payback)}</td><td>${num(p.lifetime)} ${MAD_AR}</td></tr>`).join("\n")}
+      </tbody>
+    </table>
+    </div>
+    <p class="cp-note">السطح ديالك، الاتجاه ديالو والدوفي ديال المركّب كيبدلو هاد الأرقام. <a href="${esc("../" + toolLink(c, REFERENCE_BILL))}">المحاكي</a> كيعاود يحسبهم للعنوان ديالك بالضبط، مع المساحة الحقيقية ديال السطح.</p>
+  </section>
+
+  <section class="cp-section">
+    <h2>شحال كتنتج البلاكات كل شهر ${esc(fi(name))}</h2>
+    <div class="cp-scroll">
+    <table class="cp-table cp-months">
+      <caption>${KWH} لكل ${KWC} مركّب (PVGIS)</caption>
+      <thead><tr>${MONTHS_AR.map(m => `<th scope="col">${m}</th>`).join("")}</tr></thead>
+      <tbody><tr>${r.monthlyPerKw.map(m => `<td>${num(m)}</td>`).join("")}</tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="cp-section">
+    <h2>الأسئلة اللي كيسولو الناس</h2>
+${faq.map(([q, a]) => `    <h3>${esc(q)}</h3>\n    <p>${esc(a)}</p>`).join("\n")}
+  </section>
+
+  ${methodHtmlAr("فوسط المدينة")}
+
+  <section class="cp-section">
+    <h2>مدن خرين</h2>
+    ${sameRegion.length ? `<p class="cp-near">فنفس الجهة: ${sameRegion.map(x => `<a href="../${x.slug}/">${esc(x.name_ar)}</a> (${num(x.result.yieldPerKw)} ${KWH}/${KWC})`).join(" · ")}</p>` : ""}
+    <p class="cp-near">${others.map(x => `<a href="../${x.slug}/">${esc(x.name_ar)}</a>`).join(" · ")}</p>
+    <p><a href="../../villes/">قارن بين ${all.length} مدينة ←</a></p>
+  </section>
+</article>`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article", "@id": url + "#article",
+        headline: `البلاكات الشمسية ${fi(name)}: شحال كتنتج، شحال كتكلف، وفوقاش كترجع فلوسك`,
+        description: answer, inLanguage: "ar-MA", url, dateModified: today,
+        author: { "@type": "Person", name: AUTHOR },
+        publisher: { "@type": "Organization", name: "Wattu", url: SITE + "/" },
+        about: {
+          "@type": "City", name, alternateName: c.name,
+          containedInPlace: { "@type": "AdministrativeArea", name: c.region_ar },
+          geo: { "@type": "GeoCoordinates", latitude: c.lat, longitude: c.lon },
+        },
+        isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
+      },
+      { "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) },
+      { "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Wattu", item: SITE + "/" },
+        { "@type": "ListItem", position: 2, name: "المدن", item: SITE + "/ar/villes/" },
+        { "@type": "ListItem", position: 3, name, item: url },
+      ] },
+    ],
+  };
+
+  return layout({
+    title: `الطاقة الشمسية ${fi(name)}: شحال كتنتج البلاكات وشحال كتربح (${new Date().getUTCFullYear()}) | Wattu`,
+    description: answer, canonical: url, depth: 3, body, jsonLd,
+    lang: "ar", alt: altCity(c),
+  });
+}
+
+function indexPageAr(all) {
+  const url = `${SITE}/ar/villes/`;
+  const sorted = [...all].sort((a, b) => b.result.yieldPerKw - a.result.yieldPerKw);
+  const ys = sorted.map(c => c.result.yieldPerKw);
+  const refOf = (c) => c.result.profiles.find(p => p.bill === REFERENCE_BILL);
+  const paybacks = sorted.map(c => refOf(c).payback).filter(Number.isFinite);
+  const top = sorted[0], low = sorted[sorted.length - 1];
+  const answer = `فالمغرب، كل ${KWC} ديال البلاكات الشمسية (الألواح الشمسية) كينتج بين ${num(Math.min(...ys))} و${num(Math.max(...ys))} ${KWH} فالعام حسب المدينة، من ${low.name_ar} حتى ${li(top.name_ar)}. إلا كانت فاتورة الضو ديالك ${REFERENCE_BILL} ${MAD_AR} فالشهر، كترجع فلوس التركيب ف${dec(Math.min(...paybacks))} حتى ل${dec(Math.max(...paybacks))} عام.`;
+
+  const body = `
+<nav class="cp-crumbs" aria-label="فين كاين"><a href="../../">Wattu</a> ‹ <span>المدن</span></nav>
+<article>
+  <header class="cp-head">
+    <p class="w-kicker">الطاقة الشمسية فالدار · المغرب</p>
+    <h1>الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة</h1>
+    <p class="cp-answer">${esc(answer)}</p>
+    <a class="cp-cta" href="../../">حسب لدارك ←</a>
+    <p class="cp-note">المحاكي متوفر دابا غير بالفرنسية.</p>
+  </header>
+
+  <section class="cp-section">
+    <h2>ترتيب ${all.length} مدينة حسب الإنتاج الشمسي</h2>
+    <div class="cp-scroll">
+    <table class="cp-table">
+      <caption>سطح مايل ب${ANGLE}° لجهة الجنوب، فاتورة ${REFERENCE_BILL} ${MAD_AR} فالشهر، ${num(COST)} ${MAD_AR} للواط، بلا ما تبيع الفائض</caption>
+      <thead><tr><th scope="col">المدينة</th><th scope="col">الجهة</th><th scope="col">الإنتاج لكل ${KWC}</th><th scope="col">القوة اللي خاصك</th><th scope="col">التوفير فالعام الأول</th><th scope="col">فوقاش كترجع فلوسك</th></tr></thead>
+      <tbody>
+${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a href="../ville/${c.slug}/">${esc(c.name_ar)}</a></th><td>${esc(c.region_ar)}</td><td>${num(c.result.yieldPerKw)} ${KWH}/العام</td><td>${kw(p.kwp)} ${KWC}</td><td>${num(p.savings)} ${MAD_AR}</td><td>${yearsAr(p.payback)}</td></tr>`; }).join("\n")}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  ${methodHtmlAr("فوسط كل مدينة")}
+</article>`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Dataset",
+        name: "الإنتاج والربح ديال الطاقة الشمسية فالديور حسب المدن المغربية",
+        description: answer, url, inLanguage: "ar-MA", dateModified: today,
+        creator: { "@type": "Person", name: AUTHOR },
+        license: "https://creativecommons.org/licenses/by/4.0/",
+        spatialCoverage: { "@type": "Country", name: "المغرب" },
+        isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
+      },
+      { "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Wattu", item: SITE + "/" },
+        { "@type": "ListItem", position: 2, name: "المدن", item: url },
+      ] },
+    ],
+  };
+
+  return layout({
+    title: `الطاقة الشمسية فالمغرب: شحال كتربح البلاكات فكل مدينة (${new Date().getUTCFullYear()}) | Wattu`,
+    description: answer, canonical: url, depth: 2, body, jsonLd,
+    lang: "ar", alt: ALT_INDEX,
+  });
+}
+
+// ── English pages (/en/city/<slug>/, /en/cities/) ──
+// For expatriates, the diaspora and English-language search. Same figures,
+// English number format (1,646 · 9.8).
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const numEn = (n) => Math.round(n).toLocaleString("en-US");
+const decEn = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const kwEn = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 1 });
+const yearsEn = (n) => Number.isFinite(n) ? `${decEn(n)} years` : "over 25 years";
+const ordinalEn = (n) => n + ((n % 100 >= 11 && n % 100 <= 13) ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th"));
+const todayEn = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+const methodHtmlEn = (where) => `
+<section class="cp-section" id="methode">
+  <h2>Method and sources</h2>
+  <ul class="cp-method">
+    <li><strong>Output:</strong> PVGIS v5.2 (European Commission Joint Research Centre), ${where}, rooftop panels tilted ${ANGLE}° due south, ${CONFIG.PVGIS_LOSS}% system losses.</li>
+    <li><strong>Savings:</strong> ONEE low-voltage residential tariff by tranche (tax included). Solar replaces the most expensive kWh of the bill first. The share used on site depends on system size; no surplus sales.</li>
+    <li><strong>Sizing:</strong> a system covering about ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}% of yearly consumption, rounded to half a kWp, with ${CONFIG.PANEL_KWP * 1000} Wp panels.</li>
+    <li><strong>Cost:</strong> ${numEn(COST)} MAD per installed watt-peak (an assumption: use your installer's quote). Maintenance ${Math.round(CONFIG.OPEX_PCT_CAPEX_YR * 100)}% a year, ${decEn(CONFIG.DEGRADATION_PCT_YR * 100)}% yearly output loss, ${Math.round(CONFIG.TARIFF_INFLATION_YR * 100)}% yearly tariff rise, ${CONFIG.LIFETIME_YR}-year life.</li>
+  </ul>
+  <p class="cp-meta">Updated <time datetime="${today}">${todayEn}</time> by ${AUTHOR}, an energy and digital infrastructure expert focused on Morocco. Figures are recalculated with every update of the simulator. Wattu does not sell installations and takes no commission.</p>
+</section>`;
+
+function cityPageEn(c, all) {
+  const r = c.result;
+  const ref = r.profiles.find(p => p.bill === REFERENCE_BILL);
+  const url = `${SITE}/en/city/${c.slug}/`;
+  const name = c.name_en;
+  const nationalAvg = all.reduce((a, x) => a + x.result.yieldPerKw, 0) / all.length;
+  const diff = (r.yieldPerKw / nationalAvg - 1) * 100;
+  const diffTxt = Math.abs(diff) < 1 ? "in line with the Moroccan average"
+    : `${numEn(Math.abs(diff))}% ${diff > 0 ? "above" : "below"} the average of the ${all.length} cities studied`;
+  const rank = [...all].sort((a, b) => b.result.yieldPerKw - a.result.yieldPerKw).indexOf(c) + 1;
+  const best = Math.max(...r.monthlyPerKw), worst = Math.min(...r.monthlyPerKw);
+
+  const answer = `In ${name}, each kWp of solar panels produces about ${numEn(r.yieldPerKw)} kWh a year. For an electricity bill of ${REFERENCE_BILL} MAD a month, a ${kwEn(ref.kwp)} kWp system (about ${numEn(ref.capex)} MAD) saves around ${numEn(ref.savings)} MAD a year and pays for itself in ${yearsEn(ref.payback)}.`;
+
+  const faq = [
+    [`How much does a solar panel produce in ${name}?`,
+      `A well-oriented ${CONFIG.PANEL_KWP * 1000} Wp panel produces about ${numEn(r.yieldPerKw * CONFIG.PANEL_KWP)} kWh a year in ${name}, or ${numEn(r.yieldPerKw)} kWh per installed kWp (PVGIS, roof tilted ${ANGLE}° due south). Output ranges from ${numEn(worst)} kWh per kWp in the weakest month to ${numEn(best)} kWh in the strongest.`],
+    [`How much does a home solar system cost in ${name}?`,
+      `For a home with a ${REFERENCE_BILL} MAD monthly bill, you need about ${kwEn(ref.kwp)} kWp, or ${ref.panels} panels, for a budget of around ${numEn(ref.capex)} MAD at ${numEn(COST)} MAD per watt-peak. The actual price depends on the installer, the equipment and the roof.`],
+    [`Is solar worth it in ${name}?`,
+      `For most households, yes: with a ${REFERENCE_BILL} MAD monthly bill, the system pays for itself in ${yearsEn(ref.payback)} and returns about ${numEn(ref.lifetime)} MAD net over ${CONFIG.LIFETIME_YR} years. The higher the bill, the faster the payback, because solar replaces the most expensive tranches of the ONEE tariff first.`],
+    [`Can you sell surplus solar power to the grid in ${name}?`,
+      `Morocco's self-generation law 82-21 allows surplus power to be fed into the grid, capped at ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}% of yearly output. The residential buy-back tariff has not been published yet, so the figures on this page leave it out: they are conservative estimates.`],
+  ];
+
+  const sameRegion = all.filter(x => x !== c && x.region === c.region);
+  const others = all.filter(x => x !== c && x.region !== c.region);
+
+  const body = `
+<nav class="cp-crumbs" aria-label="Breadcrumb"><a href="../../../">Wattu Solar</a> › <a href="../../cities/">Cities</a> › <span>${esc(name)}</span></nav>
+
+<article>
+  <header class="cp-head">
+    <p class="w-kicker">Home solar · ${esc(c.region)}</p>
+    <h1>Solar panels in ${esc(name)}, Morocco: output, cost and payback</h1>
+    <p class="cp-answer">${esc(answer)}</p>
+    <a class="cp-cta" href="${esc("../" + toolLink(c, REFERENCE_BILL))}">Calculate for my address in ${esc(name)} →</a>
+    <p class="cp-note">The simulator is in French for now.</p>
+  </header>
+
+  <section class="cp-figures" aria-label="Key figures">
+    <div><span class="cp-fig">${numEn(r.yieldPerKw)}</span><span class="cp-unit">kWh per kWp per year</span></div>
+    <div><span class="cp-fig">${r.radiationAnnual ? numEn(r.radiationAnnual) : "—"}</span><span class="cp-unit">kWh/m² of sunlight on the panel per year</span></div>
+    <div><span class="cp-fig">${ordinalEn(rank)}</span><span class="cp-unit">of ${all.length} cities for solar output</span></div>
+    <div><span class="cp-fig">${decEn(ref.payback)}</span><span class="cp-unit">years to pay back (${REFERENCE_BILL} MAD bill)</span></div>
+  </section>
+  <p class="cp-note">Solar output in ${esc(name)} is ${diffTxt}.</p>
+
+  <section class="cp-section">
+    <h2>Payback by electricity bill</h2>
+    <div class="cp-scroll">
+    <table class="cp-table">
+      <caption>Rooftop system in ${esc(name)}, ${ANGLE}° due south, ${numEn(COST)} MAD/Wp, no surplus sales</caption>
+      <thead><tr><th scope="col">ONEE bill</th><th scope="col">Consumption</th><th scope="col">Recommended size</th><th scope="col">Investment</th><th scope="col">Output</th><th scope="col">Year-1 savings</th><th scope="col">Payback</th><th scope="col">Net gain over ${CONFIG.LIFETIME_YR} years</th></tr></thead>
+      <tbody>
+${r.profiles.map(p => `        <tr><th scope="row">${numEn(p.bill)} MAD/month</th><td>${numEn(p.consumption)} kWh/month</td><td>${kwEn(p.kwp)} kWp (${p.panels} panels)</td><td>${numEn(p.capex)} MAD</td><td>${numEn(p.annualKwh)} kWh/yr</td><td>${numEn(p.savings)} MAD</td><td>${yearsEn(p.payback)}</td><td>${numEn(p.lifetime)} MAD</td></tr>`).join("\n")}
+      </tbody>
+    </table>
+    </div>
+    <p class="cp-note">Your roof, its orientation and your quote change these figures. <a href="${esc("../" + toolLink(c, REFERENCE_BILL))}">The simulator</a> recalculates them for your exact address, with your actual roof area.</p>
+  </section>
+
+  <section class="cp-section">
+    <h2>Month-by-month solar output in ${esc(name)}</h2>
+    <div class="cp-scroll">
+    <table class="cp-table cp-months">
+      <caption>kWh per installed kWp (PVGIS)</caption>
+      <thead><tr>${MONTHS_EN.map(m => `<th scope="col">${m}</th>`).join("")}</tr></thead>
+      <tbody><tr>${r.monthlyPerKw.map(m => `<td>${numEn(m)}</td>`).join("")}</tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="cp-section">
+    <h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `    <h3>${esc(q)}</h3>\n    <p>${esc(a)}</p>`).join("\n")}
+  </section>
+
+  ${methodHtmlEn("at the city centre")}
+
+  <section class="cp-section">
+    <h2>Other cities</h2>
+    ${sameRegion.length ? `<p class="cp-near">Same region: ${sameRegion.map(x => `<a href="../${x.slug}/">${esc(x.name_en)}</a> (${numEn(x.result.yieldPerKw)} kWh/kWp)`).join(" · ")}</p>` : ""}
+    <p class="cp-near">${others.map(x => `<a href="../${x.slug}/">${esc(x.name_en)}</a>`).join(" · ")}</p>
+    <p><a href="../../cities/">Compare the ${all.length} cities →</a></p>
+  </section>
+</article>`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article", "@id": url + "#article",
+        headline: `Solar panels in ${name}, Morocco: output, cost and payback`,
+        description: answer, inLanguage: "en", url, dateModified: today,
+        author: { "@type": "Person", name: AUTHOR },
+        publisher: { "@type": "Organization", name: "Wattu", url: SITE + "/" },
+        about: {
+          "@type": "City", name, alternateName: c.name,
+          containedInPlace: { "@type": "AdministrativeArea", name: c.region },
+          geo: { "@type": "GeoCoordinates", latitude: c.lat, longitude: c.lon },
+        },
+        isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
+      },
+      { "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) },
+      { "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Wattu Solar", item: SITE + "/" },
+        { "@type": "ListItem", position: 2, name: "Cities", item: SITE + "/en/cities/" },
+        { "@type": "ListItem", position: 3, name, item: url },
+      ] },
+    ],
+  };
+
+  return layout({
+    title: `Solar panels in ${name}, Morocco: output, cost, payback (${new Date().getUTCFullYear()}) | Wattu`,
+    description: answer, canonical: url, depth: 3, body, jsonLd,
+    lang: "en", alt: altCity(c),
+  });
+}
+
+function indexPageEn(all) {
+  const url = `${SITE}/en/cities/`;
+  const sorted = [...all].sort((a, b) => b.result.yieldPerKw - a.result.yieldPerKw);
+  const ys = sorted.map(c => c.result.yieldPerKw);
+  const refOf = (c) => c.result.profiles.find(p => p.bill === REFERENCE_BILL);
+  const paybacks = sorted.map(c => refOf(c).payback).filter(Number.isFinite);
+  const top = sorted[0], low = sorted[sorted.length - 1];
+  const answer = `In Morocco, one kWp of solar panels produces ${numEn(Math.min(...ys))} to ${numEn(Math.max(...ys))} kWh a year depending on the city, from ${low.name_en} to ${top.name_en}. For an electricity bill of ${REFERENCE_BILL} MAD a month, a home system pays for itself in ${decEn(Math.min(...paybacks))} to ${decEn(Math.max(...paybacks))} years.`;
+
+  const body = `
+<nav class="cp-crumbs" aria-label="Breadcrumb"><a href="../../">Wattu Solar</a> › <span>Cities</span></nav>
+<article>
+  <header class="cp-head">
+    <p class="w-kicker">Home solar · Morocco</p>
+    <h1>Solar panel payback in Morocco, city by city</h1>
+    <p class="cp-answer">${esc(answer)}</p>
+    <a class="cp-cta" href="../../">Calculate for my address →</a>
+    <p class="cp-note">The simulator is in French for now.</p>
+  </header>
+
+  <section class="cp-section">
+    <h2>The ${all.length} cities ranked by solar output</h2>
+    <div class="cp-scroll">
+    <table class="cp-table">
+      <caption>Roof at ${ANGLE}° due south, ${REFERENCE_BILL} MAD monthly bill, ${numEn(COST)} MAD/Wp, no surplus sales</caption>
+      <thead><tr><th scope="col">City</th><th scope="col">Region</th><th scope="col">Output per kWp</th><th scope="col">Recommended size</th><th scope="col">Year-1 savings</th><th scope="col">Payback</th></tr></thead>
+      <tbody>
+${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a href="../city/${c.slug}/">${esc(c.name_en)}</a></th><td>${esc(c.region)}</td><td>${numEn(c.result.yieldPerKw)} kWh/yr</td><td>${kwEn(p.kwp)} kWp</td><td>${numEn(p.savings)} MAD</td><td>${yearsEn(p.payback)}</td></tr>`; }).join("\n")}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  ${methodHtmlEn("at each city centre")}
+</article>`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Dataset",
+        name: "Home solar output and payback in Moroccan cities",
+        description: answer, url, inLanguage: "en", dateModified: today,
+        creator: { "@type": "Person", name: AUTHOR },
+        license: "https://creativecommons.org/licenses/by/4.0/",
+        spatialCoverage: { "@type": "Country", name: "Morocco" },
+        variableMeasured: ["Yearly PV output (kWh/kWp)", "Yearly savings (MAD)", "Payback (years)"],
+        isBasedOn: "https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en",
+      },
+      { "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Wattu Solar", item: SITE + "/" },
+        { "@type": "ListItem", position: 2, name: "Cities", item: url },
+      ] },
+    ],
+  };
+
+  return layout({
+    title: `Solar panel payback in Morocco by city (${new Date().getUTCFullYear()}) | Wattu`,
+    description: answer, canonical: url, depth: 2, body, jsonLd,
+    lang: "en", alt: ALT_INDEX,
   });
 }
 
 function sitemap(all, guideList) {
   const urls = [`${SITE}/`, `${SITE}/villes/`, `${SITE}/guide/`,
-    ...guideList.map(g => `${SITE}/guide/${g.slug}/`), ...all.map(c => `${SITE}/ville/${c.slug}/`)];
+    ...guideList.map(g => `${SITE}/guide/${g.slug}/`), ...all.map(c => `${SITE}/ville/${c.slug}/`),
+    `${SITE}/ar/villes/`, ...all.map(c => `${SITE}/ar/ville/${c.slug}/`),
+    `${SITE}/en/cities/`, ...all.map(c => `${SITE}/en/city/${c.slug}/`)];
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${u}</loc><lastmod>${today}</lastmod></url>`).join("\n")}
@@ -417,6 +864,8 @@ function llmsTxt(all, guideList) {
 
 - [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise
 - [Rentabilité par ville](${SITE}/villes/): tableau comparatif de ${all.length} villes marocaines
+- [الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة](${SITE}/ar/villes/): les mêmes pages villes en arabe marocain (darija)
+- [Solar panel payback in Morocco, city by city](${SITE}/en/cities/): the same city pages in English
 
 ## Guides
 
@@ -695,6 +1144,7 @@ for (const c of cities) {
   if (!/^[a-z0-9-]+$/.test(c.slug) || slugs.has(c.slug)) throw new Error(`bad or duplicate slug: ${c.slug}`);
   slugs.add(c.slug);
   if (!inMorocco(c.lat, c.lon)) throw new Error(`${c.name} is outside Morocco: ${c.lat},${c.lon}`);
+  if (!c.name_ar || !c.region_ar || !c.name_en) throw new Error(`${c.name}: name_ar, region_ar and name_en are required`);
 }
 
 if (offline) console.warn("OFFLINE: approximate yields, every page is noindex. Do not deploy this output.");
@@ -714,6 +1164,10 @@ const write = (rel, content) => {
 };
 for (const c of cities) write(`ville/${c.slug}/index.html`, cityPage(c, cities));
 write("villes/index.html", indexPage(cities));
+for (const c of cities) write(`ar/ville/${c.slug}/index.html`, cityPageAr(c, cities));
+write("ar/villes/index.html", indexPageAr(cities));
+for (const c of cities) write(`en/city/${c.slug}/index.html`, cityPageEn(c, cities));
+write("en/cities/index.html", indexPageEn(cities));
 const guideList = guides(cities);
 for (const g of guideList) write(`guide/${g.slug}/index.html`, guidePage(g, guideList));
 write("guide/index.html", guideIndex(guideList));
@@ -722,4 +1176,4 @@ write("llms.txt", llmsTxt(cities, guideList));
 // IndexNow ownership proof (scripts/indexnow-ping.mjs): /<key>.txt holds the key.
 const indexNowKey = readFileSync(join(ROOT, "solar/indexnow-key.txt"), "utf8").trim();
 write(`${indexNowKey}.txt`, indexNowKey);
-console.log(`wrote ${cities.length} city pages, villes/, ${guideList.length} guides, guide/, sitemap.xml, llms.txt to ${out}`);
+console.log(`wrote ${cities.length} city pages (fr + ar + en), villes/, ar/villes/, en/cities/, ${guideList.length} guides, guide/, sitemap.xml, llms.txt to ${out}`);

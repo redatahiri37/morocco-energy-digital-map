@@ -48,6 +48,10 @@ writes static HTML with the same figures:
 - `/ville/<slug>/` — one page per city in `data/cities.json`: yield per kWc,
   savings and payback for four bills, monthly production, FAQ, method.
 - `/villes/` — all cities ranked, linked from the page footer.
+- `/ar/ville/<slug>/`, `/ar/villes/` (Moroccan Arabic: Darija headings and
+  questions, right to left) and `/en/city/<slug>/`, `/en/cities/` (English) —
+  the same pages, all three languages `hreflang`-linked. Names: `name_ar`,
+  `region_ar`, `name_en` in `data/cities.json`.
 - `/guide/<slug>/` — answers to the questions people search for: how many
   panels for a bill, installed price, ONEE tariff, law 82-21, Taqa Pro. Figures
   from the same engine and PVGIS runs (median city); facts from "Data sources"
