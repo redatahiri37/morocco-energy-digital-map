@@ -63,9 +63,13 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   Clusters show their summed MW/GW and size on the same scale (floor so the
   label fits, cap at 56 px); hover gives "N plants · X GW". A size key under
   the layer list redraws with the zoom.
-- Next UX steps, in order: status filter; shareable URL (country, plant);
-  plant search; FR/EN; Africa/Europe overview coloured by mix; mobile mix
-  sheet. The fuel palette fails the
+- Status view above the layer list: All / In service / Pipeline (under
+  construction, announced, planned) narrows every layer with a file and the
+  OSM plants (construction / disused tags); kept across country switches.
+  Only Morocco, France and Spain have a pipeline in their files; elsewhere
+  the note says the sources list built assets only.
+- Next UX steps, in order: shareable URL (country, plant); plant search;
+  FR/EN; Africa/Europe overview coloured by mix; mobile mix sheet. The fuel palette fails the
   dataviz validator (gas/oil too close); changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)

@@ -95,6 +95,15 @@
 
     <section class="panel-section">
       <h2 class="panel-title">Layers</h2>
+      <!-- Status view: narrows every layer with a file (app.js STATUS_VIEWS). -->
+      <div class="status-row" id="statusRow">
+        <div class="seg" role="group" aria-label="Status">
+          <button type="button" class="seg-btn" data-status="all" aria-pressed="true">All</button>
+          <button type="button" class="seg-btn" data-status="service" aria-pressed="false">In service</button>
+          <button type="button" class="seg-btn" data-status="pipeline" aria-pressed="false">Pipeline</button>
+        </div>
+      </div>
+      <p class="status-note" id="statusNote" hidden></p>
       <div id="layerList" class="layer-list"></div>
       <!-- Plant dot sizes at the current zoom (app.js renderSizeKey). -->
       <div class="size-key" id="sizeKey" hidden>

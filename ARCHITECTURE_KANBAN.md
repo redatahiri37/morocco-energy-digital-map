@@ -173,7 +173,7 @@ Information Design
   • files: docs/app.js (new KPI bar component), docs/style.css
   • verify: top strip shows total MW, project count, updates live with filters
 
-- [ ] Add inline bubble-size legend for capacity encoding
+- [x] Add inline bubble-size legend for capacity encoding — done 2026-10-12 (PR #95; dots sized by MW, key follows the zoom)
   • why: marker sizes encode capacity but there's no legend.
     Users can't decode what "big" vs "small" means.
   • impact: 2
@@ -197,14 +197,14 @@ Interaction & Filtering
   • files: docs/app.js (filter panel), docs/style.css
   • verify: drag slider → only plants within range visible on map
 
-- [ ] Add fuel-type multi-select filter (Solar, Wind, Gas, Coal, Hydro, etc.)
+- [x] Add fuel-type multi-select filter (Solar, Wind, Gas, Coal, Hydro, etc.) — done 2026-10-12 as a single-fuel pick from the mix legend (PR #95)
   • why: users exploring renewables can't isolate solar vs wind vs gas.
   • impact: 4
   • effort: M
   • files: docs/app.js (filter panel)
   • verify: select "Solar" + "Wind" → only those fuel types shown
 
-- [ ] Add project status filter (Operational / Under Construction / Planned)
+- [x] Add project status filter (Operational / Under Construction / Planned) — done 2026-10-12 as All / In service / Pipeline (PR #95)
   • why: mixing all statuses makes the map noisy. Users want to see
     only the pipeline, or only operational assets.
   • impact: 3
@@ -243,7 +243,7 @@ Interaction & Filtering
   • verify: click share → URL copied → paste in new tab → same view
 
 Analytical Value
-- [ ] Add stacked bar chart of installed capacity by fuel type
+- [x] Add stacked bar chart of installed capacity by fuel type — done 2026-10-12: national generation / capacity bar from Ember (PR #95)
   • why: map shows spatial distribution but not aggregate mix.
     A small chart panel gives the macro picture.
   • impact: 3

@@ -204,6 +204,13 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layer-row.muted{opacity:.45}
 .layer-row.muted .layer-name{color:var(--text-2)}
 
+/* Status view above the layer list */
+.status-row{margin-bottom:8px}
+.status-row .seg{display:flex}
+.status-row .seg-btn{flex:1}
+.status-note[hidden]{display:none}
+.status-note{font-size:11px;line-height:1.4;color:var(--text-1);background:var(--bg-2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;margin-bottom:8px}
+
 /* Plant size key — dots drawn at the map's current scale */
 .size-key[hidden]{display:none}
 .size-key{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 8px 0;border-top:1px dashed var(--border)}

@@ -147,6 +147,7 @@
   let boundaryData   = null;
   let mixData        = null;   // national mix (mix.json) of the current country
   let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
+  let statusView     = "all";  // key of STATUS_VIEWS; kept across country switches
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -329,6 +330,7 @@
   // Panel, KPIs and methodology for a country whose data is loaded.
   function renderPanel(countryKey){
     renderMix();
+    renderStatusNote();
     renderLayerList(countryKey);
     renderSizeKey();
     renderKPIs(countryKey);
@@ -389,7 +391,7 @@
     c.layers.forEach(L=>{
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
-      const shown = plantData(L).features.length;
+      const shown = layerView(L).features.length;
       const planned = kind==="grid" && isPlannedGrid(L.id);
       const dotColor = (
         planned             ? PLANNED_COLOR :
@@ -536,13 +538,52 @@
   const plantFuels = (fuel)=>MIX_PLANT_FUELS[fuel] || [fuel];
   const mixFuel = (fuel)=>mixData && mixData.fuels.find(f=>f.fuel === fuel);
 
-  // A plant layer's data as drawn: every feature, or the picked fuel's only.
-  function plantData(L){
+  // A layer's data as drawn: narrowed to the picked fuel (plant layers) and
+  // to the status view (every layer with a file).
+  function layerView(L){
     const fc = layerData[L.id] || { type:"FeatureCollection", features:[] };
-    if(!fuelFilter || L.kind !== "power") return fc;
-    const keep = plantFuels(fuelFilter);
-    return { type:"FeatureCollection", features: fc.features.filter(f=>keep.includes(f.properties.fuel_type)) };
+    const fuels = fuelFilter && L.kind === "power" ? plantFuels(fuelFilter) : null;
+    const statuses = STATUS_VIEWS[statusView].statuses;
+    if(!fuels && !statuses) return fc;
+    return { type:"FeatureCollection", features: fc.features.filter(f=>
+      (!fuels || fuels.includes(f.properties.fuel_type)) &&
+      (!statuses || statuses.includes(f.properties.status))) };
   }
+
+  // ---------- Status view ----------
+  // "In service" and "Pipeline" match the KPI tiles. Idle assets (a closed
+  // interconnector, a stopped plant) show under "All" only.
+  const STATUS_VIEWS = {
+    all:      { statuses: null },
+    service:  { statuses: ["operational"] },
+    pipeline: { statuses: ["construction", "announced", "planned"] }
+  };
+  function renderStatusNote(){
+    $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.status === statusView)));
+    const note = $("#statusNote");
+    note.hidden = statusView === "all";
+    if(note.hidden) return;
+    // Counted by status alone: a fuel picked in the mix doesn't change it.
+    const statuses = STATUS_VIEWS[statusView].statuses;
+    const all = COUNTRIES[currentCountry].layers.filter(L=>L.file)
+      .flatMap(L=>(layerData[L.id] || { features:[] }).features);
+    const total = all.length;
+    const shown = all.filter(f=>statuses.includes(f.properties.status)).length;
+    note.textContent = shown ? `${shown.toLocaleString("en")} of ${total.toLocaleString("en")} mapped assets` +
+        (statusView === "pipeline" ? " are under construction, announced or planned." : " are in service.")
+      : statusView === "pipeline"
+        ? "None of this country's mapped assets is under construction or announced: its sources list built ones only."
+        : "None of this country's mapped assets is listed as in service.";
+  }
+  function setStatusView(view){
+    if(!STATUS_VIEWS[view] || view === statusView) return;
+    statusView = view;
+    renderStatusNote();
+    renderLayerList(currentCountry);
+    renderMixFilter();
+    if(map && mapReady && dataReady){ hoveredLayer = null; closePopup(); buildMapLayers(currentCountry); }
+  }
+  $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
 
   // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
   const fmtShare = (v)=>v >= 0.95 ? Math.round(v) + "%" : v >= 0.1 ? v.toFixed(1) + "%" : v > 0 ? "<0.1%" : "—";
@@ -615,8 +656,8 @@
     host.replaceChildren();
     if(!f) return;
     const n = COUNTRIES[currentCountry].layers.filter(L=>L.kind === "power")
-      .reduce((s, L)=>s + plantData(L).features.length, 0);
-    host.append(el("span", null, `Map: ${f.label.toLowerCase()} plants only · ${n} mapped`));
+      .reduce((s, L)=>s + layerView(L).features.length, 0);
+    host.append(el("span", null, `Map: ${f.label.toLowerCase()} plants only · ${n} shown`));
     const all = el("button", "link-btn", "Show all");
     all.type = "button";
     all.addEventListener("click", ()=>setFuelFilter(null));
@@ -757,10 +798,10 @@
     const builders = {
       oim:        (L)=>buildOimLayer(L),
       "oim-plants": (L)=>buildOimPlantsLayer(L),
-      grid:       (L)=>buildLineLayer(L, layerData[L.id] || { features:[] }),
-      power:      (L)=>buildPowerLayer(L, plantData(L)),
-      industrial: (L)=>buildIndustrialLayer(L, layerData[L.id] || { features:[] }),
-      digital:    (L)=>buildDigitalLayer(L, layerData[L.id] || { features:[] })
+      grid:       (L)=>buildLineLayer(L, layerView(L)),
+      power:      (L)=>buildPowerLayer(L, layerView(L)),
+      industrial: (L)=>buildIndustrialLayer(L, layerView(L)),
+      digital:    (L)=>buildDigitalLayer(L, layerView(L))
     };
     c.layers.filter(L=>!KINDS.includes(L.kind)).forEach(L=>
       console.error("[MoroccoMap] unknown layer kind:", L.id, L.kind));
@@ -865,10 +906,16 @@
         "circle-stroke-width":1
       }
     };
+    const filters = [];
     if(fuelFilter){
       const keep = plantFuels(fuelFilter);
-      spec.filter = ["in", ["get","source"], ["literal", Object.keys(OSM_FUEL).filter(k=>keep.includes(OSM_FUEL[k]))]];
+      filters.push(["in", ["get","source"], ["literal", Object.keys(OSM_FUEL).filter(k=>keep.includes(OSM_FUEL[k]))]]);
     }
+    // OSM tags a plant being built with `construction`, a closed one `disused`.
+    const tagged = (k)=>["to-boolean", ["coalesce", ["get", k], false]];
+    if(statusView === "service") filters.push(["!", tagged("construction")], ["!", tagged("disused")]);
+    if(statusView === "pipeline") filters.push(tagged("construction"));
+    if(filters.length) spec.filter = ["all", ...filters];
     addLayer(L, spec, "point");
   }
 
