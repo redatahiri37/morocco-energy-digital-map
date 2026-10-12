@@ -40,6 +40,16 @@ solar/          (repo root — its own Cloudflare Pages project)
 └── README.md
 ```
 
+### Languages
+
+The simulator is written once, in French (`index.html`, `app.js`). At deploy,
+`scripts/build-solar-i18n.mjs` writes `/ar/` (Moroccan Arabic, right to left)
+and `/en/` from `index.html` and the table in `i18n/simulator.mjs`; `app.js`
+picks its own texts from its `I18N` table by `<html lang>`. Change a French
+text in `index.html` and the build stops until its translation follows
+(the PR check runs the same script). Arabic register: Darija for headings,
+buttons and questions, plain Arabic for explanations.
+
 ### City pages (search engines and AI assistants)
 
 The estimator computes everything in the browser after an address is typed,
@@ -101,6 +111,7 @@ What the Worker does:
 - **Edge-caches** JRC responses 24 h, keyed on the sorted param tuple. Repeat lookups never hit JRC.
 - **Rate-limits** 60 req/min/IP (degrades gracefully if the beta binding is unavailable).
 - **Maps errors** to `{ "error": "<message fr>", "status": <code> }` — the client shows the message inline.
+- **Collects** usage events on `POST /e` ([`ANALYTICS.md`](ANALYTICS.md)) and Content-Security-Policy violation reports on `POST /csp` ([`SECURITY.md`](../SECURITY.md) › Reading the CSP reports), each kept only in the expected shape.
 - **Scopes CORS** to the Wattu origins (`ALLOWED_ORIGINS` in `proxy/worker.js`: solar.wattu.org, energy.wattu.org and the Pages addresses; no localhost, so a local copy of the page shows the approximate mode unless it points at `wrangler dev`).
 
 The client calls only the Worker (`CONFIG.PVGIS_WORKER_URL`); there is no third-party CORS proxy.

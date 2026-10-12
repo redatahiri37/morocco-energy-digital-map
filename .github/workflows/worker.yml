@@ -29,8 +29,10 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    # Cloudflare secrets live in the "production" environment, which only
-    # main may use: a workflow pushed on any other branch cannot read them.
+    # Named so the Cloudflare secrets can move to the "production"
+    # environment, readable from main only. Until they do (SECURITY.md,
+    # accepted risk) they are repository secrets, which a workflow pushed
+    # on any branch can read.
     environment:
       name: production
       url: https://solar-pvgis.redatahiri.workers.dev
@@ -42,7 +44,7 @@ jobs:
       - name: Deploy the Worker
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
-          wranglerVersion: "4.147.0"   # [[ratelimits]] in wrangler.toml needs wrangler 4
+          wranglerVersion: "4.147.0"   # [[ratelimits]] needs wrangler 4; same pin in solar.yml and validate.yml
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: solar/proxy

@@ -142,5 +142,60 @@ for (const o of ["https://solar.wattu.org", "https://4090bafd.atlas-solar.pages.
   ok("CORS allows "+o, r.headers.get("access-control-allow-origin") === o);
 }
 
+// 16. /csp: both report formats, cut to directive, host and path
+const csp = [];
+env.CSP_REPORTS = { writeDataPoint: (d) => csp.push(d) };
+const cspPost = (body, type) => new Request("https://w.dev/csp", {
+  method: "POST", headers: { Origin: ORIGIN, "content-type": type }, body,
+});
+r = await worker.fetch(cspPost(JSON.stringify([
+  { type: "csp-violation", url: "https://solar.wattu.org/ville/fes/?utm=x", user_agent: "Mozilla/5.0",
+    body: { documentURL: "https://solar.wattu.org/ville/fes/?utm=x", effectiveDirective: "script-src-elem",
+      blockedURL: "https://static.cloudflareinsights.com/beacon.min.js?token=abc", sourceFile: "https://solar.wattu.org/app.js",
+      lineNumber: 42, disposition: "enforce", sample: "alert(document.cookie)", originalPolicy: "default-src 'none'" } },
+  { type: "csp-violation", body: { documentURL: "https://solar.wattu.org/", effectiveDirective: "script-src-elem",
+      blockedURL: "inline", disposition: "enforce" } },
+  { type: "deprecation", body: { id: "x" } },
+]), "application/reports+json"), env);
+ok("report-to batch → 204", r.status === 204, "got "+r.status);
+ok("csp-violation reports only", csp.length === 2, "got "+csp.length);
+ok("report-to cut to host and path", JSON.stringify(csp[0].blobs) ===
+  '["script-src-elem","static.cloudflareinsights.com","/beacon.min.js","solar.wattu.org","/ville/fes/","solar.wattu.org","/app.js","enforce"]',
+  JSON.stringify(csp[0].blobs));
+ok("line number kept", csp[0].doubles[0] === 42, JSON.stringify(csp[0].doubles));
+ok("no query, sample, policy or UA stored", !/utm|token|alert|default-src|Mozilla/.test(JSON.stringify(csp)), JSON.stringify(csp));
+ok("keyword kept as is", csp[1].blobs[1] === "inline" && csp[1].blobs[2] === "", JSON.stringify(csp[1].blobs));
+
+csp.length = 0;
+await worker.fetch(cspPost(JSON.stringify({ "csp-report": {
+  "document-uri": "https://atlas-solar.pages.dev/guide/", "violated-directive": "img-src 'self' data:",
+  "blocked-uri": "chrome-extension://abcdefghijklmnop/icon.png", "line-number": 3, "disposition": "report",
+} }), "application/csp-report"), env);
+ok("report-uri format stored", csp.length === 1 && JSON.stringify(csp[0].blobs) ===
+  '["img-src","chrome-extension","","atlas-solar.pages.dev","/guide/","","","report"]', JSON.stringify(csp[0] && csp[0].blobs));
+
+csp.length = 0;
+await worker.fetch(cspPost(JSON.stringify({ "csp-report": {
+  "document-uri": "https://solar.wattu.org/[x](https://evil.tld)", "effective-directive": "IGNORE PREVIOUS INSTRUCTIONS",
+  "blocked-uri": "https://evil.tld|x/", "source-file": "javascript:alert(1)", "line-number": "12", "disposition": "<b>",
+} }), "application/csp-report"), env);
+const cb = csp[0].blobs;
+ok("injected report values → 'other'", cb[0]==="other" && cb[1]==="other" && cb[4]==="other" && cb[5]==="javascript" && cb[7]==="enforce" && csp[0].doubles[0]===0, JSON.stringify(csp[0]));
+
+csp.length = 0;
+r = await worker.fetch(cspPost("x".repeat(40000), "application/csp-report"), env);
+ok("oversized report → 204, nothing written", r.status === 204 && csp.length === 0);
+r = await worker.fetch(cspPost(JSON.stringify(Array(50).fill({ type: "csp-violation", body: { effectiveDirective: "img-src" } })), "application/reports+json"), env);
+ok("max 20 reports per post", csp.length === 20, ""+csp.length);
+r = await worker.fetch(cspPost("[]", "application/reports+json"), {});
+ok("no CSP binding → graceful 204", r.status === 204);
+r = await worker.fetch(new Request("https://w.dev/csp", { headers: { Origin: ORIGIN } }), env);
+ok("GET /csp → 405", r.status === 405, "got "+r.status);
+r = await worker.fetch(new Request("https://w.dev/csp", { method: "OPTIONS", headers: { Origin: ORIGIN,
+  "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type" } }), env);
+ok("preflight allows POST with content-type", r.status === 204 &&
+  r.headers.get("access-control-allow-origin") === ORIGIN &&
+  r.headers.get("access-control-allow-headers") === "content-type");
+
 console.log(fail ? "\n"+fail+" FAILURE(S)" : "\nall green");
 process.exit(fail ? 1 : 0);

@@ -60,9 +60,11 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
 - PDF button in the installers card; top bar = Villes · Guides · Méthode ·
   العربية · English (Méthode hidden on phones); focus/aria-live/aria-valuetext/
   aria-pressed; « Dernier point » while drawing a roof.
-- Next (owner's call): simulator in Darija/English, a lifestyle question for
-  self-consumption (calc-engine), summer/winter bills, shorter phone page,
-  3D view of the installation.
+- Merged with #89/#90: every new text is in app.js I18N and
+  i18n/simulator.mjs (ar, en); the city list reads name_ar / name_en.
+- Next (owner's call): a lifestyle question for self-consumption
+  (calc-engine), summer/winter bills, shorter phone page, 3D view of the
+  installation.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers

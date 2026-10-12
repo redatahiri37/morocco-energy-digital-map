@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -25,6 +25,26 @@ jobs:
           set -e
           node --check solar/app.js
           node --check solar/analytics.js
+
+      # The page builds its HTML from nodes (textContent, createElement): no
+      # string, from OSM, a shared link or our own code, is parsed as HTML.
+      - name: No HTML parsed from strings in the page scripts
+        run: |
+          if grep -nE '\.(inner|outer)HTML\b|insertAdjacentHTML|document\.write' solar/app.js solar/analytics.js; then
+            echo "Build these elements with textContent / createElement instead"
+            exit 1
+          fi
+
+      # RFC 9116: a security.txt past its Expires date must be ignored by
+      # whoever reads it. Warns in the last 60 days, fails once past.
+      - name: security.txt has not expired
+        run: |
+          E=$(sed -n 's/^Expires: //p' solar/.well-known/security.txt)
+          node -e '
+            const left = (new Date(process.argv[1]) - Date.now()) / 864e5;
+            if (!(left > 0)) { console.error("solar/.well-known/security.txt: Expires " + process.argv[1] + " has passed, set a date under a year ahead"); process.exit(1); }
+            if (left < 60) console.log("::warning::solar/.well-known/security.txt expires in " + Math.floor(left) + " days");
+          ' "$E"
 
       # Both Pages projects ship their own copy of the shared identity:
       # brand sheet, logo, favicon and fonts.
@@ -57,6 +77,17 @@ jobs:
             _check/en/guide/index.html _check/en/guide/*/index.html
           node --check scripts/indexnow-ping.mjs
 
+      # The simulator in Arabic and English: every French string of
+      # index.html must have its translation (the script fails otherwise),
+      # and the pages pass the same code rules.
+      - name: Simulator translations are complete and first-party
+        run: |
+          set -e
+          cp -r solar/vendor _check/
+          cp solar/app.js solar/analytics.js _check/
+          node scripts/build-solar-i18n.mjs _check
+          node scripts/check-sri.mjs _check/ar/index.html _check/en/index.html
+
       - name: Worker tests
         working-directory: solar/proxy
         run: node worker.test.mjs
@@ -69,8 +100,10 @@ jobs:
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    # Cloudflare secrets live in the "production" environment, which only
-    # main may use: a workflow pushed on any other branch cannot read them.
+    # Named so the Cloudflare secrets can move to the "production"
+    # environment, readable from main only. Until they do (SECURITY.md,
+    # accepted risk) they are repository secrets, which a workflow pushed
+    # on any branch can read.
     environment:
       name: production
       url: https://solar.wattu.org
@@ -95,6 +128,7 @@ jobs:
           cp -r solar/fonts _site/fonts
           cp -r solar/vendor _site/vendor
           cp -r solar/installers _site/installers
+          cp -r solar/.well-known _site/.well-known
           # City list for « Choisissez votre ville » when an address is not found
           mkdir _site/data
           cp solar/data/cities.json _site/data/
@@ -111,10 +145,15 @@ jobs:
       - name: Build the city pages
         run: node scripts/build-solar-cities.mjs _site --version "${GITHUB_SHA::8}"
 
+      # The simulator in Moroccan Arabic (/ar/) and English (/en/), from
+      # index.html and solar/i18n/simulator.mjs.
+      - name: Build the translated simulator
+        run: node scripts/build-solar-i18n.mjs _site --version "${GITHUB_SHA::8}"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
-          wranglerVersion: "3.90.0"   # the version v3.15.0 installs by default, pinned
+          wranglerVersion: "4.147.0"   # same pin as worker.yml; Dependabot does not bump it
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy _site --project-name=atlas-solar --branch=main --commit-dirty=true

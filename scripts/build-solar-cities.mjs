@@ -120,8 +120,10 @@ const today = new Date().toISOString().slice(0, 10);
 const todayFr = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 const ldJson = (o) => JSON.stringify(o, null, 2).replace(/</g, "\\u003c");
 
-function toolLink(c, bill) {
-  const q = new URLSearchParams({ lat: c.lat.toFixed(5), lon: c.lon.toFixed(5), f: bill, a: ANGLE, o: ASPECT, c: COST, n: c.name });
+// From a city page (../../ is that language's simulator), pre-filled for
+// the city, named in the page's language.
+function toolLink(c, bill, name = c.name) {
+  const q = new URLSearchParams({ lat: c.lat.toFixed(5), lon: c.lon.toFixed(5), f: bill, a: ANGLE, o: ASPECT, c: COST, n: name });
   return `../../#${q.toString()}`;
 }
 
@@ -138,16 +140,17 @@ function layout({ title, description, canonical, depth, body, jsonLd, lang = "fr
   const langLinks = alt ? Object.entries(alt).filter(([l]) => l !== lang)
     .map(([l, path]) => `\n    <a class="nav-lang" href="${path}" lang="${l}" hreflang="${l}">${LANG_LABEL[l]}</a>`).join("") : "";
   const home = { fr: "Wattu Solaire — accueil", ar: "Wattu — الصفحة الرئيسية", en: "Wattu Solar — home" }[lang];
+  const homeHref = { fr: up, ar: `${up}ar/`, en: `${up}en/` }[lang];   // each language's simulator
   const nav = {
     fr: `    <a href="${up}villes/">Villes</a>
     <a href="${up}guide/">Guides</a>
     <a class="nav-sim" href="${up}">Simulateur</a>`,
     ar: `    <a href="${up}ar/villes/">المدن</a>
     <a href="${up}ar/guide/">شروحات</a>
-    <a class="nav-sim" href="${up}">المحاكي</a>`,
+    <a class="nav-sim" href="${up}ar/">المحاكي</a>`,
     en: `    <a href="${up}en/cities/">Cities</a>
     <a href="${up}en/guide/">Guides</a>
-    <a class="nav-sim" href="${up}">Simulator</a>`,
+    <a class="nav-sim" href="${up}en/">Simulator</a>`,
   }[lang] + langLinks;
   const footNav = {
     fr: `    <a href="${up}villes/">Rentabilité par ville</a>
@@ -187,7 +190,7 @@ ${ldJson(jsonLd)}
 <body class="cp">
 
 <header class="topbar">
-  <a class="w-brand" href="${up}" aria-label="${home}">
+  <a class="w-brand" href="${homeHref}" aria-label="${home}">
     <img class="w-mark" src="${up}mark.svg" alt="" width="26" height="26">
     <span class="w-word">wattu</span>
     <span class="w-product">Solaire</span>
@@ -202,7 +205,7 @@ ${body}
 </main>
 
 <footer class="site-footer">
-  <a class="w-brand" href="${up}" aria-label="${home}">
+  <a class="w-brand" href="${homeHref}" aria-label="${home}">
     <img class="w-mark" src="${up}mark.svg" alt="" width="22" height="22">
     <span class="w-word">wattu</span>
   </a>
@@ -490,16 +493,15 @@ function cityPageAr(c, all) {
   const others = all.filter(x => x !== c && x.region !== c.region);
 
   const body = `
-<nav class="cp-crumbs" aria-label="فين كاين"><a href="../../../">Wattu</a> ‹ <a href="../../villes/">المدن</a> ‹ <span>${esc(name)}</span></nav>
+<nav class="cp-crumbs" aria-label="فين كاين"><a href="../../">Wattu</a> ‹ <a href="../../villes/">المدن</a> ‹ <span>${esc(name)}</span></nav>
 
 <article>
   <header class="cp-head">
     <p class="w-kicker">الطاقة الشمسية فالدار · ${esc(c.region_ar)}</p>
     <h1>البلاكات الشمسية ${esc(fi(name))}: شحال كتنتج، شحال كتكلف، وفوقاش كترجع فلوسك</h1>
     <p class="cp-answer">${esc(answer)}</p>
-    <a class="cp-cta" href="${esc("../" + toolLink(c, REFERENCE_BILL))}">حسب لدارك ${esc(fi(name))} ←</a>
-    <p class="cp-note">المحاكي متوفر دابا غير بالفرنسية.</p>
-  </header>
+    <a class="cp-cta" href="${esc(toolLink(c, REFERENCE_BILL, c.name_ar))}">حسب لدارك ${esc(fi(name))} ←</a>
+      </header>
 
   <section class="cp-figures" aria-label="الأرقام المهمة">
     <div><span class="cp-fig">${num(r.yieldPerKw)}</span><span class="cp-unit">${KWH} لكل ${KWC} فالعام</span></div>
@@ -520,7 +522,7 @@ ${r.profiles.map(p => `        <tr><th scope="row">${num(p.bill)} ${MAD_AR}/ال
       </tbody>
     </table>
     </div>
-    <p class="cp-note">السطح ديالك، الاتجاه ديالو والدوفي ديال المركّب كيبدلو هاد الأرقام. <a href="${esc("../" + toolLink(c, REFERENCE_BILL))}">المحاكي</a> كيعاود يحسبهم للعنوان ديالك بالضبط، مع المساحة الحقيقية ديال السطح.</p>
+    <p class="cp-note">السطح ديالك، الاتجاه ديالو والدوفي ديال المركّب كيبدلو هاد الأرقام. <a href="${esc(toolLink(c, REFERENCE_BILL, c.name_ar))}">المحاكي</a> كيعاود يحسبهم للعنوان ديالك بالضبط، مع المساحة الحقيقية ديال السطح.</p>
   </section>
 
   <section class="cp-section">
@@ -598,9 +600,8 @@ function indexPageAr(all) {
     <p class="w-kicker">الطاقة الشمسية فالدار · المغرب</p>
     <h1>الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة</h1>
     <p class="cp-answer">${esc(answer)}</p>
-    <a class="cp-cta" href="../../">حسب لدارك ←</a>
-    <p class="cp-note">المحاكي متوفر دابا غير بالفرنسية.</p>
-  </header>
+    <a class="cp-cta" href="../">حسب لدارك ←</a>
+      </header>
 
   <section class="cp-section">
     <h2>ترتيب ${all.length} مدينة حسب الإنتاج الشمسي</h2>
@@ -696,16 +697,15 @@ function cityPageEn(c, all) {
   const others = all.filter(x => x !== c && x.region !== c.region);
 
   const body = `
-<nav class="cp-crumbs" aria-label="Breadcrumb"><a href="../../../">Wattu Solar</a> › <a href="../../cities/">Cities</a> › <span>${esc(name)}</span></nav>
+<nav class="cp-crumbs" aria-label="Breadcrumb"><a href="../../">Wattu Solar</a> › <a href="../../cities/">Cities</a> › <span>${esc(name)}</span></nav>
 
 <article>
   <header class="cp-head">
     <p class="w-kicker">Home solar · ${esc(c.region)}</p>
     <h1>Solar panels in ${esc(name)}, Morocco: output, cost and payback</h1>
     <p class="cp-answer">${esc(answer)}</p>
-    <a class="cp-cta" href="${esc("../" + toolLink(c, REFERENCE_BILL))}">Calculate for my address in ${esc(name)} →</a>
-    <p class="cp-note">The simulator is in French for now.</p>
-  </header>
+    <a class="cp-cta" href="${esc(toolLink(c, REFERENCE_BILL, c.name_en))}">Calculate for my address in ${esc(name)} →</a>
+      </header>
 
   <section class="cp-figures" aria-label="Key figures">
     <div><span class="cp-fig">${numEn(r.yieldPerKw)}</span><span class="cp-unit">kWh per kWp per year</span></div>
@@ -726,7 +726,7 @@ ${r.profiles.map(p => `        <tr><th scope="row">${numEn(p.bill)} MAD/month</t
       </tbody>
     </table>
     </div>
-    <p class="cp-note">Your roof, its orientation and your quote change these figures. <a href="${esc("../" + toolLink(c, REFERENCE_BILL))}">The simulator</a> recalculates them for your exact address, with your actual roof area.</p>
+    <p class="cp-note">Your roof, its orientation and your quote change these figures. <a href="${esc(toolLink(c, REFERENCE_BILL, c.name_en))}">The simulator</a> recalculates them for your exact address, with your actual roof area.</p>
   </section>
 
   <section class="cp-section">
@@ -804,9 +804,8 @@ function indexPageEn(all) {
     <p class="w-kicker">Home solar · Morocco</p>
     <h1>Solar panel payback in Morocco, city by city</h1>
     <p class="cp-answer">${esc(answer)}</p>
-    <a class="cp-cta" href="../../">Calculate for my address →</a>
-    <p class="cp-note">The simulator is in French for now.</p>
-  </header>
+    <a class="cp-cta" href="../">Calculate for my address →</a>
+      </header>
 
   <section class="cp-section">
     <h2>The ${all.length} cities ranked by solar output</h2>
@@ -854,6 +853,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
 function sitemap(all, guideList, guideListAr = [], guideListEn = []) {
   const urls = [`${SITE}/`, `${SITE}/villes/`, `${SITE}/guide/`,
     ...guideList.map(g => `${SITE}/guide/${g.slug}/`), ...all.map(c => `${SITE}/ville/${c.slug}/`),
+    `${SITE}/ar/`, `${SITE}/en/`,
     `${SITE}/ar/villes/`, ...all.map(c => `${SITE}/ar/ville/${c.slug}/`),
     `${SITE}/en/cities/`, ...all.map(c => `${SITE}/en/city/${c.slug}/`),
     `${SITE}/ar/guide/`, ...guideListAr.map(g => `${SITE}/ar/guide/${g.slug}/`),
@@ -871,7 +871,7 @@ function llmsTxt(all, guideList) {
 
 > Simulateur gratuit de production et de rentabilité des panneaux solaires résidentiels au Maroc. Production calculée avec PVGIS (Commission européenne), économies avec les tarifs ONEE par tranche. Sans inscription, sans commission. Par ${AUTHOR}. Mis à jour le ${today}.
 
-- [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise
+- [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise (aussi en [arabe](${SITE}/ar/) et en [anglais](${SITE}/en/))
 - [Rentabilité par ville](${SITE}/villes/): tableau comparatif de ${all.length} villes marocaines
 - [الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة](${SITE}/ar/villes/): les mêmes pages villes en arabe marocain (darija)
 - [Solar panel payback in Morocco, city by city](${SITE}/en/cities/): the same city pages in English
@@ -1145,11 +1145,11 @@ const GUIDE_L = {
   fr: { depth: 2, root: "../../", home: "Wattu Solaire", crumbs: "Fil d'Ariane", sep: "›", guides: "Guides", kicker: "Guide",
         cta: "Calculer pour mon adresse →", note: "", faq: "Questions fréquentes", others: "Autres guides",
         cities: ["../../villes/", "Rentabilité du solaire ville par ville →"], inLang: "fr-MA", base: "/guide/" },
-  ar: { depth: 3, root: "../../../", home: "Wattu", crumbs: "فين كاين", sep: "‹", guides: "شروحات", kicker: "شرح",
-        cta: "حسب لدارك ←", note: "المحاكي متوفر دابا غير بالفرنسية.", faq: "الأسئلة اللي كيسولو الناس", others: "شروحات خرين",
+  ar: { depth: 3, root: "../../", home: "Wattu", crumbs: "فين كاين", sep: "‹", guides: "شروحات", kicker: "شرح",
+        cta: "حسب لدارك ←", note: "", faq: "الأسئلة اللي كيسولو الناس", others: "شروحات خرين",
         cities: ["../../villes/", "شحال كتربح الطاقة الشمسية فكل مدينة ←"], inLang: "ar-MA", base: "/ar/guide/" },
-  en: { depth: 3, root: "../../../", home: "Wattu Solar", crumbs: "Breadcrumb", sep: "›", guides: "Guides", kicker: "Guide",
-        cta: "Calculate for my address →", note: "The simulator is in French for now.", faq: "Frequently asked questions", others: "Other guides",
+  en: { depth: 3, root: "../../", home: "Wattu Solar", crumbs: "Breadcrumb", sep: "›", guides: "Guides", kicker: "Guide",
+        cta: "Calculate for my address →", note: "", faq: "Frequently asked questions", others: "Other guides",
         cities: ["../../cities/", "Solar payback, city by city →"], inLang: "en", base: "/en/guide/" },
 };
 
@@ -1174,7 +1174,7 @@ ${tableHtml("الثمن مع الضرائب لكل كيلوواط ساعة، ح�
     <p>كل كيلوواط ساعة كتنتجو البلاكات وكتستهلكو فالدار كيوفر عليك تشري الكيلوواط الغالي فالفاتورة. كلما كتستهلك كثر، كلما الطاقة الشمسية كتربح كثر.</p>
 ${tableHtml("ثمن الكيلوواط اللي كتوفر بالاستهلاك الذاتي", ["الاستهلاك ديالك", "ثمن الكيلوواط اللي كتوفر", "شحال كتسوا 100 كيلوواط ساعة شمسية"],
   f.consKwh.map(k => [`${k} ${KWH}/الشهر`, `${price4(f.marginal(k))} ${MAD_AR}`, `${num(f.marginal(k) * 100)} ${MAD_AR}`]))}
-    <p>باش تشوف شنو كيعطي عندك، <a href="../../../">المحاكي</a> كيبدا من الفاتورة ديالك بالدرهم وكيحسب منها الاستهلاك.</p>
+    <p>باش تشوف شنو كيعطي عندك، <a href="../../">المحاكي</a> كيبدا من الفاتورة ديالك بالدرهم وكيحسب منها الاستهلاك.</p>
   </section>`,
     faq: [
       ["شحال كيسوا الكيلوواط ساعة ديال الضو فالمغرب؟", `لدار مربوطة مع ONEE، من ${price4(f.p0)} ${MAD_AR} للكيلوواط ساعة مع الضرائب للاستهلاك الصغير حتى ل${price4(f.pL)} ${MAD_AR} فوق ${f.last} ${KWH} فالشهر.`],
@@ -1222,7 +1222,7 @@ ${tableHtml(`تركيب كيغطي تقريبا ${f.cover}% من الاستهل�
   <section class="cp-section">
     <h2>علاش ما نغطيوش 100% من الاستهلاك؟</h2>
     <p>البلاكات كتنتج فالنهار، والدار كتستهلك جزء فالليل. فوق تقريبا ${f.cover}% ديال التغطية، جزء كبير من الإنتاج كيمشي للشبكة، وتما ما كيتخلصش مزيان. تركيب صغير اللي كتستهلكو تقريبا كامل فالدار كيرجع فلوسو بالزربة.</p>
-    <p>للسطح ديالك بالضبط، <a href="../../../">المحاكي</a> كيلقى الحدود ديال الدار وكيقول ليك شحال ديال البلاكات كيدخلو.</p>
+    <p>للسطح ديالك بالضبط، <a href="../../">المحاكي</a> كيلقى الحدود ديال الدار وكيقول ليك شحال ديال البلاكات كيدخلو.</p>
   </section>`,
     faq: [
       ["شحال ديال البلاكات الشمسية خاص الدار؟", `على حساب الفاتورة: تقريبا ${panelsAr(f.nbOf(300).panels)} لفاتورة 300 ${MAD_AR}، ${panelsAr(f.nb500.panels)} ل500 ${MAD_AR} و${panelsAr(f.nbOf(1000).panels)} ل1000 ${MAD_AR}، ببلاكات ديال ${f.panelW} واط.`],
@@ -1248,7 +1248,7 @@ ${tableHtml(`تركيب كيغطي تقريبا ${f.cover}% من الاستهل�
   <section class="cp-section">
     <h2>شحال كتربح من البيع؟</h2>
     <p>قليل، إلا قارنتيه مع الاستهلاك ديالك. خود فاتورة ديال ${REFERENCE_BILL} ${MAD_AR} فالشهر، تركيب ديال ${kw(f.nb500.kwp)} ${KWC} و${medNote}: إلا استهلكتي الإنتاج ديالك كتوفر تقريبا ${num(f.nb500.savings)} ${MAD_AR} فالعام، والبيع ديال الفائض غادي يزيد على الأكثر ${num(f.extra)} ${MAD_AR} فالعام.</p>
-    <p>كل كيلوواط ساعة كتستهلكو فالدار كيوفر عليك كيلوواط كان غادي تشريه بين ${price4(f.p0)} و${price4(f.pL)} ${MAD_AR} (<a href="../tarif-electricite-onee/">تعريفة ONEE</a>)، والكيلوواط اللي كتبيع كيجيب تقريبا ${price2(f.exportPrice)} ${MAD_AR}. حسن ليك تختار حجم التركيب على قد الاستهلاك ديالك، وهادشي اللي كيدير <a href="../../../">المحاكي</a>.</p>
+    <p>كل كيلوواط ساعة كتستهلكو فالدار كيوفر عليك كيلوواط كان غادي تشريه بين ${price4(f.p0)} و${price4(f.pL)} ${MAD_AR} (<a href="../tarif-electricite-onee/">تعريفة ONEE</a>)، والكيلوواط اللي كتبيع كيجيب تقريبا ${price2(f.exportPrice)} ${MAD_AR}. حسن ليك تختار حجم التركيب على قد الاستهلاك ديالك، وهادشي اللي كيدير <a href="../../">المحاكي</a>.</p>
   </section>`,
     faq: [
       ["واش خاصني رخصة باش نركب البلاكات الشمسية فداري فالمغرب؟", "من نهار المرسوم رقم 2.25.100 ديال 5 مارس 2026 اللي جا مع القانون 82-21، التركيب اللي تحت 11 كيلوواط كيكفيه تصريح بسيط."],
@@ -1272,7 +1272,7 @@ ${tableHtml(`تركيب كيغطي تقريبا ${f.cover}% من الاستهل�
     <ul class="cp-method">
       <li><strong>طلب على الأقل 3 ديال الدوفيات</strong>، لنفس القوة ب${KWC}.</li>
       <li><strong>حسب الثمن ديال كل دوفي للواط</strong> (الثمن الكامل ÷ القوة بالواط). الثمن العادي بين ${COST_LOW} و${COST_HIGH} ${MAD_AR} للواط مركّب (<a href="../prix-panneau-solaire-maroc/">تفاصيل الأثمنة</a>). دوفي غالي بزاف كيستاهل سؤال.</li>
-      <li><strong>قارن الإنتاج اللي عطاك المركّب</strong> مع تقدير مستقل: <a href="../../../">المحاكي</a> كيحسبو للعنوان ديالك ب PVGIS، والـPDF ديالو تقدر تزيدو مع الطلب ديال الدوفي.</li>
+      <li><strong>قارن الإنتاج اللي عطاك المركّب</strong> مع تقدير مستقل: <a href="../../">المحاكي</a> كيحسبو للعنوان ديالك ب PVGIS، والـPDF ديالو تقدر تزيدو مع الطلب ديال الدوفي.</li>
       <li><strong>صرّح بالتركيب</strong>: تحت 11 كيلوواط، تصريح بسيط كافي (<a href="../loi-82-21-autoproduction/">القانون 82-21</a>).</li>
     </ul>
     <p class="cp-note"><span lang="fr">Wattu</span> ما كتبيعش التركيبات وما كتاخد حتى عمولة.</p>
@@ -1309,7 +1309,7 @@ ${tableHtml("Price per kWh including tax, by monthly consumption", ["Monthly con
     <p>Each kWh your panels produce and you use at home saves you buying the most expensive kWh on your bill. The more you use, the more solar pays.</p>
 ${tableHtml("Price of the kWh avoided by using your own solar power", ["Your consumption", "Price of the kWh avoided", "Value of 100 solar kWh"],
   f.consKwh.map(k => [`${k} kWh/month`, `${price4En(f.marginal(k))} MAD`, `${numEn(f.marginal(k) * 100)} MAD`]))}
-    <p>To see what it means for you, <a href="../../../">the simulator</a> starts from your bill in dirhams and works out your consumption.</p>
+    <p>To see what it means for you, <a href="../../">the simulator</a> starts from your bill in dirhams and works out your consumption.</p>
   </section>`,
     faq: [
       ["How much does electricity cost per kWh in Morocco?", `For a household on the ONEE grid, from ${price4En(f.p0)} MAD per kWh including tax for small consumption to ${price4En(f.pL)} MAD above ${f.last} kWh a month.`],
@@ -1357,7 +1357,7 @@ ${tableHtml(`System covering about ${f.cover}% of yearly consumption, ${COST} MA
   <section class="cp-section">
     <h2>Why not cover 100% of consumption?</h2>
     <p>Panels produce in the daytime, while part of a home's consumption is in the evening. Beyond about ${f.cover}% coverage, a growing share of the output goes to the grid, where it earns little. A smaller system whose output is used almost entirely at home pays back faster.</p>
-    <p>For your own roof, <a href="../../../">the simulator</a> finds the building outline and tells you how many panels fit.</p>
+    <p>For your own roof, <a href="../../">the simulator</a> finds the building outline and tells you how many panels fit.</p>
   </section>`,
     faq: [
       ["How many solar panels does a house need?", `It depends on the bill: about ${f.nbOf(300).panels} panels for 300 MAD a month, ${f.nb500.panels} for 500 MAD and ${f.nbOf(1000).panels} for 1,000 MAD, with ${f.panelW} Wp panels.`],
@@ -1383,7 +1383,7 @@ ${tableHtml(`System covering about ${f.cover}% of yearly consumption, ${COST} MA
   <section class="cp-section">
     <h2>How much does selling surplus earn?</h2>
     <p>Little, compared with using the power yourself. Take a ${REFERENCE_BILL} MAD monthly bill, a ${kwEn(f.nb500.kwp)} kWp system and the ${medNote}: using your own output saves about ${numEn(f.nb500.savings)} MAD a year, and selling the surplus would add at most ${numEn(f.extra)} MAD a year.</p>
-    <p>Each kWh used at home avoids buying a kWh at ${price4En(f.p0)} to ${price4En(f.pL)} MAD (<a href="../${S["tarif-electricite-onee"]}/">ONEE tariff</a>), against about ${price2En(f.exportPrice)} MAD for a kWh sold. It is better to size the system to your own use, which is what <a href="../../../">the simulator</a> does.</p>
+    <p>Each kWh used at home avoids buying a kWh at ${price4En(f.p0)} to ${price4En(f.pL)} MAD (<a href="../${S["tarif-electricite-onee"]}/">ONEE tariff</a>), against about ${price2En(f.exportPrice)} MAD for a kWh sold. It is better to size the system to your own use, which is what <a href="../../">the simulator</a> does.</p>
   </section>`,
     faq: [
       ["Do I need a permit to install solar panels at home in Morocco?", "Since Decree No. 2.25.100 of 5 March 2026 implementing Law 82-21, a system under 11 kW only needs a simple declaration."],
@@ -1407,7 +1407,7 @@ ${tableHtml(`System covering about ${f.cover}% of yearly consumption, ${COST} MA
     <ul class="cp-method">
       <li><strong>Ask for at least three quotes</strong> for the same system size in kWp.</li>
       <li><strong>Work out each quote's price per watt-peak</strong> (total price ÷ size in Wp). The usual range is ${COST_LOW} to ${COST_HIGH} MAD/Wp installed (<a href="../${S["prix-panneau-solaire-maroc"]}/">price details</a>). A quote well above it deserves a question.</li>
-      <li><strong>Compare the output the installer promises</strong> with an independent estimate: <a href="../../../">the simulator</a> calculates it for your address with PVGIS, and its PDF can go with your quote request.</li>
+      <li><strong>Compare the output the installer promises</strong> with an independent estimate: <a href="../../">the simulator</a> calculates it for your address with PVGIS, and its PDF can go with your quote request.</li>
       <li><strong>Declare the installation</strong>: under 11 kW, a simple declaration is enough (<a href="../${S["loi-82-21-autoproduction"]}/">Law 82-21</a>).</li>
     </ul>
     <p class="cp-note">Wattu does not sell installations and takes no commission.</p>
