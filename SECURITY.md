@@ -63,7 +63,10 @@ Please do not post a working exploit or a credential in a public issue.
 2. Copy the `dist` files (and LICENSE) into a new `vendor/<name>-X.Y.Z/`
    folder; delete the old folder.
 3. Update the path and the integrity hash in `index.html`:
-   `openssl dgst -sha384 -binary <file> | openssl base64 -A`.
+   `openssl dgst -sha384 -binary <file> | openssl base64 -A`. The solar
+   page loads MapLibre from `app.js` (3D view, on click): its path and
+   hashes are in `CONFIG.MAPLIBRE_JS` / `MAPLIBRE_CSS` (`engine.js`), which solar.yml
+   checks against the files.
 4. CI (`check-sri.mjs`) and the map/solar test suites must pass.
 
 ## Settings only the owner can change (GitHub and Cloudflare)

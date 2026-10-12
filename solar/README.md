@@ -38,7 +38,8 @@ solar/          (repo root — its own Cloudflare Pages project)
 ├── chat/            Chat assistant page (prototype, private link)
 ├── proxy/           Cloudflare Worker: PVGIS proxy, /e, /csp, /chat
 ├── pages.css        Style of the generated city pages
-├── data/cities.json Cities that get a page under /ville/<slug>/
+├── data/cities.json Cities that get a page under /ville/<slug>/, and the list
+│                    offered when an address is not found (deployed as is)
 └── README.md
 ```
 
@@ -96,6 +97,9 @@ without network: `node scripts/build-solar-cities.mjs /tmp/out --offline`
 ### External dependencies (all CDN, no build step, no tokens)
 - **Leaflet 1.9.4** — mini-map
 - **Chart.js 4.4.1** — monthly production + 25-yr cashflow
+- **MapLibre GL 4.7.1** — the « Voir en 3D » view of the roof, loaded only on
+  that click (`vendor/maplibre-gl-4.7.1`, the energy map's copy; hashes in
+  `CONFIG.MAPLIBRE_*`, checked by CI)
 - **Esri World Imagery** — default basemap, zoomed on the roof (token-free, not open data); OpenStreetMap tiles as the other layer (ODbL).
 - **Nominatim** — address geocoding (`countrycodes=ma`, French locale)
 - **Overpass API** — building footprint around the address
@@ -210,6 +214,15 @@ Each tool is a self-contained folder under repo root — no shared build, no fra
 If any tool grows beyond ~500 LOC, split `app.js` into ES modules and add a lightweight bundler (esbuild). Not now.
 
 ## Model notes
+
+- **3D view** (« Voir en 3D » on the roof map): the footprint extruded to
+  storeys × 3 m (OSM `building:levels` or `height`, else 2 storeys, which
+  the visitor can change), the proposed panels tilted on 0.3 m frames, and
+  the shadows they cast on the roof for 21 Dec / 21 Mar / 21 Jun at a chosen
+  solar hour (Cooper's declination; shadows clipped to the roof's convex
+  hull). MapLibre extrudes flat prisms only, so a tilted panel is a stair
+  of 10 strips. An illustration: roof obstacles and the neighbours'
+  shadows are unknown, and the page says so. It changes no figure.
 
 - **PVGIS** uses PVGIS-SARAH3 radiation DB (satellite-derived, 5×5 km, 1990–2020 climatology). Systematic bias typically ±5% for MA.
 - **Self-consumption ratio** is heuristic: `0.30 + 0.55·exp(-0.9·(prod/cons))`. At sizing ratio 1.0 → ~55%; at 2.0 → ~33%. Real values depend on load profile — should be a per-user input in a future version.

@@ -63,6 +63,17 @@ const CONFIG = {
   OVERPASS_URL: "https://overpass-api.de/api/interpreter",
   BUILDING_SEARCH_RADIUS_M: 25,
 
+  // 3D view. MapLibre is the energy map's vendored copy, loaded on the
+  // first click only, with the same integrity hashes (SECURITY.md). Root
+  // paths: /ar/ and /en/ load the same files. Heights are assumptions and
+  // the page says so: OpenStreetMap rarely knows a Moroccan house's height.
+  MAPLIBRE_JS: { url: "/vendor/maplibre-gl-4.7.1/maplibre-gl.js", sri: "sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj" },
+  MAPLIBRE_CSS: { url: "/vendor/maplibre-gl-4.7.1/maplibre-gl.css", sri: "sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V" },
+  STOREY_M: 3,           // one storey
+  DEFAULT_STOREYS: 2,    // when OpenStreetMap has no building:levels or height
+  MAX_STOREYS: 12,
+  RACK_FRONT_M: 0.3,     // a panel's low edge above the roof, on its frame
+
   // Loi 82-21 (décret n° 2.25.100, mars 2026) — surplus injection réseau
   // Cap: 20% de la production annuelle. Tarif LV résidentiel non publié —
   // borne haute prise = tarif MV heures creuses (0,18 MAD/kWh, source pv-magazine 02/2026).
