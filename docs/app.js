@@ -62,8 +62,33 @@
     coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A",
     nuclear:"#DB2777", geothermal:"#DC2626", biomass:"#65A30D", waste:"#78716C"
   };
-  // Counted in the "Renewables share" KPI.
-  const RENEWABLE_FUELS = ["solar", "wind", "hydro", "geothermal", "biomass"];
+  // Plant dots: area tracks capacity (radius ∝ √MW, with a floor so a 10 MW
+  // plant stays visible) and grows with zoom. plantRadius() is the same curve
+  // in JS, for the size key under the layer list.
+  const PLANT_R_MIN = 3, PLANT_R_PER_SQRT_MW = 0.3;
+  const PLANT_ZOOM_SCALE = [[4, 0.6], [7, 1], [10, 1.3]];
+  function zoomScale(zoom){
+    const s = PLANT_ZOOM_SCALE;
+    if(zoom <= s[0][0]) return s[0][1];
+    for(let i = 1; i < s.length; i++){
+      if(zoom <= s[i][0]){
+        const t = (zoom - s[i-1][0]) / (s[i][0] - s[i-1][0]);
+        return s[i-1][1] + t * (s[i][1] - s[i-1][1]);
+      }
+    }
+    return s[s.length-1][1];
+  }
+  const plantRadius = (mw, zoom)=>zoomScale(zoom) * (PLANT_R_MIN + PLANT_R_PER_SQRT_MW * Math.sqrt(Math.max(0, mw)));
+  // The same curve as a MapLibre expression on a feature's MW field; `out`
+  // turns the radius into another value (halo radius, label offset).
+  function plantRadiusExpr(mwField, out){
+    const r = (f)=>["*", f, ["+", PLANT_R_MIN,
+      ["*", PLANT_R_PER_SQRT_MW, ["sqrt", ["max", 0, ["to-number", ["get", mwField], 0]]]]]];
+    return ["interpolate", ["linear"], ["zoom"], ...PLANT_ZOOM_SCALE.flatMap(([z, f])=>[z, out ? out(r(f)) : r(f)])];
+  }
+  // Capacity in a cluster or tooltip: "850 MW", "4.2 GW".
+  const fmtMW = (mw)=>mw >= 1000 ? (mw/1000).toFixed(1).replace(/\.0$/, "") + " GW" : Math.round(mw) + " MW";
+
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
   const CABLE_COLOR      = "#2DD4BF";  // teal — was orange, collided with industrial
@@ -120,6 +145,10 @@
   let visibility     = {};   // id -> bool
   let hoveredLayer   = null; // { sourceId, dataLayerId, keepId } while a point is hovered
   let boundaryData   = null;
+  let mixData        = null;   // national mix (mix.json) of the current country
+  let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
+  let statusView     = "all";  // key of STATUS_VIEWS; kept across country switches
+  let selected       = null;   // { layer, id } of the feature whose popup is open, if linkable
 
   // ---------- DOM refs ----------
   const $ = (sel)=>document.querySelector(sel);
@@ -244,16 +273,28 @@
   // against empty layerData, so nothing rendered. Track both readiness
   // signals explicitly and only build when both are true.
   let dataReady = false, mapReady = false;
+  // A shared link's view and feature wait for the map and the data.
+  let initialView = null, pendingFeature = null;
   function tryBuild(){
-    if(dataReady && mapReady) buildMapLayers(currentCountry);
+    if(!(dataReady && mapReady)) return;
+    buildMapLayers(currentCountry);
+    if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
+    urlReady = true;
   }
 
   function boot(){
-    const initialCountry = ENABLED.includes(DEFAULT_COUNTRY) ? DEFAULT_COUNTRY : ENABLED[0];
+    const link = readLink();
+    const initialCountry = ENABLED.includes(link.country) ? link.country
+      : ENABLED.includes(DEFAULT_COUNTRY) ? DEFAULT_COUNTRY : ENABLED[0];
     countrySelect.value = initialCountry;
     currentCountry = initialCountry;
+    initialView = link.country === initialCountry ? link.view : null;
     loadAllData(initialCountry).then(committed=>{
-      if(committed) renderPanel(initialCountry);
+      if(committed){
+        applyLinkState(link);
+        renderPanel(initialCountry);
+        pendingFeature = link.feature;
+      }
       dataReady = true;
       tryBuild();
     });
@@ -267,13 +308,20 @@
       map = new maplibregl.Map({
         container: "map",
         style: basemapStyle(document.body.dataset.theme),
-        center: c.center, zoom: c.zoom,
+        center: initialView ? initialView.center : c.center,
+        zoom: initialView ? initialView.zoom : c.zoom,
         attributionControl: false
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass:false }), "bottom-right");
       map.addControl(staticAttribution(), "bottom-left");
 
       map.on("load", ()=>{ mapReady = true; tryBuild(); });
+      map.on("moveend", ()=>syncUrl());
+      let sizeKeyFrame = 0;
+      map.on("zoom", ()=>{
+        if(sizeKeyFrame) return;
+        sizeKeyFrame = requestAnimationFrame(()=>{ sizeKeyFrame = 0; if(currentCountry) renderSizeKey(); });
+      });
       map.on("click", (e)=>{
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
@@ -296,7 +344,10 @@
 
   // Panel, KPIs and methodology for a country whose data is loaded.
   function renderPanel(countryKey){
+    renderMix();
+    renderStatusNote();
     renderLayerList(countryKey);
+    renderSizeKey();
     renderKPIs(countryKey);
     renderMethodologySources(countryKey);
   }
@@ -311,11 +362,17 @@
     // locals and committed at the end, so a slower load for a country the
     // user has already switched away from can't overwrite the newer one.
     const data = {}, vis = {};
-    let boundary = null;
+    let boundary = null, mix = null;
     try{
       const r = await fetch(c.dataPath + "boundary.geojson" + ASSET_V);
       if(r.ok) boundary = await r.json();
     } catch(e){ /* no boundary for this country */ }
+    if(c.mix){
+      try{
+        const r = await fetch(c.dataPath + c.mix + ASSET_V);
+        if(r.ok) mix = await r.json();
+      } catch(e){ console.warn("[MoroccoMap] failed to load", c.mix, e); }
+    }
 
     const promises = c.layers.map(async (L, idx)=>{
       vis[L.id] = L.visible !== false;
@@ -337,6 +394,7 @@
     layerData = data;
     visibility = vis;
     boundaryData = boundary;
+    mixData = mix;
     return true;
   }
 
@@ -348,6 +406,7 @@
     c.layers.forEach(L=>{
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
+      const shown = layerView(L).features.length;
       const planned = kind==="grid" && isPlannedGrid(L.id);
       const dotColor = (
         planned             ? PLANNED_COLOR :
@@ -370,7 +429,7 @@
         <span class="check"></span>
         ${swatch}
         <span class="layer-name">${escapeHtml(L.title)}</span>
-        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : fc.features.length}</span>
+        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : shown === fc.features.length ? shown : `${shown} / ${fc.features.length}`}</span>
       `;
       paint(row);
       row.querySelector("input").addEventListener("change", (e)=>{
@@ -378,9 +437,35 @@
         visibility[L.id] = on;
         row.classList.toggle("muted", !on);
         applyLayerVisibility(L.id, on);
+        syncUrl();
       });
       if(visibility[L.id] === false) row.classList.add("muted");
       host.appendChild(row);
+    });
+  }
+
+  // Three reference dots drawn with the map's own curve at the current zoom,
+  // so they match the plants on screen. Redrawn as the map zooms.
+  const SIZE_KEY_MW = [100, 1000, 5000];
+  function renderSizeKey(){
+    const host = $("#sizeKey");
+    const hasPlants = COUNTRIES[currentCountry].layers.some(L=>L.kind === "power" || L.kind === "oim-plants");
+    host.hidden = !hasPlants;
+    if(!hasPlants) return;
+    const zoom = map ? map.getZoom() : COUNTRIES[currentCountry].zoom;
+    const items = $("#sizeKeyItems");
+    items.replaceChildren();
+    SIZE_KEY_MW.forEach(mw=>{
+      const d = 2 * plantRadius(mw, zoom);
+      const item = document.createElement("span");
+      item.className = "size-key-item";
+      const dot = document.createElement("span");
+      dot.className = "size-key-dot";
+      dot.style.width = dot.style.height = d.toFixed(1) + "px";
+      const label = document.createElement("span");
+      label.textContent = fmtMW(mw);
+      item.append(dot, label);
+      items.appendChild(item);
     });
   }
 
@@ -390,31 +475,43 @@
       .flatMap(L=>(layerData[L.id] || { features:[] }).features);
   }
 
+  // Statuses counted as not yet built in the "Pipeline" tile.
+  const PIPELINE_STATUS = ["construction", "announced", "planned"];
+  function fmtPower(mw){
+    return mw >= 1000 ? `${(mw/1000).toFixed(1)}<small> GW</small>` : `${Math.round(mw)}<small> MW</small>`;
+  }
+
+  // Figures summed from the layers on the map, so they follow the fuel picked
+  // in the mix legend. National totals are in the Electricity mix above.
   function renderKPIs(countryKey){
     const host = $("#kpiGrid");
     const c = COUNTRIES[countryKey];
     const snap = $("#snapshotSource");
-    if(snap) snap.textContent = c.snapshotSource ? "source: " + c.snapshotSource : "";
-    const fcPower = { features: featuresOfKind(countryKey, "power") };
+    if(snap) snap.textContent = c.snapshotSource ? "plants: " + c.snapshotSource : "";
+    const allPlants = featuresOfKind(countryKey, "power");
+    const plants = fuelFilter ? allPlants.filter(f=>plantFuels(fuelFilter).includes(f.properties.fuel_type)) : allPlants;
     const fcDC    = { features: featuresOfKind(countryKey, "digital") };
-    const totalMW = fcPower.features.reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
-    const renewMW = fcPower.features.filter(f=>RENEWABLE_FUELS.includes(f.properties.fuel_type))
-                    .reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
-    const renewShare = totalMW ? Math.round(100 * renewMW / totalMW) : 0;
+    const mw = (fs)=>fs.reduce((s,f)=>s + (num(f.properties.capacity_mw) || 0), 0);
+    const inService = mw(plants.filter(f=>f.properties.status === "operational"));
+    const pipeline  = mw(plants.filter(f=>PIPELINE_STATUS.includes(f.properties.status)));
     const dcMW = fcDC.features.reduce((s,f)=>s + (num(f.properties.capacity_estimate_mw) || 0), 0);
     const dcInvest = fcDC.features.reduce((s,f)=>s + (num(f.properties.investment_usd) || 0), 0);
     // A country with no layer of a kind shows "—", not a zero that reads as a finding.
-    const hasPower = fcPower.features.length > 0, hasDC = fcDC.features.length > 0;
+    const hasPower = allPlants.length > 0, hasDC = fcDC.features.length > 0;
+    // Sources such as WRI's database list built plants only: no pipeline to show.
+    const tracksPipeline = allPlants.some(f=>PIPELINE_STATUS.includes(f.properties.status));
     // Registries such as PeeringDB list sites without MW or investment
     // figures: show the site count and "—" rather than 0.0 GW / $0.
     const hasDCmw = fcDC.features.some(f=>f.properties.capacity_estimate_mw != null);
     const hasDCinv = fcDC.features.some(f=>f.properties.investment_usd != null);
     const NA = "—";
+    const fuel = fuelFilter && mixFuel(fuelFilter);
+    const prefix = fuel ? escapeHtml(fuel.label) + " · " : "";
     host.innerHTML = `
-      <div class="kpi"><div class="k">Tracked capacity</div>
-        <div class="v">${hasPower ? `${(totalMW/1000).toFixed(1)}<small> GW</small>` : NA}</div></div>
-      <div class="kpi"><div class="k">Renewables share*</div>
-        <div class="v">${hasPower ? `${renewShare}<small>%</small>` : NA}</div></div>
+      <div class="kpi" title="Plants on the map that are operating"><div class="k">${prefix}In service</div>
+        <div class="v">${hasPower ? fmtPower(inService) : NA}</div></div>
+      <div class="kpi" title="Plants on the map under construction or announced. — means the plant source lists built plants only."><div class="k">${prefix}Pipeline</div>
+        <div class="v">${hasPower && tracksPipeline ? fmtPower(pipeline) : NA}</div></div>
       <div class="kpi"><div class="k">${hasDC && !hasDCmw ? "Data centres" : "DC pipeline"}</div>
         <div class="v">${!hasDC ? NA : hasDCmw ? `${(dcMW/1000).toFixed(1)}<small> GW</small>`
                                                : `${fcDC.features.length}<small> sites</small>`}</div></div>
@@ -441,9 +538,235 @@
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
-    ).join("") + (c.boundary ? `<li><strong>Boundary:</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
+    ).join("") + (mixData ? `<li><strong>Electricity mix:</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(mixData.year)} figures; national, not summed from the map)</span></li>` : "") +
+    (c.boundary ? `<li><strong>Boundary:</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
     `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.</li>`;
   }
+
+  // ---------- Electricity mix ----------
+  // The plant layers are nameplate capacity, and only the plants we map. The
+  // mix is the country's own generation and capacity by fuel, from Ember's
+  // yearly data (scripts/build-country-mix.py). Its legend is also the colour
+  // key for the plant dots: picking a fuel narrows the plant layers to it.
+  let mixMeasure = "generation";   // or "capacity"
+  // A mix fuel → the plant fuel_type values it covers on the map.
+  const MIX_PLANT_FUELS = { biomass: ["biomass", "waste"] };
+  const plantFuels = (fuel)=>MIX_PLANT_FUELS[fuel] || [fuel];
+  const mixFuel = (fuel)=>mixData && mixData.fuels.find(f=>f.fuel === fuel);
+
+  // A layer's data as drawn: narrowed to the picked fuel (plant layers) and
+  // to the status view (every layer with a file).
+  function layerView(L){
+    const fc = layerData[L.id] || { type:"FeatureCollection", features:[] };
+    const fuels = fuelFilter && L.kind === "power" ? plantFuels(fuelFilter) : null;
+    const statuses = STATUS_VIEWS[statusView].statuses;
+    if(!fuels && !statuses) return fc;
+    return { type:"FeatureCollection", features: fc.features.filter(f=>
+      (!fuels || fuels.includes(f.properties.fuel_type)) &&
+      (!statuses || statuses.includes(f.properties.status))) };
+  }
+
+  // ---------- Status view ----------
+  // "In service" and "Pipeline" match the KPI tiles. Idle assets (a closed
+  // interconnector, a stopped plant) show under "All" only.
+  const STATUS_VIEWS = {
+    all:      { statuses: null },
+    service:  { statuses: ["operational"] },
+    pipeline: { statuses: ["construction", "announced", "planned"] }
+  };
+  function renderStatusNote(){
+    $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.status === statusView)));
+    const note = $("#statusNote");
+    note.hidden = statusView === "all";
+    if(note.hidden) return;
+    // Counted by status alone: a fuel picked in the mix doesn't change it.
+    const statuses = STATUS_VIEWS[statusView].statuses;
+    const all = COUNTRIES[currentCountry].layers.filter(L=>L.file)
+      .flatMap(L=>(layerData[L.id] || { features:[] }).features);
+    const total = all.length;
+    const shown = all.filter(f=>statuses.includes(f.properties.status)).length;
+    note.textContent = shown ? `${shown.toLocaleString("en")} of ${total.toLocaleString("en")} mapped assets` +
+        (statusView === "pipeline" ? " are under construction, announced or planned." : " are in service.")
+      : statusView === "pipeline"
+        ? "None of this country's mapped assets is under construction or announced: its sources list built ones only."
+        : "None of this country's mapped assets is listed as in service.";
+  }
+  function setStatusView(view){
+    if(!STATUS_VIEWS[view] || view === statusView) return;
+    statusView = view;
+    renderStatusNote();
+    renderLayerList(currentCountry);
+    renderMixFilter();
+    if(map && mapReady && dataReady){ hoveredLayer = null; closePopup(); buildMapLayers(currentCountry); }
+    syncUrl();
+  }
+  $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
+
+  // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
+  const fmtShare = (v)=>v >= 0.95 ? Math.round(v) + "%" : v >= 0.1 ? v.toFixed(1) + "%" : v > 0 ? "<0.1%" : "—";
+  const fmtAmount = (v, unit)=>(v >= 100 ? Math.round(v).toLocaleString("en") : v >= 0.1 ? v.toFixed(1) : "<0.1") + " " + unit;
+  // Plant capacity in text: MW under 1 GW, as the tiles show it.
+  const fmtGW = (gw)=>gw >= 1 ? fmtAmount(gw, "GW") : Math.round(gw * 1000) + " MW";
+  function el(tag, cls, text){
+    const e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(text != null) e.textContent = text;
+    return e;
+  }
+
+  // Built with DOM nodes, not HTML strings: every value is data.
+  function renderMix(){
+    const section = $("#mixSection");
+    const m = mixData;
+    section.hidden = !m;
+    if(!m) return;
+    const cap = mixMeasure === "capacity";
+    const total = cap ? m.capacity_gw : m.generation_twh;
+    const value = (f)=>cap ? f.capacity_gw : f.generation_twh;
+    const share = (f)=>cap ? (total ? 100 * f.capacity_gw / total : 0) : f.generation_pct;
+    const amount = (f)=>fmtAmount(value(f), cap ? "GW" : "TWh");
+
+    $("#mixYear").textContent = "· " + m.year;
+    $("#mixTotal").textContent = fmtAmount(total, cap ? "GW installed" : "TWh generated");
+    section.querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.measure === mixMeasure)));
+    section.classList.toggle("has-filter", !!fuelFilter);
+    section.classList.remove("has-hot");   // a tap's hover must not outlive the rebuild
+
+    const bar = $("#mixBar"), legend = $("#mixLegend");
+    bar.replaceChildren(); legend.replaceChildren();
+    m.fuels.forEach(f=>{
+      const color = FUEL_COLOR[f.fuel] || "#888";
+      const picked = fuelFilter === f.fuel;
+      const tip = `${f.label}: ${amount(f)}, ${fmtShare(share(f))}`;
+      if(value(f) > 0){
+        const seg = el("span", "mix-seg" + (picked ? " picked" : ""));
+        seg.dataset.fuel = f.fuel;
+        seg.title = tip;
+        seg.style.flexGrow = String(value(f));
+        seg.style.background = color;
+        seg.addEventListener("click", ()=>setFuelFilter(f.fuel));
+        bar.appendChild(seg);
+      }
+      const li = el("li");
+      const btn = el("button", "mix-key" + (picked ? " picked" : ""));
+      btn.type = "button";
+      btn.dataset.fuel = f.fuel;
+      btn.title = tip + (picked ? ". Pick again to show every plant." : ". Show only these plants on the map.");
+      btn.setAttribute("aria-pressed", String(picked));
+      const sw = el("span", "mix-swatch"); sw.style.background = color;
+      btn.append(sw, el("span", "mix-label", f.label), el("span", "mix-val", fmtShare(share(f))));
+      btn.addEventListener("click", ()=>setFuelFilter(f.fuel));
+      li.appendChild(btn);
+      legend.appendChild(li);
+    });
+
+    renderMixFilter();
+    renderMixFacts(m);
+    renderMixNote(m, cap);
+  }
+
+  // "Showing wind plants only · 12 on the map · Show all"
+  function renderMixFilter(){
+    const host = $("#mixFilter");
+    const f = fuelFilter && mixFuel(fuelFilter);
+    host.hidden = !f;
+    host.replaceChildren();
+    if(!f) return;
+    const n = COUNTRIES[currentCountry].layers.filter(L=>L.kind === "power")
+      .reduce((s, L)=>s + layerView(L).features.length, 0);
+    host.append(el("span", null, `Map: ${f.label.toLowerCase()} plants only · ${n} shown`));
+    const all = el("button", "link-btn", "Show all");
+    all.type = "button";
+    all.addEventListener("click", ()=>setFuelFilter(null));
+    host.appendChild(all);
+  }
+
+  function renderMixFacts(m){
+    const dl = $("#mixFacts");
+    dl.replaceChildren();
+    const row = (k, v)=>{ dl.append(el("dt", null, k), el("dd", null, v)); };
+    row("Renewables", `${fmtShare(m.renewables_pct_generation)} of generation` +
+      (m.renewables_pct_capacity != null ? ` · ${fmtShare(m.renewables_pct_capacity)} of capacity` : ""));
+    const imp = m.net_imports_twh;
+    if(imp != null){
+      if(Math.abs(imp) < 0.05) row("Trade", "Imports and exports balance");
+      else if(imp > 0) row("Net imports", `${fmtAmount(imp, "TWh")}` +
+        (m.demand_twh ? ` · ${fmtShare(100 * imp / m.demand_twh)} of demand` : ""));
+      else row("Net exports", `${fmtAmount(-imp, "TWh")} · ${fmtShare(100 * -imp / m.generation_twh)} of generation`);
+    }
+    if(m.co2_intensity_g_per_kwh != null) row("CO₂ intensity", `${Math.round(m.co2_intensity_g_per_kwh)} g/kWh`);
+  }
+
+  // How much of the national fleet the plant layer holds, a capacity gap in
+  // the source if any, and the citation.
+  function renderMixNote(m, cap){
+    const host = $("#mixNote");
+    host.replaceChildren();
+    const f = fuelFilter && mixFuel(fuelFilter);
+    const keep = f ? plantFuels(f.fuel) : null;
+    const mappedMW = featuresOfKind(currentCountry, "power")
+      .filter(p=>p.properties.status === "operational" && (!keep || keep.includes(p.properties.fuel_type)))
+      .reduce((s, p)=>s + (num(p.properties.capacity_mw) || 0), 0);
+    const nationalGW = f ? f.capacity_gw : m.capacity_gw;
+    const plantLayer = COUNTRIES[currentCountry].layers.find(L=>L.kind === "power");
+    // A national total missing a fuel (capacity_gaps) would overstate coverage.
+    const comparable = f ? !m.capacity_gaps.includes(f.fuel) : !m.capacity_gaps.length;
+    if(plantLayer && nationalGW > 0 && comparable){
+      const pct = 100 * mappedMW / 1000 / nationalGW;
+      host.append(el("span", null, `${plantLayer.title} layer${f ? ", " + f.label.toLowerCase() : ""}: ` +
+        `${fmtGW(mappedMW / 1000)} in service, ` +
+        (pct <= 100 ? `${Math.round(pct)}% of the ${fmtGW(nationalGW)} installed. `
+                    : `against ${fmtGW(nationalGW)} installed per Ember. `)));
+    }
+    if(cap && m.capacity_gaps.length){
+      const names = m.capacity_gaps.map(g=>(mixFuel(g) || { label:g }).label).join(", ");
+      host.append(el("span", "mix-gap", `The source lists no ${names} capacity though it generates power: this view undercounts it. `));
+    }
+    host.append(el("span", null, "Source: "));
+    const a = el("a", null, `Ember ${m.year}`);
+    a.href = safeUrl(m.source_url); a.target = "_blank"; a.rel = "noopener";
+    host.append(a, el("span", null, " (CC BY 4.0)."));
+  }
+
+  // Narrows the plant layers to one fuel (null: all). Picking the shown fuel
+  // again clears it. Turns the plant layers on, so the pick is visible.
+  function setFuelFilter(fuel){
+    // The legend is rebuilt: keep keyboard focus on the fuel just used.
+    const a = document.activeElement;
+    const refocus = a && a.closest && a.closest("#mixSection") ? (fuel || fuelFilter) : null;
+    fuelFilter = fuel && fuel !== fuelFilter ? fuel : null;
+    const c = COUNTRIES[currentCountry];
+    if(fuelFilter) c.layers.filter(L=>L.kind === "power").forEach(L=>{ visibility[L.id] = true; });
+    renderMix();
+    if(refocus){
+      const key = [...document.querySelectorAll("#mixLegend .mix-key")].find(k=>k.dataset.fuel === refocus);
+      if(key) key.focus();
+    }
+    renderLayerList(currentCountry);
+    renderKPIs(currentCountry);
+    if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    syncUrl();
+  }
+
+  $("#mixSection").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>{
+    if(mixMeasure === b.dataset.measure) return;
+    mixMeasure = b.dataset.measure;
+    renderMix();
+    syncUrl();
+  }));
+  // Hovering a fuel lights it in both the bar and the legend. Pointer only:
+  // focus moves back to the legend after a pick, and lighting the focused
+  // key would read as a pick that "Show all" just cleared.
+  function hotFuel(fuel){
+    const section = $("#mixSection");
+    section.classList.toggle("has-hot", !!fuel);
+    section.querySelectorAll("[data-fuel]").forEach(e=>e.classList.toggle("hot", e.dataset.fuel === fuel));
+  }
+  $("#mixSection").addEventListener("mouseover", (e)=>{
+    const t = e.target.closest && e.target.closest("[data-fuel]");
+    hotFuel(t ? t.dataset.fuel : null);
+  });
+  $("#mixSection").addEventListener("mouseleave", ()=>hotFuel(null));
 
   // ---------- Layer ID bookkeeping ----------
   // Each data layer produces a set of MapLibre layers, registered in
@@ -494,10 +817,10 @@
     const builders = {
       oim:        (L)=>buildOimLayer(L),
       "oim-plants": (L)=>buildOimPlantsLayer(L),
-      grid:       (L)=>buildLineLayer(L, layerData[L.id] || { features:[] }),
-      power:      (L)=>buildPowerLayer(L, layerData[L.id] || { features:[] }),
-      industrial: (L)=>buildIndustrialLayer(L, layerData[L.id] || { features:[] }),
-      digital:    (L)=>buildDigitalLayer(L, layerData[L.id] || { features:[] })
+      grid:       (L)=>buildLineLayer(L, layerView(L)),
+      power:      (L)=>buildPowerLayer(L, layerView(L)),
+      industrial: (L)=>buildIndustrialLayer(L, layerView(L)),
+      digital:    (L)=>buildDigitalLayer(L, layerView(L))
     };
     c.layers.filter(L=>!KINDS.includes(L.kind)).forEach(L=>
       console.error("[MoroccoMap] unknown layer kind:", L.id, L.kind));
@@ -591,16 +914,28 @@
     const fuelExpr = ["match", ["get","source"]];
     Object.entries(OSM_FUEL).forEach(([osm, fuel])=>fuelExpr.push(osm, FUEL_COLOR[fuel]));
     fuelExpr.push(OSM_PLANT_SWATCH);
-    addLayer(L, {
+    const spec = {
       id: "lyr-" + L.id + "-points", type:"circle", source: OIM_SRC, "source-layer":"power_plant_point",
+      layout:{ "circle-sort-key": ["-", ["to-number", ["get","output"], 0]] },
       paint:{
         "circle-color": fuelExpr,
-        "circle-radius":["interpolate",["linear"],["coalesce",["get","output"],0], 0,3.5, 50,5, 300,8, 1000,11],
+        "circle-radius": plantRadiusExpr("output"),
         "circle-opacity":0.75,
         "circle-stroke-color": isDark() ? "rgba(241,239,233,0.8)" : "rgba(24,24,26,0.7)",
         "circle-stroke-width":1
       }
-    }, "point");
+    };
+    const filters = [];
+    if(fuelFilter){
+      const keep = plantFuels(fuelFilter);
+      filters.push(["in", ["get","source"], ["literal", Object.keys(OSM_FUEL).filter(k=>keep.includes(OSM_FUEL[k]))]]);
+    }
+    // OSM tags a plant being built with `construction`, a closed one `disused`.
+    const tagged = (k)=>["to-boolean", ["coalesce", ["get", k], false]];
+    if(statusView === "service") filters.push(["!", tagged("construction")], ["!", tagged("disused")]);
+    if(statusView === "pipeline") filters.push(tagged("construction"));
+    if(filters.length) spec.filter = ["all", ...filters];
+    addLayer(L, spec, "point");
   }
 
   // Maps an OpenInfraMap plant's tile fields onto the curated power schema,
@@ -682,18 +1017,25 @@
     // Dense national fleets (France, Spain: 1,500+ plants) cluster wider so
     // the bubbles don't tile the whole screen on a phone.
     const dense = fc.features.length > 500;
-    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35 };
+    // Clusters carry their summed MW, shown instead of a plant count.
+    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35,
+      clusterProperties: { mw: ["+", ["to-number", ["get","capacity_mw"], 0]] } };
     addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
-    // Cluster bubbles
+    // Cluster bubbles: amber, or the picked fuel's colour when the mix
+    // legend narrows the layer to one fuel.
+    const pickedColor = fuelFilter && FUEL_COLOR[fuelFilter];
     addLayer(L, {
       id: p+"-clusters", type:"circle", source:srcId,
       filter:["has","point_count"],
       paint:{
-        "circle-color":"rgba(245,158,11,0.85)",
-        "circle-radius":["step",["get","point_count"], 14, 3, 18, 6, 22, 50, 26, 200, 31],
+        "circle-color": pickedColor || "rgba(245,158,11,0.85)",
+        "circle-opacity": pickedColor ? 0.85 : 1,
+        // Same scale as a plant of the summed MW, never smaller than its
+        // label ("999 MW") and capped so a national cluster stays on screen.
+        "circle-radius": plantRadiusExpr("mw", (r)=>["max", 21, ["min", 56, r]]),
         "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
         "circle-stroke-width":1.5
       }
@@ -702,12 +1044,15 @@
       id: p+"-cluster-count", type:"symbol", source:srcId + "-text",
       filter:["has","point_count"],
       layout:{
-        "text-field":["get","point_count_abbreviated"],
+        // Rounded by hand: same text as fmtMW() ("850 MW", "4.2 GW").
+        "text-field":["case", [">=", ["get","mw"], 1000],
+          ["concat", ["to-string", ["/", ["round", ["/", ["get","mw"], 100]], 10]], " GW"],
+          ["concat", ["to-string", ["round", ["get","mw"]]], " MW"]],
         "text-font":FONT_BOLD,
-        "text-size":11,
+        "text-size":9.5,
         "text-allow-overlap":true
       },
-      paint:{ "text-color":"#070D1A" }
+      paint:{ "text-color": pickedColor && !isLight(pickedColor) ? "#FFFFFF" : "#070D1A" }
     });
 
     // Halo for announced/construction status
@@ -716,34 +1061,35 @@
       filter:["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
       paint:{
         "circle-color":"rgba(245,158,11,0.25)",
-        "circle-radius":11,
+        "circle-radius": plantRadiusExpr("capacity_mw", (r)=>["+", r, 4]),
         "circle-blur":0.3
       }
     });
 
-    // Individual plants, color by fuel
+    // Individual plants, colour by fuel, area by capacity. Small plants are
+    // drawn last so a large neighbour never hides them.
     addLayer(L, {
       id: p+"-points", type:"circle", source:srcId,
       filter:["!",["has","point_count"]],
+      layout:{ "circle-sort-key": ["-", ["to-number", ["get","capacity_mw"], 0]] },
       paint:{
         "circle-color":["match",["get","fuel_type"], ...Object.entries(FUEL_COLOR).flat(), "#888"],
-        "circle-radius":[
-          "interpolate",["linear"],["zoom"],
-          4, 4,
-          7, 6,
-          10, 8
-        ],
+        "circle-radius": plantRadiusExpr("capacity_mw"),
         "circle-stroke-color": POINT_STROKE(),
         "circle-stroke-width":1.5,
         "circle-opacity":[
           "case",
           ["boolean",["feature-state","dim"],false], 0.3,
-          1
+          0.9
         ]
       }
     }, "point");
 
-    addLabelLayer(L, p+"-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]]);
+    // Labels sit just below each dot, whatever its size.
+    addLabelLayer(L, p+"-labels", srcId + "-text", "name", 7, 1.1, ["!",["has","point_count"]], {
+      "text-variable-anchor": ["top"],
+      "text-radial-offset": plantRadiusExpr("capacity_mw", (r)=>["/", ["+", r, 2], 10.5])
+    });
   }
 
   // Industrial consumers — coloured by the country's sector palette
@@ -769,11 +1115,19 @@
     addLabelLayer(L, p + "-labels", sourceId + "-text", "name", 7, 1.1);
   }
 
+  // Relative luminance above ~0.18, where dark text out-contrasts white.
+  function isLight(hex){
+    const [r, g, b] = [1, 3, 5].map(i=>parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map(c=>c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.18;
+  }
   const POINT_STROKE = () => isDark() ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.9)";
 
   // Name labels live on a separate text-only source: MapLibre drops every
   // layer of a source whose glyphs fail to load, and points must survive that.
-  function addLabelLayer(L, id, sourceId, field, minzoom, offset, filter){
+  // `layout` adds or overrides layout properties; a text-radial-offset
+  // replaces the fixed text-offset.
+  function addLabelLayer(L, id, sourceId, field, minzoom, offset, filter, layout){
     const spec = {
       id, type:"symbol", source: sourceId, minzoom,
       layout:{
@@ -791,6 +1145,10 @@
       }
     };
     if(filter) spec.filter = filter;
+    if(layout){
+      if("text-radial-offset" in layout){ delete spec.layout["text-offset"]; delete spec.layout["text-anchor"]; }
+      Object.assign(spec.layout, layout);
+    }
     addLayer(L, spec);
   }
 
@@ -882,6 +1240,8 @@
         showPointTooltip(m.dataLayerId, f, e.point);
       } else if(m.role === "line"){
         showLineTooltip(f, e.point);
+      } else if(m.role === "cluster"){
+        showClusterTooltip(f, e.point);
       }
     });
     map.on("mouseleave", id, ()=>{
@@ -905,7 +1265,7 @@
         openPointPopup(m.dataLayerId, f);
         map.easeTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 7), duration: 600 });
       } else if(m.role === "line"){
-        openLinePopup(f);
+        openLinePopup(m.dataLayerId, f);
       }
     });
   }
@@ -978,6 +1338,13 @@
       <div class="tt-meta">${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
+  function showClusterTooltip(f, point){
+    const p = f.properties || {};
+    tooltip.innerHTML = `
+      <div class="tt-name">${escapeHtml(num(p.point_count))} plants · ${escapeHtml(fmtMW(num(p.mw) || 0))}</div>
+      <div class="tt-metric">Click to zoom in</div>`;
+    positionTooltip(point);
+  }
   function positionTooltip(point){
     const rect = $("#map").getBoundingClientRect();
     tooltip.style.left = (rect.left + point.x) + "px";
@@ -989,6 +1356,8 @@
   // ---------- Popup ----------
   function openPointPopup(dataLayerId, f){
     let p = f.properties || {};
+    // OSM plants have no stable id of ours: the link keeps the view only.
+    selected = layerKind(dataLayerId) !== "oim-plants" && p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
     let kind = layerKind(dataLayerId);
     if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     const badgeClass = kind === "power" ? "power" : kind === "industrial" ? "industrial" : kind === "digital" ? "digital" : "grid";
@@ -1048,13 +1417,17 @@
              <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
           : `<a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`, `Feature id: ${p.id || p.name}\n\nSuggested correction:\n`))}" target="_blank" rel="noopener">Report an error</a>
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
+        ${selected ? `<button type="button" class="pop-share">Copy link</button>` : ""}
       </div>`;
+    wirePopupShare();
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
+    syncUrl();
   }
 
-  function openLinePopup(f){
+  function openLinePopup(dataLayerId, f){
     const p = f.properties || {};
+    selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
     $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>Transmission line</span>`;
     paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
@@ -1077,38 +1450,361 @@
       </details>
       <div class="pop-actions">
         <a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`))}" target="_blank" rel="noopener">Report an error</a>
+        ${selected ? `<button type="button" class="pop-share">Copy link</button>` : ""}
       </div>`;
+    wirePopupShare();
     popup.classList.add("open");
     popup.setAttribute("aria-hidden","false");
+    syncUrl();
   }
 
   function closePopup(){
+    const wasOpen = popup.classList.contains("open");
     popup.classList.remove("open");
     popup.setAttribute("aria-hidden","true");
+    selected = null;
+    if(wasOpen) syncUrl();
   }
+  function wirePopupShare(){
+    const b = popup.querySelector(".pop-share");
+    if(b) b.addEventListener("click", shareView);
+  }
+
+  // ---------- Shareable link ----------
+  // The view lives in the URL hash, so a link reopens the same map:
+  //   #country=france&map=7.20/45.7600/4.8400&status=pipeline&fuel=wind
+  //    &measure=capacity&layers=power-plants,oim-grid&feature=power-plants:ppm-fr-2265
+  // Defaults are left out. Written with replaceState (no history entry per
+  // pan); a pasted or edited hash is applied on hashchange.
+  let urlReady = false;      // false until a shared link has been applied
+  const LINK_SAFE = (v)=>encodeURIComponent(v).replace(/%2C/g, ",").replace(/%2F/g, "/").replace(/%3A/g, ":");
+
+  function readLink(){
+    const q = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const link = { country: q.get("country"), status: q.get("status"), fuel: q.get("fuel"),
+                   measure: q.get("measure"), layers: null, view: null, feature: null };
+    const v = (q.get("map") || "").split("/").map(Number);
+    if(v.length === 3 && v.every(Number.isFinite) && Math.abs(v[1]) <= 90 && Math.abs(v[2]) <= 180)
+      link.view = { zoom: Math.min(Math.max(v[0], 1), 18), center: [v[2], v[1]] };
+    if(q.has("layers")) link.layers = q.get("layers").split(",").filter(Boolean);
+    const f = q.get("feature");
+    if(f && f.includes(":")){ const i = f.indexOf(":"); link.feature = { layer: f.slice(0, i), id: f.slice(i + 1) }; }
+    return link;
+  }
+
+  // Filters and layer choices from a link, for the country now loaded.
+  // Unknown values fall back to the defaults.
+  function applyLinkState(link){
+    statusView = STATUS_VIEWS[link.status] ? link.status : "all";
+    mixMeasure = link.measure === "capacity" ? "capacity" : "generation";
+    fuelFilter = link.fuel && mixFuel(link.fuel) ? link.fuel : null;
+    if(link.layers) COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = link.layers.includes(L.id); });
+  }
+
+  function writeLink(){
+    const c = COUNTRIES[currentCountry];
+    const parts = [["country", currentCountry]];
+    if(map){
+      const ctr = map.getCenter();
+      parts.push(["map", `${map.getZoom().toFixed(2)}/${ctr.lat.toFixed(4)}/${ctr.lng.toFixed(4)}`]);
+    }
+    if(statusView !== "all") parts.push(["status", statusView]);
+    if(fuelFilter) parts.push(["fuel", fuelFilter]);
+    if(mixMeasure !== "generation") parts.push(["measure", mixMeasure]);
+    if(c.layers.some(L=>(visibility[L.id] !== false) !== (L.visible !== false)))
+      parts.push(["layers", c.layers.filter(L=>visibility[L.id] !== false).map(L=>L.id).join(",")]);
+    if(selected) parts.push(["feature", `${selected.layer}:${selected.id}`]);
+    return "#" + parts.map(([k, v])=>`${k}=${LINK_SAFE(v)}`).join("&");
+  }
+  function syncUrl(force){
+    if(!urlReady && !force) return;
+    const hash = writeLink();
+    if(hash !== location.hash){
+      try{ history.replaceState(null, "", hash); } catch(e){ /* sandboxed frame: the link stays as it was */ }
+    }
+  }
+
+  // Opens the popup of a linked feature; `fly` centres the map on it when the
+  // link carried no view of its own.
+  // `smooth` animates the move (search); a link jumps. Returns false when
+  // the feature isn't in the loaded data.
+  function linkedFeature(ref){
+    const L = layerConfig(ref.layer);
+    const fc = layerData[ref.layer];
+    const f = L && L.file && fc && fc.features.find(x=>String(x.properties.id) === ref.id);
+    return f ? { L, f } : null;
+  }
+  function openLinkedFeature(ref, fly, smooth){
+    const hit = linkedFeature(ref);
+    if(!hit) return false;
+    const { L, f } = hit;
+    if(L.kind === "grid"){
+      openLinePopup(L.id, f);
+      if(fly){
+        const pts = (f.geometry.type === "LineString" ? f.geometry.coordinates : f.geometry.coordinates.flat());
+        const lng = pts.map(p=>p[0]), lat = pts.map(p=>p[1]);
+        map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, duration: smooth ? 1200 : 0 });
+      }
+    } else {
+      openPointPopup(L.id, f);
+      const view = { center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 8) };
+      if(fly) smooth ? map.flyTo({ ...view, speed: 1.2, curve: 1.4 }) : map.jumpTo(view);
+    }
+    return true;
+  }
+
+  // Makes a feature visible before going to it: its layer on, and a fuel or
+  // status filter that hides it lifted. Returns whether anything changed.
+  function revealFeature(ref){
+    const hit = linkedFeature(ref);
+    if(!hit) return false;
+    const { L, f } = hit;
+    let changed = false;
+    if(visibility[L.id] === false){ visibility[L.id] = true; changed = true; }
+    if(fuelFilter && L.kind === "power" && !plantFuels(fuelFilter).includes(f.properties.fuel_type)){ fuelFilter = null; changed = true; }
+    const statuses = STATUS_VIEWS[statusView].statuses;
+    if(statuses && !statuses.includes(f.properties.status)){ statusView = "all"; changed = true; }
+    return changed;
+  }
+
+  // Share: the system sheet on phones, the clipboard elsewhere.
+  const toast = $("#toast");
+  let toastTimer = 0;
+  function showToast(text){
+    toast.textContent = text;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toast.hidden = true; }, 2600);
+  }
+  async function shareView(){
+    syncUrl(true);
+    const url = location.href;
+    if(navigator.share && matchMedia("(hover: none)").matches){
+      try{ await navigator.share({ title: document.title, url }); return; }
+      catch(e){ if(e && e.name === "AbortError") return; }
+    }
+    try{ await navigator.clipboard.writeText(url); showToast("Link copied"); }
+    catch(e){ showToast("Copy the link from the address bar"); }
+  }
+  $("#shareBtn").addEventListener("click", shareView);
+
+  // A link pasted into this tab, or an edited hash.
+  window.addEventListener("hashchange", ()=>{
+    if(location.hash === writeLink()) return;
+    const link = readLink();
+    if(ENABLED.includes(link.country) && link.country !== currentCountry){ switchCountry(link.country, link); return; }
+    closePopup();
+    applyLinkState(link);
+    renderPanel(currentCountry);
+    if(map && mapReady && dataReady){
+      hoveredLayer = null;
+      buildMapLayers(currentCountry);
+      if(link.view) map.jumpTo(link.view);
+      if(link.feature) openLinkedFeature(link.feature, !link.view);
+    }
+  });
   $("#popupClose").addEventListener("click", closePopup);
   document.addEventListener("keydown", (e)=>{
+    // "/" jumps to the search box, unless the user is typing somewhere.
+    if(e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey &&
+       !/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || "")){
+      e.preventDefault();
+      searchInput.focus();
+      return;
+    }
     if(e.key !== "Escape") return;
     if(!methModal.classList.contains("hidden")) methModal.classList.add("hidden");
     else closePopup();
   });
 
   // ---------- Country switch ----------
-  countrySelect.addEventListener("change", async (e)=>{
-    const key = e.target.value;
+  // ---------- Search ----------
+  // Names (and operator, sector, region, fuel) of every mapped asset in every
+  // country, plus country names. The other countries' files load on the
+  // first keystroke, not on page load. OSM plants are live tiles: not indexed.
+  const searchInput = $("#searchInput"), searchResults = $("#searchResults");
+  const norm = (v)=>String(v == null ? "" : v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const SEARCH_MAX = 8;
+  const STATUS_WORD = { construction:"under construction", announced:"announced", planned:"planned", idle:"idle" };
+
+  function searchEntries(countryKey, data){
+    const c = COUNTRIES[countryKey];
+    return c.layers.filter(L=>L.file && data[L.id]).flatMap(L=>data[L.id].features.map(f=>{
+      const p = f.properties || {};
+      if(p.id == null || !p.name) return null;
+      const mw = num(p.capacity_mw) ?? num(p.capacity_estimate_mw) ?? num(p.estimated_demand_mw);
+      const what = L.kind === "power" ? ["Power plant", p.fuel_type]
+        : L.kind === "industrial" ? [p.sector || "Industry"]
+        : L.kind === "digital" ? [p.category === "cable_landing" ? "Cable landing" : "Data centre", p.operator]
+        : [num(p.voltage_kv) != null ? `Line · ${p.voltage_kv} kV` : "Line"];
+      // Industry carries an estimated demand, not a capacity.
+      const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? `~${fmtMW(mw)} demand` : fmtMW(mw);
+      const meta = [...what, size, STATUS_WORD[p.status], c.label].filter(Boolean).join(" · ");
+      const color = L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888"
+        : L.kind === "industrial" ? INDUSTRIAL_COLOR
+        : L.kind === "digital" ? (p.category === "cable_landing" ? CABLE_COLOR : DIGITAL_COLOR)
+        : INTERCONNECTOR_COLOR();
+      return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, color, mw: mw || 0,
+               nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, p.region, p.fuel_type].filter(Boolean).join(" ")) };
+    })).filter(Boolean);
+  }
+  async function loadSearchEntries(key){
+    const c = COUNTRIES[key], data = {};
+    await Promise.all(c.layers.filter(L=>L.file).map(async L=>{
+      try{ const r = await fetch(c.dataPath + L.file + ASSET_V); if(r.ok) data[L.id] = await r.json(); }
+      catch(e){ /* that layer isn't searchable this time */ }
+    }));
+    return searchEntries(key, data);
+  }
+  let allEntries = null, allEntriesLoading = null;
+  function ensureSearchIndex(){
+    if(!allEntriesLoading){
+      allEntriesLoading = Promise.all(ENABLED.map(loadSearchEntries)).then(lists=>{
+        allEntries = lists.flat();
+        if(searchInput.value.trim()) runSearch();
+      });
+    }
+  }
+
+  // Every word must match; name starts first, the current country next,
+  // then the larger asset.
+  function rankEntries(entries, q){
+    const words = q.split(/\s+/).filter(Boolean);
+    return entries.map(e=>{
+      if(!words.every(w=>e.hay.includes(w))) return null;
+      const score = (e.nameN.startsWith(q) ? 100 : e.nameN.includes(" " + q) ? 60 : e.nameN.includes(q) ? 40 : 10)
+        + (e.country === currentCountry ? 30 : 0) + Math.min(20, 5 * Math.log10(1 + e.mw));
+      return { e, score };
+    }).filter(Boolean).sort((a, b)=>b.score - a.score).slice(0, SEARCH_MAX).map(x=>x.e);
+  }
+
+  let searchOptions = [], activeOption = -1;
+  function runSearch(){
+    const q = norm(searchInput.value.trim());
+    if(q.length < 2){ closeResults(); return; }
+    ensureSearchIndex();
+    const countries = ENABLED.filter(k=>norm(COUNTRIES[k].label).includes(q))
+      .map(k=>({ country: k, isCountry: true, name: COUNTRIES[k].label, meta: k === currentCountry ? "Current country" : "Go to this country" }));
+    const pool = allEntries || searchEntries(currentCountry, layerData);
+    searchOptions = [...countries, ...rankEntries(pool, q)].slice(0, SEARCH_MAX);
+    activeOption = searchOptions.length ? 0 : -1;
+    renderResults(q, !allEntries);
+  }
+
+  // Name with the match marked, as DOM nodes.
+  function markedName(name, q){
+    const span = el("span", "so-name");
+    const n = norm(name), i = n.indexOf(q);
+    // Positions only line up when folding accents kept the length.
+    if(i < 0 || n.length !== name.length){ span.textContent = name; return span; }
+    span.append(document.createTextNode(name.slice(0, i)), el("mark", null, name.slice(i, i + q.length)),
+                document.createTextNode(name.slice(i + q.length)));
+    return span;
+  }
+
+  function renderResults(q, partial){
+    searchResults.replaceChildren();
+    searchOptions.forEach((o, i)=>{
+      const li = el("li", "search-opt" + (o.isCountry ? " is-country" : ""));
+      li.id = "search-opt-" + i;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", String(i === activeOption));
+      const dot = el("span", "so-dot");
+      if(o.isCountry) dot.textContent = "→"; else dot.style.background = o.color;
+      const text = el("span", "so-text");
+      text.append(markedName(o.name, q), el("span", "so-meta", o.meta));
+      li.append(dot, text);
+      li.addEventListener("mousedown", (e)=>e.preventDefault());   // keep focus in the box
+      li.addEventListener("click", ()=>chooseResult(o));
+      searchResults.appendChild(li);
+    });
+    if(!searchOptions.length || partial){
+      searchResults.appendChild(el("li", "search-note", partial
+        ? "Searching the other countries…"
+        : "No match in the mapped assets. OSM power plants are not searchable."));
+    }
+    searchResults.hidden = false;
+    searchInput.setAttribute("aria-expanded", "true");
+    searchInput.setAttribute("aria-activedescendant", activeOption >= 0 ? "search-opt-" + activeOption : "");
+  }
+  function closeResults(){
+    searchResults.hidden = true;
+    searchResults.replaceChildren();
+    searchOptions = []; activeOption = -1;
+    searchInput.setAttribute("aria-expanded", "false");
+    searchInput.removeAttribute("aria-activedescendant");
+  }
+  function moveActive(step){
+    if(!searchOptions.length) return;
+    activeOption = (activeOption + step + searchOptions.length) % searchOptions.length;
+    searchResults.querySelectorAll(".search-opt").forEach((li, i)=>li.setAttribute("aria-selected", String(i === activeOption)));
+    searchInput.setAttribute("aria-activedescendant", "search-opt-" + activeOption);
+    const li = $("#search-opt-" + activeOption);
+    if(li) li.scrollIntoView({ block: "nearest" });
+  }
+
+  // Goes to a result: the country, or the asset with its popup, lifting any
+  // filter that would hide it.
+  async function chooseResult(o){
+    closeResults();
+    if(o.isCountry){
+      searchInput.value = "";
+      if(o.country !== currentCountry) await switchCountry(o.country, null);
+      return;
+    }
+    searchInput.value = o.name;
+    const ref = { layer: o.layer, id: o.id };
+    if(o.country !== currentCountry){
+      await switchCountry(o.country, { status: statusView, measure: mixMeasure, fuel: null, layers: null,
+                                       view: null, feature: ref, reveal: true, smooth: true });
+      return;
+    }
+    if(revealFeature(ref)){
+      renderPanel(currentCountry);
+      if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    }
+    if(map && mapReady) openLinkedFeature(ref, true, true);
+  }
+
+  let searchTimer = 0;
+  searchInput.addEventListener("input", ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 80); });
+  searchInput.addEventListener("focus", ()=>{ ensureSearchIndex(); if(searchInput.value.trim()) runSearch(); });
+  searchInput.addEventListener("blur", ()=>setTimeout(closeResults, 120));
+  searchInput.addEventListener("keydown", (e)=>{
+    if(e.key === "ArrowDown"){ e.preventDefault(); if(searchResults.hidden) runSearch(); else moveActive(1); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); moveActive(-1); }
+    else if(e.key === "Enter"){ if(activeOption >= 0){ e.preventDefault(); chooseResult(searchOptions[activeOption]); } }
+    else if(e.key === "Escape"){
+      // Clear the box first; the page's own Escape (close popup) comes next time.
+      if(!searchResults.hidden || searchInput.value){ e.stopPropagation(); searchInput.value = ""; closeResults(); }
+    }
+  });
+
+  // `link`: the shared link being applied, if the switch comes from one.
+  async function switchCountry(key, link){
     if(!ENABLED.includes(key)) return;
     currentCountry = key;
+    countrySelect.value = key;
     const c = COUNTRIES[key];
     closePopup();
     hideTooltip();
     hoveredLayer = null;
+    fuelFilter = null;
     if(!(await loadAllData(key))) return; // superseded by a later switch
+    if(link) applyLinkState(link);
+    if(link && link.reveal && link.feature) revealFeature(link.feature);
     renderPanel(key);
     if(map && mapReady){
-      map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
+      if(link && link.view) map.jumpTo(link.view);
       buildMapLayers(key);
+      const opened = !!(link && link.feature) && openLinkedFeature(link.feature, !link.view, link.smooth);
+      if(!opened && !(link && link.view)) map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
+    } else if(link){
+      pendingFeature = link.feature;
     }
-  });
+    syncUrl();
+  }
+  countrySelect.addEventListener("change", (e)=>switchCountry(e.target.value, null));
 
   boot();
 })();

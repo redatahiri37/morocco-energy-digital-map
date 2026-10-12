@@ -20,7 +20,9 @@
 // Optional per country:
 //   palette:        { providers: [{ key, color, short }], sectors: { name: color } }
 //   boundary:       { source, sourceUrl, note } — provenance of boundary.geojson
-//   snapshotSource: short credit shown above the KPI tiles
+//   mix:            national electricity mix file in dataPath, built from Ember
+//                   by scripts/build-country-mix.py (the "Electricity mix" panel)
+//   snapshotSource: short credit for the plant figures in the "Mapped assets" tiles
 //   credits:        data credits in the footer, e.g. "GEM · ONEE · Datacentermap"
 
 // Layers for countries built from open data (see the entries below).
@@ -75,7 +77,8 @@ window.COUNTRIES = {
     zoom:   5.5,
     bounds: [[-17.5, 20.5], [-0.8, 36.35]],
     dataPath: "./data/morocco/",
-    snapshotSource: "ONEE 2025",
+    mix:      "mix.json",
+    snapshotSource: "GEM · ONEE · operator disclosures, 2026-04",
     credits: "GEM · ONEE · Datacentermap",
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
                 sourceUrl: "https://www.naturalearthdata.com/",
@@ -158,6 +161,7 @@ window.COUNTRIES = {
     zoom:   6.3,
     bounds: [[-8.9, 4.1], [-2.3, 11.0]],
     dataPath: "./data/cote-divoire/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -172,6 +176,7 @@ window.COUNTRIES = {
     zoom:   5.3,
     bounds: [[24.5, 21.7], [37.1, 31.9]],
     dataPath: "./data/egypt/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -186,6 +191,7 @@ window.COUNTRIES = {
     zoom:   5.4,
     bounds: [[32.7, 3.2], [48.2, 15.1]],
     dataPath: "./data/ethiopia/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -200,6 +206,7 @@ window.COUNTRIES = {
     zoom:   6.2,
     bounds: [[-3.5, 4.5], [1.4, 11.4]],
     dataPath: "./data/ghana/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -214,6 +221,7 @@ window.COUNTRIES = {
     zoom:   5.6,
     bounds: [[33.6, -4.9], [42.1, 5.7]],
     dataPath: "./data/kenya/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -228,6 +236,7 @@ window.COUNTRIES = {
     zoom:   5.7,
     bounds: [[2.4, 4.0], [14.9, 14.1]],
     dataPath: "./data/nigeria/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -242,6 +251,7 @@ window.COUNTRIES = {
     zoom:   8.0,
     bounds: [[28.6, -3.1], [31.1, -0.8]],
     dataPath: "./data/rwanda/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -256,6 +266,7 @@ window.COUNTRIES = {
     zoom:   4.9,
     bounds: [[16.2, -35.0], [33.1, -21.9]],
     dataPath: "./data/south-africa/",
+    mix:      "mix.json",
     snapshotSource: "WRI GPPD 2021",
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -274,6 +285,7 @@ window.COUNTRIES = {
     zoom:   6.2,
     bounds: [[-17.6, 12.3], [-11.3, 16.7]],
     dataPath: "./data/senegal/",
+    mix:      "mix.json",
     snapshotSource: "owner list, unverified",
     credits: "owner-supplied plant list (unverified) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -309,6 +321,7 @@ window.COUNTRIES = {
     zoom:   5.4,
     bounds: [[-5.0, 41.1], [9.8, 51.3]],
     dataPath: "./data/france/",
+    mix:      "mix.json",
     snapshotSource: "powerplantmatching 2026, ≥ 10 MW",
     credits: "powerplantmatching (CC BY 4.0)",
     boundary: { source: "Natural Earth 1:50m Admin 0",
@@ -323,6 +336,7 @@ window.COUNTRIES = {
     zoom:   5.4,
     bounds: [[-18.4, 27.4], [4.6, 44.0]],
     dataPath: "./data/spain/",
+    mix:      "mix.json",
     snapshotSource: "powerplantmatching 2026, ≥ 10 MW",
     credits: "powerplantmatching (CC BY 4.0)",
     boundary: { source: "Natural Earth 1:50m Admin 0",
