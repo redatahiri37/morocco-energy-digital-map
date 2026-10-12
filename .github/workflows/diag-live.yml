@@ -1,0 +1,29 @@
+name: diag-live
+# Temporary: checks the live sites answer and carry the latest changes. Delete after use.
+on:
+  pull_request:
+    paths: ['.github/workflows/diag-live.yml']
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for the running deploy to land
+        run: sleep 150
+      - name: Status of each page
+        run: |
+          for u in https://solar.wattu.org/ https://solar.wattu.org/ar/ https://solar.wattu.org/en/ \
+                   https://solar.wattu.org/villes/ https://solar.wattu.org/ville/rabat/ https://solar.wattu.org/guide/ \
+                   https://solar.wattu.org/sitemap.xml https://solar.wattu.org/installers/econosol.png https://solar.wattu.org/installers/shamsiyah.png \
+                   https://energy.wattu.org/ https://energy.wattu.org/sitemap.xml; do
+            printf '%s  %s\n' "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$u")" "$u"
+          done
+      - name: Content checks on solar.wattu.org
+        run: |
+          curl -s --max-time 20 https://solar.wattu.org/ > home.html
+          echo "installer logos:      $(grep -c 'installers/econosol.png\|installers/shamsiyah.png' home.html)  (expect 2)"
+          echo "'Code source' link:   $(grep -c 'Code source' home.html)  (expect 0)"
+          echo "'Aucun cookie' text:  $(grep -c 'Aucun cookie' home.html)  (expect 0)"
+          echo "asset version:        $(grep -o 'app.js?v=[a-f0-9]*' home.html | head -1)"
+          echo "sitemap URLs:         $(curl -s --max-time 20 https://solar.wattu.org/sitemap.xml | grep -c '<loc>')"
