@@ -65,7 +65,7 @@ for (const [lang, col] of [["ar", 1], ["en", 2]]) {
   // guide/ stay relative, since /ar/ and /en/ have their own.
   html = html.replace(/\b(href|src)="(?!https?:|#|\/|\.\/|villes\/|cities\/|guide\/)([^"]+)"/g, '$1="../$2"');
   if (version) {
-    html = html.replace(/((?:href|src)="\.\.\/(?:style\.css|brand\.css|app\.js|analytics\.js))"/g, `$1?v=${encodeURIComponent(version)}"`);
+    html = html.replace(/((?:href|src)="\.\.\/(?:style\.css|brand\.css|engine\.js|app\.js|analytics\.js))"/g, `$1?v=${encodeURIComponent(version)}"`);
   }
   const left = leftoverFrench(html);
   if (left.length) {

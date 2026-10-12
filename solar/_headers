@@ -19,3 +19,8 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000
+
+# The chat assistant prototype (chat/, reached by a private link): kept out
+# of search engines.
+/chat/*
+  X-Robots-Tag: noindex, nofollow

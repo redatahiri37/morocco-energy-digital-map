@@ -23,14 +23,16 @@ jobs:
       - name: Syntax-check the page scripts
         run: |
           set -e
+          node --check solar/engine.js
           node --check solar/app.js
           node --check solar/analytics.js
+          node --check solar/chat/chat.js
 
       # The page builds its HTML from nodes (textContent, createElement): no
       # string, from OSM, a shared link or our own code, is parsed as HTML.
       - name: No HTML parsed from strings in the page scripts
         run: |
-          if grep -nE '\.(inner|outer)HTML\b|insertAdjacentHTML|document\.write' solar/app.js solar/analytics.js; then
+          if grep -nE '\.(inner|outer)HTML\b|insertAdjacentHTML|document\.write' solar/app.js solar/analytics.js solar/chat/chat.js; then
             echo "Build these elements with textContent / createElement instead"
             exit 1
           fi
@@ -58,24 +60,24 @@ jobs:
 
       # No code from another site; vendored libraries match their hashes.
       - name: Page code is first-party and untampered
-        run: node scripts/check-sri.mjs solar/index.html
+        run: node scripts/check-sri.mjs solar/index.html solar/chat/index.html
 
       # The 3D view loads MapLibre from app.js, not from a tag, so
-      # check-sri does not see it: its hashes live in CONFIG and must match
-      # the vendored files.
+      # check-sri does not see it: its hashes live in CONFIG (engine.js) and
+      # must match the vendored files.
       - name: Libraries loaded by app.js match their hashes
         run: |
           node -e '
             const fs = require("fs"), crypto = require("crypto");
-            const src = fs.readFileSync("solar/app.js", "utf8");
+            const src = fs.readFileSync("solar/engine.js", "utf8");
             let n = 0;
             for (const m of src.matchAll(/url: "\/(vendor\/[^"]+)", sri: "sha384-([^"]+)"/g)) {
               const got = crypto.createHash("sha384").update(fs.readFileSync("solar/" + m[1])).digest("base64");
-              if (got !== m[2]) { console.error("solar/" + m[1] + " is sha384-" + got + ", app.js expects sha384-" + m[2]); process.exit(1); }
+              if (got !== m[2]) { console.error("solar/" + m[1] + " is sha384-" + got + ", engine.js expects sha384-" + m[2]); process.exit(1); }
               console.log("ok    solar/" + m[1]);
               n++;
             }
-            if (n < 2) { console.error("no vendored file hashes found in solar/app.js CONFIG"); process.exit(1); }
+            if (n < 2) { console.error("no vendored file hashes found in solar/engine.js CONFIG"); process.exit(1); }
           '
 
       # City pages: built offline here (no PVGIS call on pull requests),
@@ -102,7 +104,7 @@ jobs:
         run: |
           set -e
           cp -r solar/vendor _check/
-          cp solar/app.js solar/analytics.js _check/
+          cp solar/engine.js solar/app.js solar/analytics.js _check/
           node scripts/build-solar-i18n.mjs _check
           node scripts/check-sri.mjs _check/ar/index.html _check/en/index.html
 
@@ -115,9 +117,15 @@ jobs:
           node scripts/render-og.mjs _og _check/og
           test "$(find _check/og -name '*.png' | wc -l)" -eq "$(find _og -name '*.html' | wc -l)"
 
+      # The Worker's one dependency is the Anthropic SDK (chat.js), pinned in
+      # package-lock.json; no install script runs.
       - name: Worker tests
         working-directory: solar/proxy
-        run: node worker.test.mjs
+        run: |
+          set -e
+          npm ci --ignore-scripts --no-audit --no-fund
+          node worker.test.mjs
+          node chat.test.mjs
 
   # Publishes the estimator to the Cloudflare Pages project behind
   # solar.wattu.org (atlas-solar). Runs only on main, after the checks.
@@ -146,7 +154,7 @@ jobs:
         run: |
           set -e
           mkdir _site
-          cp solar/index.html solar/app.js solar/analytics.js solar/style.css \
+          cp solar/index.html solar/engine.js solar/app.js solar/analytics.js solar/style.css \
              solar/brand.css solar/mark.svg solar/favicon.svg \
              solar/pages.css solar/robots.txt solar/_headers _site/
           # Search engine ownership proofs (Google Search Console, Bing
@@ -156,14 +164,18 @@ jobs:
           cp -r solar/vendor _site/vendor
           cp -r solar/installers _site/installers
           cp -r solar/.well-known _site/.well-known
+          # The chat assistant prototype, reached by a private link (noindex).
+          cp -r solar/chat _site/chat
           # City list for « Choisissez votre ville » when an address is not found
           mkdir _site/data
           cp solar/data/cities.json _site/data/
           # New asset URLs on every deploy: Cloudflare's browser cache would
           # otherwise serve the previous style.css / app.js with the new page.
           V="${GITHUB_SHA::8}"
-          sed -i -E 's#((href|src)="(style\.css|brand\.css|app\.js|analytics\.js))"#\1?v='"$V"'"#g' _site/index.html
-          test "$(grep -c "?v=$V" _site/index.html)" -eq 4
+          sed -i -E 's#((href|src)="(style\.css|brand\.css|engine\.js|app\.js|analytics\.js))"#\1?v='"$V"'"#g' _site/index.html
+          test "$(grep -c "?v=$V" _site/index.html)" -eq 5
+          sed -i -E 's#((href|src)="(\.\./style\.css|\.\./brand\.css|chat\.css|chat\.js))"#\1?v='"$V"'"#g' _site/chat/index.html
+          test "$(grep -c "?v=$V" _site/chat/index.html)" -eq 4
 
       # One static page per city (ville/<slug>/), the comparison table
       # (villes/), sitemap.xml and llms.txt, with PVGIS figures fetched now

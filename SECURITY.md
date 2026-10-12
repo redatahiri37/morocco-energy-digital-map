@@ -28,10 +28,12 @@ Please do not post a working exploit or a credential in a public issue.
   - HTTPS only (HSTS), no MIME sniffing, no camera or microphone;
   - on the solar site, every refusal is reported to the Worker (below,
     « Reading the CSP reports »).
-- **The solar page never parses a string as HTML**: `app.js` builds its
+- **The solar page never parses a string as HTML**: `app.js` and the
+  chat page's `chat/chat.js` (which shows the model's replies) build their
   elements with `textContent` / `createElement`, and `solar.yml` fails if
   `innerHTML`, `outerHTML`, `insertAdjacentHTML` or `document.write`
-  appears in it.
+  appears in them. The chat turns only links to solar.wattu.org and
+  taqapro.ma into links; any other address stays text.
 - **The map never renders third-party HTML**: its attribution is fixed text,
   numbers from the data are written only if they are numbers, and links
   only if they are http(s). `scripts/validate-countries.mjs` checks the
@@ -41,7 +43,12 @@ Please do not post a working exploit or a credential in a public issue.
   without its binding, stores analytics values only when they have the
   expected shape (see `solar/ANALYTICS.md`), keeps CSP reports to
   directive, host and path, and answers CORS only for the Wattu origins
-  (no localhost, no github.io).
+  (no localhost, no github.io). Its chat endpoint (`/chat`, prototype)
+  answers only the Wattu origins and the access key (`CHAT_ACCESS_KEY`),
+  10 answers a minute per IP, at most 5 model calls per answer; the
+  Anthropic API key is a Worker secret, and no message is logged or
+  stored. The model's tools only compute (PVGIS, tariff, payback): they
+  read nothing private and change nothing.
 - **CI**: actions pinned to commit SHAs and kept current by Dependabot
   (`.github/dependabot.yml`), read-only `GITHUB_TOKEN`, gitleaks on every
   push and PR (`.github/workflows/secrets.yml`), deploys from `main` only,
@@ -58,7 +65,7 @@ Please do not post a working exploit or a credential in a public issue.
 3. Update the path and the integrity hash in `index.html`:
    `openssl dgst -sha384 -binary <file> | openssl base64 -A`. The solar
    page loads MapLibre from `app.js` (3D view, on click): its path and
-   hashes are in `CONFIG.MAPLIBRE_JS` / `MAPLIBRE_CSS`, which solar.yml
+   hashes are in `CONFIG.MAPLIBRE_JS` / `MAPLIBRE_CSS` (`engine.js`), which solar.yml
    checks against the files.
 4. CI (`check-sri.mjs`) and the map/solar test suites must pass.
 
@@ -108,6 +115,13 @@ Please do not post a working exploit or a credential in a public issue.
       updates for the actions already run from `.github/dependabot.yml`.
 - [x] 2026-10-08 — the Cloudflare API token has
       Account › Workers Scripts › Edit; `worker-deploy` publishes the Worker.
+- [ ] Chat assistant (prototype): its two Worker secrets are set from
+      `solar/proxy/` with `npx wrangler@4 secret put ANTHROPIC_API_KEY` and
+      `npx wrangler@4 secret put CHAT_ACCESS_KEY`, never committed. In the
+      Anthropic Console, give the key its own workspace with a monthly
+      spend limit. To shut the chat: `npx wrangler@4 secret delete
+      CHAT_ACCESS_KEY` (it answers 503). To cut off a shared link: put a
+      new `CHAT_ACCESS_KEY` and send the new link.
 - [ ] Record here the date (never the value) on which each credential that
       was ever exposed was revoked: the old GitHub PAT, the old Mapbox
       token, and any token pasted into a chat.
@@ -160,6 +174,10 @@ count against the Worker's daily quota (below). If they ever eat it, drop
   same quota. The estimator then shows its approximate mode (no PVGIS), it
   does not break. Moving the Worker to a
   route on wattu.org would allow Cloudflare WAF rules if this happens.
+- **Chat cost.** Each answer is a paid model call. The access key, the
+  per-IP limit and the cap of 5 calls per answer bound it; the Anthropic
+  workspace spend limit (above) is the backstop. Whoever has the link can
+  use it until the key is changed.
 - **Third-party data services** (OpenFreeMap, OpenInfraMap, Nominatim,
   Overpass, PVGIS, Esri tiles) can be slow or down; each failure degrades
   one feature with a message, the pages keep working. They receive the
