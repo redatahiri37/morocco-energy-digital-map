@@ -50,7 +50,8 @@ jobs:
           cp solar/*.css solar/*.svg _check/
           node scripts/build-solar-cities.mjs _check --offline
           node scripts/check-sri.mjs _check/villes/index.html _check/ville/*/index.html \
-            _check/guide/index.html _check/guide/*/index.html
+            _check/guide/index.html _check/guide/*/index.html \
+            _check/ar/villes/index.html _check/ar/ville/*/index.html
           node --check scripts/indexnow-ping.mjs
 
       - name: Worker tests
