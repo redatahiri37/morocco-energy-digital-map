@@ -39,6 +39,16 @@ solar/          (repo root — its own Cloudflare Pages project)
 └── README.md
 ```
 
+### Languages
+
+The simulator is written once, in French (`index.html`, `app.js`). At deploy,
+`scripts/build-solar-i18n.mjs` writes `/ar/` (Moroccan Arabic, right to left)
+and `/en/` from `index.html` and the table in `i18n/simulator.mjs`; `app.js`
+picks its own texts from its `I18N` table by `<html lang>`. Change a French
+text in `index.html` and the build stops until its translation follows
+(the PR check runs the same script). Arabic register: Darija for headings,
+buttons and questions, plain Arabic for explanations.
+
 ### City pages (search engines and AI assistants)
 
 The estimator computes everything in the browser after an address is typed,

@@ -3,10 +3,10 @@ name: solar-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
+    paths: ['solar/**', 'scripts/check-sri.mjs', 'scripts/build-solar-cities.mjs', 'scripts/build-solar-i18n.mjs', 'scripts/indexnow-ping.mjs', 'docs/brand.css', 'docs/fonts/**', 'docs/*.svg', '.github/workflows/solar.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -77,6 +77,17 @@ jobs:
             _check/en/guide/index.html _check/en/guide/*/index.html
           node --check scripts/indexnow-ping.mjs
 
+      # The simulator in Arabic and English: every French string of
+      # index.html must have its translation (the script fails otherwise),
+      # and the pages pass the same code rules.
+      - name: Simulator translations are complete and first-party
+        run: |
+          set -e
+          cp -r solar/vendor _check/
+          cp solar/app.js solar/analytics.js _check/
+          node scripts/build-solar-i18n.mjs _check
+          node scripts/check-sri.mjs _check/ar/index.html _check/en/index.html
+
       - name: Worker tests
         working-directory: solar/proxy
         run: node worker.test.mjs
@@ -130,6 +141,11 @@ jobs:
       # the live site keeps its previous pages rather than approximate ones.
       - name: Build the city pages
         run: node scripts/build-solar-cities.mjs _site --version "${GITHUB_SHA::8}"
+
+      # The simulator in Moroccan Arabic (/ar/) and English (/en/), from
+      # index.html and solar/i18n/simulator.mjs.
+      - name: Build the translated simulator
+        run: node scripts/build-solar-i18n.mjs _site --version "${GITHUB_SHA::8}"
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0

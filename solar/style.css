@@ -744,6 +744,19 @@ a:hover { text-decoration: underline; }
   .how, .about-grid { grid-template-columns: 1fr; }
 }
 
+/* Arabic page (/ar/): letter spacing pulls Arabic letters apart and
+   breaks their joining, so no element of the page gets any. */
+html:lang(ar) * { letter-spacing: 0 !important; }
+/* The label font is a Latin monospace: Arabic falls back to another
+   monospace face and looks spaced out. Labels use the interface font. */
+html:lang(ar) { --w-font-mono: var(--w-font-ui); }
+
+/* Small phones: with the two language links, the "Méthode" anchor (it
+   only scrolls down the page) leaves the top bar so it fits. */
+@media (max-width: 400px) {
+  .topnav .nav-method { display: none; }
+}
+
 /* Phone refinements */
 @media (max-width: 620px) {
   .topbar { padding: 12px 16px; }
