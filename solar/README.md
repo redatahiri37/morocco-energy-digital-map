@@ -69,6 +69,14 @@ writes static HTML with the same figures:
   The same guides in Arabic (`/ar/guide/<slug>/`, Darija headings and
   questions) and English (`/en/guide/<english-slug>/`), `hreflang`-linked.
 - `/sitemap.xml` and `/llms.txt` — generated with them (no sitemap in the repo).
+- `/data/barometre-solaire-maroc.csv` — the figures behind the city pages,
+  one row per city (PVGIS output by month, then sizing, cost, savings and
+  payback for four bills), CC BY 4.0, linked from the three city indexes
+  and declared as the Dataset's download.
+- `/og/<lang>/<slug>.png` and `/og/<lang>/home.png` — 1200×630 share images
+  (og:image, twitter:image) with each city's figures. The build writes the
+  cards as HTML (`--og-src`); `scripts/render-og.mjs` renders them with the
+  runner's Chrome over the DevTools pipe (no npm package).
 - IndexNow: after each deploy, `scripts/indexnow-ping.mjs` submits every
   sitemap URL to Bing and the other IndexNow engines. The key in
   `indexnow-key.txt` is public by design (served at `/<key>.txt`); a failed
