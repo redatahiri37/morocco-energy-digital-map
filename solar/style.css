@@ -524,6 +524,50 @@ a:hover { text-decoration: underline; }
   margin: 12px 0 0;
   font-size: 13px; color: var(--muted);
 }
+/* Plan view (Leaflet) and 3D view (MapLibre) share the stage; the button
+   switching them sits on the map, next to the zoom buttons: the bottom
+   holds the imagery credit, two lines on a phone. */
+.map-stage { position: relative; }
+#map3d { height: 380px; width: 100%; border-radius: var(--r); overflow: hidden; }
+.map-3d-btn {
+  position: absolute; left: 52px; top: 10px; z-index: 1000;
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid rgba(10,22,40,0.12); background: #fff; color: var(--navy);
+  font-size: 13.5px; font-weight: 600;
+  box-shadow: 0 2px 10px rgba(10,22,40,0.22);
+  transition: background .15s, color .15s;
+}
+/* Navy while the 3D view is on; hover only where there is a mouse (a tap
+   would leave it stuck on a phone). */
+.map-3d-btn[aria-pressed="true"], .map-3d-btn:focus-visible { background: var(--navy); color: #fff; }
+@media (hover: hover) { .map-3d-btn:hover { background: var(--navy); color: #fff; } }
+.map-3d-btn:disabled { opacity: .75; cursor: progress; }
+
+/* Sun and height controls under the 3D view */
+.sun-bar {
+  display: grid; gap: 10px;
+  margin-top: 12px; padding: 14px 16px;
+  border: 1px solid var(--border); border-radius: var(--r);
+  background: var(--bg);
+}
+.sun-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 13.5px; }
+.sun-k { min-width: 96px; font-weight: 600; color: var(--text); }
+.sun-row input[type=range] { flex: 1; min-width: 120px; accent-color: var(--orange); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--card); }
+.seg-btn { padding: 6px 12px; border: 0; background: none; color: var(--text); font-size: 13px; }
+.seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+html[dir="rtl"] .seg-btn + .seg-btn { border-left: 0; border-right: 1px solid var(--border); }
+.seg-btn.active { background: var(--navy); color: #fff; font-weight: 600; }
+.step-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card); color: var(--text);
+  font-size: 16px; line-height: 1;
+}
+.step-btn:disabled { opacity: .4; cursor: default; }
+.sun-note { font-size: 12px; color: var(--muted); }
+.sun-caption { margin: 2px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
 #map {
   height: 380px;
   width: 100%;
@@ -845,7 +889,8 @@ html:lang(ar) { --w-font-mono: var(--w-font-ui); }
   .chart-card, .finance-card, .next-card { padding: 16px; }
   .chart-header { flex-direction: column; gap: 2px; }
   .chart-sub { text-align: left; }
-  #map { height: 300px; }
+  #map, #map3d { height: 300px; }
+  .sun-k { min-width: 0; flex-basis: 100%; }
 }
 
 @media (max-width: 360px) {
@@ -857,6 +902,7 @@ html:lang(ar) { --w-font-mono: var(--w-font-ui); }
 /* Print / "PDF": the estimate, without the controls */
 @media print {
   .topbar, .results-actions, .back-btn, #alt-addresses, .advanced, .roof-actions, #hero-bill-ask,
+  .map-3d-btn, #map3d, .sun-bar,
   #step1, .about, .installers-card, .site-footer nav, .help, .leaflet-control-container { display: none !important; }
   html, body { background: #fff; }
   .results-wrap { max-width: none; padding: 0; margin: 0; }

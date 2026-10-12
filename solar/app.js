@@ -60,6 +60,17 @@ const CONFIG = {
   OVERPASS_URL: "https://overpass-api.de/api/interpreter",
   BUILDING_SEARCH_RADIUS_M: 25,
 
+  // 3D view. MapLibre is the energy map's vendored copy, loaded on the
+  // first click only, with the same integrity hashes (SECURITY.md). Root
+  // paths: /ar/ and /en/ load the same files. Heights are assumptions and
+  // the page says so: OpenStreetMap rarely knows a Moroccan house's height.
+  MAPLIBRE_JS: { url: "/vendor/maplibre-gl-4.7.1/maplibre-gl.js", sri: "sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj" },
+  MAPLIBRE_CSS: { url: "/vendor/maplibre-gl-4.7.1/maplibre-gl.css", sri: "sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V" },
+  STOREY_M: 3,           // one storey
+  DEFAULT_STOREYS: 2,    // when OpenStreetMap has no building:levels or height
+  MAX_STOREYS: 12,
+  RACK_FRONT_M: 0.3,     // a panel's low edge above the roof, on its frame
+
   // Loi 82-21 (décret n° 2.25.100, mars 2026) — surplus injection réseau
   // Cap: 20% de la production annuelle. Tarif LV résidentiel non publié —
   // borne haute prise = tarif MV heures creuses (0,18 MAD/kWh, source pv-magazine 02/2026).
@@ -141,6 +152,10 @@ const I18N = {
     effortNet: (a, yrs, b) => `Effort net ${a} MAD/mois pendant ${yrs} ans, puis +${b} MAD/mois`,
     rateNote: (r, y) => `${r} % sur ${y} ans`,
     co2Line: (t, f) => `Soit environ ${t} t de CO₂ évitées par an (réseau ONEE\u00a0: ${f} kg par kWh).`,
+    view3d: "Voir en 3D", view2d: "Vue 2D", loading3d: "Chargement…",
+    view3dError: "La vue 3D n'est pas disponible sur cet appareil\u00a0; la vue 2D et les chiffres restent valables.",
+    hourLabel: (h, m) => `${h} h${m ? " " + String(m).padStart(2, "0") : ""}`, sunDown: "soleil couché",
+    storeysOsm: "d'après OpenStreetMap", storeysAssumed: "supposé",
     srSummary: (s, bill, capex, pay) => `Économies estimées : ${s} dirhams par an, pour une facture de ${bill} par mois. Investissement : ${capex}. ${pay}.`,
     sayBill: (v) => `${v} MAD par mois`, sayDegrees: (a) => `${a} degrés`, sayCost: (v) => `${v} MAD par Wc`,
     aspect: { south: "Sud", east: "Est", west: "Ouest", off: (a, dir) => `${a}° ${dir} du Sud` },
@@ -189,6 +204,10 @@ const I18N = {
     effortNet: (a, yrs, b) => `كتزيد ${a} درهم/الشهر لمدة ${yrs} ${arYears(yrs)}، ومن بعد +${b} درهم/الشهر`,
     rateNote: (r, y) => `${r}% على ${y} ${arYears(y)}`,
     co2Line: (t, f) => `يعني تقريبا ${t} طن ديال CO₂ اللي ما كتخرجش فالعام (شبكة ONEE: ${f} كلغ لكل ${bidi("kWh")}).`,
+    view3d: "شوف ب 3D", view2d: "رجع ل 2D", loading3d: "كنحملو…",
+    view3dError: "العرض ب 3D ما خدامش فهاد الجهاز؛ العرض ب 2D والأرقام مازال صالحين.",
+    hourLabel: (h, m) => `${h}:${String(m).padStart(2, "0")}`, sunDown: "الشمس غربات",
+    storeysOsm: "من OpenStreetMap", storeysAssumed: "تقديري",
     srSummary: (s, bill, capex, pay) => `التوفير المتوقع: ${s} درهم فالعام، لفاتورة ديال ${bill} فالشهر. الثمن ديال التركيب: ${capex}. ${pay}.`,
     sayBill: (v) => `${v} درهم فالشهر`, sayDegrees: (a) => `${a} درجة`, sayCost: (v) => `${v} درهم للواط`,
     aspect: { south: "الجنوب", east: "الشرق", west: "الغرب", off: (a, dir) => `الجنوب، ${a}° لجهة ${dir}` },
@@ -237,6 +256,10 @@ const I18N = {
     effortNet: (a, yrs, b) => `Net cost ${a} MAD/month for ${yrs} years, then +${b} MAD/month`,
     rateNote: (r, y) => `${r}% over ${y} years`,
     co2Line: (t, f) => `That is about ${t} t of CO₂ avoided a year (ONEE grid: ${f} kg per kWh).`,
+    view3d: "View in 3D", view2d: "2D view", loading3d: "Loading…",
+    view3dError: "The 3D view is not available on this device; the 2D view and the figures still hold.",
+    hourLabel: (h, m) => `${h}:${String(m).padStart(2, "0")}`, sunDown: "sun down",
+    storeysOsm: "from OpenStreetMap", storeysAssumed: "assumed",
     srSummary: (s, bill, capex, pay) => `Estimated savings: ${s} dirhams a year, for a bill of ${bill} a month. Investment: ${capex}. ${pay}.`,
     sayBill: (v) => `${v} MAD a month`, sayDegrees: (a) => `${a} degrees`, sayCost: (v) => `${v} MAD per Wp`,
     aspect: { south: "South", east: "East", west: "West", off: (a, dir) => `${a}° ${dir} of South` },
@@ -661,15 +684,84 @@ const Roof = {
     if (!res.ok) throw new Error("Overpass " + res.status);
     const ways = ((await res.json()).elements || [])
       .filter(e => e.type === "way" && e.geometry && e.geometry.length >= 4)
-      .map(e => e.geometry.slice(0, -1).map(g => [g.lat, g.lon]));   // drop the closing vertex
+      .map(e => ({
+        w: e.geometry.slice(0, -1).map(g => [g.lat, g.lon]),   // drop the closing vertex
+        levels: this.levelsOf(e.tags),
+      }));
     if (!ways.length) return null;
     const o = { lat, lon, mx: 111320 * Math.cos(lat * Math.PI / 180), my: 110540 };
-    const scored = ways.map(w => {
-      const pts = this.toLocal(w, o);
-      return { w, inside: this.contains(pts, [0, 0]), d: this.distToEdges(pts, [0, 0]) };
+    const scored = ways.map(way => {
+      const pts = this.toLocal(way.w, o);
+      return { ...way, inside: this.contains(pts, [0, 0]), d: this.distToEdges(pts, [0, 0]) };
     });
     const hit = scored.find(s => s.inside) || scored.sort((a, b) => a.d - b.d)[0];
-    return hit.w;
+    return { latlngs: hit.w, levels: hit.levels };
+  },
+  // Storeys from OSM tags (building:levels, else height), or null.
+  levelsOf(tags = {}) {
+    const n = parseInt(tags["building:levels"], 10);
+    if (n >= 1 && n <= 60) return n;
+    const h = parseFloat(tags.height);
+    if (h >= 2 && h <= 200) return Math.max(1, Math.round(h / CONFIG.STOREY_M));
+    return null;
+  },
+  // Convex hull (monotone chain), counter-clockwise.
+  hull(pts) {
+    const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const half = (list) => {
+      const h = [];
+      for (const q of list) {
+        while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop();
+        h.push(q);
+      }
+      h.pop();
+      return h;
+    };
+    return half(p).concat(half([...p].reverse()));
+  },
+  // Sutherland–Hodgman: the part of `poly` inside the convex CCW polygon `clip`.
+  clipConvex(poly, clip) {
+    let out = poly;
+    for (let i = 0; i < clip.length && out.length; i++) {
+      const a = clip[i], b = clip[(i + 1) % clip.length];
+      const inside = (q) => (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) >= 0;
+      const cut = (p1, p2) => {
+        const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+        const den = (b[0] - a[0]) * dy - (b[1] - a[1]) * dx;
+        const t = ((b[0] - a[0]) * (a[1] - p1[1]) - (b[1] - a[1]) * (a[0] - p1[0])) / (den || 1e-12);
+        return [p1[0] + t * dx, p1[1] + t * dy];
+      };
+      const src = out;
+      out = [];
+      for (let j = 0; j < src.length; j++) {
+        const cur = src[j], prev = src[(j + src.length - 1) % src.length];
+        if (inside(cur)) {
+          if (!inside(prev)) out.push(cut(prev, cur));
+          out.push(cur);
+        } else if (inside(prev)) out.push(cut(prev, cur));
+      }
+    }
+    return out;
+  },
+};
+
+// ── Sun position ───────────────────────────────────
+// Elevation and azimuth (degrees, azimuth from north, clockwise) at `lat`
+// on day `doy`, `hour` in solar time. Cooper's declination: well under a
+// degree off, plenty for a picture of shadows.
+const Sun = {
+  DAYS: { winter: 355, equinox: 80, summer: 172 },
+  position(lat, doy, hour) {
+    const rad = Math.PI / 180;
+    const decl = 23.44 * Math.sin(2 * Math.PI * (284 + doy) / 365) * rad;
+    const H = 15 * (hour - 12) * rad, phi = lat * rad;
+    const sinAlt = Math.sin(phi) * Math.sin(decl) + Math.cos(phi) * Math.cos(decl) * Math.cos(H);
+    const alt = Math.asin(sinAlt);
+    const cosAz = (Math.sin(decl) - sinAlt * Math.sin(phi)) / (Math.cos(alt) * Math.cos(phi));
+    let az = Math.acos(Math.max(-1, Math.min(1, cosAz))) / rad;
+    if (H > 0) az = 360 - az;   // afternoon: west of south
+    return { alt: alt / rad, az };
   },
 };
 
@@ -791,6 +883,257 @@ const MapView = {
   },
 };
 
+// ── 3D view (MapLibre) ─────────────────────────────
+// The roof as a block, the proposed panels tilted on their frames and the
+// shadows they cast for a chosen day and solar hour. MapLibre extrudes flat
+// prisms only, so each tilted panel is drawn as a stair of thin strips,
+// which reads as a slope at house scale. Shadows are drawn on the roof
+// (clipped to its convex hull), not on the ground or the neighbours.
+const View3D = {
+  map: null,
+  open: false,
+  day: "winter",
+  hour: 12,
+  storeys: null,   // the visitor's choice; null = OSM's or the default
+  _lib: null,
+
+  // MapLibre and its stylesheet, once, checked against their hashes.
+  loadLib() {
+    if (this._lib) return this._lib;
+    this._lib = new Promise((resolve, reject) => {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = CONFIG.MAPLIBRE_CSS.url;
+      css.integrity = CONFIG.MAPLIBRE_CSS.sri;
+      document.head.appendChild(css);
+      const js = document.createElement("script");
+      js.src = CONFIG.MAPLIBRE_JS.url;
+      js.integrity = CONFIG.MAPLIBRE_JS.sri;
+      js.onload = () => window.maplibregl ? resolve(window.maplibregl) : reject(new Error("maplibre missing"));
+      js.onerror = () => { this._lib = null; reject(new Error("maplibre load failed")); };
+      document.head.appendChild(js);
+    });
+    return this._lib;
+  },
+
+  storeysNow() {
+    return this.storeys || (State.roof && State.roof.levels) || CONFIG.DEFAULT_STOREYS;
+  },
+
+  async show() {
+    if (!State.roof) return;
+    const btn = $("view3d-btn"), label = $("view3d-label");
+    btn.disabled = true;
+    label.textContent = STR.loading3d;
+    let gl;
+    try { gl = await this.loadLib(); }
+    catch (e) {
+      console.warn("[3d]", e);
+      btn.disabled = false;
+      label.textContent = STR.view3d;
+      UI.setRoofInfo(STR.view3dError);
+      return;
+    }
+    if (!State.roof) { btn.disabled = false; label.textContent = STR.view3d; return; }
+    $("map").hidden = true;
+    $("map3d").hidden = false;
+    $("sun-bar").hidden = false;
+    $("roof-legend").hidden = true;   // outline and free places are plan-view marks
+    this.open = true;
+    try {
+      if (!this.map) this.create(gl);
+      else this.map.resize();
+    } catch (e) {
+      // No WebGL (old phone, disabled GPU): back to the plan view.
+      console.warn("[3d]", e);
+      this.close();
+      UI.setRoofInfo(STR.view3dError);
+      btn.disabled = false;
+      return;
+    }
+    btn.disabled = false;
+    btn.setAttribute("aria-pressed", "true");
+    label.textContent = STR.view2d;
+    this.update({ frame: true });
+  },
+
+  close() {
+    if (!this.open) return;
+    this.open = false;
+    $("map3d").hidden = true;
+    $("sun-bar").hidden = true;
+    $("map").hidden = false;
+    $("roof-legend").hidden = !State.roof;
+    $("view3d-label").textContent = STR.view3d;
+    $("view3d-btn").setAttribute("aria-pressed", "false");
+    if (MapView.map) MapView.map.invalidateSize();
+  },
+
+  create(gl) {
+    const empty = { type: "FeatureCollection", features: [] };
+    const extrusion = (id, color, opacity) => ({
+      id, type: "fill-extrusion", source: id,
+      paint: {
+        "fill-extrusion-color": color,
+        "fill-extrusion-base": ["get", "base"],
+        "fill-extrusion-height": ["get", "height"],
+        "fill-extrusion-opacity": opacity,
+      },
+    });
+    this.map = new gl.Map({
+      container: "map3d",
+      style: {
+        version: 8,
+        sources: {
+          sat: {
+            type: "raster", tileSize: 256, maxzoom: 19,
+            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+            attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics",
+          },
+          building: { type: "geojson", data: empty },
+          shadows: { type: "geojson", data: empty },
+          panels: { type: "geojson", data: empty },
+        },
+        layers: [
+          { id: "bg", type: "background", paint: { "background-color": "#DCE3EA" } },
+          { id: "sat", type: "raster", source: "sat" },
+          extrusion("building", "#D9C8A9", 0.95),
+          extrusion("shadows", "#0A1628", 0.42),
+          extrusion("panels", "#1E3A8A", 1),
+        ],
+      },
+      maxZoom: 21, maxPitch: 60,
+      attributionControl: { compact: true },
+    });
+    this.map.addControl(new gl.NavigationControl({ visualizePitch: true }), "top-left");
+    this.map.on("error", (e) => console.warn("[3d]", e && e.error));
+    this._ready = new Promise(r => this.map.once("load", r));
+  },
+
+  // GeoJSON for the roof, the panels and their shadows, in [lon, lat].
+  features() {
+    const info = UI.roofLayout();
+    if (!info) return null;
+    const p = State.params, rad = Math.PI / 180;
+    const roofH = this.storeysNow() * CONFIG.STOREY_M;
+    const needed = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
+    const panels = info.panels.slice(0, needed);
+    const rise = CONFIG.PANEL_L_M * Math.sin(p.angle * rad);
+    const front = CONFIG.RACK_FRONT_M;
+    const ring = (pts) => { const ll = Roof.toLatLng(pts, info.o).map(([la, lo]) => [lo, la]); return [[...ll, ll[0]]]; };
+    const feat = (pts, base, height) => ({ type: "Feature", properties: { base, height }, geometry: { type: "Polygon", coordinates: ring(pts) } });
+    const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+
+    // Corners A, B: the low front edge (toward the sun); D, C: the back.
+    const N = p.angle > 0 ? 10 : 1;
+    const strips = [];
+    for (const [A, B, C, D] of panels) {
+      for (let i = 0; i < N; i++) {
+        const s0 = i / N, s1 = (i + 1) / N;
+        const z0 = roofH + front + rise * s0;
+        strips.push(feat([lerp(A, D, s0), lerp(B, C, s0), lerp(B, C, s1), lerp(A, D, s1)], z0, z0 + rise / N + 0.05));
+      }
+    }
+
+    const roofPts = Roof.toLocal(State.roof.latlngs, info.o);
+    const sun = Sun.position(info.o.lat, Sun.DAYS[this.day], this.hour);
+    const shadows = [];
+    if (sun.alt > 1) {
+      // Away from the sun, h / tan(elevation) metres for a point h above the roof.
+      const k = 1 / Math.tan(sun.alt * rad);
+      const d = [-Math.sin(sun.az * rad), -Math.cos(sun.az * rad)];
+      const off = (q, h) => [q[0] + d[0] * h * k, q[1] + d[1] * h * k];
+      const hull = Roof.hull(roofPts);
+      for (const [A, B, C, D] of panels) {
+        const quad = [off(A, front), off(B, front), off(C, front + rise), off(D, front + rise)];
+        const onRoof = Roof.clipConvex(Roof.hull(quad), hull);
+        if (onRoof.length >= 3) shadows.push(feat(onRoof, roofH + 0.02, roofH + 0.05));
+      }
+    }
+    return {
+      sun, roofH,
+      building: { type: "FeatureCollection", features: [feat(roofPts, 0, roofH)] },
+      panels: { type: "FeatureCollection", features: strips },
+      shadows: { type: "FeatureCollection", features: shadows },
+    };
+  },
+
+  async update({ frame = false } = {}) {
+    if (!this.open || !this.map) return;
+    this.renderControls();
+    await this._ready;
+    if (!this.open) return;
+    const f = this.features();
+    if (!f) { this.close(); return; }
+    for (const id of ["building", "panels", "shadows"]) this.map.getSource(id).setData(f[id]);
+    // Shading follows the sun, never so low that the roof goes dark.
+    if (f.sun.alt > 1) this.map.setLight({ anchor: "map", position: [1.5, f.sun.az, Math.min(60, 90 - f.sun.alt)], intensity: 0.4 });
+    if (frame) {
+      const ll = State.roof.latlngs;
+      const lons = ll.map(q => q[1]), lats = ll.map(q => q[0]);
+      const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
+      const cam = this.map.cameraForBounds(bounds, { padding: 40 });
+      if (!cam) return;   // no room to fit (container not laid out)
+      const zoom = Math.min(cam.zoom - 1, 20), pitch = 45;
+      // MapLibre centres the view on the ground; the subject is the roof,
+      // roofH higher, so the ground point is pushed down by most of that
+      // height on screen. Bearing: facing the panels, three-quarter angle.
+      const pxPerM = 512 * 2 ** zoom / (40075016.686 * Math.cos(cam.center.lat * Math.PI / 180));
+      this.map.easeTo({
+        center: cam.center, zoom, pitch, bearing: State.params.aspect - 25, duration: 0,
+        offset: [0, 0.6 * f.roofH * pxPerM * Math.sin(pitch * Math.PI / 180)],
+      });
+    }
+  },
+
+  renderControls() {
+    document.querySelectorAll("#sun-bar .seg-btn").forEach(b => {
+      const on = b.dataset.day === this.day;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    const h = Math.floor(this.hour), m = Math.round((this.hour - h) * 60);
+    const info = State.roof ? Roof.origin(State.roof.latlngs) : null;
+    const down = info && Sun.position(info.lat, Sun.DAYS[this.day], this.hour).alt <= 1;
+    $("sun-hour-val").textContent = STR.hourLabel(h, m) + (down ? " · " + STR.sunDown : "");
+    $("sun-hour").setAttribute("aria-valuetext", $("sun-hour-val").textContent);
+    const n = this.storeysNow();
+    $("storeys-val").textContent = String(n);
+    $("storeys-minus").disabled = n <= 1;
+    $("storeys-plus").disabled = n >= CONFIG.MAX_STOREYS;
+    $("storeys-src").textContent = this.storeys ? "" : (State.roof && State.roof.levels ? STR.storeysOsm : STR.storeysAssumed);
+  },
+
+  init() {
+    $("view3d-btn").addEventListener("click", () => {
+      if (this.open) { this.close(); return; }
+      Analytics.once("param_change:view_3d", "param_change", { field: "view_3d" });
+      this.show();
+    });
+    document.querySelectorAll("#sun-bar .seg-btn").forEach(b => b.addEventListener("click", () => {
+      Analytics.once("param_change:sun_day", "param_change", { field: "sun_day" });
+      this.day = b.dataset.day;
+      this.update();
+    }));
+    const hourSoon = debounce(() => this.update(), 60);
+    $("sun-hour").addEventListener("input", (e) => {
+      Analytics.once("param_change:sun_hour", "param_change", { field: "sun_hour" });
+      this.hour = parseFloat(e.target.value);
+      this.renderControls();
+      hourSoon();
+    });
+    const step = (dn) => {
+      Analytics.once("param_change:storeys", "param_change", { field: "storeys" });
+      this.storeys = Math.max(1, Math.min(CONFIG.MAX_STOREYS, this.storeysNow() + dn));
+      this.update();
+    };
+    $("storeys-minus").addEventListener("click", () => step(-1));
+    $("storeys-plus").addEventListener("click", () => step(1));
+    // The PDF shows the plan view: a WebGL canvas does not print reliably.
+    window.addEventListener("beforeprint", () => this.close());
+  },
+};
+
 // ── UI ─────────────────────────────────────────────
 const State = {
   location: null,   // { lat, lon, label }
@@ -856,6 +1199,7 @@ const UI = {
     // Roof: draw / finish / clear
     $("roof-draw-btn").addEventListener("click", () => {
       Analytics.once("roof_draw", "roof", { src: "draw_start" });
+      View3D.close();   // corners are placed on the plan view
       const d = MapView.startDraw((pts) => {
         State.roof = { latlngs: pts, src: "drawn" };
         Analytics.track("roof", { src: "drawn" });
@@ -1170,6 +1514,7 @@ const UI = {
     MapView.cancelDraw();
     this.setRoofDrawing(false);
     State.roof = null;
+    View3D.storeys = null;   // a new building: its own height, or the default
     if (loc.src === "city") {
       // A city centre is nobody's roof: no building lookup, the visitor
       // finds the house and draws it.
@@ -1188,14 +1533,14 @@ const UI = {
   async detectRoof(loc) {
     const id = ++State.roofSearch;
     this.setRoofInfo(STR.roofSearching);
-    let latlngs = null;
-    try { latlngs = await Roof.findBuilding(loc.lat, loc.lon); }
+    let found = null;
+    try { found = await Roof.findBuilding(loc.lat, loc.lon); }
     catch (e) { console.warn("[roof] building lookup failed", e); }
     if (id !== State.roofSearch || State.location !== loc) return;   // superseded
     if (State.roof && State.roof.src === "drawn") return;              // user drew meanwhile
-    Analytics.track("roof", { src: latlngs ? "osm" : "none" });
-    if (latlngs) {
-      State.roof = { latlngs, src: "osm" };
+    Analytics.track("roof", { src: found ? "osm" : "none" });
+    if (found) {
+      State.roof = { latlngs: found.latlngs, levels: found.levels, src: "osm" };
       this.recalc({ fitRoof: true });
     } else {
       this.setRoofInfo(STR.roofNone);
@@ -1243,8 +1588,10 @@ const UI = {
   // numbers the score needs (target size, yield, payback).
   renderRoof(info, m, { fit = false } = {}) {
     const on = !!info;
-    ["roof-legend", "roof-summary", "roof-stats"].forEach(id => { $(id).hidden = !on; });
-    if (!on) return;
+    ["roof-summary", "roof-stats", "view3d-btn"].forEach(id => { $(id).hidden = !on; });
+    $("roof-legend").hidden = !on || View3D.open;
+    if (!on) { View3D.close(); return; }
+    View3D.update();   // follows size, tilt and orientation while open
     const p = State.params;
     const needed = Math.ceil(p.peakpower / CONFIG.PANEL_KWP - 1e-9);
     const toLL = r => Roof.toLatLng(r, info.o);
@@ -1305,6 +1652,7 @@ const UI = {
 
   // Back to the address: a roof being drawn is dropped with the results.
   leaveResults() {
+    View3D.close();
     MapView.cancelDraw();
     this.setRoofDrawing(false);
     this.goToStep(1);
@@ -1657,6 +2005,7 @@ document.addEventListener("DOMContentLoaded", () => {
   Analytics.init();
   Chart_.init();
   UI.init();
+  View3D.init();
   Tooltips.init();
   Depth.init();
   Installers.init();

@@ -62,9 +62,15 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   aria-pressed; « Dernier point » while drawing a roof.
 - Merged with #89/#90: every new text is in app.js I18N and
   i18n/simulator.mjs (ar, en); the city list reads name_ar / name_en.
+- 3D prototype (same PR): « Voir en 3D » on the roof map loads MapLibre
+  (solar/vendor, the energy map's copy) on click; roof extruded to storeys
+  (OSM or 2, adjustable), panels tilted as 10-strip stairs, shadows on the
+  roof for 21 Dec/Mar/Jun and a solar hour. CSP gains worker-src/child-src
+  blob:, img-src blob:, connect-src Esri. Hashes in CONFIG, checked by
+  solar.yml. Not seen with real Esri imagery (CORS assumed, as MapLibre
+  users commonly rely on) nor on a real phone GPU.
 - Next (owner's call): a lifestyle question for self-consumption
-  (calc-engine), summer/winter bills, shorter phone page, 3D view of the
-  installation.
+  (calc-engine), summer/winter bills, shorter phone page.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers

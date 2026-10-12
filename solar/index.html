@@ -265,7 +265,39 @@
             <h3>Votre toit</h3>
             <span class="chart-sub" id="coords-label"></span>
           </div>
-          <div id="map"></div>
+          <!-- 3D view: MapLibre (vendor/maplibre-gl-4.7.1, the energy map's
+               copy) is loaded by app.js on the first click only. -->
+          <div class="map-stage">
+            <div id="map"></div>
+            <div id="map3d" hidden></div>
+            <button type="button" class="map-3d-btn" id="view3d-btn" aria-pressed="false" hidden>
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2.5 3.5 7v10l8.5 4.5 8.5-4.5V7L12 2.5zM3.5 7 12 11.5 20.5 7M12 11.5v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              <span id="view3d-label">Voir en 3D</span>
+            </button>
+          </div>
+          <div class="sun-bar" id="sun-bar" hidden>
+            <div class="sun-row">
+              <span class="sun-k">Soleil du</span>
+              <div class="seg" role="group" aria-label="Jour de l'année">
+                <button type="button" class="seg-btn active" data-day="winter" aria-pressed="true">21 déc.</button>
+                <button type="button" class="seg-btn" data-day="equinox" aria-pressed="false">21 mars</button>
+                <button type="button" class="seg-btn" data-day="summer" aria-pressed="false">21 juin</button>
+              </div>
+            </div>
+            <div class="sun-row">
+              <label class="sun-k" for="sun-hour">Heure solaire</label>
+              <input type="range" id="sun-hour" min="7" max="19" step="0.25" value="12">
+              <span class="pval" id="sun-hour-val">12 h</span>
+            </div>
+            <div class="sun-row">
+              <span class="sun-k">Étages</span>
+              <button type="button" class="step-btn" id="storeys-minus" aria-label="Un étage de moins">−</button>
+              <span class="pval" id="storeys-val">2</span>
+              <button type="button" class="step-btn" id="storeys-plus" aria-label="Un étage de plus">+</button>
+              <span class="sun-note" id="storeys-src"></span>
+            </div>
+            <p class="sun-caption">Illustration&nbsp;: la hauteur du bâtiment est supposée et les obstacles du toit (cage d'escalier, réservoir, chauffe-eau, parabole) ne sont pas connus. Les rangées sont espacées pour que leur ombre épargne la suivante à midi le 21&nbsp;décembre.</p>
+          </div>
           <div class="roof-legend" id="roof-legend" hidden>
             <span><i class="lg lg-panel"></i>Installation proposée</span>
             <span><i class="lg lg-slot"></i>Place disponible</span>
