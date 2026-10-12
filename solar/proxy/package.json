@@ -7,6 +7,6 @@
     "test": "node worker.test.mjs && node chat.test.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.129.0"
+    "@anthropic-ai/sdk": "0.131.0"
   }
 }
