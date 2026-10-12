@@ -19,6 +19,22 @@ namespace_id = "1001"
   limit = 60
   period = 60
 
+# Its own, much lower limit for the chat assistant (POST /chat, chat.js):
+# each answer costs a model call. 10 answers per minute per IP.
+[[ratelimits]]
+name = "CHAT_LIMITER"
+namespace_id = "1002"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+# Chat assistant (POST /chat, chat.js): answers 503 until both secrets are
+# set, from this directory:
+#   npx wrangler@4 secret put ANTHROPIC_API_KEY
+#   npx wrangler@4 secret put CHAT_ACCESS_KEY    (any long random string)
+# The model is claude-opus-5-5 unless a [vars] CHAT_MODEL names another.
+
 # Usage analytics dataset written by POST /e (see ../ANALYTICS.md).
 # Analytics Engine is included on the Workers Free plan. If `wrangler deploy`
 # rejects this block, delete it — the worker degrades gracefully (events are

@@ -7,10 +7,10 @@ name: worker-deploy
 on:
   push:
     branches: [main]
-    paths: ['solar/proxy/**', '.github/workflows/worker.yml']
+    paths: ['solar/proxy/**', 'solar/engine.js', 'solar/data/cities.json', '.github/workflows/worker.yml']
   pull_request:
     branches: [main]
-    paths: ['solar/proxy/**', '.github/workflows/worker.yml']
+    paths: ['solar/proxy/**', 'solar/engine.js', 'solar/data/cities.json', '.github/workflows/worker.yml']
   workflow_dispatch:
 
 permissions:
@@ -23,7 +23,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Worker tests
         working-directory: solar/proxy
-        run: node worker.test.mjs
+        run: |
+          set -e
+          npm ci --ignore-scripts --no-audit --no-fund
+          node worker.test.mjs
+          node chat.test.mjs
 
   deploy:
     needs: test
@@ -41,6 +45,11 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # The bundle takes the Anthropic SDK from node_modules (chat.js) and
+      # ../engine.js and ../data/cities.json from the checkout.
+      - name: Install the pinned dependencies
+        working-directory: solar/proxy
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Deploy the Worker
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:

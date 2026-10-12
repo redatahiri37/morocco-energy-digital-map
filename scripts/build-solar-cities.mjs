@@ -13,7 +13,7 @@
  * The estimator computes everything in the browser, after an address is
  * typed: search engines and AI crawlers see none of it. These pages carry
  * the same figures as plain HTML. They are computed with the estimator's
- * own engine (CONFIG, Tariff, ROI, read from solar/app.js), so a page and
+ * own engine (solar/engine.js, which the simulator loads too), so a page and
  * the tool never disagree, and with PVGIS at each city centre.
  *
  *   node scripts/build-solar-cities.mjs _site [--version abc123]
@@ -50,18 +50,21 @@ if (!out) {
 }
 
 // ── The estimator's engine ──────────────────────────
-// app.js is a browser script; run it with a stub document so its boot
-// handler is registered and never fires, then read its top-level objects.
+// engine.js holds the figures' code; app.js only adds the simulator's
+// defaults (State: tilt, orientation, cost). Both are browser scripts: run
+// them in one context with a stub document, so app.js's boot handler is
+// registered and never fires, then read their top-level objects.
 function loadEngine() {
-  const src = readFileSync(join(ROOT, "solar/app.js"), "utf8");
   const ctx = vm.createContext({
     document: { addEventListener() {} },
     window: { matchMedia: () => ({ matches: false }) },
     console,
   });
-  return vm.runInContext(src + "\n;({ CONFIG, Tariff, ROI, PVGIS, State, inMorocco })", ctx);
+  vm.runInContext(readFileSync(join(ROOT, "solar/engine.js"), "utf8"), ctx);
+  return vm.runInContext(readFileSync(join(ROOT, "solar/app.js"), "utf8") +
+    "\n;({ CONFIG, Tariff, ROI, PVGIS, Sizing, State, inMorocco })", ctx);
 }
-const { CONFIG, Tariff, ROI, PVGIS, State, inMorocco } = loadEngine();
+const { CONFIG, Tariff, ROI, PVGIS, Sizing, State, inMorocco } = loadEngine();
 const ANGLE = State.params.angle;     // 30°
 const ASPECT = State.params.aspect;   // 0 = south
 const COST = State.params.cost;       // MAD/Wc
@@ -98,13 +101,12 @@ async function fetchPerKw(lat, lon) {
 // consumption, rounded to 0.5 kWc, between 1 and 10 kWc, no export.
 function profile(perKw, bill) {
   const consumption = Tariff.kwhFromBill(bill);
-  const targetKw = (consumption * 12 * CONFIG.AUTOSIZE_COVER) / perKw.yieldPerKw;
-  const kwp = Math.min(10, Math.max(1, Math.round(targetKw * 2) / 2));
+  const kwp = Sizing.autoKw(consumption, perKw.yieldPerKw);
   const pv = PVGIS.scale(perKw, kwp);
   const capex = kwp * 1000 * COST;
   const roi = ROI.compute({ pv, monthlyConsumption: consumption, capexMAD: capex, exportAllowed: false });
   return {
-    bill, consumption, kwp, panels: Math.ceil(kwp / CONFIG.PANEL_KWP - 1e-9),
+    bill, consumption, kwp, panels: Sizing.panels(kwp),
     capex, annualKwh: pv.annualKwh, savings: roi.annualSavingsMAD,
     payback: roi.paybackYr, lifetime: roi.lifetimeSavingsMAD - capex,
     co2: pv.annualKwh * CONFIG.CO2_KG_PER_KWH / 1000,
@@ -975,7 +977,7 @@ ${tableHtml("Prix du kWh évité par l'autoconsommation solaire", ["Votre consom
   // ── 2. Installed price
   const sizes = [1, 2, 3, 5, 8, 10];
   const prixRows = sizes.map(k => {
-    const panels = Math.ceil(k / CONFIG.PANEL_KWP - 1e-9);
+    const panels = Sizing.panels(k);
     return [`${kw(k)} kWc`, `${panels}`, `${num(surface(panels))} m²`, `${num(k * 1000 * COST_LOW)} MAD`, `${num(k * 1000 * COST)} MAD`, `${num(k * 1000 * COST_HIGH)} MAD`, `${num(k * Y)} kWh`];
   });
   const prix = {
@@ -1207,7 +1209,7 @@ ${tableHtml("ثمن الكيلوواط اللي كتوفر بالاستهلاك 
   <section class="cp-section">
     <h2>الثمن حسب القوة</h2>
 ${tableHtml(`ثمن التركيب، بلاكات ديال ${f.panelW} واط؛ الإنتاج: ${medNote}`, ["القوة", "البلاكات", "مساحة السطح", `رخيص (${COST_LOW} ${MAD_AR}/واط)`, `متوسط (${COST} ${MAD_AR}/واط)`, `غالي (${COST_HIGH} ${MAD_AR}/واط)`, "الإنتاج فالعام"],
-  f.sizes.map(k => { const p = Math.ceil(k / CONFIG.PANEL_KWP - 1e-9); return [`${kw(k)} ${KWC}`, `${p}`, `${num(f.surface(p))} م²`, `${num(k * 1000 * COST_LOW)} ${MAD_AR}`, `${num(k * 1000 * COST)} ${MAD_AR}`, `${num(k * 1000 * COST_HIGH)} ${MAD_AR}`, `${num(k * f.Y)} ${KWH}`]; }))}
+  f.sizes.map(k => { const p = Sizing.panels(k); return [`${kw(k)} ${KWC}`, `${p}`, `${num(f.surface(p))} م²`, `${num(k * 1000 * COST_LOW)} ${MAD_AR}`, `${num(k * 1000 * COST)} ${MAD_AR}`, `${num(k * 1000 * COST_HIGH)} ${MAD_AR}`, `${num(k * f.Y)} ${KWH}`]; }))}
     <p>ثمن التركيب عادة كيدخل فيه البلاكات، الأوندولور، الستريكتور، الكابلاج والخدمة. يعني بلاكة ديال ${f.panelW} واط كتجي تقريبا ${num(f.panelW * COST)} ${MAD_AR} مركّبة، كلشي داخل.</p>
   </section>
   <section class="cp-section">
@@ -1342,7 +1344,7 @@ ${tableHtml("Price of the kWh avoided by using your own solar power", ["Your con
   <section class="cp-section">
     <h2>Price by system size</h2>
 ${tableHtml(`Installed price, ${f.panelW} Wp panels; output: ${medNote}`, ["System size", "Panels", "Roof area", `Low (${COST_LOW} MAD/Wp)`, `Mid (${COST} MAD/Wp)`, `High (${COST_HIGH} MAD/Wp)`, "Output/yr"],
-  f.sizes.map(k => { const p = Math.ceil(k / CONFIG.PANEL_KWP - 1e-9); return [`${kwEn(k)} kWp`, `${p}`, `${numEn(f.surface(p))} m²`, `${numEn(k * 1000 * COST_LOW)} MAD`, `${numEn(k * 1000 * COST)} MAD`, `${numEn(k * 1000 * COST_HIGH)} MAD`, `${numEn(k * f.Y)} kWh`]; }))}
+  f.sizes.map(k => { const p = Sizing.panels(k); return [`${kwEn(k)} kWp`, `${p}`, `${numEn(f.surface(p))} m²`, `${numEn(k * 1000 * COST_LOW)} MAD`, `${numEn(k * 1000 * COST)} MAD`, `${numEn(k * 1000 * COST_HIGH)} MAD`, `${numEn(k * f.Y)} kWh`]; }))}
     <p>The installed price usually covers the panels, the inverter, the mounting structure, the wiring and the labour. A ${f.panelW} Wp panel therefore comes to about ${numEn(f.panelW * COST)} MAD installed, all included.</p>
   </section>
   <section class="cp-section">
