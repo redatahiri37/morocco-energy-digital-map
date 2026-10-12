@@ -79,6 +79,15 @@
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
 
+    <!-- Search across every country's mapped assets (app.js "Search"). -->
+    <section class="panel-section search-section" role="search">
+      <label class="sr-only" for="searchInput">Search plants, sites and countries</label>
+      <input id="searchInput" class="search-input" type="search" placeholder="Search plants, sites, countries…"
+             autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
+             aria-expanded="false" aria-controls="searchResults">
+      <ul id="searchResults" class="search-results" role="listbox" aria-label="Search results" hidden></ul>
+    </section>
+
     <!-- National mix from Ember (data/<country>/mix.json). The legend is
          also the fuel colour key for the plant dots, and filters them. -->
     <section class="panel-section mix-section" id="mixSection" aria-labelledby="mixTitle" hidden>

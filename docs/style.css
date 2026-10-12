@@ -229,6 +229,29 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .kpi .v{font-family:var(--font-display);font-size:22px;font-weight:400;line-height:1.1;margin-top:4px;letter-spacing:-0.02em;font-variant-numeric:lining-nums tabular-nums}
 .kpi .v small{font-family:var(--font-ui);font-size:11px;color:var(--text-2);font-weight:500;margin-left:2px}
 
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Search — results sit in the panel's flow, so the panel scrolls them */
+.search-section{padding-top:2px;padding-right:32px}   /* clear of the collapse button */
+.search-input{
+  width:100%;padding:7px 10px;
+  font:inherit;font-size:12.5px;color:var(--text-0);
+  background:var(--bg-2);border:1px solid var(--border-hi);border-radius:5px;
+}
+.search-input::placeholder{color:var(--text-3)}
+.search-input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.search-results[hidden]{display:none}
+.search-results{list-style:none;margin:6px -32px 0 0;display:flex;flex-direction:column;gap:1px}
+.search-opt{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer}
+.search-opt:hover,.search-opt[aria-selected="true"]{background:var(--bg-3)}
+.so-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.search-opt.is-country .so-dot{width:auto;height:auto;margin-top:0;font-size:12px;color:var(--accent)}
+.so-text{display:flex;flex-direction:column;min-width:0}
+.so-name{font-size:12.5px;color:var(--text-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.so-name mark{background:none;color:var(--accent);font-weight:600}
+.so-meta{font-size:10.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-note{font-size:11px;color:var(--text-2);padding:6px 8px}
+
 /* Electricity mix — fuel colours come from the plant layer (FUEL_COLOR in
    app.js) and are set through the DOM; text keeps the text tokens. */
 .mix-section[hidden],.mix-section [hidden]{display:none}
@@ -567,6 +590,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   .country-switch{padding-left:0;border-left:0;min-width:0}
   /* 16px: iOS Safari zooms the page on focus below that. */
   .country-switch select{max-width:46vw;font-size:16px;padding:4px 8px}
+  .search-input{font-size:16px}
   .topbar .ghost-btn{padding:0;width:34px;height:34px;justify-content:center;flex-shrink:0}
   .topbar .icon-btn{width:34px;height:34px;flex-shrink:0}
   .btn-label{display:none}

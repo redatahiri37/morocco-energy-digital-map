@@ -1526,22 +1526,45 @@
 
   // Opens the popup of a linked feature; `fly` centres the map on it when the
   // link carried no view of its own.
-  function openLinkedFeature(ref, fly){
+  // `smooth` animates the move (search); a link jumps. Returns false when
+  // the feature isn't in the loaded data.
+  function linkedFeature(ref){
     const L = layerConfig(ref.layer);
     const fc = layerData[ref.layer];
-    const f = L && fc && fc.features.find(x=>String(x.properties.id) === ref.id);
-    if(!f) return;
+    const f = L && L.file && fc && fc.features.find(x=>String(x.properties.id) === ref.id);
+    return f ? { L, f } : null;
+  }
+  function openLinkedFeature(ref, fly, smooth){
+    const hit = linkedFeature(ref);
+    if(!hit) return false;
+    const { L, f } = hit;
     if(L.kind === "grid"){
       openLinePopup(L.id, f);
       if(fly){
         const pts = (f.geometry.type === "LineString" ? f.geometry.coordinates : f.geometry.coordinates.flat());
         const lng = pts.map(p=>p[0]), lat = pts.map(p=>p[1]);
-        map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, duration: 0 });
+        map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, duration: smooth ? 1200 : 0 });
       }
     } else {
       openPointPopup(L.id, f);
-      if(fly) map.jumpTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 8) });
+      const view = { center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 8) };
+      if(fly) smooth ? map.flyTo({ ...view, speed: 1.2, curve: 1.4 }) : map.jumpTo(view);
     }
+    return true;
+  }
+
+  // Makes a feature visible before going to it: its layer on, and a fuel or
+  // status filter that hides it lifted. Returns whether anything changed.
+  function revealFeature(ref){
+    const hit = linkedFeature(ref);
+    if(!hit) return false;
+    const { L, f } = hit;
+    let changed = false;
+    if(visibility[L.id] === false){ visibility[L.id] = true; changed = true; }
+    if(fuelFilter && L.kind === "power" && !plantFuels(fuelFilter).includes(f.properties.fuel_type)){ fuelFilter = null; changed = true; }
+    const statuses = STATUS_VIEWS[statusView].statuses;
+    if(statuses && !statuses.includes(f.properties.status)){ statusView = "all"; changed = true; }
+    return changed;
   }
 
   // Share: the system sheet on phones, the clipboard elsewhere.
@@ -1582,12 +1605,181 @@
   });
   $("#popupClose").addEventListener("click", closePopup);
   document.addEventListener("keydown", (e)=>{
+    // "/" jumps to the search box, unless the user is typing somewhere.
+    if(e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey &&
+       !/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || "")){
+      e.preventDefault();
+      searchInput.focus();
+      return;
+    }
     if(e.key !== "Escape") return;
     if(!methModal.classList.contains("hidden")) methModal.classList.add("hidden");
     else closePopup();
   });
 
   // ---------- Country switch ----------
+  // ---------- Search ----------
+  // Names (and operator, sector, region, fuel) of every mapped asset in every
+  // country, plus country names. The other countries' files load on the
+  // first keystroke, not on page load. OSM plants are live tiles: not indexed.
+  const searchInput = $("#searchInput"), searchResults = $("#searchResults");
+  const norm = (v)=>String(v == null ? "" : v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const SEARCH_MAX = 8;
+  const STATUS_WORD = { construction:"under construction", announced:"announced", planned:"planned", idle:"idle" };
+
+  function searchEntries(countryKey, data){
+    const c = COUNTRIES[countryKey];
+    return c.layers.filter(L=>L.file && data[L.id]).flatMap(L=>data[L.id].features.map(f=>{
+      const p = f.properties || {};
+      if(p.id == null || !p.name) return null;
+      const mw = num(p.capacity_mw) ?? num(p.capacity_estimate_mw) ?? num(p.estimated_demand_mw);
+      const what = L.kind === "power" ? ["Power plant", p.fuel_type]
+        : L.kind === "industrial" ? [p.sector || "Industry"]
+        : L.kind === "digital" ? [p.category === "cable_landing" ? "Cable landing" : "Data centre", p.operator]
+        : [num(p.voltage_kv) != null ? `Line · ${p.voltage_kv} kV` : "Line"];
+      // Industry carries an estimated demand, not a capacity.
+      const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? `~${fmtMW(mw)} demand` : fmtMW(mw);
+      const meta = [...what, size, STATUS_WORD[p.status], c.label].filter(Boolean).join(" · ");
+      const color = L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888"
+        : L.kind === "industrial" ? INDUSTRIAL_COLOR
+        : L.kind === "digital" ? (p.category === "cable_landing" ? CABLE_COLOR : DIGITAL_COLOR)
+        : INTERCONNECTOR_COLOR();
+      return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, color, mw: mw || 0,
+               nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, p.region, p.fuel_type].filter(Boolean).join(" ")) };
+    })).filter(Boolean);
+  }
+  async function loadSearchEntries(key){
+    const c = COUNTRIES[key], data = {};
+    await Promise.all(c.layers.filter(L=>L.file).map(async L=>{
+      try{ const r = await fetch(c.dataPath + L.file + ASSET_V); if(r.ok) data[L.id] = await r.json(); }
+      catch(e){ /* that layer isn't searchable this time */ }
+    }));
+    return searchEntries(key, data);
+  }
+  let allEntries = null, allEntriesLoading = null;
+  function ensureSearchIndex(){
+    if(!allEntriesLoading){
+      allEntriesLoading = Promise.all(ENABLED.map(loadSearchEntries)).then(lists=>{
+        allEntries = lists.flat();
+        if(searchInput.value.trim()) runSearch();
+      });
+    }
+  }
+
+  // Every word must match; name starts first, the current country next,
+  // then the larger asset.
+  function rankEntries(entries, q){
+    const words = q.split(/\s+/).filter(Boolean);
+    return entries.map(e=>{
+      if(!words.every(w=>e.hay.includes(w))) return null;
+      const score = (e.nameN.startsWith(q) ? 100 : e.nameN.includes(" " + q) ? 60 : e.nameN.includes(q) ? 40 : 10)
+        + (e.country === currentCountry ? 30 : 0) + Math.min(20, 5 * Math.log10(1 + e.mw));
+      return { e, score };
+    }).filter(Boolean).sort((a, b)=>b.score - a.score).slice(0, SEARCH_MAX).map(x=>x.e);
+  }
+
+  let searchOptions = [], activeOption = -1;
+  function runSearch(){
+    const q = norm(searchInput.value.trim());
+    if(q.length < 2){ closeResults(); return; }
+    ensureSearchIndex();
+    const countries = ENABLED.filter(k=>norm(COUNTRIES[k].label).includes(q))
+      .map(k=>({ country: k, isCountry: true, name: COUNTRIES[k].label, meta: k === currentCountry ? "Current country" : "Go to this country" }));
+    const pool = allEntries || searchEntries(currentCountry, layerData);
+    searchOptions = [...countries, ...rankEntries(pool, q)].slice(0, SEARCH_MAX);
+    activeOption = searchOptions.length ? 0 : -1;
+    renderResults(q, !allEntries);
+  }
+
+  // Name with the match marked, as DOM nodes.
+  function markedName(name, q){
+    const span = el("span", "so-name");
+    const n = norm(name), i = n.indexOf(q);
+    // Positions only line up when folding accents kept the length.
+    if(i < 0 || n.length !== name.length){ span.textContent = name; return span; }
+    span.append(document.createTextNode(name.slice(0, i)), el("mark", null, name.slice(i, i + q.length)),
+                document.createTextNode(name.slice(i + q.length)));
+    return span;
+  }
+
+  function renderResults(q, partial){
+    searchResults.replaceChildren();
+    searchOptions.forEach((o, i)=>{
+      const li = el("li", "search-opt" + (o.isCountry ? " is-country" : ""));
+      li.id = "search-opt-" + i;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", String(i === activeOption));
+      const dot = el("span", "so-dot");
+      if(o.isCountry) dot.textContent = "→"; else dot.style.background = o.color;
+      const text = el("span", "so-text");
+      text.append(markedName(o.name, q), el("span", "so-meta", o.meta));
+      li.append(dot, text);
+      li.addEventListener("mousedown", (e)=>e.preventDefault());   // keep focus in the box
+      li.addEventListener("click", ()=>chooseResult(o));
+      searchResults.appendChild(li);
+    });
+    if(!searchOptions.length || partial){
+      searchResults.appendChild(el("li", "search-note", partial
+        ? "Searching the other countries…"
+        : "No match in the mapped assets. OSM power plants are not searchable."));
+    }
+    searchResults.hidden = false;
+    searchInput.setAttribute("aria-expanded", "true");
+    searchInput.setAttribute("aria-activedescendant", activeOption >= 0 ? "search-opt-" + activeOption : "");
+  }
+  function closeResults(){
+    searchResults.hidden = true;
+    searchResults.replaceChildren();
+    searchOptions = []; activeOption = -1;
+    searchInput.setAttribute("aria-expanded", "false");
+    searchInput.removeAttribute("aria-activedescendant");
+  }
+  function moveActive(step){
+    if(!searchOptions.length) return;
+    activeOption = (activeOption + step + searchOptions.length) % searchOptions.length;
+    searchResults.querySelectorAll(".search-opt").forEach((li, i)=>li.setAttribute("aria-selected", String(i === activeOption)));
+    searchInput.setAttribute("aria-activedescendant", "search-opt-" + activeOption);
+    const li = $("#search-opt-" + activeOption);
+    if(li) li.scrollIntoView({ block: "nearest" });
+  }
+
+  // Goes to a result: the country, or the asset with its popup, lifting any
+  // filter that would hide it.
+  async function chooseResult(o){
+    closeResults();
+    if(o.isCountry){
+      searchInput.value = "";
+      if(o.country !== currentCountry) await switchCountry(o.country, null);
+      return;
+    }
+    searchInput.value = o.name;
+    const ref = { layer: o.layer, id: o.id };
+    if(o.country !== currentCountry){
+      await switchCountry(o.country, { status: statusView, measure: mixMeasure, fuel: null, layers: null,
+                                       view: null, feature: ref, reveal: true, smooth: true });
+      return;
+    }
+    if(revealFeature(ref)){
+      renderPanel(currentCountry);
+      if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    }
+    if(map && mapReady) openLinkedFeature(ref, true, true);
+  }
+
+  let searchTimer = 0;
+  searchInput.addEventListener("input", ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 80); });
+  searchInput.addEventListener("focus", ()=>{ ensureSearchIndex(); if(searchInput.value.trim()) runSearch(); });
+  searchInput.addEventListener("blur", ()=>setTimeout(closeResults, 120));
+  searchInput.addEventListener("keydown", (e)=>{
+    if(e.key === "ArrowDown"){ e.preventDefault(); if(searchResults.hidden) runSearch(); else moveActive(1); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); moveActive(-1); }
+    else if(e.key === "Enter"){ if(activeOption >= 0){ e.preventDefault(); chooseResult(searchOptions[activeOption]); } }
+    else if(e.key === "Escape"){
+      // Clear the box first; the page's own Escape (close popup) comes next time.
+      if(!searchResults.hidden || searchInput.value){ e.stopPropagation(); searchInput.value = ""; closeResults(); }
+    }
+  });
+
   // `link`: the shared link being applied, if the switch comes from one.
   async function switchCountry(key, link){
     if(!ENABLED.includes(key)) return;
@@ -1600,12 +1792,13 @@
     fuelFilter = null;
     if(!(await loadAllData(key))) return; // superseded by a later switch
     if(link) applyLinkState(link);
+    if(link && link.reveal && link.feature) revealFeature(link.feature);
     renderPanel(key);
     if(map && mapReady){
       if(link && link.view) map.jumpTo(link.view);
-      else map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
       buildMapLayers(key);
-      if(link && link.feature) openLinkedFeature(link.feature, !link.view);
+      const opened = !!(link && link.feature) && openLinkedFeature(link.feature, !link.view, link.smooth);
+      if(!opened && !(link && link.view)) map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
     } else if(link){
       pendingFeature = link.feature;
     }

@@ -57,6 +57,8 @@ yearly data (CC BY 4.0, `docs/data/<country>/mix.json`, built by
 `scripts/build-country-mix.py`). Its legend is the fuel colour key and
 filters the plant layers to one fuel.
 
+The search box at the top of the panel finds any mapped plant, site or line
+by name, operator or sector, in every country (press `/` to jump to it).
 The URL keeps the view: country, map position, filters, layers and the open
 feature, so a link (top-bar **Share**, or **Copy link** in a popup) reopens
 the same map.

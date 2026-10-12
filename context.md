@@ -76,8 +76,14 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   the first action. "Share" in the top bar (share sheet on phones, else
   clipboard) and "Copy link" in each popup. On phones the GitHub button
   makes room for Share (GitHub stays in the panel footer and bottom bar).
-- Next UX steps, in order: plant search; FR/EN; Africa/Europe overview
-  coloured by mix; mobile mix sheet. The fuel palette fails the
+- Search at the top of the panel: names (and operator, sector, region,
+  fuel) of every mapped asset in all 12 countries, plus country names;
+  accents ignored. Other countries' files load on the first keystroke, not
+  on page load. A result opens its popup (switching country if needed) and
+  lifts a fuel or status filter that would hide it. Arrow keys / Enter /
+  Escape; "/" focuses the box. OSM plants are live tiles: not searchable.
+- Next UX steps, in order: FR/EN; Africa/Europe overview coloured by mix;
+  mobile mix sheet. The fuel palette fails the
   dataviz validator (gas/oil too close); changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)

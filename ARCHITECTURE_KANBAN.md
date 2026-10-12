@@ -220,7 +220,7 @@ Interaction & Filtering
   • files: docs/app.js (renderDetailPanel), docs/style.css
   • verify: click a plant → right panel slides in with full details
 
-- [ ] Add search box with autocomplete (by project name, location, operator)
+- [x] Add search box with autocomplete (by project name, location, operator) — done 2026-10-12 (PR #95; every country, keyboard, '/' to focus)
   • why: no way to find a specific project without panning and scanning.
   • impact: 3
   • effort: M
