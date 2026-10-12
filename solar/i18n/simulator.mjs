@@ -24,6 +24,7 @@ export const PAIRS = [
    "دخل العنوان ديالك وشوف شحال غادي توفر بالطاقة الشمسية بالدرهم. مبني على PVGIS (المفوضية الأوروبية) وتعريفة ONEE. مجاني، بلا تسجيل.",
    "Enter your address, get your solar savings in dirhams. Based on PVGIS (European Commission) and ONEE tariffs. Free, no sign-up."],
   ['content="fr_MA"', 'content="ar_MA"', 'content="en_US"'],
+  ["https://solar.wattu.org/og/fr/home.png", "https://solar.wattu.org/og/ar/home.png", "https://solar.wattu.org/og/en/home.png"],
   ["Vos économies solaires en quelques secondes. Gratuit, sans inscription.",
    "شحال غادي توفر بالطاقة الشمسية، فثواني. مجاني، بلا تسجيل.",
    "Your solar savings in seconds. Free, no sign-up."],
