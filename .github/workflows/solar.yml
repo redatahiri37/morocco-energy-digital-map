@@ -117,13 +117,10 @@ jobs:
           node scripts/render-og.mjs _og _check/og
           test "$(find _check/og -name '*.png' | wc -l)" -eq "$(find _og -name '*.html' | wc -l)"
 
-      # The Worker's one dependency is the Anthropic SDK (chat.js), pinned in
-      # package-lock.json; no install script runs.
       - name: Worker tests
         working-directory: solar/proxy
         run: |
           set -e
-          npm ci --ignore-scripts --no-audit --no-fund
           node worker.test.mjs
           node chat.test.mjs
 

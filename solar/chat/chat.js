@@ -1,6 +1,7 @@
 /* Wattu — chat assistant page (prototype).
  *
- * Talks to the Worker's POST /chat (solar/proxy/chat.js), which runs Claude
+ * Talks to the Worker's POST /chat (solar/proxy/chat.js), which runs an open
+ * model on Cloudflare Workers AI (free allowance)
  * with the estimator's engine as tools and streams the answer back as
  * NDJSON. The page keeps the conversation in memory only and sends it, as
  * plain text, with each question.
@@ -32,7 +33,7 @@
       label: "Votre question",
       placeholder: "Ex. : ma facture est de 600 DH à Casablanca, ça vaut le coup ?",
       send: "Envoyer", reset: "Nouvelle conversation",
-      privacy: "Prototype. Vos messages sont envoyés à Claude (Anthropic) pour rédiger la réponse ; Wattu ne les enregistre pas. N'indiquez ni nom, ni téléphone, ni adresse exacte. Les chiffres sont des estimations, pas un devis.",
+      privacy: "Prototype gratuit. Vos messages sont traités par un modèle d'IA ouvert chez Cloudflare (Workers AI) pour rédiger la réponse ; Wattu ne les enregistre pas. N'indiquez ni nom, ni téléphone, ni adresse exacte. Les chiffres viennent du simulateur Wattu : ce sont des estimations, pas un devis.",
       you: "Vous", bot: "Wattu",
       thinking: "Réflexion…",
       tools: { estimate_solar: "Calcul avec PVGIS et les tarifs ONEE…", onee_bill: "Calcul de la facture ONEE…" },
@@ -45,6 +46,7 @@
         503: "L'assistant n'est pas encore activé.",
         refused: "Je ne peux pas répondre à cette demande. Posez une question sur le solaire ou l'électricité au Maroc.",
         failed: "La réponse a échoué. Réessayez.",
+        busy: "L'assistant gratuit a atteint sa limite du jour. Donnez votre ville et votre facture pour une estimation, ou utilisez le simulateur : solar.wattu.org",
         offline: "Pas de connexion. Vérifiez le réseau et réessayez.",
       },
       suggestions: [
@@ -65,7 +67,7 @@
       label: "السؤال ديالك",
       placeholder: "مثلا: الفاتورة ديالي 600 درهم فكازا، واش كتسوا؟",
       send: "صيفط", reset: "محادثة جديدة",
-      privacy: "نسخة تجريبية. الرسائل ديالك كتمشي لـ Claude (Anthropic) باش يكتب الجواب، و Wattu ما كيحفظهاش. ما تكتبش السمية ولا التيليفون ولا العنوان بالضبط. الأرقام تقديرات، ماشي ديفي.",
+      privacy: "نسخة تجريبية فابور. الرسائل ديالك كيعالجها واحد النموذج ديال الذكاء الاصطناعي مفتوح عند Cloudflare (Workers AI) باش يكتب الجواب، و Wattu ما كيحفظهاش. ما تكتبش السمية ولا التيليفون ولا العنوان بالضبط. الأرقام جاية من المحاكي ديال Wattu: تقديرات، ماشي ديفي.",
       you: "أنت", bot: "Wattu",
       thinking: "كنفكر…",
       tools: { estimate_solar: "كنحسب بـ PVGIS وتعريفة ONEE…", onee_bill: "كنحسب الفاتورة ديال ONEE…" },
@@ -78,6 +80,7 @@
         503: "المساعد مازال ما تشعلش.",
         refused: "ما نقدرش نجاوب على هاد الطلب. سول على الطاقة الشمسية ولا الضو فالمغرب.",
         failed: "الجواب ما وصلش. عاود جرب.",
+        busy: "المساعد الفابور وصل للحد ديالو اليوم. عطينا المدينة والفاتورة باش نحسبو ليك، ولا خدم بالمحاكي: solar.wattu.org/ar/",
         offline: "ما كاينش الأنترنيت. تأكد من الريزو وعاود.",
       },
       suggestions: [
@@ -98,7 +101,7 @@
       label: "Your question",
       placeholder: "E.g. my bill is 600 MAD in Casablanca, is solar worth it?",
       send: "Send", reset: "New conversation",
-      privacy: "Prototype. Your messages are sent to Claude (Anthropic) to write the answer; Wattu does not keep them. Don't include your name, phone number or exact address. Figures are estimates, not a quote.",
+      privacy: "Free prototype. Your messages are processed by an open AI model at Cloudflare (Workers AI) to write the answer; Wattu does not keep them. Don't include your name, phone number or exact address. Figures come from the Wattu simulator: estimates, not a quote.",
       you: "You", bot: "Wattu",
       thinking: "Thinking…",
       tools: { estimate_solar: "Calculating with PVGIS and ONEE tariffs…", onee_bill: "Calculating the ONEE bill…" },
@@ -111,6 +114,7 @@
         503: "The assistant is not switched on yet.",
         refused: "I can't answer that. Ask about solar power or electricity in Morocco.",
         failed: "The answer failed. Please try again.",
+        busy: "The free assistant has reached today's limit. Give your city and your bill for an estimate, or use the simulator: solar.wattu.org/en/",
         offline: "No connection. Check the network and try again.",
       },
       suggestions: [

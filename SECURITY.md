@@ -45,10 +45,10 @@ Please do not post a working exploit or a credential in a public issue.
   directive, host and path, and answers CORS only for the Wattu origins
   (no localhost, no github.io). Its chat endpoint (`/chat`, prototype)
   answers only the Wattu origins and the access key (`CHAT_ACCESS_KEY`),
-  10 answers a minute per IP, at most 5 model calls per answer; the
-  Anthropic API key is a Worker secret, and no message is logged or
-  stored. The model's tools only compute (PVGIS, tariff, payback): they
-  read nothing private and change nothing.
+  10 answers a minute per IP, one model call per answer, on Cloudflare
+  Workers AI (no third-party API key); no message is logged or stored.
+  The figures come from the engine, never from the model, and the model
+  can call nothing: it only writes the reply.
 - **CI**: actions pinned to commit SHAs and kept current by Dependabot
   (`.github/dependabot.yml`), read-only `GITHUB_TOKEN`, gitleaks on every
   push and PR (`.github/workflows/secrets.yml`), deploys from `main` only,
@@ -115,13 +115,13 @@ Please do not post a working exploit or a credential in a public issue.
       updates for the actions already run from `.github/dependabot.yml`.
 - [x] 2026-10-08 — the Cloudflare API token has
       Account › Workers Scripts › Edit; `worker-deploy` publishes the Worker.
-- [ ] Chat assistant (prototype): its two Worker secrets are set from
-      `solar/proxy/` with `npx wrangler@4 secret put ANTHROPIC_API_KEY` and
-      `npx wrangler@4 secret put CHAT_ACCESS_KEY`, never committed. In the
-      Anthropic Console, give the key its own workspace with a monthly
-      spend limit. To shut the chat: `npx wrangler@4 secret delete
-      CHAT_ACCESS_KEY` (it answers 503). To cut off a shared link: put a
-      new `CHAT_ACCESS_KEY` and send the new link.
+- [ ] Chat assistant (prototype): its one Worker secret is set with
+      `npx wrangler@4 secret put CHAT_ACCESS_KEY --name solar-pvgis`, never
+      committed. To shut the chat: `npx wrangler@4 secret delete
+      CHAT_ACCESS_KEY --name solar-pvgis` (it answers 503). To cut off a
+      shared link: put a new `CHAT_ACCESS_KEY` and send the new link. The
+      chat no longer uses Anthropic: delete `ANTHROPIC_API_KEY` from the
+      Worker if it was set, and revoke that key in the Anthropic Console.
 - [ ] Record here the date (never the value) on which each credential that
       was ever exposed was revoked: the old GitHub PAT, the old Mapbox
       token, and any token pasted into a chat.
@@ -174,10 +174,11 @@ count against the Worker's daily quota (below). If they ever eat it, drop
   same quota. The estimator then shows its approximate mode (no PVGIS), it
   does not break. Moving the Worker to a
   route on wattu.org would allow Cloudflare WAF rules if this happens.
-- **Chat cost.** Each answer is a paid model call. The access key, the
-  per-IP limit and the cap of 5 calls per answer bound it; the Anthropic
-  workspace spend limit (above) is the backstop. Whoever has the link can
-  use it until the key is changed.
+- **Chat quota.** The chat runs on Workers AI's free daily allowance
+  (Workers Free plan): nothing is billed, and once the allowance is used
+  the model stops until midnight UTC. Estimates are still answered then,
+  with a fixed sentence; other questions get « limit reached ». Whoever has
+  the link can use the allowance until the key is changed.
 - **Third-party data services** (OpenFreeMap, OpenInfraMap, Nominatim,
   Overpass, PVGIS, Esri tiles) can be slow or down; each failure degrades
   one feature with a message, the pages keep working. They receive the
