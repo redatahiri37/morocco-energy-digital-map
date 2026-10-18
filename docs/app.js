@@ -10,6 +10,140 @@
   // Deploys add ?v=<commit> to this script's URL (see validate.yml); reuse it
   // on the data files so a phone never mixes new code with cached old data.
   const ASSET_V = (()=>{ try{ return new URL(document.currentScript.src).search; }catch(e){ return ""; } })();
+  // Data files are addressed from this script's folder, the site root, not
+  // from the page: /fr/ loads the same ./data/ as /.
+  const SITE_ROOT = (()=>{ try{ return new URL(".", document.currentScript.src).href; }catch(e){ return location.href; } })();
+  const dataUrl = (c, file)=>new URL(c.dataPath + file, SITE_ROOT).href + ASSET_V;
+
+  // ---------- Language ----------
+  // The page's <html lang> picks it: energy.wattu.org/ is English, /fr/ is
+  // French (built from index.html by scripts/build-map-i18n.mjs). The texts
+  // this script writes come from T; numbers follow the language (7.7 / 7,7).
+  // Data stays as published: plant names, sources, technology, operators.
+  const LANG = document.documentElement.lang === "fr" ? "fr" : "en";
+  const LOCALE = LANG === "fr" ? "fr-FR" : "en-GB";
+  const FR = LANG === "fr";
+  const PCT = FR ? "\u202f%" : "%";      // French sets a narrow space before %
+  const COLON = FR ? "\u00a0:" : ":";    // ...and before a colon
+  function nfmt(v, max, min){
+    return new Intl.NumberFormat(LOCALE, { maximumFractionDigits: max || 0, minimumFractionDigits: min || 0 }).format(v);
+  }
+  const countryLabel = (c)=>(FR && c.labelFr) || c.label;
+  const layerTitle = (L)=>(FR && L.titleFr) || L.title;
+  const T = FR ? {
+    soon: "bientôt", live: "direct", updated: "mis à jour",
+    docTitle: (c)=>`Wattu Energy — carte des infrastructures (${c})`,
+    credits: (x)=>`Données : ${x} · `,
+    issueData: (c)=>`Carte ${c} — correction de données`,
+    issueFeature: (c, n)=>`Carte ${c} — correction : ${n}`,
+    issueBody: (id)=>`Identifiant : ${id}\n\nCorrection proposée :\n`,
+    attribToggle: "Afficher les crédits", dataFrom: "Données",
+    inService: "En service", pipeline: "En projet", dcSites: "Data centers", dcPipeline: "Projets data centers",
+    dcInvestment: "Investissement DC", sites: "sites", plantsCredit: "centrales : ",
+    kpiServiceTip: "Centrales de la carte en exploitation",
+    kpiPipelineTip: "Centrales de la carte en construction ou annoncées. « — » : la source ne liste que les centrales construites.",
+    mixSrc: "Mix électrique", boundary: "Frontière", basemap: "Fond de carte",
+    mixSrcNote: (y)=>`chiffres ${y} ; nationaux, pas une somme de la carte`,
+    basemapLi: 'MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) — public, sans jeton.',
+    statusSome: (n, t, pipe)=>`${n} sur ${t} actifs cartographiés ` + (pipe ? "sont en construction, annoncés ou planifiés." : "sont en service."),
+    statusNonePipe: "Aucun actif cartographié de ce pays n'est en construction ou annoncé : ses sources ne listent que l'existant.",
+    statusNoneService: "Aucun actif cartographié de ce pays n'est indiqué en service.",
+    totalGen: (v)=>`${v} TWh produits`, totalCap: (v)=>`${v} GW installés`,
+    keyPicked: " — cliquer à nouveau pour tout afficher.", keyPick: " — n'afficher que ces centrales sur la carte.",
+    filterLine: (f, n)=>`Carte : ${f} uniquement · ${n} centrale${n > 1 ? "s" : ""} affichée${n > 1 ? "s" : ""}`,
+    showAll: "Tout afficher",
+    renewables: "Renouvelables", ofGen: "de la production", ofCap: "de la capacité", ofDemand: "de la demande",
+    trade: "Échanges", balanced: "Importations et exportations s'équilibrent",
+    netImports: "Importations nettes", netExports: "Exportations nettes", co2: "Intensité CO₂",
+    coverage: (layer, f, mapped, rest)=>`Couche « ${layer} »${f ? " (" + f + ")" : ""} : ${mapped} en service, ${rest}`,
+    coveragePct: (pct, nat)=>`soit ${pct} des ${nat} installés. `,
+    coverageOver: (nat)=>`pour ${nat} installés selon Ember. `,
+    gap: (names)=>`La source n'indique aucune capacité pour : ${names}, qui produit pourtant ; cette vue la sous-estime. `,
+    source: "Source : ",
+    clusterTip: (n, mw)=>`${n} centrales · ${mw}`, clusterHint: "Cliquer pour zoomer",
+    estDemand: "env.", cableLanding: "Atterrissement de câble sous-marin",
+    badgeGen: "Production", badgeOsm: "Production · OpenStreetMap", badgeIndustry: "Consommateur industriel",
+    badgeCable: "Câble sous-marin", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Ligne de transport",
+    capacity: "Puissance", fuel: "Filière", technology: "Technologie", commissioned: "Mise en service", targetYear: "Année visée",
+    sector: "Secteur", estDemandK: "Demande estimée", gridConnection: "Raccordement", precision: "Précision",
+    operator: "Opérateur", investment: "Investissement", energised: "Mise sous tension",
+    voltage: "Tension", status: "Statut", kind: "Type", hvdcPlanned: "HVDC (prévu)", ac: "Alternatif",
+    rawData: "Données brutes", viewOim: "Voir sur OpenInfraMap ↗", fixOsm: "Corriger sur OpenStreetMap ↗",
+    reportError: "Signaler une erreur", primarySource: "Source primaire ↗", copyLink: "Copier le lien",
+    unnamedOsm: "Centrale sans nom (OSM)", osmSource: "Contributeurs OpenStreetMap via OpenInfraMap",
+    west: "O", linkCopied: "Lien copié", copyFromBar: "Copiez le lien depuis la barre d'adresse",
+    powerPlant: "Centrale", industry: "Industrie", cableShort: "Atterrissement de câble", dataCentre: "Data center",
+    line: "Ligne", demand: (mw)=>`~${mw} de demande`,
+    currentCountry: "Pays affiché", goCountry: "Aller à ce pays",
+    searching: "Recherche dans les autres pays…",
+    noMatch: "Aucun résultat parmi les actifs cartographiés. Les centrales OSM ne sont pas cherchables."
+  } : {
+    soon: "soon", live: "live", updated: "updated",
+    docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
+    credits: (x)=>`Data: ${x} · `,
+    issueData: (c)=>`${c} map — data correction`,
+    issueFeature: (c, n)=>`${c} map — correction: ${n}`,
+    issueBody: (id)=>`Feature id: ${id}\n\nSuggested correction:\n`,
+    attribToggle: "Toggle attribution", dataFrom: "Data from",
+    inService: "In service", pipeline: "Pipeline", dcSites: "Data centres", dcPipeline: "DC pipeline",
+    dcInvestment: "DC investment", sites: "sites", plantsCredit: "plants: ",
+    kpiServiceTip: "Plants on the map that are operating",
+    kpiPipelineTip: "Plants on the map under construction or announced. — means the plant source lists built plants only.",
+    mixSrc: "Electricity mix", boundary: "Boundary", basemap: "Basemap",
+    mixSrcNote: (y)=>`${y} figures; national, not summed from the map`,
+    basemapLi: 'MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.',
+    statusSome: (n, t, pipe)=>`${n} of ${t} mapped assets ` + (pipe ? "are under construction, announced or planned." : "are in service."),
+    statusNonePipe: "None of this country's mapped assets is under construction or announced: its sources list built ones only.",
+    statusNoneService: "None of this country's mapped assets is listed as in service.",
+    totalGen: (v)=>`${v} TWh generated`, totalCap: (v)=>`${v} GW installed`,
+    keyPicked: ". Pick again to show every plant.", keyPick: ". Show only these plants on the map.",
+    filterLine: (f, n)=>`Map: ${f.toLowerCase()} plants only · ${n} shown`,
+    showAll: "Show all",
+    renewables: "Renewables", ofGen: "of generation", ofCap: "of capacity", ofDemand: "of demand",
+    trade: "Trade", balanced: "Imports and exports balance",
+    netImports: "Net imports", netExports: "Net exports", co2: "CO₂ intensity",
+    coverage: (layer, f, mapped, rest)=>`${layer} layer${f ? ", " + f.toLowerCase() : ""}: ${mapped} in service, ${rest}`,
+    coveragePct: (pct, nat)=>`${pct} of the ${nat} installed. `,
+    coverageOver: (nat)=>`against ${nat} installed per Ember. `,
+    gap: (names)=>`The source lists no ${names} capacity though it generates power: this view undercounts it. `,
+    source: "Source: ",
+    clusterTip: (n, mw)=>`${n} plants · ${mw}`, clusterHint: "Click to zoom in",
+    estDemand: "est.", cableLanding: "Submarine cable landing",
+    badgeGen: "Generation", badgeOsm: "Generation · OpenStreetMap", badgeIndustry: "Industrial consumer",
+    badgeCable: "Submarine cable", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Transmission line",
+    capacity: "Capacity", fuel: "Fuel", technology: "Technology", commissioned: "Commissioned", targetYear: "Target year",
+    sector: "Sector", estDemandK: "Est. demand", gridConnection: "Grid connection", precision: "Precision",
+    operator: "Operator", investment: "Investment", energised: "Energised",
+    voltage: "Voltage", status: "Status", kind: "Kind", hvdcPlanned: "HVDC (planned)", ac: "AC",
+    rawData: "Raw data", viewOim: "View on OpenInfraMap ↗", fixOsm: "Fix on OpenStreetMap ↗",
+    reportError: "Report an error", primarySource: "Primary source ↗", copyLink: "Copy link",
+    unnamedOsm: "Unnamed plant (OSM)", osmSource: "OpenStreetMap contributors via OpenInfraMap",
+    west: "W", linkCopied: "Link copied", copyFromBar: "Copy the link from the address bar",
+    powerPlant: "Power plant", industry: "Industry", cableShort: "Cable landing", dataCentre: "Data centre",
+    line: "Line", demand: (mw)=>`~${mw} demand`,
+    currentCountry: "Current country", goCountry: "Go to this country",
+    searching: "Searching the other countries…",
+    noMatch: "No match in the mapped assets. OSM power plants are not searchable."
+  };
+  // Data values shown as words: fuel, status, precision, Moroccan sectors.
+  const FUEL_WORD = FR
+    ? { coal:"charbon", gas:"gaz", oil:"fioul", nuclear:"nucléaire", hydro:"hydraulique", wind:"éolien",
+        solar:"solaire", biomass:"biomasse", waste:"déchets", geothermal:"géothermie" }
+    : {};
+  // The mix legend's labels, by fuel key (English keeps mix.json's own).
+  const MIX_LABEL = FR
+    ? { coal:"Charbon", gas:"Gaz", oil:"Fioul et autres fossiles", nuclear:"Nucléaire", hydro:"Hydraulique",
+        wind:"Éolien", solar:"Solaire", biomass:"Bioénergie", geothermal:"Géothermie et autres" }
+    : {};
+  const STATUS_WORD_ALL = FR
+    ? { operational:"en service", construction:"en construction", announced:"annoncé", planned:"planifié", idle:"à l'arrêt" }
+    : { operational:"operational", construction:"construction", announced:"announced", planned:"planned", idle:"idle" };
+  const PRECISION_WORD = FR ? { exact:"exacte", approximate:"approximative" } : {};
+  const SECTOR_WORD = FR
+    ? { "phosphates / fertilisers":"phosphates / engrais", "phosphate mining":"mines de phosphate", "cement":"ciment",
+        "steel":"acier", "automotive":"automobile", "oil refining":"raffinage", "mining / metallurgy":"mines / métallurgie" }
+    : {};
+  const word = (table, v)=>Object.hasOwn(table, v) ? table[v] : v;
 
   // ---------- Config & country manifest ----------
   const DEFAULT_COUNTRY = "morocco";
@@ -51,7 +185,7 @@
   const ATTRIBUTION =
     '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> ' +
     '<a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> ' +
-    'Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ' +
+    T.dataFrom + ' <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ' +
     OIM_ATTR + ' · <a href="https://maplibre.org/" target="_blank" rel="noopener">MapLibre</a>';
   const COUNTRIES = window.COUNTRIES || {};
   const ENABLED   = (window.COUNTRIES_ENABLED || ["morocco"]).filter(k=>COUNTRIES[k]);
@@ -87,7 +221,7 @@
     return ["interpolate", ["linear"], ["zoom"], ...PLANT_ZOOM_SCALE.flatMap(([z, f])=>[z, out ? out(r(f)) : r(f)])];
   }
   // Capacity in a cluster or tooltip: "850 MW", "4.2 GW".
-  const fmtMW = (mw)=>mw >= 1000 ? (mw/1000).toFixed(1).replace(/\.0$/, "") + " GW" : Math.round(mw) + " MW";
+  const fmtMW = (mw)=>mw >= 1000 ? short(mw/1000) + " GW" : nfmt(mw) + " MW";
 
   const DIGITAL_COLOR    = "#7C3AED";
   const INDUSTRIAL_COLOR = "#EA580C";
@@ -183,12 +317,12 @@
   const countrySelect = $("#countrySelect");
   ENABLED.forEach(key=>{
     const o = document.createElement("option");
-    o.value = key; o.textContent = COUNTRIES[key].label;
+    o.value = key; o.textContent = countryLabel(COUNTRIES[key]);
     countrySelect.appendChild(o);
   });
   Object.keys(COUNTRIES).filter(k=>!ENABLED.includes(k)).forEach(key=>{
     const o = document.createElement("option");
-    o.value = key; o.textContent = COUNTRIES[key].label + " (soon)";
+    o.value = key; o.textContent = `${countryLabel(COUNTRIES[key])} (${T.soon})`;
     o.disabled = true;
     countrySelect.appendChild(o);
   });
@@ -216,7 +350,7 @@
         el = document.createElement("details");
         el.className = "maplibregl-ctrl maplibregl-ctrl-attrib maplibregl-compact";
         el.open = true;
-        el.innerHTML = '<summary class="maplibregl-ctrl-attrib-button" title="Toggle attribution" aria-label="Toggle attribution"></summary>' +
+        el.innerHTML = '<summary class="maplibregl-ctrl-attrib-button" title="' + T.attribToggle + '" aria-label="' + T.attribToggle + '"></summary>' +
           '<div class="maplibregl-ctrl-attrib-inner">' + ATTRIBUTION + '</div>';
         el.firstChild.addEventListener("click", (e)=>{ e.preventDefault(); el.classList.toggle("maplibregl-compact-show"); });
         return el;
@@ -226,14 +360,16 @@
   }
   // Values below go into innerHTML: anything that is not a finite number
   // (a string slipped into the data) renders as "—", never as markup.
+  // One decimal, dropped when it is 0: 2.2, 4.
+  const short = (x)=>{ const r = Math.round(x * 10) / 10; return nfmt(r, r % 1 ? 1 : 0, r % 1 ? 1 : 0); };
   function fmtInvestment(v){
     v = num(v);
     if(v == null) return "—";
-    if(v >= 1e9) return "$" + (v/1e9).toFixed(1).replace(/\.0$/,"") + "B";
-    if(v >= 1e6) return "$" + Math.round(v/1e6) + "M";
-    return "$" + v.toLocaleString();
+    if(v >= 1e9) return FR ? short(v/1e9) + " Md$" : "$" + short(v/1e9) + "B";
+    if(v >= 1e6) return FR ? nfmt(v/1e6) + " M$" : "$" + nfmt(v/1e6) + "M";
+    return FR ? nfmt(v) + " $" : "$" + nfmt(v);
   }
-  function fmtCap(mw){ mw = num(mw); return mw == null ? "—" : mw.toLocaleString() + " MW"; }
+  function fmtCap(mw){ mw = num(mw); return mw == null ? "—" : nfmt(mw, 1) + " MW"; }
   function num(v){ return typeof v === "number" && Number.isFinite(v) ? v : null; }
   // Colours go in data-bg / data-border and are applied here, through the
   // DOM: the CSP allows no style="" attribute in HTML (no 'unsafe-inline').
@@ -280,6 +416,7 @@
     buildMapLayers(currentCountry);
     if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
     urlReady = true;
+    syncLangLink();
   }
 
   function boot(){
@@ -364,12 +501,12 @@
     const data = {}, vis = {};
     let boundary = null, mix = null;
     try{
-      const r = await fetch(c.dataPath + "boundary.geojson" + ASSET_V);
+      const r = await fetch(dataUrl(c, "boundary.geojson"));
       if(r.ok) boundary = await r.json();
     } catch(e){ /* no boundary for this country */ }
     if(c.mix){
       try{
-        const r = await fetch(c.dataPath + c.mix + ASSET_V);
+        const r = await fetch(dataUrl(c, c.mix));
         if(r.ok) mix = await r.json();
       } catch(e){ console.warn("[MoroccoMap] failed to load", c.mix, e); }
     }
@@ -378,7 +515,7 @@
       vis[L.id] = L.visible !== false;
       if(!L.file) return; // OIM or other virtual layers — no fetch needed
       try{
-        const res = await fetch(c.dataPath + L.file + ASSET_V);
+        const res = await fetch(dataUrl(c, L.file));
         if(!res.ok) throw new Error(res.status + " " + L.file);
         const fc = await res.json();
         // Ensure each feature has a stable numeric id — required for feature-state
@@ -423,13 +560,13 @@
       const row = document.createElement("label");
       row.className = "layer-row";
       row.dataset.layer = L.id;
-      row.title = `${L.source} · updated ${L.updated}`;
+      row.title = `${L.source} · ${T.updated} ${L.updated === "live" ? T.live : L.updated}`;
       row.innerHTML = `
         <input type="checkbox" ${visibility[L.id]!==false?"checked":""}>
         <span class="check"></span>
         ${swatch}
-        <span class="layer-name">${escapeHtml(L.title)}</span>
-        <span class="layer-count">${LIVE_KINDS.includes(kind) ? "live" : shown === fc.features.length ? shown : `${shown} / ${fc.features.length}`}</span>
+        <span class="layer-name">${escapeHtml(layerTitle(L))}</span>
+        <span class="layer-count">${LIVE_KINDS.includes(kind) ? T.live : shown === fc.features.length ? nfmt(shown) : `${nfmt(shown)} / ${nfmt(fc.features.length)}`}</span>
       `;
       paint(row);
       row.querySelector("input").addEventListener("change", (e)=>{
@@ -478,7 +615,7 @@
   // Statuses counted as not yet built in the "Pipeline" tile.
   const PIPELINE_STATUS = ["construction", "announced", "planned"];
   function fmtPower(mw){
-    return mw >= 1000 ? `${(mw/1000).toFixed(1)}<small> GW</small>` : `${Math.round(mw)}<small> MW</small>`;
+    return mw >= 1000 ? `${nfmt(mw/1000, 1, 1)}<small> GW</small>` : `${nfmt(mw)}<small> MW</small>`;
   }
 
   // Figures summed from the layers on the map, so they follow the fuel picked
@@ -487,7 +624,8 @@
     const host = $("#kpiGrid");
     const c = COUNTRIES[countryKey];
     const snap = $("#snapshotSource");
-    if(snap) snap.textContent = c.snapshotSource ? "plants: " + c.snapshotSource : "";
+    const credit = (FR && c.snapshotSourceFr) || c.snapshotSource;
+    if(snap) snap.textContent = credit ? T.plantsCredit + credit : "";
     const allPlants = featuresOfKind(countryKey, "power");
     const plants = fuelFilter ? allPlants.filter(f=>plantFuels(fuelFilter).includes(f.properties.fuel_type)) : allPlants;
     const fcDC    = { features: featuresOfKind(countryKey, "digital") };
@@ -506,16 +644,16 @@
     const hasDCinv = fcDC.features.some(f=>f.properties.investment_usd != null);
     const NA = "—";
     const fuel = fuelFilter && mixFuel(fuelFilter);
-    const prefix = fuel ? escapeHtml(fuel.label) + " · " : "";
+    const prefix = fuel ? escapeHtml(fuelLabel(fuel)) + " · " : "";
     host.innerHTML = `
-      <div class="kpi" title="Plants on the map that are operating"><div class="k">${prefix}In service</div>
+      <div class="kpi" title="${escapeHtml(T.kpiServiceTip)}"><div class="k">${prefix}${T.inService}</div>
         <div class="v">${hasPower ? fmtPower(inService) : NA}</div></div>
-      <div class="kpi" title="Plants on the map under construction or announced. — means the plant source lists built plants only."><div class="k">${prefix}Pipeline</div>
+      <div class="kpi" title="${escapeHtml(T.kpiPipelineTip)}"><div class="k">${prefix}${T.pipeline}</div>
         <div class="v">${hasPower && tracksPipeline ? fmtPower(pipeline) : NA}</div></div>
-      <div class="kpi"><div class="k">${hasDC && !hasDCmw ? "Data centres" : "DC pipeline"}</div>
-        <div class="v">${!hasDC ? NA : hasDCmw ? `${(dcMW/1000).toFixed(1)}<small> GW</small>`
-                                               : `${fcDC.features.length}<small> sites</small>`}</div></div>
-      <div class="kpi"><div class="k">DC investment</div>
+      <div class="kpi"><div class="k">${hasDC && !hasDCmw ? T.dcSites : T.dcPipeline}</div>
+        <div class="v">${!hasDC ? NA : hasDCmw ? `${nfmt(dcMW/1000, 1, 1)}<small> GW</small>`
+                                               : `${nfmt(fcDC.features.length)}<small> ${T.sites}</small>`}</div></div>
+      <div class="kpi"><div class="k">${T.dcInvestment}</div>
         <div class="v">${hasDCinv ? fmtInvestment(dcInvest) : NA}</div></div>
     `;
   }
@@ -524,11 +662,11 @@
   // methodology intro, the data path it cites, and the report-an-error link.
   function renderCountryText(countryKey){
     const c = COUNTRIES[countryKey];
-    document.title = `Wattu Energy — ${c.label} infrastructure map`;
-    document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = c.label; });
-    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? `Data: ${c.credits} · ` : ""; });
+    document.title = T.docTitle(countryLabel(c));
+    document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = countryLabel(c); });
+    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? T.credits(c.credits) : ""; });
     document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
-    if(reportErrorFooter) reportErrorFooter.href = issueUrl(`${c.label} map — data correction`);
+    if(reportErrorFooter) reportErrorFooter.href = issueUrl(T.issueData(countryLabel(c)));
   }
 
   function renderMethodologySources(countryKey){
@@ -537,10 +675,10 @@
     const host = $("#methodologySources");
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
-      `<li><strong>${escapeHtml(L.title)}:</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(updated ${escapeHtml(L.updated)})</span></li>`
-    ).join("") + (mixData ? `<li><strong>Electricity mix:</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(mixData.year)} figures; national, not summed from the map)</span></li>` : "") +
-    (c.boundary ? `<li><strong>Boundary:</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
-    `<li><strong>Basemap:</strong> MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.</li>`;
+      `<li><strong>${escapeHtml(layerTitle(L))}${COLON}</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(${T.updated} ${escapeHtml(L.updated === "live" ? T.live : L.updated)})</span></li>`
+    ).join("") + (mixData ? `<li><strong>${T.mixSrc}${COLON}</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(T.mixSrcNote(mixData.year))})</span></li>` : "") +
+    (c.boundary ? `<li><strong>${T.boundary}${COLON}</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
+    `<li><strong>${T.basemap}${COLON}</strong> ${T.basemapLi}</li>`;
   }
 
   // ---------- Electricity mix ----------
@@ -585,11 +723,8 @@
       .flatMap(L=>(layerData[L.id] || { features:[] }).features);
     const total = all.length;
     const shown = all.filter(f=>statuses.includes(f.properties.status)).length;
-    note.textContent = shown ? `${shown.toLocaleString("en")} of ${total.toLocaleString("en")} mapped assets` +
-        (statusView === "pipeline" ? " are under construction, announced or planned." : " are in service.")
-      : statusView === "pipeline"
-        ? "None of this country's mapped assets is under construction or announced: its sources list built ones only."
-        : "None of this country's mapped assets is listed as in service.";
+    note.textContent = shown ? T.statusSome(nfmt(shown), nfmt(total), statusView === "pipeline")
+      : statusView === "pipeline" ? T.statusNonePipe : T.statusNoneService;
   }
   function setStatusView(view){
     if(!STATUS_VIEWS[view] || view === statusView) return;
@@ -603,10 +738,12 @@
   $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
 
   // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
-  const fmtShare = (v)=>v >= 0.95 ? Math.round(v) + "%" : v >= 0.1 ? v.toFixed(1) + "%" : v > 0 ? "<0.1%" : "—";
-  const fmtAmount = (v, unit)=>(v >= 100 ? Math.round(v).toLocaleString("en") : v >= 0.1 ? v.toFixed(1) : "<0.1") + " " + unit;
+  const fmtShare = (v)=>v >= 0.95 ? nfmt(v) + PCT : v >= 0.1 ? nfmt(v, 1, 1) + PCT : v > 0 ? "<" + nfmt(0.1, 1, 1) + PCT : "—";
+  const fmtAmount = (v, unit)=>(v >= 100 ? nfmt(v) : v >= 0.1 ? nfmt(v, 1, 1) : "<" + nfmt(0.1, 1, 1)) + " " + unit;
+  // A mix fuel's label in the page's language.
+  const fuelLabel = (f)=>MIX_LABEL[f.fuel] || f.label;
   // Plant capacity in text: MW under 1 GW, as the tiles show it.
-  const fmtGW = (gw)=>gw >= 1 ? fmtAmount(gw, "GW") : Math.round(gw * 1000) + " MW";
+  const fmtGW = (gw)=>gw >= 1 ? fmtAmount(gw, "GW") : nfmt(gw * 1000) + " MW";
   function el(tag, cls, text){
     const e = document.createElement(tag);
     if(cls) e.className = cls;
@@ -627,7 +764,8 @@
     const amount = (f)=>fmtAmount(value(f), cap ? "GW" : "TWh");
 
     $("#mixYear").textContent = "· " + m.year;
-    $("#mixTotal").textContent = fmtAmount(total, cap ? "GW installed" : "TWh generated");
+    const totalNum = fmtAmount(total, "").trim();
+    $("#mixTotal").textContent = cap ? T.totalCap(totalNum) : T.totalGen(totalNum);
     section.querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.measure === mixMeasure)));
     section.classList.toggle("has-filter", !!fuelFilter);
     section.classList.remove("has-hot");   // a tap's hover must not outlive the rebuild
@@ -637,7 +775,7 @@
     m.fuels.forEach(f=>{
       const color = FUEL_COLOR[f.fuel] || "#888";
       const picked = fuelFilter === f.fuel;
-      const tip = `${f.label}: ${amount(f)}, ${fmtShare(share(f))}`;
+      const tip = `${fuelLabel(f)}${COLON} ${amount(f)}, ${fmtShare(share(f))}`;
       if(value(f) > 0){
         const seg = el("span", "mix-seg" + (picked ? " picked" : ""));
         seg.dataset.fuel = f.fuel;
@@ -651,10 +789,10 @@
       const btn = el("button", "mix-key" + (picked ? " picked" : ""));
       btn.type = "button";
       btn.dataset.fuel = f.fuel;
-      btn.title = tip + (picked ? ". Pick again to show every plant." : ". Show only these plants on the map.");
+      btn.title = tip + (picked ? T.keyPicked : T.keyPick);
       btn.setAttribute("aria-pressed", String(picked));
       const sw = el("span", "mix-swatch"); sw.style.background = color;
-      btn.append(sw, el("span", "mix-label", f.label), el("span", "mix-val", fmtShare(share(f))));
+      btn.append(sw, el("span", "mix-label", fuelLabel(f)), el("span", "mix-val", fmtShare(share(f))));
       btn.addEventListener("click", ()=>setFuelFilter(f.fuel));
       li.appendChild(btn);
       legend.appendChild(li);
@@ -674,8 +812,8 @@
     if(!f) return;
     const n = COUNTRIES[currentCountry].layers.filter(L=>L.kind === "power")
       .reduce((s, L)=>s + layerView(L).features.length, 0);
-    host.append(el("span", null, `Map: ${f.label.toLowerCase()} plants only · ${n} shown`));
-    const all = el("button", "link-btn", "Show all");
+    host.append(el("span", null, T.filterLine(FR ? fuelLabel(f).toLowerCase() : fuelLabel(f), n)));
+    const all = el("button", "link-btn", T.showAll);
     all.type = "button";
     all.addEventListener("click", ()=>setFuelFilter(null));
     host.appendChild(all);
@@ -685,16 +823,16 @@
     const dl = $("#mixFacts");
     dl.replaceChildren();
     const row = (k, v)=>{ dl.append(el("dt", null, k), el("dd", null, v)); };
-    row("Renewables", `${fmtShare(m.renewables_pct_generation)} of generation` +
-      (m.renewables_pct_capacity != null ? ` · ${fmtShare(m.renewables_pct_capacity)} of capacity` : ""));
+    row(T.renewables, `${fmtShare(m.renewables_pct_generation)} ${T.ofGen}` +
+      (m.renewables_pct_capacity != null ? ` · ${fmtShare(m.renewables_pct_capacity)} ${T.ofCap}` : ""));
     const imp = m.net_imports_twh;
     if(imp != null){
-      if(Math.abs(imp) < 0.05) row("Trade", "Imports and exports balance");
-      else if(imp > 0) row("Net imports", `${fmtAmount(imp, "TWh")}` +
-        (m.demand_twh ? ` · ${fmtShare(100 * imp / m.demand_twh)} of demand` : ""));
-      else row("Net exports", `${fmtAmount(-imp, "TWh")} · ${fmtShare(100 * -imp / m.generation_twh)} of generation`);
+      if(Math.abs(imp) < 0.05) row(T.trade, T.balanced);
+      else if(imp > 0) row(T.netImports, `${fmtAmount(imp, "TWh")}` +
+        (m.demand_twh ? ` · ${fmtShare(100 * imp / m.demand_twh)} ${T.ofDemand}` : ""));
+      else row(T.netExports, `${fmtAmount(-imp, "TWh")} · ${fmtShare(100 * -imp / m.generation_twh)} ${T.ofGen}`);
     }
-    if(m.co2_intensity_g_per_kwh != null) row("CO₂ intensity", `${Math.round(m.co2_intensity_g_per_kwh)} g/kWh`);
+    if(m.co2_intensity_g_per_kwh != null) row(T.co2, `${nfmt(m.co2_intensity_g_per_kwh)} g/kWh`);
   }
 
   // How much of the national fleet the plant layer holds, a capacity gap in
@@ -713,16 +851,15 @@
     const comparable = f ? !m.capacity_gaps.includes(f.fuel) : !m.capacity_gaps.length;
     if(plantLayer && nationalGW > 0 && comparable){
       const pct = 100 * mappedMW / 1000 / nationalGW;
-      host.append(el("span", null, `${plantLayer.title} layer${f ? ", " + f.label.toLowerCase() : ""}: ` +
-        `${fmtGW(mappedMW / 1000)} in service, ` +
-        (pct <= 100 ? `${Math.round(pct)}% of the ${fmtGW(nationalGW)} installed. `
-                    : `against ${fmtGW(nationalGW)} installed per Ember. `)));
+      host.append(el("span", null, T.coverage(layerTitle(plantLayer), f ? (FR ? fuelLabel(f).toLowerCase() : fuelLabel(f)) : "",
+        fmtGW(mappedMW / 1000),
+        pct <= 100 ? T.coveragePct(nfmt(pct) + PCT, fmtGW(nationalGW)) : T.coverageOver(fmtGW(nationalGW)))));
     }
     if(cap && m.capacity_gaps.length){
-      const names = m.capacity_gaps.map(g=>(mixFuel(g) || { label:g }).label).join(", ");
-      host.append(el("span", "mix-gap", `The source lists no ${names} capacity though it generates power: this view undercounts it. `));
+      const names = m.capacity_gaps.map(g=>fuelLabel(mixFuel(g) || { fuel:g, label:g })).join(", ");
+      host.append(el("span", "mix-gap", T.gap(names)));
     }
-    host.append(el("span", null, "Source: "));
+    host.append(el("span", null, T.source));
     const a = el("a", null, `Ember ${m.year}`);
     a.href = safeUrl(m.source_url); a.target = "_blank"; a.rel = "noopener";
     host.append(a, el("span", null, " (CC BY 4.0)."));
@@ -943,12 +1080,12 @@
   function osmPlantProps(p, f){
     const [lng, lat] = f.geometry.coordinates;
     return {
-      name: p.name || "Unnamed plant (OSM)",
+      name: p.name || T.unnamedOsm,
       capacity_mw: typeof p.output === "number" ? Math.round(p.output * 10) / 10 : null,
       fuel_type: (Object.hasOwn(OSM_FUEL, p.source) && OSM_FUEL[p.source]) || p.source || "unknown",
       status: p.construction ? "construction" : p.disused ? "idle" : "operational",
       commissioning_year: p.start_date || null,
-      source: "OpenStreetMap contributors via OpenInfraMap",
+      source: T.osmSource,
       source_url: `https://openinframap.org/#14/${lat.toFixed(5)}/${lng.toFixed(5)}`,
       osm: true
     };
@@ -1045,9 +1182,7 @@
       filter:["has","point_count"],
       layout:{
         // Rounded by hand: same text as fmtMW() ("850 MW", "4.2 GW").
-        "text-field":["case", [">=", ["get","mw"], 1000],
-          ["concat", ["to-string", ["/", ["round", ["/", ["get","mw"], 100]], 10]], " GW"],
-          ["concat", ["to-string", ["round", ["get","mw"]]], " MW"]],
+        "text-field": CLUSTER_LABEL,
         "text-font":FONT_BOLD,
         "text-size":9.5,
         "text-allow-overlap":true
@@ -1114,6 +1249,15 @@
     addOrReplace(sourceId + "-text", { type:"geojson", data });
     addLabelLayer(L, p + "-labels", sourceId + "-text", "name", 7, 1.1);
   }
+
+  // "850 MW", "4.2 GW" (French "4,2 GW"): tenths of a GW, split into the
+  // whole and the decimal part so the separator follows the language.
+  const CLUSTER_TENTHS = ["round", ["/", ["get","mw"], 100]];
+  const CLUSTER_LABEL = ["case", [">=", ["get","mw"], 1000],
+    ["concat", ["to-string", ["floor", ["/", CLUSTER_TENTHS, 10]]],
+      ["case", ["==", ["%", CLUSTER_TENTHS, 10], 0], "", ["concat", FR ? "," : ".", ["to-string", ["%", CLUSTER_TENTHS, 10]]]],
+      " GW"],
+    ["concat", ["to-string", ["round", ["get","mw"]]], " MW"]];
 
   // Relative luminance above ~0.18, where dark text out-contrasts white.
   function isLight(hex){
@@ -1306,17 +1450,17 @@
     let kind = layerKind(dataLayerId);
     if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     let metric = "", dot = "";
-    if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${p.fuel_type || ""}`;
-    else if(kind === "industrial") metric = `${p.sector || ""} · est. ${fmtCap(p.estimated_demand_mw)}`;
+    if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${word(FUEL_WORD, p.fuel_type) || ""}`;
+    else if(kind === "industrial") metric = `${word(SECTOR_WORD, p.sector) || ""} · ${T.estDemand} ${fmtCap(p.estimated_demand_mw)}`;
     else if(kind === "digital"){
       if(p.category === "cable_landing"){
-        metric = ["Submarine cable landing", p.operator].filter(Boolean).join(" · ");
+        metric = [T.cableLanding, p.operator].filter(Boolean).join(" · ");
         dot = CABLE_COLOR;
       } else {
         const prov = palette().providers.find(x => x.key === p.operator);
         metric = [prov ? prov.short : p.operator,
                   p.capacity_estimate_mw != null ? fmtCap(p.capacity_estimate_mw) : "",
-                  p.status].filter(Boolean).join(" · ");
+                  word(STATUS_WORD_ALL, p.status)].filter(Boolean).join(" · ");
         dot = prov ? prov.color : DIGITAL_COLOR;
       }
     }
@@ -1334,15 +1478,15 @@
     const p = f.properties || {};
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
-      <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(p.status || "")}</div>
+      <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(word(STATUS_WORD_ALL, p.status) || "")}</div>
       <div class="tt-meta">${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
   function showClusterTooltip(f, point){
     const p = f.properties || {};
     tooltip.innerHTML = `
-      <div class="tt-name">${escapeHtml(num(p.point_count))} plants · ${escapeHtml(fmtMW(num(p.mw) || 0))}</div>
-      <div class="tt-metric">Click to zoom in</div>`;
+      <div class="tt-name">${escapeHtml(T.clusterTip(nfmt(num(p.point_count) || 0), fmtMW(num(p.mw) || 0)))}</div>
+      <div class="tt-metric">${T.clusterHint}</div>`;
     positionTooltip(point);
   }
   function positionTooltip(point){
@@ -1361,34 +1505,35 @@
     let kind = layerKind(dataLayerId);
     if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
     const badgeClass = kind === "power" ? "power" : kind === "industrial" ? "industrial" : kind === "digital" ? "digital" : "grid";
-    const badgeLabel = kind === "power" ? (p.osm ? "Generation · OpenStreetMap" : "Generation")
-                     : kind === "industrial" ? "Industrial consumer"
-                     : kind === "digital" ? (p.category === "cable_landing" ? "Submarine cable" : "Data center")
-                     : "Infrastructure";
+    const badgeLabel = kind === "power" ? (p.osm ? T.badgeOsm : T.badgeGen)
+                     : kind === "industrial" ? T.badgeIndustry
+                     : kind === "digital" ? (p.category === "cable_landing" ? T.badgeCable : T.badgeDC)
+                     : T.badgeInfra;
 
     let stats = "";
     if(kind === "power"){
       stats = `
-        <div class="cell"><div class="k">Capacity</div><div class="v">${fmtCap(p.capacity_mw)}</div></div>
-        <div class="cell"><div class="k">Fuel</div><div class="v cap">${escapeHtml(p.fuel_type)}</div></div>
-        <div class="cell"><div class="k">Technology</div><div class="v sm">${escapeHtml(p.tech || "—")}</div></div>
-        <div class="cell"><div class="k">${p.status==="operational"?"Commissioned":"Target year"}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>`;
+        <div class="cell"><div class="k">${T.capacity}</div><div class="v">${fmtCap(p.capacity_mw)}</div></div>
+        <div class="cell"><div class="k">${T.fuel}</div><div class="v cap">${escapeHtml(word(FUEL_WORD, p.fuel_type))}</div></div>
+        <div class="cell"><div class="k">${T.technology}</div><div class="v sm">${escapeHtml(p.tech || "—")}</div></div>
+        <div class="cell"><div class="k">${p.status==="operational" ? T.commissioned : T.targetYear}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>`;
     } else if(kind === "industrial"){
       stats = `
-        <div class="cell"><div class="k">Sector</div><div class="v sm">${escapeHtml(p.sector)}</div></div>
-        <div class="cell"><div class="k">Est. demand</div><div class="v">${fmtCap(p.estimated_demand_mw)}</div></div>
-        <div class="cell"><div class="k">Grid connection</div><div class="v xs">${escapeHtml(p.grid_connection || "—")}</div></div>
-        <div class="cell"><div class="k">Precision</div><div class="v cap">${escapeHtml(p.precision || "—")}</div></div>`;
+        <div class="cell"><div class="k">${T.sector}</div><div class="v sm">${escapeHtml(word(SECTOR_WORD, p.sector))}</div></div>
+        <div class="cell"><div class="k">${T.estDemandK}</div><div class="v">${fmtCap(p.estimated_demand_mw)}</div></div>
+        <div class="cell"><div class="k">${T.gridConnection}</div><div class="v xs">${escapeHtml(p.grid_connection || "—")}</div></div>
+        <div class="cell"><div class="k">${T.precision}</div><div class="v cap">${escapeHtml(word(PRECISION_WORD, p.precision) || "—")}</div></div>`;
     } else if(kind === "digital"){
       stats = `
-        <div class="cell"><div class="k">Operator</div><div class="v sm">${escapeHtml(p.operator || "—")}</div></div>
-        <div class="cell"><div class="k">Capacity</div><div class="v">${p.capacity_estimate_mw!=null ? fmtCap(p.capacity_estimate_mw) : "—"}</div></div>
-        <div class="cell"><div class="k">Investment</div><div class="v">${fmtInvestment(p.investment_usd)}</div></div>
-        <div class="cell"><div class="k">${p.status==="operational"?"Energised":"Target year"}</div><div class="v">${escapeHtml(p.year || "—")}</div></div>`;
+        <div class="cell"><div class="k">${T.operator}</div><div class="v sm">${escapeHtml(p.operator || "—")}</div></div>
+        <div class="cell"><div class="k">${T.capacity}</div><div class="v">${p.capacity_estimate_mw!=null ? fmtCap(p.capacity_estimate_mw) : "—"}</div></div>
+        <div class="cell"><div class="k">${T.investment}</div><div class="v">${fmtInvestment(p.investment_usd)}</div></div>
+        <div class="cell"><div class="k">${p.status==="operational" ? T.energised : T.targetYear}</div><div class="v">${escapeHtml(p.year || "—")}</div></div>`;
     }
 
     const [lng, lat] = f.geometry.coordinates;
-    const coords = `${Math.abs(lat).toFixed(2)}°${lat>=0?"N":"S"}, ${Math.abs(lng).toFixed(2)}°${lng>=0?"E":"W"}`;
+    const deg = (v)=>nfmt(Math.abs(v), 2, 2) + (FR ? "° " : "°");
+    const coords = `${deg(lat)}${lat>=0?"N":"S"}, ${deg(lng)}${lng>=0?"E":T.west}`;
 
     const dotColor = badgeClass==='power'      ? (FUEL_COLOR[p.fuel_type] || FUEL_COLOR.solar)
                    : badgeClass==='industrial' ? INDUSTRIAL_COLOR
@@ -1400,24 +1545,24 @@
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${p.region ? escapeHtml(p.region) + " · " : ""}${coords}</div>
-      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
-        <summary>Raw data</summary>
+        <summary>${T.rawData}</summary>
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
         ${p.osm
           // OSM data is fixed at the source, where every map using it benefits.
-          ? `<a href="${escapeHtml(safeUrl(p.source_url))}" target="_blank" rel="noopener">View on OpenInfraMap ↗</a>
-             <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">Fix on OpenStreetMap ↗</a>`
-          : `<a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`, `Feature id: ${p.id || p.name}\n\nSuggested correction:\n`))}" target="_blank" rel="noopener">Report an error</a>
-        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">Primary source ↗</a>` : ""}`}
-        ${selected ? `<button type="button" class="pop-share">Copy link</button>` : ""}
+          ? `<a href="${escapeHtml(safeUrl(p.source_url))}" target="_blank" rel="noopener">${T.viewOim}</a>
+             <a href="https://www.openstreetmap.org/#map=17/${f.geometry.coordinates[1].toFixed(5)}/${f.geometry.coordinates[0].toFixed(5)}" target="_blank" rel="noopener">${T.fixOsm}</a>`
+          : `<a href="${escapeHtml(issueUrl(T.issueFeature(countryLabel(COUNTRIES[currentCountry]), p.name), T.issueBody(p.id || p.name)))}" target="_blank" rel="noopener">${T.reportError}</a>
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${T.primarySource}</a>` : ""}`}
+        ${selected ? `<button type="button" class="pop-share">${T.copyLink}</button>` : ""}
       </div>`;
     wirePopupShare();
     popup.classList.add("open");
@@ -1428,29 +1573,29 @@
   function openLinePopup(dataLayerId, f){
     const p = f.properties || {};
     selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
-    $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>Transmission line</span>`;
+    $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>${T.badgeLine}</span>`;
     paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
-      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(p.status || "operational")}</span>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
       <div class="stat-grid">
-        <div class="cell"><div class="k">Voltage</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
-        <div class="cell"><div class="k">Status</div><div class="v cap">${escapeHtml(p.status)}</div></div>
-        <div class="cell"><div class="k">Precision</div><div class="v cap">${escapeHtml(p.precision || "approximate")}</div></div>
-        <div class="cell"><div class="k">Kind</div><div class="v">${p.kind === "hvdc_planned" ? "HVDC (planned)" : "AC"}</div></div>
+        <div class="cell"><div class="k">${T.voltage}</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
+        <div class="cell"><div class="k">${T.status}</div><div class="v cap">${escapeHtml(word(STATUS_WORD_ALL, p.status))}</div></div>
+        <div class="cell"><div class="k">${T.precision}</div><div class="v cap">${escapeHtml(word(PRECISION_WORD, p.precision || "approximate"))}</div></div>
+        <div class="cell"><div class="k">${T.kind}</div><div class="v">${p.kind === "hvdc_planned" ? T.hvdcPlanned : T.ac}</div></div>
       </div>
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}</span>
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
       </div>
       <details>
-        <summary>Raw data</summary>
+        <summary>${T.rawData}</summary>
         <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
       </details>
       <div class="pop-actions">
-        <a href="${escapeHtml(issueUrl(`${COUNTRIES[currentCountry].label} map — correction: ${p.name}`))}" target="_blank" rel="noopener">Report an error</a>
-        ${selected ? `<button type="button" class="pop-share">Copy link</button>` : ""}
+        <a href="${escapeHtml(issueUrl(T.issueFeature(countryLabel(COUNTRIES[currentCountry]), p.name)))}" target="_blank" rel="noopener">${T.reportError}</a>
+        ${selected ? `<button type="button" class="pop-share">${T.copyLink}</button>` : ""}
       </div>`;
     wirePopupShare();
     popup.classList.add("open");
@@ -1522,7 +1667,11 @@
     if(hash !== location.hash){
       try{ history.replaceState(null, "", hash); } catch(e){ /* sandboxed frame: the link stays as it was */ }
     }
+    syncLangLink();
   }
+  // The other language's page opens on the same view: fr/#country=… ↔ ../#country=…
+  const langLink = $("#langLink");
+  function syncLangLink(){ if(langLink) langLink.href = langLink.dataset.path + location.hash; }
 
   // Opens the popup of a linked feature; `fly` centres the map on it when the
   // link carried no view of its own.
@@ -1583,13 +1732,14 @@
       try{ await navigator.share({ title: document.title, url }); return; }
       catch(e){ if(e && e.name === "AbortError") return; }
     }
-    try{ await navigator.clipboard.writeText(url); showToast("Link copied"); }
-    catch(e){ showToast("Copy the link from the address bar"); }
+    try{ await navigator.clipboard.writeText(url); showToast(T.linkCopied); }
+    catch(e){ showToast(T.copyFromBar); }
   }
   $("#shareBtn").addEventListener("click", shareView);
 
   // A link pasted into this tab, or an edited hash.
   window.addEventListener("hashchange", ()=>{
+    syncLangLink();
     if(location.hash === writeLink()) return;
     const link = readLink();
     if(ENABLED.includes(link.country) && link.country !== currentCountry){ switchCountry(link.country, link); return; }
@@ -1625,7 +1775,10 @@
   const searchInput = $("#searchInput"), searchResults = $("#searchResults");
   const norm = (v)=>String(v == null ? "" : v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const SEARCH_MAX = 8;
-  const STATUS_WORD = { construction:"under construction", announced:"announced", planned:"planned", idle:"idle" };
+  // Only statuses worth flagging in a result line: operating is the default.
+  const STATUS_WORD = FR
+    ? { construction:"en construction", announced:"annoncé", planned:"planifié", idle:"à l'arrêt" }
+    : { construction:"under construction", announced:"announced", planned:"planned", idle:"idle" };
 
   function searchEntries(countryKey, data){
     const c = COUNTRIES[countryKey];
@@ -1633,25 +1786,26 @@
       const p = f.properties || {};
       if(p.id == null || !p.name) return null;
       const mw = num(p.capacity_mw) ?? num(p.capacity_estimate_mw) ?? num(p.estimated_demand_mw);
-      const what = L.kind === "power" ? ["Power plant", p.fuel_type]
-        : L.kind === "industrial" ? [p.sector || "Industry"]
-        : L.kind === "digital" ? [p.category === "cable_landing" ? "Cable landing" : "Data centre", p.operator]
-        : [num(p.voltage_kv) != null ? `Line · ${p.voltage_kv} kV` : "Line"];
+      const what = L.kind === "power" ? [T.powerPlant, word(FUEL_WORD, p.fuel_type)]
+        : L.kind === "industrial" ? [word(SECTOR_WORD, p.sector) || T.industry]
+        : L.kind === "digital" ? [p.category === "cable_landing" ? T.cableShort : T.dataCentre, p.operator]
+        : [num(p.voltage_kv) != null ? `${T.line} · ${p.voltage_kv} kV` : T.line];
       // Industry carries an estimated demand, not a capacity.
-      const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? `~${fmtMW(mw)} demand` : fmtMW(mw);
-      const meta = [...what, size, STATUS_WORD[p.status], c.label].filter(Boolean).join(" · ");
+      const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
+      const meta = [...what, size, STATUS_WORD[p.status], countryLabel(c)].filter(Boolean).join(" · ");
       const color = L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888"
         : L.kind === "industrial" ? INDUSTRIAL_COLOR
         : L.kind === "digital" ? (p.category === "cable_landing" ? CABLE_COLOR : DIGITAL_COLOR)
         : INTERCONNECTOR_COLOR();
       return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, color, mw: mw || 0,
-               nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, p.region, p.fuel_type].filter(Boolean).join(" ")) };
+               nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
+                                               p.fuel_type, word(FUEL_WORD, p.fuel_type)].filter(Boolean).join(" ")) };
     })).filter(Boolean);
   }
   async function loadSearchEntries(key){
     const c = COUNTRIES[key], data = {};
     await Promise.all(c.layers.filter(L=>L.file).map(async L=>{
-      try{ const r = await fetch(c.dataPath + L.file + ASSET_V); if(r.ok) data[L.id] = await r.json(); }
+      try{ const r = await fetch(dataUrl(c, L.file)); if(r.ok) data[L.id] = await r.json(); }
       catch(e){ /* that layer isn't searchable this time */ }
     }));
     return searchEntries(key, data);
@@ -1683,8 +1837,9 @@
     const q = norm(searchInput.value.trim());
     if(q.length < 2){ closeResults(); return; }
     ensureSearchIndex();
-    const countries = ENABLED.filter(k=>norm(COUNTRIES[k].label).includes(q))
-      .map(k=>({ country: k, isCountry: true, name: COUNTRIES[k].label, meta: k === currentCountry ? "Current country" : "Go to this country" }));
+    // Both names match ("spain" on the French page too); the page's is shown.
+    const countries = ENABLED.filter(k=>norm(COUNTRIES[k].label + " " + (COUNTRIES[k].labelFr || "")).includes(q))
+      .map(k=>({ country: k, isCountry: true, name: countryLabel(COUNTRIES[k]), meta: k === currentCountry ? T.currentCountry : T.goCountry }));
     const pool = allEntries || searchEntries(currentCountry, layerData);
     searchOptions = [...countries, ...rankEntries(pool, q)].slice(0, SEARCH_MAX);
     activeOption = searchOptions.length ? 0 : -1;
@@ -1720,8 +1875,8 @@
     });
     if(!searchOptions.length || partial){
       searchResults.appendChild(el("li", "search-note", partial
-        ? "Searching the other countries…"
-        : "No match in the mapped assets. OSM power plants are not searchable."));
+        ? T.searching
+        : T.noMatch));
     }
     searchResults.hidden = false;
     searchInput.setAttribute("aria-expanded", "true");

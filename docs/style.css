@@ -581,15 +581,32 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   .layout.panel-collapsed{grid-template-columns:1fr}
 }
 
+/* Tablets and small laptops: the top-bar buttons keep their icon and lose
+   their label (each has a title and an aria-label), or the bar runs past
+   the screen's edge between 640 and 1000 px. */
+@media (max-width: 1024px){
+  .topbar .btn-label{display:none}
+  .topbar .ghost-btn{padding:0;width:34px;height:34px;justify-content:center;flex-shrink:0}
+}
+@media (max-width: 780px){
+  .topbar .w-product{display:none}
+}
+
+/* FR / EN: the other language's page, as a short mono label */
+.topbar .lang-btn{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.06em}
+
 /* Phones: one-line top bar — logo, country, icon buttons. */
 @media (max-width: 640px){
   .topbar{gap:8px;padding:0 10px}
   .topbar .w-word,.topbar .w-product,.country-switch label{display:none}
   /* Room for Share: GitHub is also in the panel footer and the bottom bar. */
   .topbar #githubLink{display:none}
-  .country-switch{padding-left:0;border-left:0;min-width:0}
+  /* The country menu takes the room the buttons leave, and shrinks with it:
+     five icon buttons (Solar, Methodology, Share, FR/EN, theme) must fit. */
+  .country-switch{padding-left:0;border-left:0;min-width:0;flex:1 1 auto}
+  .topbar .spacer{display:none}
   /* 16px: iOS Safari zooms the page on focus below that. */
-  .country-switch select{max-width:46vw;font-size:16px;padding:4px 8px}
+  .country-switch select{width:100%;max-width:100%;min-width:0;font-size:16px;padding:4px 8px}
   .search-input{font-size:16px}
   .topbar .ghost-btn{padding:0;width:34px;height:34px;justify-content:center;flex-shrink:0}
   .topbar .icon-btn{width:34px;height:34px;flex-shrink:0}

@@ -74,10 +74,17 @@ uses MapLibre GL + OpenFreeMap (Positron / Dark) vector tiles, the live
 grid OpenInfraMap tiles — all public.
 
 ```bash
+node scripts/build-map-i18n.mjs docs   # optional: the French page, docs/fr/ (git-ignored)
 cd docs
 python3 -m http.server 8000
-# open http://localhost:8000
+# open http://localhost:8000 (English) or http://localhost:8000/fr/ (French)
 ```
+
+The map is in English at `/` and in French at `/fr/`. Edit `docs/index.html`
+only: the deploy builds `fr/index.html` from it with the strings in
+`scripts/map-i18n-fr.mjs`, and CI fails on a string left in English. Texts
+written by `app.js` are in its `T` table. The GitHub Pages mirror serves the
+repository as is, so it has no `/fr/`.
 
 ## Reporting a bug
 

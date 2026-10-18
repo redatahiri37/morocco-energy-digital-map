@@ -35,3 +35,7 @@ venv/
 
 # Downloads cached by scripts/build-country-open-data.py
 scripts/.cache/
+
+# The French map page, built from docs/index.html at deploy
+# (scripts/build-map-i18n.mjs)
+docs/fr/

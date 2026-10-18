@@ -31,6 +31,7 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 |---|---|---|
 | key | yes | Lowercase, e.g. `senegal`. Folder is `docs/data/<key>/`. |
 | `label` | yes | Display name. |
+| `labelFr` | yes | French name, shown on the French page (`/fr/`). |
 | `iso` | yes | ISO 3166-1 alpha-2, e.g. `SN`. |
 | `center`, `zoom` | yes | Initial view. |
 | `bounds` | yes (with data) | `[[west, south], [east, north]]`. Every point feature must be inside it. Every line must have at least one vertex inside it. |
@@ -40,11 +41,13 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `palette` | no | `{ providers: [{ key, color, short }], sectors: { "<sector>": "#rrggbb" } }`. `key` matches `operator` in the data. Unlisted values use the default colour. |
 | `mix` | no (warned if missing) | File name of the national electricity mix in `dataPath`, e.g. `mix.json`. See [Electricity mix](#electricity-mix-mixjson). |
 | `snapshotSource` | no | Short credit for the plant figures in the "Mapped assets" tiles. |
+| `snapshotSourceFr` | no | The same credit in French, when it has words to translate. |
 | `credits` | no | Data credits in the footer. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
 
 Each layer needs `id` (unique within the country, lowercase and dashes),
-`kind`, `file`, `title`, `source`, `sourceUrl` (https) and `updated`.
+`kind`, `file`, `title`, `titleFr` (French title), `source`, `sourceUrl`
+(https) and `updated`. Sources are cited as published, in one language.
 
 `boundary.geojson` is optional. It holds Polygon or MultiPolygon features
 only.

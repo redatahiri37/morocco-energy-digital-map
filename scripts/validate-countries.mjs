@@ -104,6 +104,8 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
   const at = `countries.${key}`;
   if (!/^[a-z][a-z0-9-]*$/.test(key)) fail(at, "key must be lowercase letters, digits and dashes");
   if (!str(c.label)) fail(at, "label missing");
+  // The French page (fr/, scripts/build-map-i18n.mjs) names every country.
+  if (!str(c.labelFr)) fail(at, "labelFr missing (the French page shows it)");
   if (!/^[A-Z]{2}$/.test(c.iso || "")) fail(at, "iso must be a two-letter ISO 3166-1 code");
   if (!isLngLat(c.center)) fail(at, "center must be [lng, lat]");
   if (!num(c.zoom)) fail(at, "zoom must be a number");
@@ -138,7 +140,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (!/^[a-z][a-z0-9-]*$/.test(L.id || "")) fail(lat, "id must be lowercase letters, digits and dashes");
     if (seenIds.has(L.id)) fail(lat, "duplicate layer id"); seenIds.add(L.id);
     if (!KINDS.includes(L.kind)) { fail(lat, `unknown kind "${L.kind}" (expected ${KINDS.join(" / ")})`); continue; }
-    for (const f of ["title", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
+    for (const f of ["title", "titleFr", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
     if (!/^https:\/\//.test(L.sourceUrl || "")) fail(lat, "sourceUrl must be an https URL");
 
     if (L.visible !== undefined && typeof L.visible !== "boolean") fail(lat, "visible must be true or false");

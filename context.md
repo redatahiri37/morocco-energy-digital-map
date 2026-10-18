@@ -110,9 +110,18 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   on page load. A result opens its popup (switching country if needed) and
   lifts a fuel or status filter that would hide it. Arrow keys / Enter /
   Escape; "/" focuses the box. OSM plants are live tiles: not searchable.
-- Next UX steps, in order: FR/EN; Africa/Europe overview coloured by mix;
-  mobile mix sheet. The fuel palette fails the
-  dataviz validator (gas/oil too close); changing it changes the map dots.
+- French page: energy.wattu.org/fr/, built at deploy from docs/index.html
+  by scripts/build-map-i18n.mjs with scripts/map-i18n-fr.mjs (CI fails on
+  English left in it or a stale table); docs/fr/ is git-ignored. app.js
+  picks its T table by <html lang>; numbers in French format (7,7 GW,
+  62 %); countries.config.js has labelFr / titleFr (validator requires
+  them). Sources, plant names, technology and operators stay as published.
+  Data files load from the site root (dataUrl), so /fr/ shares ./data/.
+  FR / EN link in the top bar keeps the view (#…). Top bar: icons only
+  below 1024 px (it ran past the edge between 640 and 1000 px).
+- Next UX steps, in order: Africa/Europe overview coloured by mix; mobile
+  mix sheet. The fuel palette fails the dataviz validator (gas/oil too
+  close); changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers
