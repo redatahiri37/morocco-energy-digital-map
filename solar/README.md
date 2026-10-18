@@ -159,43 +159,49 @@ The deploy output prints the live URL. Currently deployed at
 ## Chat assistant (prototype)
 
 `chat/` is a page where a visitor asks questions in French, Darija or
-English. The Worker's `POST /chat` (`proxy/chat.js`) sends the
-conversation to Claude (`claude-opus-5-5`, adaptive thinking at medium
-effort, refusals re-run on Anthropic's recommended fallback model) with
-two tools that run in the Worker on `engine.js`:
+English. It is free to run: the Worker's `POST /chat` (`proxy/chat.js`)
+uses an open model on **Cloudflare Workers AI** (the `AI` binding, inside
+the Workers Free plan's daily allowance: no card, no API key). For each
+question it:
 
-- `estimate_solar` — PVGIS at a city (`data/cities.json`) or any point in
-  Morocco, then the simulator's sizing, cost, savings, payback, 25-year
-  gain and loan, and a link that opens the simulator with those values;
-- `onee_bill` — bill ↔ kWh with the detail by tranche.
+1. reads the city (one of `data/cities.json`, in French, Arabic or
+   English, Darija prefixes such as فـ / بـ included) and the monthly bill
+   in dirhams or kWh, with plain rules, anywhere in the conversation;
+2. when both are there, computes the estimate with `engine.js` and PVGIS,
+   exactly as the simulator does, and sends it to the page as a card with
+   a link that opens the simulator on those values;
+3. asks the model to write the reply around those figures only (or to ask
+   for what is missing).
 
-The system prompt forbids figures that do not come from a tool, and the
-tests check that the tool's figures equal the simulator's. The answer
-streams back as NDJSON; the page shows each estimate as a card. Nothing
-is stored: the page keeps the conversation in memory and sends it with
-each question (10 exchanges at most).
+The model never computes a figure. When the daily allowance is used up,
+an estimate is still answered with a fixed sentence in the visitor's
+language; other questions get « limit reached, use the simulator ».
+Nothing is stored: the page keeps the conversation in memory and sends it
+with each question (10 exchanges at most).
 
-**Switch it on** (once, from `solar/proxy/`):
+**Switch it on** (once): the `[ai]` binding is in `wrangler.toml`; set the
+access key and open the page.
 
 ```bash
-npx wrangler@4 secret put ANTHROPIC_API_KEY   # a key from console.anthropic.com
-npx wrangler@4 secret put CHAT_ACCESS_KEY     # any long random string, e.g. `openssl rand -hex 24`
+KEY=$(openssl rand -hex 24); echo "$KEY"
+echo "$KEY" | npx wrangler@4 secret put CHAT_ACCESS_KEY --name solar-pvgis
 ```
 
 Then open `https://solar.wattu.org/chat/#k=<CHAT_ACCESS_KEY>` (add `&l=ar`
 or `&l=en` for another language). The browser keeps the key and removes
-it from the address bar. Until both secrets exist, `/chat` answers 503.
+it from the address bar. Without the key, `/chat` answers 503.
 
-- **Cost**: a few US cents per answer at Opus 5.5 prices (system prompt
-  and tools are prompt-cached). Set a monthly limit on the key's
-  workspace in the Anthropic Console. A cheaper model: add
-  `[vars] CHAT_MODEL = "claude-sonnet-5-5"` to `wrangler.toml`.
-- **Limits**: 10 answers a minute per IP (`CHAT_LIMITER`), 5 model calls
+- **Model**: `@cf/meta/llama-4-scout-17b-16e-instruct` by default
+  (`DEFAULT_MODEL` in `proxy/chat.js`). Another Workers AI text model:
+  `[vars] CHAT_MODEL = "@cf/…"` in `wrangler.toml`. Darija is the weak
+  spot of every open model: have a native speaker try it.
+- **Cost**: none. The free allowance (10,000 neurons a day, shared by all
+  Workers AI use on the account) resets at midnight UTC.
+- **Limits**: 10 answers a minute per IP (`CHAT_LIMITER`), one model call
   per answer, 1,500 characters per question.
-- **Logs**: `wrangler tail` shows each call's model, stop reason and
-  tokens, never the text.
-- **Tests**: `npm ci && npm test` in `proxy/` plays the API's event stream
-  through the real SDK, without a key.
+- **Logs**: `wrangler tail solar-pvgis` shows each answer's model and token
+  usage, or why the model failed (quota), never the text.
+- **Tests**: `node chat.test.mjs` in `proxy/`, with a fake AI binding.
 
 ## Long-term architecture
 

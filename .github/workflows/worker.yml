@@ -25,7 +25,6 @@ jobs:
         working-directory: solar/proxy
         run: |
           set -e
-          npm ci --ignore-scripts --no-audit --no-fund
           node worker.test.mjs
           node chat.test.mjs
 
@@ -45,11 +44,8 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      # The bundle takes the Anthropic SDK from node_modules (chat.js) and
-      # ../engine.js and ../data/cities.json from the checkout.
-      - name: Install the pinned dependencies
-        working-directory: solar/proxy
-        run: npm ci --ignore-scripts --no-audit --no-fund
+      # The bundle takes ../engine.js and ../data/cities.json from the
+      # checkout; the Worker has no npm dependency.
       - name: Deploy the Worker
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
