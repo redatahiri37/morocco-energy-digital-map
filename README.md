@@ -57,6 +57,11 @@ yearly data (CC BY 4.0, `docs/data/<country>/mix.json`, built by
 `scripts/build-country-mix.py`). Its legend is the fuel colour key and
 filters the plant layers to one fuel.
 
+**All countries — overview** (top of the country menu, or
+`#view=overview`) colours every country by its renewables share or its
+power-sector CO₂ intensity, with a ranked list beside the map; click a
+country to open it.
+
 The search box at the top of the panel finds any mapped plant, site or line
 by name, operator or sector, in every country (press `/` to jump to it).
 The URL keeps the view: country, map position, filters, layers and the open

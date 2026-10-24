@@ -119,9 +119,16 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   Data files load from the site root (dataUrl), so /fr/ shares ./data/.
   FR / EN link in the top bar keeps the view (#…). Top bar: icons only
   below 1024 px (it ran past the edge between 640 and 1000 px).
-- Next UX steps, in order: Africa/Europe overview coloured by mix; mobile
-  mix sheet. The fuel palette fails the dataviz validator (gas/oil too
-  close); changing it changes the map dots.
+- Overview: "All countries — overview" at the top of the country menu
+  (#view=overview, &metric=co2 for CO₂). Each enabled country's boundary
+  filled by renewables share of generation (0–100 %) or CO₂ g/kWh (0–800),
+  one sequential blue ramp, reversed in dark mode so low values recede.
+  Ranked list in the panel (hover syncs with the map), tooltip with the top
+  three fuels, click opens the country. Mix and boundary files load on
+  first use only. Hides the mix, layers and KPI sections; leaving it goes
+  through switchCountry. Ember years differ per country (note shows range).
+- Next UX step: mobile mix sheet. The fuel palette fails the dataviz
+  validator (gas/oil too close); changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers

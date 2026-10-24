@@ -76,7 +76,11 @@
     line: "Ligne", demand: (mw)=>`~${mw} de demande`,
     currentCountry: "Pays affiché", goCountry: "Aller à ce pays",
     searching: "Recherche dans les autres pays…",
-    noMatch: "Aucun résultat parmi les actifs cartographiés. Les centrales OSM ne sont pas cherchables."
+    noMatch: "Aucun résultat parmi les actifs cartographiés. Les centrales OSM ne sont pas cherchables.",
+    allCountries: "Tous les pays — vue d'ensemble", docTitleOverview: "Wattu Energy — tous les pays",
+    legendRenew: "Renouvelables, part de la production", legendCo2: "CO₂ du secteur électrique par kWh produit",
+    overviewNote: (years)=>`Ember, dernière année par pays (${years}). Cliquer sur un pays pour l'ouvrir.`,
+    clickToOpen: "Cliquer pour ouvrir", noData: "Pas de données de mix", openCountry: (c)=>`Ouvrir : ${c}`
   } : {
     soon: "soon", live: "live", updated: "updated",
     docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
@@ -123,7 +127,11 @@
     line: "Line", demand: (mw)=>`~${mw} demand`,
     currentCountry: "Current country", goCountry: "Go to this country",
     searching: "Searching the other countries…",
-    noMatch: "No match in the mapped assets. OSM power plants are not searchable."
+    noMatch: "No match in the mapped assets. OSM power plants are not searchable.",
+    allCountries: "All countries — overview", docTitleOverview: "Wattu Energy — all countries",
+    legendRenew: "Renewables, share of generation", legendCo2: "Power-sector CO₂ per kWh generated",
+    overviewNote: (years)=>`Ember, latest year per country (${years}). Click a country to open it.`,
+    clickToOpen: "Click to open", noData: "No mix data", openCountry: (c)=>`Open ${c}`
   };
   // Data values shown as words: fuel, status, precision, Moroccan sectors.
   const FUEL_WORD = FR
@@ -311,6 +319,7 @@
       map.setStyle(basemapStyle(next), { diff:false });
     }
     if(currentCountry) renderLayerList(currentCountry); // swatch colours are theme-aware
+    if(overview) renderOverview();
   });
 
   // ---------- Country selector ----------
@@ -410,11 +419,12 @@
   // signals explicitly and only build when both are true.
   let dataReady = false, mapReady = false;
   // A shared link's view and feature wait for the map and the data.
-  let initialView = null, pendingFeature = null;
+  let initialView = null, pendingFeature = null, pendingOverview = null;
   function tryBuild(){
     if(!(dataReady && mapReady)) return;
     buildMapLayers(currentCountry);
-    if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
+    if(pendingOverview){ const link = pendingOverview; pendingOverview = null; enterOverview(link); }
+    else if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
     urlReady = true;
     syncLangLink();
   }
@@ -426,6 +436,12 @@
     countrySelect.value = initialCountry;
     currentCountry = initialCountry;
     initialView = link.country === initialCountry ? link.view : null;
+    if(link.overview){
+      // The panel shows the overview from the start, not the country first.
+      pendingOverview = link;
+      countrySelect.value = OVERVIEW_KEY;
+      layout.classList.add("is-overview");
+    }
     loadAllData(initialCountry).then(committed=>{
       if(committed){
         applyLinkState(link);
@@ -942,6 +958,7 @@
     if(!map) return;
     clearDataLayers();
     mapLayers = {};
+    if(overview){ buildOverviewLayers(); return; }
     const c = COUNTRIES[countryKey];
 
     // Each builder call is isolated: if one throws (bad MapLibre
@@ -1627,7 +1644,8 @@
   function readLink(){
     const q = new URLSearchParams(location.hash.replace(/^#/, ""));
     const link = { country: q.get("country"), status: q.get("status"), fuel: q.get("fuel"),
-                   measure: q.get("measure"), layers: null, view: null, feature: null };
+                   measure: q.get("measure"), layers: null, view: null, feature: null,
+                   overview: q.get("view") === "overview", metric: q.get("metric") };
     const v = (q.get("map") || "").split("/").map(Number);
     if(v.length === 3 && v.every(Number.isFinite) && Math.abs(v[1]) <= 90 && Math.abs(v[2]) <= 180)
       link.view = { zoom: Math.min(Math.max(v[0], 1), 18), center: [v[2], v[1]] };
@@ -1648,11 +1666,16 @@
 
   function writeLink(){
     const c = COUNTRIES[currentCountry];
-    const parts = [["country", currentCountry]];
-    if(map){
-      const ctr = map.getCenter();
-      parts.push(["map", `${map.getZoom().toFixed(2)}/${ctr.lat.toFixed(4)}/${ctr.lng.toFixed(4)}`]);
+    const mapPart = ()=>{ const ctr = map.getCenter(); return ["map", `${map.getZoom().toFixed(2)}/${ctr.lat.toFixed(4)}/${ctr.lng.toFixed(4)}`]; };
+    // #view=overview&map=…&metric=co2
+    if(overview){
+      const parts = [["view", "overview"]];
+      if(map) parts.push(mapPart());
+      if(overviewMetric !== "renewables") parts.push(["metric", overviewMetric]);
+      return "#" + parts.map(([k, v])=>`${k}=${LINK_SAFE(v)}`).join("&");
     }
+    const parts = [["country", currentCountry]];
+    if(map) parts.push(mapPart());
     if(statusView !== "all") parts.push(["status", statusView]);
     if(fuelFilter) parts.push(["fuel", fuelFilter]);
     if(mixMeasure !== "generation") parts.push(["measure", mixMeasure]);
@@ -1742,6 +1765,14 @@
     syncLangLink();
     if(location.hash === writeLink()) return;
     const link = readLink();
+    if(link.overview){
+      if(!overview){ enterOverview(link); return; }
+      overviewMetric = OVERVIEW_METRICS[link.metric] ? link.metric : "renewables";
+      renderOverview();
+      if(map && mapReady){ buildMapLayers(currentCountry); if(link.view) map.jumpTo(link.view); }
+      return;
+    }
+    if(overview){ switchCountry(ENABLED.includes(link.country) ? link.country : currentCountry, link); return; }
     if(ENABLED.includes(link.country) && link.country !== currentCountry){ switchCountry(link.country, link); return; }
     closePopup();
     applyLinkState(link);
@@ -1904,12 +1935,12 @@
     closeResults();
     if(o.isCountry){
       searchInput.value = "";
-      if(o.country !== currentCountry) await switchCountry(o.country, null);
+      if(o.country !== currentCountry || overview) await switchCountry(o.country, null);
       return;
     }
     searchInput.value = o.name;
     const ref = { layer: o.layer, id: o.id };
-    if(o.country !== currentCountry){
+    if(o.country !== currentCountry || overview){
       await switchCountry(o.country, { status: statusView, measure: mixMeasure, fuel: null, layers: null,
                                        view: null, feature: ref, reveal: true, smooth: true });
       return;
@@ -1935,9 +1966,245 @@
     }
   });
 
+  // ---------- Overview: every country at once ----------
+  // "All countries" in the menu: each country's outline filled by one figure
+  // of its national mix (renewables share of generation, or CO₂ intensity),
+  // and the panel ranks the countries with their generation bars. A click on
+  // a country, on the map or in the list, opens it.
+  const OVERVIEW_KEY = "overview";          // its value in the country menu
+  let overview = false;
+  let overviewMetric = "renewables";
+  const OVERVIEW_METRICS = {
+    renewables: { get: (m)=>m.renewables_pct_generation, max: 100, desc: true, fmt: (v)=>fmtShare(v) },
+    co2:        { get: (m)=>m.co2_intensity_g_per_kwh,   max: 800, desc: false, fmt: (v)=>nfmt(v) + " g/kWh" }
+  };
+  // Sequential blue (the dataviz reference ramp, steps 100 → 700). Zero
+  // recedes into the map: palest on the light basemap, darkest on the dark
+  // one, so "more" always stands out.
+  const SEQ_BLUE = ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"];
+  const seqRamp = ()=>isDark() ? SEQ_BLUE.slice().reverse() : SEQ_BLUE;
+  const hexRgb = (h)=>[1, 3, 5].map(i=>parseInt(h.slice(i, i + 2), 16));
+  // The fill's colour for a value, as the map interpolates it (linear RGB).
+  function rampColor(v, max){
+    const r = seqRamp(), t = Math.max(0, Math.min(1, v / max)) * (r.length - 1);
+    const i = Math.min(r.length - 2, Math.floor(t)), f = t - i, a = hexRgb(r[i]), b = hexRgb(r[i + 1]);
+    return `rgb(${a.map((x, k)=>Math.round(x + (b[k] - x) * f)).join(",")})`;
+  }
+  // Every country with data, framed together (Spain's Canaries to Ethiopia).
+  const OVERVIEW_BOUNDS = ENABLED.map(k=>COUNTRIES[k].bounds).filter(Boolean).reduce((b, c)=>[
+    [Math.min(b[0][0], c[0][0]), Math.min(b[0][1], c[0][1])], [Math.max(b[1][0], c[1][0]), Math.max(b[1][1], c[1][1])]
+  ]);
+
+  const ovOption = document.createElement("option");
+  ovOption.value = OVERVIEW_KEY; ovOption.textContent = T.allCountries;
+  const ovRule = document.createElement("option");
+  ovRule.disabled = true; ovRule.textContent = "──────────";
+  countrySelect.insertBefore(ovRule, countrySelect.firstChild);
+  countrySelect.insertBefore(ovOption, ovRule);
+
+  // [{ key, mix, boundary }] for every enabled country, loaded on first use.
+  let overviewData = null, overviewLoading = null;
+  function loadOverviewData(){
+    if(!overviewLoading){
+      overviewLoading = Promise.all(ENABLED.map(async key=>{
+        const c = COUNTRIES[key];
+        const get = async (file)=>{
+          try{ const r = await fetch(dataUrl(c, file)); return r.ok ? await r.json() : null; }
+          catch(e){ return null; }
+        };
+        const [mix, boundary] = await Promise.all([c.mix ? get(c.mix) : null, get("boundary.geojson")]);
+        return { key, mix, boundary };
+      })).then(list=>{ overviewData = list; return list; });
+    }
+    return overviewLoading;
+  }
+  const overviewIndex = (key)=>overviewData ? overviewData.findIndex(d=>d.key === key) : -1;
+  const overviewValue = (d)=>d.mix ? num(OVERVIEW_METRICS[overviewMetric].get(d.mix)) : null;
+
+  // One feature per country (its outline's polygons as one MultiPolygon, id
+  // = its index, for the hover state) and one label point at its centre.
+  function buildOverviewLayers(){
+    if(!overviewData) return;
+    overviewHover = null;
+    const m = OVERVIEW_METRICS[overviewMetric];
+    const shapes = [], labels = [];
+    overviewData.forEach((d, i)=>{
+      const c = COUNTRIES[d.key], v = overviewValue(d);
+      const polys = ((d.boundary && d.boundary.features) || []).flatMap(f=>
+        !f.geometry ? [] : f.geometry.type === "Polygon" ? [f.geometry.coordinates]
+        : f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : []);
+      if(polys.length) shapes.push({ type:"Feature", id: i, properties: { key: d.key, value: v == null ? 0 : v, has: v != null },
+                                     geometry: { type:"MultiPolygon", coordinates: polys } });
+      labels.push({ type:"Feature", properties: { text: v == null ? countryLabel(c) : `${countryLabel(c)}\n${m.fmt(v)}` },
+                    geometry: { type:"Point", coordinates: c.center } });
+    });
+    addOrReplace("src-overview", { type:"geojson", data: { type:"FeatureCollection", features: shapes } });
+    addOrReplace("src-overview-labels", { type:"geojson", data: { type:"FeatureCollection", features: labels } });
+    const r = seqRamp(), hot = ["boolean", ["feature-state", "hover"], false];
+    map.addLayer({ id:"lyr-overview-fill", type:"fill", source:"src-overview", paint:{
+      "fill-color": ["case", ["get", "has"],
+        ["interpolate", ["linear"], ["get", "value"], 0, r[0], m.max / 4, r[1], m.max / 2, r[2], m.max * 3 / 4, r[3], m.max, r[4]],
+        isDark() ? "#2a3446" : "#d9dde3"],
+      "fill-opacity": ["case", hot, 0.95, 0.8] } });
+    map.addLayer({ id:"lyr-overview-line", type:"line", source:"src-overview", paint:{
+      "line-color": ["case", hot, isDark() ? "#22D3EE" : "#0E7490", isDark() ? "rgba(255,255,255,0.45)" : "rgba(0,31,77,0.45)"],
+      "line-width": ["case", hot, 2.5, 0.8] } });
+    map.addLayer({ id:"lyr-overview-labels", type:"symbol", source:"src-overview-labels",
+      layout:{ "text-field":["get", "text"], "text-font": FONT_BOLD, "text-size": 11.5, "text-line-height": 1.15 },
+      paint:{ "text-color": isDark() ? "#EEF2F8" : "#0A1628",
+              "text-halo-color": isDark() ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)", "text-halo-width": 1.5 } });
+    wireOverview();
+  }
+
+  // A country lit on the map and in the list together.
+  let overviewHover = null;
+  function setOverviewHover(id){
+    if(overviewHover === id) return;
+    const src = map && map.getSource("src-overview");
+    if(src && overviewHover != null) map.setFeatureState({ source:"src-overview", id: overviewHover }, { hover: false });
+    overviewHover = id;
+    if(src && id != null) map.setFeatureState({ source:"src-overview", id }, { hover: true });
+    document.querySelectorAll("#overviewList .ov-row").forEach(row=>
+      row.classList.toggle("hot", id != null && overviewIndex(row.dataset.key) === id));
+  }
+
+  function showOverviewTooltip(key, point){
+    const d = overviewData[overviewIndex(key)], m = d && d.mix;
+    const top = m ? m.fuels.slice().sort((a, b)=>b.generation_pct - a.generation_pct).slice(0, 3)
+      .map(f=>`${fuelLabel(f)} ${fmtShare(f.generation_pct)}`).join(" · ") : "";
+    const lines = !m ? [T.noData] : [
+      `${T.renewables}${COLON} ${fmtShare(m.renewables_pct_generation)} ${T.ofGen}`,
+      m.co2_intensity_g_per_kwh != null ? `${T.co2}${COLON} ${nfmt(m.co2_intensity_g_per_kwh)} g/kWh` : ""
+    ].filter(Boolean);
+    tooltip.innerHTML = `
+      <div class="tt-name">${escapeHtml(countryLabel(COUNTRIES[key]))}${m ? " · " + escapeHtml(m.year) : ""}</div>
+      <div class="tt-metric">${lines.map(escapeHtml).join("<br>")}</div>
+      ${top ? `<div class="tt-meta">${escapeHtml(top)}</div>` : ""}
+      <div class="tt-meta">${escapeHtml(T.clickToOpen)}</div>`;
+    positionTooltip(point);
+  }
+
+  // Layer-scoped handlers outlive the layers' removal: wired once.
+  let overviewWired = false;
+  function wireOverview(){
+    if(overviewWired) return;
+    overviewWired = true;
+    map.on("mousemove", "lyr-overview-fill", (e)=>{
+      const f = e.features[0];
+      if(!overview || !f) return;
+      map.getCanvas().style.cursor = "pointer";
+      setOverviewHover(f.id);
+      showOverviewTooltip(f.properties.key, e.point);
+    });
+    map.on("mouseleave", "lyr-overview-fill", ()=>{
+      if(!overview) return;
+      map.getCanvas().style.cursor = "";
+      setOverviewHover(null);
+      hideTooltip();
+    });
+    map.on("click", "lyr-overview-fill", (e)=>{
+      const f = e.features[0];
+      if(overview && f){ hideTooltip(); map.getCanvas().style.cursor = ""; switchCountry(f.properties.key, null); }
+    });
+  }
+
+  // The panel: metric, colour key, countries ranked with their generation mix.
+  function renderOverview(){
+    const section = $("#overviewSection");
+    section.hidden = !overview;
+    layout.classList.toggle("is-overview", overview);
+    if(!overview || !overviewData) return;
+    const m = OVERVIEW_METRICS[overviewMetric];
+    section.querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.metric === overviewMetric)));
+
+    const legend = $("#overviewLegend");
+    legend.replaceChildren();
+    const bar = el("span", "ov-legend-bar");
+    bar.style.background = `linear-gradient(to right, ${seqRamp().join(", ")})`;
+    const scale = el("span", "ov-legend-scale");
+    // fmtShare writes a zero share as "—"; the scale's ends are numbers.
+    const end = (v)=>overviewMetric === "co2" ? m.fmt(v) : nfmt(v) + PCT;
+    scale.append(el("span", null, end(0)), el("span", null, end(m.max)));
+    legend.append(el("span", "ov-legend-title", overviewMetric === "co2" ? T.legendCo2 : T.legendRenew), bar, scale);
+
+    const list = $("#overviewList");
+    list.replaceChildren();
+    overviewData.map(d=>({ d, v: overviewValue(d) }))
+      .sort((a, b)=>(a.v == null) - (b.v == null) || (m.desc ? b.v - a.v : a.v - b.v))
+      .forEach(({ d, v })=>{
+        const name = countryLabel(COUNTRIES[d.key]);
+        const btn = el("button", "ov-row");
+        btn.type = "button";
+        btn.dataset.key = d.key;
+        btn.title = T.openCountry(name);
+        const sw = el("span", "ov-swatch");
+        sw.style.background = v == null ? (isDark() ? "#2a3446" : "#d9dde3") : rampColor(v, m.max);
+        const head = el("span", "ov-head");
+        head.append(sw, el("span", "ov-name", name), el("span", "ov-val", v == null ? "—" : m.fmt(v)));
+        const mini = el("span", "ov-bar");
+        mini.setAttribute("aria-hidden", "true");
+        (d.mix ? d.mix.fuels : []).filter(f=>f.generation_pct > 0).forEach(f=>{
+          const seg = el("span");
+          seg.style.flexGrow = String(f.generation_pct);
+          seg.style.background = FUEL_COLOR[f.fuel] || "#888";
+          mini.appendChild(seg);
+        });
+        btn.append(head, mini);
+        btn.addEventListener("click", ()=>switchCountry(d.key, null));
+        btn.addEventListener("mouseenter", ()=>setOverviewHover(overviewIndex(d.key)));
+        btn.addEventListener("mouseleave", ()=>setOverviewHover(null));
+        const li = el("li");
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+
+    const years = overviewData.filter(d=>d.mix).map(d=>d.mix.year);
+    const lo = Math.min(...years), hi = Math.max(...years);
+    $("#overviewNote").textContent = T.overviewNote(lo === hi ? String(lo) : `${lo}–${hi}`);
+  }
+
+  // `link`: a shared link to the overview (its metric and view), if any.
+  async function enterOverview(link){
+    overview = true;
+    if(link && OVERVIEW_METRICS[link.metric]) overviewMetric = link.metric;
+    countrySelect.value = OVERVIEW_KEY;
+    closePopup();
+    hideTooltip();
+    hoveredLayer = null;
+    layout.classList.add("is-overview");
+    document.title = T.docTitleOverview;
+    await loadOverviewData();
+    if(!overview) return;                  // a country was picked meanwhile
+    renderOverview();
+    if(map && mapReady){
+      buildMapLayers(currentCountry);       // draws the overview while it is on
+      // The panel has just changed height (phones stack it above the map):
+      // measure the map again, or the frame is computed for the old size.
+      map.resize();
+      if(link && link.view) map.jumpTo(link.view);
+      else map.fitBounds(OVERVIEW_BOUNDS, { padding: 24, duration: link ? 0 : 900 });
+    }
+    syncUrl();
+  }
+  function leaveOverview(){
+    if(!overview) return;
+    setOverviewHover(null);
+    overview = false;
+    layout.classList.remove("is-overview");
+    $("#overviewSection").hidden = true;
+  }
+  $("#overviewSection").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>{
+    if(overviewMetric === b.dataset.metric) return;
+    overviewMetric = b.dataset.metric;
+    renderOverview();
+    if(map && mapReady) buildMapLayers(currentCountry);
+    syncUrl();
+  }));
+
   // `link`: the shared link being applied, if the switch comes from one.
   async function switchCountry(key, link){
     if(!ENABLED.includes(key)) return;
+    leaveOverview();
     currentCountry = key;
     countrySelect.value = key;
     const c = COUNTRIES[key];
@@ -1946,6 +2213,7 @@
     hoveredLayer = null;
     fuelFilter = null;
     if(!(await loadAllData(key))) return; // superseded by a later switch
+    if(overview) return;                  // the overview was picked meanwhile
     if(link) applyLinkState(link);
     if(link && link.reveal && link.feature) revealFeature(link.feature);
     renderPanel(key);
@@ -1959,7 +2227,10 @@
     }
     syncUrl();
   }
-  countrySelect.addEventListener("change", (e)=>switchCountry(e.target.value, null));
+  countrySelect.addEventListener("change", (e)=>{
+    if(e.target.value === OVERVIEW_KEY) enterOverview(null);
+    else switchCountry(e.target.value, null);
+  });
 
   boot();
 })();

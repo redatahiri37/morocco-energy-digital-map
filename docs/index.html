@@ -96,6 +96,18 @@
       <ul id="searchResults" class="search-results" role="listbox" aria-label="Search results" hidden></ul>
     </section>
 
+    <!-- Overview: every country by one figure of its mix (app.js "Overview"). -->
+    <section class="panel-section overview-section" id="overviewSection" aria-labelledby="overviewTitle" hidden>
+      <h2 class="panel-title" id="overviewTitle">All countries</h2>
+      <div class="seg ov-metric" role="group" aria-label="Figure shown">
+        <button type="button" class="seg-btn" data-metric="renewables" aria-pressed="true">Renewables</button>
+        <button type="button" class="seg-btn" data-metric="co2" aria-pressed="false">CO₂ intensity</button>
+      </div>
+      <div class="ov-legend" id="overviewLegend"></div>
+      <ol class="ov-list" id="overviewList"></ol>
+      <p class="ov-note" id="overviewNote"></p>
+    </section>
+
     <!-- National mix from Ember (data/<country>/mix.json). The legend is
          also the fuel colour key for the plant dots, and filters them. -->
     <section class="panel-section mix-section" id="mixSection" aria-labelledby="mixTitle" hidden>
@@ -114,7 +126,7 @@
       <p class="mix-note" id="mixNote"></p>
     </section>
 
-    <section class="panel-section">
+    <section class="panel-section layers-section">
       <h2 class="panel-title">Layers</h2>
       <!-- Status view: narrows every layer with a file (app.js STATUS_VIEWS). -->
       <div class="status-row" id="statusRow">
@@ -133,7 +145,7 @@
       </div>
     </section>
 
-    <section class="panel-section">
+    <section class="panel-section kpi-section">
       <div class="panel-subhead">
         <h3>Mapped assets</h3>
         <span class="micro" id="snapshotSource"></span>

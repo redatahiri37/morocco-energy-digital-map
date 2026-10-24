@@ -204,6 +204,27 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layer-row.muted{opacity:.45}
 .layer-row.muted .layer-name{color:var(--text-2)}
 
+/* Overview: every country at once. The country's own sections step aside. */
+.is-overview .mix-section,.is-overview .layers-section,.is-overview .kpi-section{display:none}
+.overview-section[hidden]{display:none}
+.seg.ov-metric{display:flex;margin-bottom:10px}   /* full width: beats .seg's inline-flex */
+.ov-metric .seg-btn{flex:1;white-space:nowrap}
+.ov-legend{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.ov-legend-title{font-size:11px;color:var(--text-1)}
+.ov-legend-bar{height:8px;border-radius:4px}
+.ov-legend-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--text-2)}
+.ov-list{list-style:none;display:flex;flex-direction:column;gap:2px}
+.ov-row{display:flex;flex-direction:column;gap:5px;width:100%;padding:6px 8px;border-radius:5px;text-align:left}
+.ov-row:hover,.ov-row.hot{background:var(--bg-2)}
+.ov-row:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ov-head{display:flex;align-items:center;gap:8px}
+.ov-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ov-name{flex:1;min-width:0;font-size:12.5px;color:var(--text-0)}
+.ov-val{font-family:var(--font-mono);font-size:11px;color:var(--text-1);font-variant-numeric:tabular-nums}
+/* 1px gaps show the panel between fuels, as in the mix bar */
+.ov-bar{display:flex;gap:1px;height:6px;border-radius:3px;overflow:hidden}
+.ov-note{font-size:10.5px;line-height:1.45;color:var(--text-2);margin-top:8px}
+
 /* Status view above the layer list */
 .status-row{margin-bottom:8px}
 .status-row .seg{display:flex}
