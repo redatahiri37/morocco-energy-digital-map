@@ -1,0 +1,80 @@
+{
+  "country": "spain",
+  "iso3": "ESP",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 287.97,
+  "demand_twh": 275.18,
+  "net_imports_twh": -12.79,
+  "co2_intensity_g_per_kwh": 153.56,
+  "renewables_pct_generation": 55.9,
+  "capacity_gw": 137.73,
+  "renewables_pct_capacity": 71.6,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "coal",
+      "label": "Coal",
+      "generation_twh": 0.92,
+      "generation_pct": 0.3,
+      "capacity_gw": 0.61
+    },
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 62.06,
+      "generation_pct": 21.6,
+      "capacity_gw": 27.89
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 10.03,
+      "generation_pct": 3.5,
+      "capacity_gw": 3.5
+    },
+    {
+      "fuel": "nuclear",
+      "label": "Nuclear",
+      "generation_twh": 54.1,
+      "generation_pct": 18.8,
+      "capacity_gw": 7.12
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 32.77,
+      "generation_pct": 11.4,
+      "capacity_gw": 16.79
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 58.76,
+      "generation_pct": 20.4,
+      "capacity_gw": 33.3
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 62.92,
+      "generation_pct": 21.9,
+      "capacity_gw": 47.21
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 6.41,
+      "generation_pct": 2.2,
+      "capacity_gw": 1.16
+    },
+    {
+      "fuel": "geothermal",
+      "label": "Geothermal & other",
+      "generation_twh": 0.0,
+      "generation_pct": 0.0,
+      "capacity_gw": 0.15
+    }
+  ]
+}

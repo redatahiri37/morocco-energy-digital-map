@@ -1,0 +1,52 @@
+{
+  "country": "nigeria",
+  "iso3": "NGA",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 41.54,
+  "demand_twh": 39.24,
+  "net_imports_twh": -2.3,
+  "co2_intensity_g_per_kwh": 455.71,
+  "renewables_pct_generation": 31.3,
+  "capacity_gw": 15.45,
+  "renewables_pct_capacity": 20.7,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "coal",
+      "label": "Coal",
+      "generation_twh": 0.0,
+      "generation_pct": 0.0,
+      "capacity_gw": 0.34
+    },
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 28.53,
+      "generation_pct": 68.7,
+      "capacity_gw": 11.91
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 12.82,
+      "generation_pct": 30.9,
+      "capacity_gw": 2.9
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.13,
+      "generation_pct": 0.3,
+      "capacity_gw": 0.28
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.06,
+      "generation_pct": 0.1,
+      "capacity_gw": 0.02
+    }
+  ]
+}

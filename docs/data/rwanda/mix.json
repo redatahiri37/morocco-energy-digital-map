@@ -1,0 +1,52 @@
+{
+  "country": "rwanda",
+  "iso3": "RWA",
+  "year": 2024,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 1.13,
+  "demand_twh": 1.22,
+  "net_imports_twh": 0.09,
+  "co2_intensity_g_per_kwh": 353.98,
+  "renewables_pct_generation": 49.6,
+  "capacity_gw": 0.39,
+  "renewables_pct_capacity": 43.6,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "coal",
+      "label": "Coal",
+      "generation_twh": 0.17,
+      "generation_pct": 15.0,
+      "capacity_gw": 0.09
+    },
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 0.3,
+      "generation_pct": 26.6,
+      "capacity_gw": 0.09
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 0.1,
+      "generation_pct": 8.8,
+      "capacity_gw": 0.04
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 0.52,
+      "generation_pct": 46.0,
+      "capacity_gw": 0.15
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.04,
+      "generation_pct": 3.5,
+      "capacity_gw": 0.02
+    }
+  ]
+}

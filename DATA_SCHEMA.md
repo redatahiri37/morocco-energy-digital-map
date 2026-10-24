@@ -31,6 +31,7 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 |---|---|---|
 | key | yes | Lowercase, e.g. `senegal`. Folder is `docs/data/<key>/`. |
 | `label` | yes | Display name. |
+| `labelFr` | yes | French name, shown on the French page (`/fr/`). |
 | `iso` | yes | ISO 3166-1 alpha-2, e.g. `SN`. |
 | `center`, `zoom` | yes | Initial view. |
 | `bounds` | yes (with data) | `[[west, south], [east, north]]`. Every point feature must be inside it. Every line must have at least one vertex inside it. |
@@ -38,12 +39,15 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `layers` | yes (with data) | See below. |
 | `boundary` | if `boundary.geojson` exists | `{ source, sourceUrl, note }`. This is the provenance of the outline, shown in Methodology. |
 | `palette` | no | `{ providers: [{ key, color, short }], sectors: { "<sector>": "#rrggbb" } }`. `key` matches `operator` in the data. Unlisted values use the default colour. |
-| `snapshotSource` | no | Short credit above the KPI tiles. |
+| `mix` | no (warned if missing) | File name of the national electricity mix in `dataPath`, e.g. `mix.json`. See [Electricity mix](#electricity-mix-mixjson). |
+| `snapshotSource` | no | Short credit for the plant figures in the "Mapped assets" tiles. |
+| `snapshotSourceFr` | no | The same credit in French, when it has words to translate. |
 | `credits` | no | Data credits in the footer. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
 
 Each layer needs `id` (unique within the country, lowercase and dashes),
-`kind`, `file`, `title`, `source`, `sourceUrl` (https) and `updated`.
+`kind`, `file`, `title`, `titleFr` (French title), `source`, `sourceUrl`
+(https) and `updated`. Sources are cited as published, in one language.
 
 `boundary.geojson` is optional. It holds Polygon or MultiPolygon features
 only.
@@ -125,3 +129,22 @@ it by size at low zoom (all plants from zoom 8), so it is not counted in the
 KPI tiles. Those come from the curated `power` layer. The two layers overlap
 where both know a plant; set `visible: false` to start this one unticked.
 Errors in it are fixed on OpenStreetMap; the popup links there.
+
+## Electricity mix (`mix.json`)
+
+The country's own generation and capacity by fuel, drawn as the "Electricity
+mix" bar above the layers. It is national data, not a sum of the plants on
+the map. Built from Ember's yearly data by
+`python3 scripts/build-country-mix.py` (see DATA_SOURCES.md); not GeoJSON.
+
+| Field | Required | Notes |
+|---|---|---|
+| `year` | yes | Integer. Latest year Ember has generation for. |
+| `source`, `source_url` | yes | Citation and https link, shown under the bar and in Methodology. |
+| `generation_twh` | yes | Total generation. |
+| `capacity_gw` | yes | Sum of the fuels' capacity. |
+| `renewables_pct_generation` | yes | Ember's renewables share of generation. |
+| `renewables_pct_capacity` | no | Number or `null`; `null` when `capacity_gaps` is not empty. |
+| `demand_twh`, `net_imports_twh`, `co2_intensity_g_per_kwh` | no | Number or `null`. Negative net imports are net exports. |
+| `capacity_gaps` | yes | Fuels that generate at least 1 % but have no capacity in the source (Kenya: geothermal). The capacity view says it undercounts them. |
+| `fuels` | yes | In bar order: `{ fuel, label, generation_twh, generation_pct, capacity_gw }`. `fuel` is one of the `power` fuel types, so the segment takes the plant colour; the `generation_pct` add up to 100 (± 1). |

@@ -1,0 +1,59 @@
+{
+  "country": "ethiopia",
+  "iso3": "ETH",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 33.37,
+  "demand_twh": 31.02,
+  "net_imports_twh": -2.35,
+  "co2_intensity_g_per_kwh": 23.08,
+  "renewables_pct_generation": 100.0,
+  "capacity_gw": 10.17,
+  "renewables_pct_capacity": 99.0,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 0.0,
+      "generation_pct": 0.0,
+      "capacity_gw": 0.1
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 32.19,
+      "generation_pct": 96.5,
+      "capacity_gw": 9.21
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 1.1,
+      "generation_pct": 3.3,
+      "capacity_gw": 0.5
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.04,
+      "generation_pct": 0.1,
+      "capacity_gw": 0.02
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.01,
+      "generation_pct": 0.0,
+      "capacity_gw": 0.31
+    },
+    {
+      "fuel": "geothermal",
+      "label": "Geothermal & other",
+      "generation_twh": 0.03,
+      "generation_pct": 0.1,
+      "capacity_gw": 0.03
+    }
+  ]
+}
