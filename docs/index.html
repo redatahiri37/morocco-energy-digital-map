@@ -164,6 +164,7 @@
       <ul class="bullets">
         <li><strong>OpenFreeMap</strong> (<code>tiles.openfreemap.org</code>) — serves the basemap style, vector tiles and label fonts, requested continuously as you pan and zoom.</li>
         <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
+        <li><strong>Wattu's Worker</strong> (<code>solar-pvgis.redatahiri.workers.dev</code>) — for Morocco, the live Spain–Morocco flow. The Worker asks Spain's grid operator REE (<code>demanda.ree.es</code>); your browser never contacts REE.</li>
       </ul>
       <p class="micro">The map library (MapLibre GL JS, BSD-3-Clause) and the typefaces (Inter, Newsreader, IBM Plex Mono, SIL Open Font License) are served from this site, not from a CDN.</p>
       <h3>Limits</h3>
@@ -172,7 +173,7 @@
         <li>Capacity factors are not applied — figures are nameplate.</li>
         <li>Industrial demand is estimated from public disclosures, not audited.</li>
         <li>Announced DC capacity is the headline, not energised capacity.</li>
-        <li>No live data feeds — everything except the OpenInfraMap grid is static GeoJSON.</li>
+        <li>Live data: the OpenInfraMap grid and, for Morocco, the flow on the Spain–Morocco interconnector (REE, 5-minute steps). Morocco publishes no live national consumption; the demand tiles are dated figures. Everything else is static GeoJSON.</li>
       </ul>
       <p class="micro">See <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/DATA_SOURCES.md" target="_blank" rel="noopener">DATA_SOURCES.md</a> and <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/ASSUMPTIONS.md" target="_blank" rel="noopener">ASSUMPTIONS.md</a> for the full write-up.</p>
     </div>
