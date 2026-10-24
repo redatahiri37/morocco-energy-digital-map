@@ -32,6 +32,7 @@ export const PAIRS = [
   // Panel
   ['aria-label="Layers and methodology"', 'aria-label="Couches et méthodologie"'],
   ['aria-label="Collapse panel" title="Collapse panel"', 'aria-label="Replier le panneau" title="Replier le panneau"'],
+  ['aria-expanded="false" aria-label="Show more"', 'aria-expanded="false" aria-label="Afficher plus"'],
   ['<label class="sr-only" for="searchInput">Search plants, sites and countries</label>',
    '<label class="sr-only" for="searchInput">Chercher une centrale, un site ou un pays</label>'],
   ['placeholder="Search plants, sites, countries…"', 'placeholder="Chercher : centrale, site, pays…"'],

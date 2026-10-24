@@ -127,8 +127,18 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   three fuels, click opens the country. Mix and boundary files load on
   first use only. Hides the mix, layers and KPI sections; leaving it goes
   through switchCountry. Ember years differ per country (note shows range).
-- Next UX step: mobile mix sheet. The fuel palette fails the dataviz
-  validator (gas/oil too close); changing it changes the map dots.
+- Phone sheet: below 900 px (landscape phones, max-height 500, keep the
+  side panel) the panel is a bottom sheet over a full-height map, same
+  media query in style.css and app.js (SHEET_MQ). Stops peek / half / full;
+  peek ends under the mix bar (overview: under its colour key). Grip: tap
+  goes up a stop (full → peek), drag with flick; in peek the whole sheet
+  drags. Search focus → full, pick → peek; map drag, popup, overview row →
+  peek. Map bottom padding = peek, or popup height while one is open
+  (syncMapPad: changed without moving the view, never mid-animation), so
+  flyTo / easeTo / fitBounds centre above them; a tapped feature eases
+  above the popup. Popup on phones now ends above the bottom bar.
+- Next: the fuel palette fails the dataviz validator (gas/oil too close);
+  changing it changes the map dots.
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers

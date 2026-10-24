@@ -62,6 +62,10 @@ filters the plant layers to one fuel.
 power-sector CO₂ intensity, with a ranked list beside the map; click a
 country to open it.
 
+On phones (and windows under 900 px wide, landscape phones aside) the panel
+is a sheet over the map: closed, it shows the search box and the mix bar;
+a tap on its grip or a drag raises it to half or full height.
+
 The search box at the top of the panel finds any mapped plant, site or line
 by name, operator or sector, in every country (press `/` to jump to it).
 The URL keeps the view: country, map position, filters, layers and the open

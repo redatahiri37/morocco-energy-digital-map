@@ -155,6 +155,19 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layout.panel-collapsed .panel-expand{display:flex}
 .panel-expand:hover{background:var(--bg-3);color:var(--text-0)}
 
+/* The sheet's grip (phones only, see RESPONSIVE): stays at the top while
+   the sheet scrolls. */
+.sheet-handle{
+  display:none;position:sticky;top:0;z-index:3;
+  width:calc(100% + 28px);height:26px;margin:0 -14px;
+  align-items:center;justify-content:center;
+  background:var(--bg-1);border:0;border-radius:12px 12px 0 0;
+  cursor:grab;touch-action:none;
+}
+.sheet-grip{width:36px;height:4px;border-radius:2px;background:var(--border-hi)}
+.sheet-handle:hover .sheet-grip{background:var(--text-3)}
+.sheet-handle:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
 .panel-section{padding:10px 0 16px;border-bottom:1px solid var(--border)}
 .panel-section:last-child{border-bottom:0}
 
@@ -570,25 +583,47 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 /* ───────── RESPONSIVE ───────── */
 @media (max-width: 900px){
   :root{--panel-w:100%}
-  .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-  .panel{
-    max-height:40vh;border-right:0;border-bottom:1px solid var(--border);
-  }
-  /* Collapsed: drop the panel row so the map takes the whole height. The
-     desktop rule (0 1fr columns) would otherwise put the map in the panel's
-     row, leaving the lower half of the screen empty. */
+  /* Collapsed (the landscape side panel; the sheet below has no collapse
+     button): the map takes the whole grid. The desktop rule (0 1fr
+     columns) would otherwise leave it a column it doesn't fill. */
   .layout.panel-collapsed{grid-template-columns:1fr;grid-template-rows:1fr}
   .layout.panel-collapsed .panel{display:none}
   .panel-expand{
     left:8px;top:8px;transform:none;
     width:32px;height:28px;border-radius:4px;border-left:1px solid var(--border);
   }
-  .popup{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:55vh;
+  .popup{top:auto;left:8px;right:8px;bottom:calc(var(--bot-h) + 8px);width:auto;max-height:55vh;
     transform:translateY(calc(100% + 24px))}
   .popup.open{transform:translateY(0)}
   .topbar .country-switch{padding-left:8px}
   .bottombar{font-size:10px;padding:0 8px;gap:8px}
   .bb-center{display:none}
+}
+
+/* Phones and narrow windows, landscape phones aside (below): the panel is a
+   sheet over the bottom of the map, so the map keeps the whole height.
+   app.js sets its height (--sheet-h) to one of three stops: "peek" (search
+   and the mix bar), "half" and "full"; and --sheet-peek, which lifts the
+   map's controls and the toast above it. */
+@media (max-width: 900px) and (min-height: 501px), (max-width: 900px) and (orientation: portrait){
+  .layout{grid-template-columns:1fr;grid-template-rows:1fr}
+  .panel{
+    position:absolute;left:0;right:0;bottom:0;z-index:6;
+    height:var(--sheet-h, 40%);max-height:100%;
+    padding-top:0;border-right:0;border-top:1px solid var(--border-hi);
+    border-radius:12px 12px 0 0;
+    box-shadow:0 -8px 24px rgba(0,0,0,.3);
+    overscroll-behavior:contain;
+    transition:height .28s var(--ease);
+  }
+  .panel.is-dragging{transition:none}
+  /* Peek: the sheet shows its top and drags as a whole; no inner scroll. */
+  .panel.is-peek{overflow:hidden;touch-action:none}
+  .panel-collapse{display:none}
+  .search-section{padding-right:0}
+  .sheet-handle{display:flex}
+  .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{bottom:var(--sheet-peek, 0px)}
+  .toast{bottom:calc(var(--sheet-peek, 0px) + 16px)}
 }
 
 /* Landscape phones: the details sheet slides in from the right instead of
@@ -597,7 +632,6 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   .popup{top:calc(var(--top-h) + 8px);bottom:calc(var(--bot-h) + 8px);left:auto;right:8px;
     width:min(360px,48vw);max-height:none;transform:translateX(calc(100% + 24px))}
   .popup.open{transform:translateX(0)}
-  .panel{max-height:none}
   .layout{grid-template-columns:min(300px,40vw) 1fr;grid-template-rows:1fr}
   .layout.panel-collapsed{grid-template-columns:1fr}
 }

@@ -80,7 +80,8 @@
     allCountries: "Tous les pays — vue d'ensemble", docTitleOverview: "Wattu Energy — tous les pays",
     legendRenew: "Renouvelables, part de la production", legendCo2: "CO₂ du secteur électrique par kWh produit",
     overviewNote: (years)=>`Ember, dernière année par pays (${years}). Cliquer sur un pays pour l'ouvrir.`,
-    clickToOpen: "Cliquer pour ouvrir", noData: "Pas de données de mix", openCountry: (c)=>`Ouvrir : ${c}`
+    clickToOpen: "Cliquer pour ouvrir", noData: "Pas de données de mix", openCountry: (c)=>`Ouvrir : ${c}`,
+    sheetMore: "Afficher plus", sheetLess: "Afficher moins"
   } : {
     soon: "soon", live: "live", updated: "updated",
     docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
@@ -131,7 +132,8 @@
     allCountries: "All countries — overview", docTitleOverview: "Wattu Energy — all countries",
     legendRenew: "Renewables, share of generation", legendCo2: "Power-sector CO₂ per kWh generated",
     overviewNote: (years)=>`Ember, latest year per country (${years}). Click a country to open it.`,
-    clickToOpen: "Click to open", noData: "No mix data", openCountry: (c)=>`Open ${c}`
+    clickToOpen: "Click to open", noData: "No mix data", openCountry: (c)=>`Open ${c}`,
+    sheetMore: "Show more", sheetLess: "Show less"
   };
   // Data values shown as words: fuel, status, precision, Moroccan sectors.
   const FUEL_WORD = FR
@@ -422,6 +424,7 @@
   let initialView = null, pendingFeature = null, pendingOverview = null;
   function tryBuild(){
     if(!(dataReady && mapReady)) return;
+    setSheet(sheetStop);   // phones: the panel is rendered, so the peek is final; the view centres above it
     buildMapLayers(currentCountry);
     if(pendingOverview){ const link = pendingOverview; pendingOverview = null; enterOverview(link); }
     else if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
@@ -470,6 +473,8 @@
 
       map.on("load", ()=>{ mapReady = true; tryBuild(); });
       map.on("moveend", ()=>syncUrl());
+      map.on("dragstart", ()=>setSheet("peek"));   // phones: the map wants the room
+      sheetMode();
       let sizeKeyFrame = 0;
       map.on("zoom", ()=>{
         if(sizeKeyFrame) return;
@@ -1427,6 +1432,7 @@
         map.easeTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 7), duration: 600 });
       } else if(m.role === "line"){
         openLinePopup(m.dataLayerId, f);
+        if(sheetOn()) map.easeTo({ center: e.lngLat, duration: 400 });   // above the popup
       }
     });
   }
@@ -1583,6 +1589,7 @@
       </div>`;
     wirePopupShare();
     popup.classList.add("open");
+    sheetForPopup();
     popup.setAttribute("aria-hidden","false");
     syncUrl();
   }
@@ -1616,6 +1623,7 @@
       </div>`;
     wirePopupShare();
     popup.classList.add("open");
+    sheetForPopup();
     popup.setAttribute("aria-hidden","false");
     syncUrl();
   }
@@ -1625,7 +1633,7 @@
     popup.classList.remove("open");
     popup.setAttribute("aria-hidden","true");
     selected = null;
-    if(wasOpen) syncUrl();
+    if(wasOpen){ syncMapPad(); syncUrl(); }
   }
   function wirePopupShare(){
     const b = popup.querySelector(".pop-share");
@@ -1933,6 +1941,7 @@
   // filter that would hide it.
   async function chooseResult(o){
     closeResults();
+    if(sheetOn()){ searchInput.blur(); setSheet("peek"); }   // phones: keyboard down, map up
     if(o.isCountry){
       searchInput.value = "";
       if(o.country !== currentCountry || overview) await switchCountry(o.country, null);
@@ -1954,7 +1963,7 @@
 
   let searchTimer = 0;
   searchInput.addEventListener("input", ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 80); });
-  searchInput.addEventListener("focus", ()=>{ ensureSearchIndex(); if(searchInput.value.trim()) runSearch(); });
+  searchInput.addEventListener("focus", ()=>{ setSheet("full"); ensureSearchIndex(); if(searchInput.value.trim()) runSearch(); });
   searchInput.addEventListener("blur", ()=>setTimeout(closeResults, 120));
   searchInput.addEventListener("keydown", (e)=>{
     if(e.key === "ArrowDown"){ e.preventDefault(); if(searchResults.hidden) runSearch(); else moveActive(1); }
@@ -2150,7 +2159,7 @@
           mini.appendChild(seg);
         });
         btn.append(head, mini);
-        btn.addEventListener("click", ()=>switchCountry(d.key, null));
+        btn.addEventListener("click", ()=>{ setSheet("peek"); switchCountry(d.key, null); });
         btn.addEventListener("mouseenter", ()=>setOverviewHover(overviewIndex(d.key)));
         btn.addEventListener("mouseleave", ()=>setOverviewHover(null));
         const li = el("li");
@@ -2176,11 +2185,9 @@
     await loadOverviewData();
     if(!overview) return;                  // a country was picked meanwhile
     renderOverview();
+    setSheet(sheetStop);                   // phones: the frame below needs the new peek
     if(map && mapReady){
       buildMapLayers(currentCountry);       // draws the overview while it is on
-      // The panel has just changed height (phones stack it above the map):
-      // measure the map again, or the frame is computed for the old size.
-      map.resize();
       if(link && link.view) map.jumpTo(link.view);
       else map.fitBounds(OVERVIEW_BOUNDS, { padding: 24, duration: link ? 0 : 900 });
     }
@@ -2201,6 +2208,134 @@
     syncUrl();
   }));
 
+  // ---------- Sheet (phones) ----------
+  // Below 900 px, landscape phones aside, the panel is a sheet over the
+  // bottom of the map (style.css, same query). Three stops: "peek" shows the
+  // search box and the mix bar (the overview's colour key), "half" and
+  // "full" the rest. A tap on the grip goes up a stop, and from the top back
+  // to peek; the grip drags, and in peek the whole sheet does.
+  const SHEET_MQ = matchMedia("(max-width: 900px) and (min-height: 501px), (max-width: 900px) and (orientation: portrait)");
+  const panelEl = $("#panel"), sheetHandle = $("#sheetHandle");
+  const SHEET_STOPS = ["peek", "half", "full"];
+  let sheetStop = "peek", sheetPad = 0;
+  const sheetOn = ()=>SHEET_MQ.matches;
+  function sheetHeights(){
+    const H = layout.clientHeight;
+    const anchor = overview ? $("#overviewLegend") : !$("#mixSection").hidden ? $("#mixBar") : $(".search-section");
+    // The anchor's bottom, measured from the top of the sheet's content.
+    const below = anchor.getBoundingClientRect().bottom - panelEl.getBoundingClientRect().top + panelEl.scrollTop;
+    const peek = Math.round(Math.min(H * 0.45, below + 12));
+    return { peek, half: Math.max(peek, Math.round(H * 0.55)), full: H - 12 };
+  }
+  function setSheet(stop){
+    if(!sheetOn()) return;
+    sheetStop = stop;
+    // Raised, the sheet is what the user wants to see: the popup would cover it.
+    if(stop !== "peek" && popup.classList.contains("open")) closePopup();
+    const h = sheetHeights();
+    layout.style.setProperty("--sheet-h", h[stop] + "px");
+    layout.style.setProperty("--sheet-peek", h.peek + "px");
+    panelEl.classList.toggle("is-peek", stop === "peek");
+    if(stop === "peek") panelEl.scrollTop = 0;
+    sheetHandle.setAttribute("aria-expanded", String(stop !== "peek"));
+    sheetHandle.setAttribute("aria-label", stop === "full" ? T.sheetLess : T.sheetMore);
+    syncMapPad();
+  }
+  // The map's bottom padding: what the peek, or an open popup, covers on a
+  // phone. Camera moves (flyTo, easeTo, fitBounds) centre in the part left
+  // free. It changes without moving what is on screen, and not during a
+  // camera move (jumpTo would cut it short) unless `now`: then at its end.
+  let mapPadWaits = false;
+  function syncMapPad(now){
+    if(!map) return;
+    if(map.isMoving() && !now){
+      if(!mapPadWaits){ mapPadWaits = true; map.once("moveend", ()=>{ mapPadWaits = false; syncMapPad(); }); }
+      return;
+    }
+    const bottom = !sheetOn() ? 0 : popup.classList.contains("open") ? popup.offsetHeight + 8 : sheetHeights().peek;
+    if(Math.abs(bottom - sheetPad) <= 2) return;
+    sheetPad = bottom;
+    const padding = { top:0, right:0, left:0, bottom };
+    // Until the first view is built, its centre (country or link) goes in
+    // the free part instead.
+    if(!urlReady){ map.setPadding(padding); return; }
+    const box = map.getContainer();
+    map.jumpTo({ center: map.unproject([box.clientWidth / 2, (box.clientHeight - bottom) / 2]), padding });
+  }
+  // A popup lowers the sheet, and the map pads up to the popup's top: the
+  // camera move that follows (tap, search, link) centres the feature there.
+  function sheetForPopup(){
+    if(!sheetOn()) return;
+    setSheet("peek");
+    syncMapPad(true);
+  }
+  // Called when the window crosses the query, and once the map exists.
+  function sheetMode(){
+    if(sheetOn()){ setSheet(sheetStop); return; }
+    layout.style.removeProperty("--sheet-h");
+    layout.style.removeProperty("--sheet-peek");
+    panelEl.classList.remove("is-peek");
+    syncMapPad();
+  }
+  SHEET_MQ.addEventListener("change", sheetMode);
+  window.addEventListener("resize", ()=>{ if(sheetOn()) setSheet(sheetStop); });
+  // The peek follows what it shows: mix rendered, overview on or off, language.
+  const sheetObserver = new ResizeObserver(()=>{ if(sheetOn()) setSheet(sheetStop); });
+  [".search-section", "#mixSection", "#overviewSection"].forEach(s=>sheetObserver.observe($(s)));
+  sheetHandle.addEventListener("click", ()=>{
+    setSheet(SHEET_STOPS[(SHEET_STOPS.indexOf(sheetStop) + 1) % SHEET_STOPS.length]);
+  });
+
+  // Dragging. A move under 6 px is a tap. On release the sheet settles on
+  // the nearest stop, or one further in the direction of a flick.
+  let sheetDrag = null, sheetDragEnd = -1;
+  panelEl.addEventListener("pointerdown", (e)=>{
+    if(!sheetOn() || e.button > 0) return;
+    if(sheetStop !== "peek" && !sheetHandle.contains(e.target)) return;   // the content scrolls
+    sheetDrag = { id: e.pointerId, y0: e.clientY, h0: panelEl.getBoundingClientRect().height,
+                  y: e.clientY, t: e.timeStamp, v: 0, moved: false };
+  });
+  // On the window: a mouse isn't captured until it has moved, and the
+  // first move upwards already leaves the sheet.
+  window.addEventListener("pointermove", (e)=>{
+    const d = sheetDrag;
+    if(!d || e.pointerId !== d.id) return;
+    if(!d.moved){
+      if(Math.abs(e.clientY - d.y0) < 6) return;
+      d.moved = true;
+      panelEl.setPointerCapture(e.pointerId);
+      panelEl.classList.add("is-dragging");
+    }
+    const h = sheetHeights();
+    layout.style.setProperty("--sheet-h", Math.max(h.peek * 0.6, Math.min(h.full, d.h0 - (e.clientY - d.y0))) + "px");
+    if(e.timeStamp > d.t){ d.v = (e.clientY - d.y) / (e.timeStamp - d.t); d.y = e.clientY; d.t = e.timeStamp; }
+  });
+  const endSheetDrag = (e)=>{
+    const d = sheetDrag;
+    if(!d || e.pointerId !== d.id) return;
+    sheetDrag = null;
+    if(!d.moved) return;
+    sheetDragEnd = e.timeStamp;
+    panelEl.classList.remove("is-dragging");
+    const h = sheetHeights(), now = panelEl.getBoundingClientRect().height;
+    let stop = SHEET_STOPS.reduce((a, b)=>Math.abs(h[b] - now) < Math.abs(h[a] - now) ? b : a);
+    if(d.v < -0.4) stop = SHEET_STOPS.find(s=>h[s] > now + 1) || "full";               // flick up
+    else if(d.v > 0.4) stop = SHEET_STOPS.slice().reverse().find(s=>h[s] < now - 1) || "peek"; // flick down
+    setSheet(stop);
+  };
+  window.addEventListener("pointerup", endSheetDrag);
+  window.addEventListener("pointercancel", endSheetDrag);
+  // The click that ends a drag is not a tap on what lies under the finger.
+  panelEl.addEventListener("click", (e)=>{
+    if(e.timeStamp - sheetDragEnd < 400){ e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  // Keyboard: Tab onto something below the peek raises the sheet. The
+  // browser has scrolled it into view by then, so the scroll tells.
+  panelEl.addEventListener("focusin", (e)=>{
+    if(sheetOn() && sheetStop === "peek" && e.target !== searchInput
+       && (panelEl.scrollTop > 0 || e.target.getBoundingClientRect().bottom > panelEl.getBoundingClientRect().bottom)) setSheet("half");
+  });
+
   // `link`: the shared link being applied, if the switch comes from one.
   async function switchCountry(key, link){
     if(!ENABLED.includes(key)) return;
@@ -2217,6 +2352,7 @@
     if(link) applyLinkState(link);
     if(link && link.reveal && link.feature) revealFeature(link.feature);
     renderPanel(key);
+    setSheet(sheetStop);                   // phones: the flight below needs the new peek
     if(map && mapReady){
       if(link && link.view) map.jumpTo(link.view);
       buildMapLayers(key);
