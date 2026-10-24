@@ -131,8 +131,22 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
   if (c.boundary && (!str(c.boundary.source) || !/^https:\/\//.test(c.boundary.sourceUrl || "")))
     fail(`${at}.boundary`, "needs source and an https sourceUrl");
 
+  if (c.demand) {
+    const d = c.demand;
+    if (!str(d.source) || !/^https:\/\//.test(d.sourceUrl || "")) fail(`${at}.demand`, "needs source and an https sourceUrl");
+    if (!Array.isArray(d.figures) || !d.figures.length || !d.figures.every((x) => x && str(x.label) && num(x.value) && str(x.unit)))
+      fail(`${at}.demand`, "figures must be [{ label, value: number, unit }]");
+  }
+  const lf = c.liveFlow;
+  if (lf) {
+    if (!/^\/flow\/[a-z-]+$/.test(lf.path || "")) fail(`${at}.liveFlow`, `path must look like "/flow/<route>", got ${JSON.stringify(lf.path)}`);
+    if (!str(lf.partner) || !str(lf.source) || !/^https:\/\//.test(lf.sourceUrl || "")) fail(`${at}.liveFlow`, "needs partner, source and an https sourceUrl");
+    if (!Array.isArray(lf.features) || !lf.features.length) fail(`${at}.liveFlow`, "features must list interconnector ids");
+  }
+
   const referenced = new Set();
   const seenIds = new Set();
+  const gridIds = new Set();   // feature ids of grid layers, for liveFlow
   for (const L of c.layers || []) {
     const lat = `${at}.layers.${L.id}`;
     if (!/^[a-z][a-z0-9-]*$/.test(L.id || "")) fail(lat, "id must be lowercase letters, digits and dashes");
@@ -169,6 +183,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
         if (!test(p[field])) fail(fat, `${field} ${field in p ? `invalid: ${JSON.stringify(p[field])}` : "missing"}`);
       for (const field of schema.recommended) if (p[field] == null) missingRec[field] = (missingRec[field] || 0) + 1;
       if (p.id != null) { if (featIds.has(p.id)) fail(fat, `duplicate id "${p.id}"`); featIds.add(p.id); }
+      if (L.kind === "grid" && p.id != null) gridIds.add(p.id);
       if (p.source_url != null && !/^https?:\/\//.test(p.source_url)) fail(fat, "source_url must be an http(s) URL");
       // The map writes these into HTML as numbers: a string here would be
       // markup on the page.
@@ -184,6 +199,11 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     for (const [field, n] of Object.entries(missingRec))
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
   }
+
+  // A renamed interconnector would silently lose its live figure.
+  if (lf && Array.isArray(lf.features))
+    for (const id of lf.features)
+      if (!gridIds.has(id)) fail(`${at}.liveFlow`, `"${id}" is not the id of a grid feature`);
 
   const bpath = join(dir, "boundary.geojson");
   if (existsSync(bpath)) {

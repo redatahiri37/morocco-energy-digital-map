@@ -197,5 +197,68 @@ ok("preflight allows POST with content-type", r.status === 204 &&
   r.headers.get("access-control-allow-origin") === ORIGIN &&
   r.headers.get("access-control-allow-headers") === "content-type");
 
+// 17. /flow/es-ma: REE's Spain–Morocco exchange, read and converted
+const { latestFlow, madridMs, madridDate } = await import("./flow.js");
+const ree = (rows) => "null(" + JSON.stringify({ valoresHorariosGeneracion: rows }) + ");";
+const row = (ts, expMar, impMar) => ({ ts, dem: 29998, expMar, impMar, expPor: 0, impPor: 586 });
+
+ok("summer time is UTC+2", madridMs("2026-07-15 14:20") === Date.UTC(2026, 6, 15, 12, 20));
+ok("winter time is UTC+1", madridMs("2026-01-15 14:20") === Date.UTC(2026, 0, 15, 13, 20));
+ok("repeated hour: 2A then 2B", madridMs("2026-10-25 2A:05") === Date.UTC(2026, 9, 25, 0, 5) &&
+  madridMs("2026-10-25 2B:05") === Date.UTC(2026, 9, 25, 1, 5));
+ok("not a REE time → NaN", Number.isNaN(madridMs("2026-10-18T14:20")));
+ok("date is Madrid's, not UTC's", madridDate(Date.UTC(2026, 9, 17, 22, 30)) === "2026-10-18");
+
+const at1430 = Date.UTC(2026, 9, 18, 12, 30);   // 14:30 in Madrid
+let fl = latestFlow(ree([row("2026-10-18 14:15", -344, 0), row("2026-10-18 14:20", -640, 0)]), at1430);
+ok("Spain exporting → Morocco importing", fl && fl.net_import_mw === 640 && fl.at === Date.UTC(2026, 9, 18, 12, 20), JSON.stringify(fl));
+fl = latestFlow(ree([row("2026-10-18 14:20", 0, 230)]), at1430);
+ok("Spain importing → Morocco exporting", fl && fl.net_import_mw === -230, JSON.stringify(fl));
+fl = latestFlow(ree([row("2026-10-18 14:20", -500, 0), { ts: "2026-10-18 14:25", dem: 1 }, row("2026-10-18 15:00", -9, 0)]), at1430);
+ok("future and empty rows skipped", fl && fl.net_import_mw === 500, JSON.stringify(fl));
+ok("absurd value skipped", latestFlow(ree([row("2026-10-18 14:20", -99999, 0)]), at1430) === null);
+ok("text numbers refused", latestFlow(ree([row("2026-10-18 14:20", "-640", 0)]), at1430) === null);
+ok("not JSONP → null", latestFlow("<html>maintenance</html>", at1430) === null);
+ok("no series → null", latestFlow(ree(null), at1430) === null);
+
+const MAP_ORIGIN = "https://energy.wattu.org";
+const flowReq = (init = {}) => new Request("https://w.dev/flow/es-ma", { headers: { Origin: MAP_ORIGIN }, ...init });
+const MAD = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid", hourCycle: "h23",
+  year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+const madridTs = (t) => MAD.format(new Date(t));   // "2026-10-18 14:20", as REE writes it
+
+seen.length = 0;
+globalThis.fetch = async (u, init) => {
+  seen.push({ u: String(u), init });
+  return new Response(ree([row(madridTs(Date.now() - 5 * 60e3), -640, 0)]), { status: 200 });
+};
+r = await worker.fetch(flowReq(), env);
+const flowBody = await r.json();
+ok("flow → 200", r.status === 200, "got " + r.status);
+ok("flow body is at + net_import_mw only", JSON.stringify(Object.keys(flowBody)) === '["at","net_import_mw"]' &&
+  flowBody.net_import_mw === 640 && !Number.isNaN(Date.parse(flowBody.at)), JSON.stringify(flowBody));
+ok("CORS for the energy map", r.headers.get("access-control-allow-origin") === MAP_ORIGIN);
+ok("browser keeps it 5 min", r.headers.get("cache-control") === "public, max-age=300");
+ok("asks REE for today in Madrid", seen[0] && seen[0].u ===
+  "https://demanda.ree.es/WSvisionaMovilesPeninsulaRest/resources/demandaGeneracionPeninsula?curva=DEMANDAAU&fecha=" + madridDate(Date.now()),
+  seen[0] && seen[0].u);
+ok("REE answer edge-cached 5 min, errors never", seen[0] && seen[0].init.cf.cacheTtlByStatus["200-299"] === 300 &&
+  seen[0].init.cf.cacheTtlByStatus["400-599"] === 0);
+
+globalThis.fetch = async () => new Response(ree([row(madridTs(Date.now() - 3 * 3600e3), -640, 0)]));
+r = await worker.fetch(flowReq(), env);
+ok("stale REE data → 503", r.status === 503, "got " + r.status);
+globalThis.fetch = async () => new Response("down", { status: 500 });
+r = await worker.fetch(flowReq(), env);
+ok("REE down → 502 with CORS", r.status === 502 && r.headers.get("access-control-allow-origin") === MAP_ORIGIN, "got " + r.status);
+globalThis.fetch = async () => new Response("<html>maintenance</html>");
+r = await worker.fetch(flowReq(), env);
+ok("unreadable REE answer → 502", r.status === 502, "got " + r.status);
+globalThis.fetch = async () => { throw new Error("timeout"); };
+r = await worker.fetch(flowReq(), env);
+ok("REE silent → 504", r.status === 504, "got " + r.status);
+r = await worker.fetch(flowReq({ method: "POST", body: "{}" }), env);
+ok("POST /flow/es-ma → 405", r.status === 405, "got " + r.status);
+
 console.log(fail ? "\n"+fail+" FAILURE(S)" : "\nall green");
 process.exit(fail ? 1 : 0);

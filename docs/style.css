@@ -213,6 +213,22 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .kpi .k{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);font-weight:500}
 .kpi .v{font-family:var(--font-display);font-size:22px;font-weight:400;line-height:1.1;margin-top:4px;letter-spacing:-0.02em;font-variant-numeric:lining-nums tabular-nums}
 .kpi .v small{font-family:var(--font-ui);font-size:11px;color:var(--text-2);font-weight:500;margin-left:2px}
+.kpi.wide{grid-column:1 / -1}
+.kpi .when{margin-top:3px;color:var(--text-1)}
+.kpi-note{grid-column:1 / -1;margin-top:2px;line-height:1.5}
+.kpi-note a{color:var(--text-2)}
+
+/* Live cross-border flow: KPI tile and interconnector popup */
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:1px;
+  background:#34b75a;box-shadow:0 0 6px #34b75a88;animation:live-pulse 2s ease-in-out infinite}
+@keyframes live-pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){ .live-dot{animation:none} }
+.live-flow{margin-top:14px;padding:9px 11px;background:var(--bg-2);border:1px solid var(--border);border-radius:4px}
+.live-flow .k{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);font-weight:500}
+.live-flow .v{font-family:var(--font-display);font-size:22px;line-height:1.1;margin-top:4px;font-variant-numeric:lining-nums tabular-nums}
+.live-flow .v small{font-family:var(--font-ui);font-size:11px;color:var(--text-2);font-weight:500;margin-left:2px}
+.live-flow .when{margin-top:3px;color:var(--text-1)}
+.live-flow .micro{margin-top:6px}
 
 .bullets{padding-left:14px}
 .bullets li{margin-top:4px}

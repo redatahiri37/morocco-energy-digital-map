@@ -75,6 +75,23 @@ The [Africa Electricity Grids Explorer](https://africagrid.energydata.info/)
 (World Bank / ESMAP) provides Africa-specific regional transmission
 topology, used to cross-check strategic corridor routing.
 
+### Live flow and national demand (added 2026-10-18)
+
+Morocco publishes no live national consumption: ONEE gives annual
+figures and record peaks, and Electricity Maps' Morocco zone is modelled
+(its config has no live parser, only Ember's yearly capacity). The one
+live, measured signal is the Spain–Morocco interconnector, which Spain's
+grid operator publishes.
+
+| Figure | Source | Notes |
+|---|---|---|
+| Live net flow, Spain–Morocco (both cables) | REE, `demanda.ree.es` (Peninsula, `curva=DEMANDAAU`), series `expMar` / `impMar` | 5-minute steps, no account. Read by `solar/proxy/flow.js` (the Worker) because REE sends no CORS header. Same series Electricity Maps uses for ES→MA (`electricitymaps-contrib`, `parsers/ES.py`). |
+| Record peak demand, 8.4 GW (July 2026; previous record 7.99 GW in 2025) | ONEE board of directors, 27 Jul 2026, reported by [TelQuel](https://telquel.ma/instant-t/2026/07/28/electricite-le-maroc-enregistre-un-nouveau-record-historique-de-consommation_2001082) | Also reported by Consonews. The ONEE release itself was not found online. |
+| National demand 2025, 49 TWh (+7.4%) | Same ONEE board session | Energy Institute's Statistical Review 2026 gives 48.2 TWh (+7.35%), a different scope. |
+
+The flow is an import or export, not consumption: at 640 MW of imports,
+Spain covers that much of Morocco's load at that moment, nothing more.
+
 ## Layer 3 — Industrial Consumers
 **File:** `docs/data/morocco/industrial.geojson`
 
@@ -147,7 +164,8 @@ No account, token, or API key is required.
   that could fill this gap in v1.1 for remote regions where OSM is sparse.
 - No substation dataset — only line endpoints. (OIM renders substations
   as polygons/points at zoom ≥ 5; no ingest needed.)
-- No demand time-series — demand is a single annual estimate.
+- No demand time-series — ONEE publishes none. The map shows dated
+  national figures and the live Spain–Morocco flow (see Layer 2).
 - No cross-border interconnection capacities with Spain/Algeria (to be
   added in v1.1).
 - No renewable potential raster (Layer 5).

@@ -17,10 +17,15 @@
  *   → the assistant's answer, streamed as NDJSON. Prototype behind an
  *     access key; contract and setup in chat.js.
  *
+ *   GET /flow/es-ma
+ *   → { at, net_import_mw }: the Spain–Morocco interconnector now, from
+ *     REE, for the energy map. Contract in flow.js.
+ *
  * Deploy: automatic on main (.github/workflows/worker.yml). See ../README.md "Proxy operations".
  */
 
 import { handleChat } from "./chat.js";
+import { handleFlow } from "./flow.js";
 
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 
@@ -387,6 +392,10 @@ export default {
       return handleChat(request, env, ctx, {
         corsHeaders, errorResponse, originAllowed, rateLimited, readJson, fetchJrc,
       });
+    }
+
+    if (url.pathname === "/flow/es-ma") {
+      return handleFlow(request, env, { corsHeaders, errorResponse, rateLimited });
     }
 
     if (request.method !== "GET") {
