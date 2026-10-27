@@ -3,10 +3,10 @@ name: docs-validate
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-fuel-palette.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   pull_request:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-fuel-palette.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -67,6 +67,12 @@ jobs:
       # so a check can't be silently weakened.
       - name: Self-test the validator
         run: node scripts/test-validate-countries.mjs
+
+      # Fuel colours (FUEL_COLORS in app.js), both themes: lightness, chroma,
+      # contrast, and fuels that touch in a mix bar kept apart, also for
+      # colour-blind readers.
+      - name: Fuel palette
+        run: node scripts/check-fuel-palette.mjs
 
   # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.

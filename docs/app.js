@@ -201,11 +201,24 @@
   const ENABLED   = (window.COUNTRIES_ENABLED || ["morocco"]).filter(k=>COUNTRIES[k]);
   const REPO_URL  = "https://github.com/redatahiri37/morocco-energy-digital-map";
 
-  const FUEL_COLOR = {
-    solar:"#F59E0B", wind:"#0D9488", hydro:"#3B82F6",
-    coal:"#8B7F72",  gas:"#C77B3A", oil:"#A55A2A",
-    nuclear:"#DB2777", geothermal:"#DC2626", biomass:"#65A30D", waste:"#78716C"
+  // Fuel colours: each fuel keeps the hue readers expect (coal brown, gas
+  // orange, oil crimson, nuclear purple, hydro blue, wind cyan, solar gold,
+  // bioenergy green, geothermal pink), its lightness and chroma set per
+  // theme so that any two fuels side by side in a country's mix bar stay
+  // apart, also for colour-blind readers. scripts/check-fuel-palette.mjs
+  // holds the rules (CI); change a value only with it passing. Waste plants
+  // take bioenergy's colour, as in the mix and its filter.
+  const FUEL_COLORS = {
+    light: { coal:"#7C4E00", gas:"#EC6002", oil:"#C02553", nuclear:"#7C298E", hydro:"#3A69E2",
+             wind:"#01A2B6", solar:"#E0AA00", biomass:"#00A039", geothermal:"#E669AB" },
+    dark:  { coal:"#895700", gas:"#EF630A", oil:"#C6335B", nuclear:"#A23DB9", hydro:"#4D7FFF",
+             wind:"#00A7BB", solar:"#B98D00", biomass:"#328541", geothermal:"#DE62A3" }
   };
+  const FUEL_COLOR = {};   // the current theme's, set by setFuelPalette()
+  function setFuelPalette(){
+    Object.assign(FUEL_COLOR, FUEL_COLORS[document.body.dataset.theme === "light" ? "light" : "dark"]);
+    FUEL_COLOR.waste = FUEL_COLOR.biomass;
+  }
   // Plant dots: area tracks capacity (radius ∝ √MW, with a floor so a 10 MW
   // plant stays visible) and grows with zoom. plantRadius() is the same curve
   // in JS, for the size key under the layer list.
@@ -309,10 +322,12 @@
   };
   const savedTheme = store.get("mg.theme") || "dark";
   document.body.dataset.theme = savedTheme;
+  setFuelPalette();
   $("#themeToggle").addEventListener("click", ()=>{
     const next = document.body.dataset.theme === "dark" ? "light" : "dark";
     document.body.dataset.theme = next;
     store.set("mg.theme", next);
+    setFuelPalette();
     if(map){
       // Full reload, not a diff: diffing Positron→Dark patches the basemap in
       // place, which drops our layers and never fires "style.load", so they
@@ -320,7 +335,7 @@
       map.once("style.load", ()=>buildMapLayers(currentCountry));
       map.setStyle(basemapStyle(next), { diff:false });
     }
-    if(currentCountry) renderLayerList(currentCountry); // swatch colours are theme-aware
+    if(currentCountry){ renderLayerList(currentCountry); renderMix(); }   // swatch and bar colours are theme-aware
     if(overview) renderOverview();
   });
 
@@ -1150,7 +1165,7 @@
     // Editorial overlay — interconnectors, HVDC corridors, planned/idle
     // strategic links. Rendered bold/colored on top of OIM's grey OSM grid
     // so the strategic story pops.
-    // Interconnector color: blue family — distinct from wind's teal (#0D9488)
+    // Interconnector color: blue family — lines, apart from wind's cyan dots
     const intColor = INTERCONNECTOR_COLOR();
     addLayer(L, { id:p+"-hv", type:"line", source:srcId,
       filter:["all",["==",["get","status"],"operational"],[">=",["get","voltage_kv"],300]],
@@ -2319,8 +2334,9 @@
     panelEl.classList.remove("is-dragging");
     const h = sheetHeights(), now = panelEl.getBoundingClientRect().height;
     let stop = SHEET_STOPS.reduce((a, b)=>Math.abs(h[b] - now) < Math.abs(h[a] - now) ? b : a);
-    if(d.v < -0.4) stop = SHEET_STOPS.find(s=>h[s] > now + 1) || "full";               // flick up
-    else if(d.v > 0.4) stop = SHEET_STOPS.slice().reverse().find(s=>h[s] < now - 1) || "peek"; // flick down
+    const v = e.timeStamp - d.t > 120 ? 0 : d.v;   // held still before letting go: no flick
+    if(v < -0.4) stop = SHEET_STOPS.find(s=>h[s] > now + 1) || "full";               // flick up
+    else if(v > 0.4) stop = SHEET_STOPS.slice().reverse().find(s=>h[s] < now - 1) || "peek"; // flick down
     setSheet(stop);
   };
   window.addEventListener("pointerup", endSheetDrag);

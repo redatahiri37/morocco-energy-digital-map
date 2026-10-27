@@ -137,8 +137,19 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   (syncMapPad: changed without moving the view, never mid-animation), so
   flyTo / easeTo / fitBounds centre above them; a tapped feature eases
   above the popup. Popup on phones now ends above the bottom bar.
-- Next: the fuel palette fails the dataviz validator (gas/oil too close);
-  changing it changes the map dots.
+- Fuel palette (2026-10-27): FUEL_COLORS in app.js, one set per theme
+  (setFuelPalette on load and theme switch; waste = bioenergy's colour).
+  Each fuel keeps its usual hue (coal brown, gas orange, oil crimson,
+  nuclear purple, hydro blue, wind cyan, solar gold, bioenergy green,
+  geothermal pink); L and C were optimised in OKLCH against the dataviz
+  checks. scripts/check-fuel-palette.mjs (CI) re-checks: band, chroma,
+  contrast with the panel, and the 14 fuel pairs that touch in some mix bar
+  (Delta E >= 15, colour-blind >= 6; now >= 8.1). The map can't keep all 9
+  apart for colour-blind readers (dark solar/gas collapse for deutans): the
+  mix legend's fuel filter is the remedy. Not re-checked: the industry
+  sector / data-centre operator palettes and the amber cluster bubbles.
+- Sheet: a drag held still for 120 ms before release no longer counts as a
+  flick (settles on the nearest stop).
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers
