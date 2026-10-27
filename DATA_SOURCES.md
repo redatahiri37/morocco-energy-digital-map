@@ -36,6 +36,19 @@ or a PR on GitHub.*
 | Cross-check | Against RTE / REE 2024 statistics: France nuclear 65.7 GW (RTE 63 GW net), Spain nuclear 7.4 GW (REE 7.1), Spain wind 30.7 GW (REE 31), Spain CCGT 27.2 GW (REE 26.2) |
 | Known limits | Closure dates are the dataset's: Spanish coal (Aboño, Los Barrios, Soto de Ribera, Es Murterar) is shown until its listed closure even where units already stopped. No data-centre layer yet (needs a PeeringDB export for FR, ES). |
 
+## Electricity mix — national generation and capacity (added 2026-10-12)
+**Files:** `docs/data/<country>/mix.json`, one per country
+
+| | |
+|---|---|
+| Source | [Ember — Yearly electricity data](https://ember-energy.org/data/yearly-electricity-data/), long-format CSV, release of 2026-06-23 (sha256 pinned in the build script) |
+| Licence | CC BY 4.0 |
+| What it is | Generation (TWh, %) and capacity (GW) by fuel, demand, net imports and power-sector CO₂ intensity, compiled by Ember from national statistics, EIA and IRENA, with Ember estimates for the latest year |
+| Build | `python3 scripts/build-country-mix.py` (all countries) |
+| Year | 2025 for Egypt, Ethiopia, France, Kenya, Morocco, Nigeria, South Africa and Spain; 2024 for Côte d'Ivoire, Ghana, Rwanda and Senegal (latest in the release) |
+| Fuel mapping | Ember's "Other Fossil" (mostly oil and diesel) takes the oil colour; "Other Renewables" (mostly geothermal) the geothermal colour; "Bioenergy" covers the map's biomass and waste plants |
+| Known limits | Kenya: Ember lists no geothermal capacity although geothermal makes 46 % of generation. Senegal: hydro generation (its share of the OMVS dams in Mali) with no domestic capacity. Both are flagged in `capacity_gaps`; the map says the capacity view undercounts them and leaves out the renewables share of capacity |
+
 ## Layer 2 — Transmission Grid
 **File:** `docs/data/morocco/grid-lines.geojson` (editorial overlay only)
 

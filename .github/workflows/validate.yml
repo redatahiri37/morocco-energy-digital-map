@@ -3,10 +3,10 @@ name: docs-validate
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-fuel-palette.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   pull_request:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-fuel-palette.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -40,6 +40,15 @@ jobs:
       - name: Page code is first-party and untampered
         run: node scripts/check-sri.mjs docs/index.html
 
+      # fr/index.html is built from index.html at deploy. Building it here
+      # fails the pull request on a string left in English or a translation
+      # table that no longer matches the page.
+      - name: French page builds, fully translated
+        run: |
+          set -e
+          node scripts/build-map-i18n.mjs docs
+          node scripts/check-sri.mjs docs/fr/index.html
+
       # docs/_headers allows the inline redirect script in index.html by its
       # hash. Edit the script without updating the hash and the browser
       # silently refuses it, so CI checks they agree.
@@ -58,6 +67,12 @@ jobs:
       # so a check can't be silently weakened.
       - name: Self-test the validator
         run: node scripts/test-validate-countries.mjs
+
+      # Fuel colours (FUEL_COLORS in app.js), both themes: lightness, chroma,
+      # contrast, and fuels that touch in a mix bar kept apart, also for
+      # colour-blind readers.
+      - name: Fuel palette
+        run: node scripts/check-fuel-palette.mjs
 
   # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.
@@ -82,6 +97,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # energy.wattu.org/fr/, from index.html and scripts/map-i18n-fr.mjs.
+      - name: Build the French page
+        run: node scripts/build-map-i18n.mjs docs
+
       # Cloudflare's browser cache keeps style.css / app.js for hours, so a
       # phone got the new index.html with the old stylesheet. A per-deploy
       # ?v= query gives every asset a new URL on each deploy.
@@ -89,8 +108,8 @@ jobs:
         run: |
           set -e
           V="${GITHUB_SHA::8}"
-          sed -i -E 's#((href|src)="\./(style\.css|brand\.css|app\.js|countries\.config\.js))"#\1?v='"$V"'"#g' docs/index.html
-          test "$(grep -c "?v=$V" docs/index.html)" -eq 4
+          sed -i -E 's#((href|src)="\.\.?/(style\.css|brand\.css|app\.js|countries\.config\.js))"#\1?v='"$V"'"#g' docs/index.html docs/fr/index.html
+          for f in docs/index.html docs/fr/index.html; do test "$(grep -c "?v=$V" "$f")" -eq 4; done
 
       - name: Deploy docs/ to Cloudflare Pages
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3

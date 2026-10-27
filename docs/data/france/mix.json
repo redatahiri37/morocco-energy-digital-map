@@ -1,0 +1,80 @@
+{
+  "country": "france",
+  "iso3": "FRA",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 570.14,
+  "demand_twh": 476.79,
+  "net_imports_twh": -93.35,
+  "co2_intensity_g_per_kwh": 41.45,
+  "renewables_pct_generation": 26.1,
+  "capacity_gw": 167.6,
+  "renewables_pct_capacity": 49.9,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "coal",
+      "label": "Coal",
+      "generation_twh": 1.74,
+      "generation_pct": 0.3,
+      "capacity_gw": 1.91
+    },
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 17.25,
+      "generation_pct": 3.0,
+      "capacity_gw": 17.52
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 10.36,
+      "generation_pct": 1.8,
+      "capacity_gw": 3.16
+    },
+    {
+      "fuel": "nuclear",
+      "label": "Nuclear",
+      "generation_twh": 392.07,
+      "generation_pct": 68.8,
+      "capacity_gw": 61.4
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 59.41,
+      "generation_pct": 10.4,
+      "capacity_gw": 24.31
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 46.46,
+      "generation_pct": 8.2,
+      "capacity_gw": 25.65
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 32.01,
+      "generation_pct": 5.6,
+      "capacity_gw": 31.23
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 10.27,
+      "generation_pct": 1.8,
+      "capacity_gw": 1.67
+    },
+    {
+      "fuel": "geothermal",
+      "label": "Geothermal & other",
+      "generation_twh": 0.57,
+      "generation_pct": 0.1,
+      "capacity_gw": 0.75
+    }
+  ]
+}

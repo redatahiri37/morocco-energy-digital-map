@@ -1,0 +1,59 @@
+{
+  "country": "egypt",
+  "iso3": "EGY",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 245.71,
+  "demand_twh": 244.31,
+  "net_imports_twh": -1.4,
+  "co2_intensity_g_per_kwh": 563.23,
+  "renewables_pct_generation": 13.0,
+  "capacity_gw": 63.48,
+  "renewables_pct_capacity": 14.6,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 195.65,
+      "generation_pct": 79.6,
+      "capacity_gw": 53.43
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 18.08,
+      "generation_pct": 7.4,
+      "capacity_gw": 0.79
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 15.07,
+      "generation_pct": 6.1,
+      "capacity_gw": 2.83
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 9.3,
+      "generation_pct": 3.8,
+      "capacity_gw": 3.03
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 7.61,
+      "generation_pct": 3.1,
+      "capacity_gw": 3.27
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.0,
+      "generation_pct": 0.0,
+      "capacity_gw": 0.13
+    }
+  ]
+}
