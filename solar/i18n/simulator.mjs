@@ -9,7 +9,7 @@
  * people use: البلاكات، فاتورة الضو، شحال، الدوفي), plain Arabic for the
  * explanations, as on the Arabic city pages.
  *
- * [French, Arabic, English]
+ * [French, Arabic, English]. Tamazight: simulator-zgh.mjs, keyed by the French string.
  */
 export const PAIRS = [
   // ── head
@@ -38,9 +38,6 @@ export const PAIRS = [
   ['aria-label="Wattu Solaire — accueil"', 'aria-label="Wattu — الصفحة الرئيسية"', 'aria-label="Wattu Solar — home"'],
   ['<a href="villes/">Villes</a>', '<a href="villes/">المدن</a>', '<a href="cities/">Cities</a>'],
   ['<a class="nav-method" href="#about">Méthode</a>', '<a class="nav-method" href="#about">كيفاش كنحسبو</a>', '<a class="nav-method" href="#about">Method</a>'],
-  ['<a class="nav-lang" href="/ar/" lang="ar" hreflang="ar">العربية</a>\n    <a class="nav-lang" href="/en/" lang="en" hreflang="en">English</a>',
-   '<a class="nav-lang" href="/" lang="fr" hreflang="fr">Français</a>\n    <a class="nav-lang" href="/en/" lang="en" hreflang="en">English</a>',
-   '<a class="nav-lang" href="/" lang="fr" hreflang="fr">Français</a>\n    <a class="nav-lang" href="/ar/" lang="ar" hreflang="ar">العربية</a>'],
 
   // ── step 1
   ["Estimateur solaire · Maroc", "حاسبة الطاقة الشمسية · المغرب", "Solar estimator · Morocco"],

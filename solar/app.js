@@ -19,7 +19,7 @@
 // scripts/build-solar-i18n.mjs. Every text this script writes comes from
 // here; numbers use NUM_LOCALE (Arabic keeps French formatting, as the
 // Arabic city pages do).
-const LANG = ["ar", "en"].includes(globalThis.document?.documentElement?.lang)
+const LANG = ["ar", "en", "zgh"].includes(globalThis.document?.documentElement?.lang)
   ? globalThis.document.documentElement.lang : "fr";
 const NUM_LOCALE = LANG === "en" ? "en-US" : "fr-FR";
 const arYears = (n) => n <= 10 ? "سنين" : "عام";
@@ -128,6 +128,60 @@ const I18N = {
     srSummary: (s, bill, capex, pay) => `التوفير المتوقع: ${s} درهم فالعام، لفاتورة ديال ${bill} فالشهر. الثمن ديال التركيب: ${capex}. ${pay}.`,
     sayBill: (v) => `${v} درهم فالشهر`, sayDegrees: (a) => `${a} درجة`, sayCost: (v) => `${v} درهم للواط`,
     aspect: { south: "الجنوب", east: "الشرق", west: "الغرب", off: (a, dir) => `الجنوب، ${a}° لجهة ${dir}` },
+  },
+  // Tamazight (Standard Moroccan Amazigh, Tifinagh): first draft, to be
+  // reviewed by a native speaker. Numbers keep French formatting.
+  zgh: {
+    acceptLanguage: "fr",
+    mad: "MAD", madWc: "MAD/Wc", madMonth: "MAD/ⴰⵢⵢⵓⵔ", kwc: "kWc", tonnes: "t",
+    months: ["ⵉⵏⵏ", "ⴱⵕⴰ", "ⵎⴰⵕ", "ⵉⴱⵔ", "ⵎⴰⵢ", "ⵢⵓⵏ", "ⵢⵓⵍ", "ⵖⵓⵛ", "ⵛⵓⵜ", "ⴽⵜⵓ", "ⵏⵓⵡ", "ⴷⵓⵊ"],
+    yearLabel: (y) => "ⴰⵙⴳⴳⵯⴰⵙ " + y,
+    layers: { satellite: "Satellite", plan: "ⵜⴰⴽⴰⵕⴹⴰ (OSM)" },
+    pvgisConnect: "ⵓⵔ ⵏⵣⵎⵉⵔ ⴰⴷ ⵏⵏⵔⵣⵎ PVGIS — ⵥⵕ ⴰⵥⵟⵟⴰ ⵏⵏⴽ ⵜⴰⵍⵙⴷ.",
+    geoUnavailable: "ⴰⴷⵖⴰⵔ ⵓⵔ ⵉⵍⵍⵉ ⴳ ⵓⵎⴰⵙⵙ ⴰ. ⴰⵔⵓ ⵜⴰⵏⵙⴰ ⵏⵏⴽ.",
+    geoLocating: "ⴰⵔ ⵏⵙⵉⴳⴳⵉⵍ ⴰⴷⵖⴰⵔ…",
+    geoButton: "ⵙⵙⵎⵔⵙ ⴰⴷⵖⴰⵔ ⵉⵏⵓ",
+    geoOutside: "ⴰⴷⵖⴰⵔ ⵏⵏⴽ ⵉⴱⴰⵢⵏ ⴱⵕⵕⴰ ⵏ ⵍⵎⵖⵔⵉⴱ. ⴰⵔⵓ ⵜⴰⵏⵙⴰ ⴳ ⵍⵎⵖⵔⵉⴱ.",
+    myPosition: "ⴰⴷⵖⴰⵔ ⵉⵏⵓ",
+    geoDenied: "ⵜⴰⴳⵢⴷ ⴰⴷⵖⴰⵔ. ⴰⵊⵊ ⵜ ⴳ ⵓⵎⵙⵙⵓⴳⴳⵔ ⵏⵏⴽ, ⵏⵖ ⴰⵔⵓ ⵜⴰⵏⵙⴰ ⵏⵏⴽ.",
+    geoNotFound: "ⵓⵔ ⵏⵓⴼⵉ ⴰⴷⵖⴰⵔ ⵖⵉⵍⴰ. ⴰⵔⵓ ⵜⴰⵏⵙⴰ ⵏⵏⴽ.",
+    shareText: (s) => `ⴰⵙⵇⵇⵓⴼ ⵏ ⵜⴼⵓⴽⵜ: ⵎⴰⵙ ${s} MAD ⵏ ⵓⵔⴱⴰⵃ ⴳ ⵓⵙⴳⴳⵯⴰⵙ, ⵙ Wattu.`,
+    shareTitle: "ⴰⵙⵙⵉⴹⵏ ⵉⵏⵓ ⵏ ⵜⴼⵓⴽⵜ — Wattu",
+    linkCopied: "ⵉⵜⵜⵓⵙⵏⵖⵍ ⵓⵙⵖⵏ", share: "ⴱⴹⵓ", copyPrompt: "ⵙⵏⵖⵍ ⴰⵙⵖⵏ ⴰ:",
+    addrNotFound: "ⵓⵔ ⵏⵓⴼⵉ ⵜⴰⵏⵙⴰ ⴰⴷ ⴳ OpenStreetMap. ⴰⵔⵎ ⴰⴱⵔⵉⴷ ⴷ ⵜⵎⴷⵉⵏⵜ.",
+    geocodeError: "ⴰⵔⵣⵣⵓ ⵅⴼ ⵜⵏⵙⴰ ⵓⵔ ⵉⵔⴰⵔⴰ ⵖⵉⵍⴰ. ⵄⴰⵡⴷ ⴷⴼⴼⵉⵔ ⴽⵔⴰ ⵏ ⵜⵙⵉⵏⵉⵜⵉⵏ.",
+    cityName: "name",
+    roofCityHint: (city) => `ⵜⵙⵜⵉⴷ ⵜⴰⵎⴷⵉⵏⵜ, ⵓⵔ ⵜⴳⵉ ⵜⴰⵏⵙⴰ: ⵙⵎⵖⵔ ⵜⴰⴽⴰⵕⴹⴰ ⴰⵔ ⵜⴰⴷⴷⴰⵔⵜ ⵏⵏⴽ, ⵙ ⴷⴰⵔⵜ « ⵙⵓⵏⵖ ⴰⵙⵇⵇⵓⴼ ⵉⵏⵓ » ⴷ ⴽⵍⵉⴽⵉ ⵅⴼ ⵜⵉⵖⵎⵔⵉⵏ ⵏⵏⵙ. ⴰⵔ ⴷⵉⵖ, ⵉⵎⴹⴰⵏⵏ ⵉ ⵜⵏⵎⵎⴰⵙⵜ ⵏ ${city}.`,
+    searching: "ⴰⵔ ⵏⵔⵣⵣⵓ…", estimate: "ⵙⵙⵉⴹⵏ",
+    roofSearching: "ⴰⵔ ⵏⵔⵣⵣⵓ ⵅⴼ ⵜⴷⴷⴰⵔⵜ ⴳ OpenStreetMap…",
+    roofNone: "ⵓⵔ ⵏⵓⴼⵉ ⵜⴰⴷⴷⴰⵔⵜ ⴳ ⵜⵏⵙⴰ ⴰⴷ ⴳ OpenStreetMap. ⴽⵍⵉⴽⵉ ⵅⴼ « ⵙⵓⵏⵖ ⴰⵙⵇⵇⵓⴼ ⵉⵏⵓ » ⵜⴳⴷ ⵜⵉⵖⵎⵔⵉⵏ ⵏ ⵓⵙⵇⵇⵓⴼ ⴳ ⵜⴽⴰⵕⴹⴰ.",
+    roofDrawHint: "ⴽⵍⵉⴽⵉ ⵅⴼ ⴽⵓ ⵜⵉⵖⵎⵔⵜ ⵏ ⵓⵙⵇⵇⵓⴼ ⵏⵏⴽ, ⵙ ⴷⴰⵔⵜ « ⵉⴽⵎⵍ ».",
+    roofSrcOsm: "ⵙⴳ OpenStreetMap", roofSrcDrawn: "ⴰⵙⵇⵇⵓⴼ ⵍⵍⵉ ⵜⵙⵓⵏⵖⴷ",
+    panels: (n, plus = "") => `${n}${plus} ⵏ ⵜⵉⵍⵓⵃⵉⵏ`,
+    instSub: (n, m2) => `${n} ⵏ ⵜⵉⵍⵓⵃⵉⵏ · ${m2} m²`,
+    roofInfo: (w, setback) => `ⵜⵉⵍⵓⵃⵉⵏ ⵏ ${w} Wc, ${setback} m ⵏ ⵜⵉⵙⴳⴰ, ⵜⵉⴳⵓⵔⵉⵡⵉⵏ ⵉⴱⵄⴷⵏ ⴰⴼⴰⴷ ⵓⵔ ⵉⵍⵍⵉ ⵓⵎⴰⵍⵓ.`,
+    roofWarn: (have, needed) => `ⴰⵙⵇⵇⵓⴼ ⵏⵏⴽ ⵉⵙⵙⵓⴷⵓⵙ ⵖⴰⵙ ${have} ⵙⴳ ${needed} ⵏ ⵜⵉⵍⵓⵃⵉⵏ ⵏ ⵓⵙⵔⵙ ⴰ.`,
+    loading: ["ⴰⵙⵙⵉⴹⵏ ⵏ ⵜⴼⵓⴽⵜ ⴳ ⵓⴷⵖⴰⵔ ⵏⵏⴽ…", "ⴰⵔ ⵏⵙⵇⵙⴰ PVGIS (ⵜⴰⵎⵙⵙⵓⴳⵔⵜ ⵜⴰⵎⴰⵔⵓⴱⵉⵜ)…", "ⴰⵔ ⵏⵙⵙⵉⴹⵉⵏ ⴰⵔⴱⴰⵃ ⵏⵏⴽ…"],
+    consumptionHint: (k) => `ⵎⴰⵙ ${k} kWh ⴳ ⵡⴰⵢⵢⵓⵔ`,
+    peakpowerHint: (n, w, m2) => `${n} ⵏ ⵜⵉⵍⵓⵃⵉⵏ ⵏ ${w} Wc, ≈ ${m2} m²`,
+    capexHint: (v) => `ⴰⵜⵉⴳ ⴰⴽⴽ ⵏ ⵓⵙⵔⵙ: ${v}`,
+    pvgisFallback: (city) => `⚠ ⴰⵎⴰⵙⵙ ⵏ ⵓⵙⵙⵉⴹⵏ ⵓⵔ ⵉⵍⵍⵉ ⵖⵉⵍⴰ — ⴰⵙⵙⵉⴹⵏ ⴰⵎⵇⵔⴰⴱ ⵙ ⵜⵎⴷⵉⵏⵜ ⵏ ${city}.`,
+    years: (y) => `${y} ⵏ ⵉⵙⴳⴳⵯⵓⵙⴰ`,
+    finCashNet: (v) => `ⴰⵔⴱⴰⵃ ⵏ ⵓⵙⴳⴳⵯⴰⵙ ⴰⵎⵣⵡⴰⵔⵓ: ${v}`,
+    amortized: (y) => `ⵜⵓⵖⴰⵍⵉⵏ ⵏ ⵉⵇⵔⵉⴹⵏ ⴳ ${y} ⵏ ⵉⵙⴳⴳⵯⵓⵙⴰ`,
+    notAmortized: (n) => `ⵓⵔ ⴷ ⴽⵔⵔⵏ ⵉⵇⵔⵉⴹⵏ ⴳ ${n} ⵏ ⵉⵙⴳⴳⵯⵓⵙⴰ`,
+    finLoanSavings: (v) => `ⴰⵔⴱⴰⵃ ⵏ ⵜⴼⵓⴽⵜ: ${v} MAD/ⴰⵢⵢⵓⵔ`,
+    cashflowPositive: (v) => `ⴰⵔⴱⴰⵃ ⵙⴳ ⵡⴰⵢⵢⵓⵔ ⴰⵎⵣⵡⴰⵔⵓ: +${v} MAD/ⴰⵢⵢⵓⵔ`,
+    effortNet: (a, yrs, b) => `ⵜⵔⵏⵓⴷ ${a} MAD/ⴰⵢⵢⵓⵔ ⵅⴼ ${yrs} ⵏ ⵉⵙⴳⴳⵯⵓⵙⴰ, ⵙ ⴷⴰⵔⵜ +${b} MAD/ⴰⵢⵢⵓⵔ`,
+    rateNote: (r, y) => `${r}% ⵅⴼ ${y} ⵏ ⵉⵙⴳⴳⵯⵓⵙⴰ`,
+    co2Line: (t, f) => `ⵎⴰⵙ ${t} t ⵏ CO₂ ⵍⵍⵉ ⵓⵔ ⵉⵜⵜⴼⴼⵖⵏ ⴳ ⵓⵙⴳⴳⵯⴰⵙ (ⴰⵥⵟⵟⴰ ⵏ ONEE: ${f} kg ⵉ kWh).`,
+    view3d: "ⵥⵕ ⵙ 3D", view2d: "ⵥⵕ ⵙ 2D", loading3d: "ⴰⵔ ⵏⵙⵙⴽⵛⴰⵎ…",
+    view3dError: "ⴰⵙⵎⴰⵍ ⵙ 3D ⵓⵔ ⵉⵍⵍⵉ ⴳ ⵓⵎⴰⵙⵙ ⴰ; ⴰⵙⵎⴰⵍ ⵙ 2D ⴷ ⵉⵎⴹⴰⵏⵏ ⵇⵇⵉⵎⵏ ⵜⵜⵡⴰⵎⵏⵏ.",
+    hourLabel: (h, m) => `${h}:${String(m).padStart(2, "0")}`, sunDown: "ⵜⴽⵛⵎ ⵜⴼⵓⴽⵜ",
+    storeysOsm: "ⵙⴳ OpenStreetMap", storeysAssumed: "ⵉⵜⵜⵓⵙⵙⵉⴹⵏ",
+    srSummary: (s, bill, capex, pay) => `ⴰⵔⴱⴰⵃ ⵍⵍⵉ ⵉⵜⵜⵓⵙⵙⵉⴹⵏⵏ: ${s} ⴷⴷⵔⵀⵎ ⴳ ⵓⵙⴳⴳⵯⴰⵙ, ⵉ ⵜⴼⴰⴽⵜⵓⵔⵜ ⵏ ${bill} ⴳ ⵡⴰⵢⵢⵓⵔ. ⴰⵜⵉⴳ ⵏ ⵓⵙⵔⵙ: ${capex}. ${pay}.`,
+    sayBill: (v) => `${v} MAD ⴳ ⵡⴰⵢⵢⵓⵔ`, sayDegrees: (a) => `${a} ⵏ ⵜⴼⵔⴽⵉⵡⵉⵏ`, sayCost: (v) => `${v} MAD ⵉ Wc`,
+    aspect: { south: "ⴰⵏⵥⵓⵍ", east: "ⴰⴳⵎⵎⵓⴹ", west: "ⴰⵜⵔⵉⵎ", off: (a, dir) => `ⴰⵏⵥⵓⵍ, ${a}° ⵙ ${dir}` },
   },
   en: {
     acceptLanguage: "en,fr",
