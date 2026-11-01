@@ -1,0 +1,52 @@
+{
+  "country": "cote-divoire",
+  "iso3": "CIV",
+  "year": 2024,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 10.79,
+  "demand_twh": 10.06,
+  "net_imports_twh": -0.73,
+  "co2_intensity_g_per_kwh": 405.01,
+  "renewables_pct_generation": 28.9,
+  "capacity_gw": 2.7,
+  "renewables_pct_capacity": 38.1,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 7.65,
+      "generation_pct": 70.9,
+      "capacity_gw": 1.47
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 0.02,
+      "generation_pct": 0.2,
+      "capacity_gw": 0.2
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 3.0,
+      "generation_pct": 27.8,
+      "capacity_gw": 0.99
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.02,
+      "generation_pct": 0.2,
+      "capacity_gw": 0.04
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.1,
+      "generation_pct": 0.9,
+      "capacity_gw": 0.0
+    }
+  ]
+}

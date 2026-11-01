@@ -51,6 +51,27 @@ config entry per country.
 | 4 | Digital infrastructure | points | Datacentermap.com · OSM · DCD · press |
 | 5 | Renewable potential | **deferred to v1.1** | Global Solar Atlas · Global Wind Atlas  EU Commission PHOTOVOLTAIC GEOGRAPHICAL INFORMATION SYSTEM | 
 
+Above the layers, each country shows its **national electricity mix**:
+generation and capacity by fuel, imports and CO₂ intensity, from Ember's
+yearly data (CC BY 4.0, `docs/data/<country>/mix.json`, built by
+`scripts/build-country-mix.py`). Its legend is the fuel colour key and
+filters the plant layers to one fuel.
+
+**All countries — overview** (top of the country menu, or
+`#view=overview`) colours every country by its renewables share or its
+power-sector CO₂ intensity, with a ranked list beside the map; click a
+country to open it.
+
+On phones (and windows under 900 px wide, landscape phones aside) the panel
+is a sheet over the map: closed, it shows the search box and the mix bar;
+a tap on its grip or a drag raises it to half or full height.
+
+The search box at the top of the panel finds any mapped plant, site or line
+by name, operator or sector, in every country (press `/` to jump to it).
+The URL keeps the view: country, map position, filters, layers and the open
+feature, so a link (top-bar **Share**, or **Copy link** in a popup) reopens
+the same map.
+
 All source URLs are in [DATA_SOURCES.md](./DATA_SOURCES.md). Every
 feature carries a `source` and `source_url` property so provenance is
 inspectable from the map tooltip.
@@ -62,10 +83,17 @@ uses MapLibre GL + OpenFreeMap (Positron / Dark) vector tiles, the live
 grid OpenInfraMap tiles — all public.
 
 ```bash
+node scripts/build-map-i18n.mjs docs   # optional: the French page, docs/fr/ (git-ignored)
 cd docs
 python3 -m http.server 8000
-# open http://localhost:8000
+# open http://localhost:8000 (English) or http://localhost:8000/fr/ (French)
 ```
+
+The map is in English at `/` and in French at `/fr/`. Edit `docs/index.html`
+only: the deploy builds `fr/index.html` from it with the strings in
+`scripts/map-i18n-fr.mjs`, and CI fails on a string left in English. Texts
+written by `app.js` are in its `T` table. The GitHub Pages mirror serves the
+repository as is, so it has no `/fr/`.
 
 ## Reporting a bug
 

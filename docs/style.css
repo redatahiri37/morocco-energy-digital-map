@@ -155,6 +155,19 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layout.panel-collapsed .panel-expand{display:flex}
 .panel-expand:hover{background:var(--bg-3);color:var(--text-0)}
 
+/* The sheet's grip (phones only, see RESPONSIVE): stays at the top while
+   the sheet scrolls. */
+.sheet-handle{
+  display:none;position:sticky;top:0;z-index:3;
+  width:calc(100% + 28px);height:26px;margin:0 -14px;
+  align-items:center;justify-content:center;
+  background:var(--bg-1);border:0;border-radius:12px 12px 0 0;
+  cursor:grab;touch-action:none;
+}
+.sheet-grip{width:36px;height:4px;border-radius:2px;background:var(--border-hi)}
+.sheet-handle:hover .sheet-grip{background:var(--text-3)}
+.sheet-handle:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
 .panel-section{padding:10px 0 16px;border-bottom:1px solid var(--border)}
 .panel-section:last-child{border-bottom:0}
 
@@ -204,6 +217,42 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layer-row.muted{opacity:.45}
 .layer-row.muted .layer-name{color:var(--text-2)}
 
+/* Overview: every country at once. The country's own sections step aside. */
+.is-overview .mix-section,.is-overview .layers-section,.is-overview .kpi-section{display:none}
+.overview-section[hidden]{display:none}
+.seg.ov-metric{display:flex;margin-bottom:10px}   /* full width: beats .seg's inline-flex */
+.ov-metric .seg-btn{flex:1;white-space:nowrap}
+.ov-legend{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.ov-legend-title{font-size:11px;color:var(--text-1)}
+.ov-legend-bar{height:8px;border-radius:4px}
+.ov-legend-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--text-2)}
+.ov-list{list-style:none;display:flex;flex-direction:column;gap:2px}
+.ov-row{display:flex;flex-direction:column;gap:5px;width:100%;padding:6px 8px;border-radius:5px;text-align:left}
+.ov-row:hover,.ov-row.hot{background:var(--bg-2)}
+.ov-row:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ov-head{display:flex;align-items:center;gap:8px}
+.ov-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ov-name{flex:1;min-width:0;font-size:12.5px;color:var(--text-0)}
+.ov-val{font-family:var(--font-mono);font-size:11px;color:var(--text-1);font-variant-numeric:tabular-nums}
+/* 1px gaps show the panel between fuels, as in the mix bar */
+.ov-bar{display:flex;gap:1px;height:6px;border-radius:3px;overflow:hidden}
+.ov-note{font-size:10.5px;line-height:1.45;color:var(--text-2);margin-top:8px}
+
+/* Status view above the layer list */
+.status-row{margin-bottom:8px}
+.status-row .seg{display:flex}
+.status-row .seg-btn{flex:1}
+.status-note[hidden]{display:none}
+.status-note{font-size:11px;line-height:1.4;color:var(--text-1);background:var(--bg-2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;margin-bottom:8px}
+
+/* Plant size key — dots drawn at the map's current scale */
+.size-key[hidden]{display:none}
+.size-key{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 8px 0;border-top:1px dashed var(--border)}
+.size-key-title{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);padding-bottom:2px}
+.size-key-items{display:flex;align-items:flex-end;gap:10px;flex-shrink:0}
+.size-key-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--font-mono);font-size:10px;color:var(--text-2);white-space:nowrap}
+.size-key-dot{display:block;border-radius:50%;background:var(--bg-3);border:1px solid var(--text-3)}
+
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{
@@ -213,6 +262,80 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .kpi .k{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);font-weight:500}
 .kpi .v{font-family:var(--font-display);font-size:22px;font-weight:400;line-height:1.1;margin-top:4px;letter-spacing:-0.02em;font-variant-numeric:lining-nums tabular-nums}
 .kpi .v small{font-family:var(--font-ui);font-size:11px;color:var(--text-2);font-weight:500;margin-left:2px}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Search — results sit in the panel's flow, so the panel scrolls them */
+.search-section{padding-top:2px;padding-right:32px}   /* clear of the collapse button */
+.search-input{
+  width:100%;padding:7px 10px;
+  font:inherit;font-size:12.5px;color:var(--text-0);
+  background:var(--bg-2);border:1px solid var(--border-hi);border-radius:5px;
+}
+.search-input::placeholder{color:var(--text-3)}
+.search-input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.search-results[hidden]{display:none}
+.search-results{list-style:none;margin:6px -32px 0 0;display:flex;flex-direction:column;gap:1px}
+.search-opt{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer}
+.search-opt:hover,.search-opt[aria-selected="true"]{background:var(--bg-3)}
+.so-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.search-opt.is-country .so-dot{width:auto;height:auto;margin-top:0;font-size:12px;color:var(--accent)}
+.so-text{display:flex;flex-direction:column;min-width:0}
+.so-name{font-size:12.5px;color:var(--text-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.so-name mark{background:none;color:var(--accent);font-weight:600}
+.so-meta{font-size:10.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-note{font-size:11px;color:var(--text-2);padding:6px 8px}
+
+/* Electricity mix — fuel colours come from the plant layer (FUEL_COLOR in
+   app.js) and are set through the DOM; text keeps the text tokens. */
+.mix-section[hidden],.mix-section [hidden]{display:none}
+.mix-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.seg{display:inline-flex;border:1px solid var(--border-hi);border-radius:5px;overflow:hidden;flex-shrink:0}
+.seg-btn{
+  font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;
+  padding:4px 8px;color:var(--text-1);
+}
+.seg-btn:hover{color:var(--text-0);background:var(--bg-2)}
+.seg-btn[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.seg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.mix-total{font-family:var(--font-mono);font-size:10.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 2px gaps show the panel between segments; rounded data ends. */
+.mix-bar{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;margin-bottom:10px}
+.mix-seg{min-width:1px;cursor:pointer;transition:opacity .12s}
+.mix-section.has-filter .mix-seg:not(.picked),
+.mix-section.has-hot .mix-seg:not(.hot){opacity:.35}
+.mix-section.has-hot .mix-seg.hot{opacity:1}
+
+.mix-legend{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-bottom:8px}
+.mix-key{
+  display:flex;align-items:center;gap:6px;width:100%;min-height:24px;
+  padding:4px 5px;border-radius:4px;
+  font-size:11.5px;color:var(--text-0);text-align:left;
+  transition:background .1s,opacity .1s;
+}
+.mix-key:hover,.mix-key.hot{background:var(--bg-2)}
+.mix-key.picked{background:var(--bg-3);box-shadow:inset 0 0 0 1px var(--accent)}
+.mix-section.has-filter .mix-key:not(.picked):not(.hot){opacity:.55}
+.mix-key:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mix-swatch{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.mix-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mix-val{font-family:var(--font-mono);font-size:10.5px;color:var(--text-1);font-variant-numeric:tabular-nums}
+
+.mix-filter{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:11px;color:var(--text-1);
+  background:var(--bg-2);border:1px solid var(--border);border-radius:5px;
+  padding:5px 8px;margin-bottom:8px;
+}
+.link-btn{color:var(--accent);font-size:11px;text-decoration:underline;flex-shrink:0}
+
+.mix-facts{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:11.5px;margin-bottom:8px}
+.mix-facts dt{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);padding-top:2px;white-space:nowrap}
+.mix-facts dd{color:var(--text-0);font-variant-numeric:tabular-nums}
+.mix-note{font-size:10.5px;line-height:1.45;color:var(--text-2)}
+.mix-note a{color:var(--text-1);text-decoration:underline}
+.mix-gap{color:var(--text-1)}
 
 .bullets{padding-left:14px}
 .bullets li{margin-top:4px}
@@ -360,6 +483,22 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   font-size:11px;color:var(--text-1);
 }
 .pop-actions a:hover{background:var(--bg-3);border-color:var(--border-hi);color:var(--text-0);text-decoration:none}
+.pop-actions .pop-share{
+  flex:1;padding:8px 10px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:4px;
+  font-size:11px;color:var(--text-1);
+}
+.pop-actions .pop-share:hover{background:var(--bg-3);border-color:var(--border-hi);color:var(--text-0)}
+.pop-actions .pop-share:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* "Link copied" — above the map controls, under any popup */
+.toast[hidden]{display:none}
+.toast{
+  position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:9;
+  background:var(--bg-3);border:1px solid var(--border-hi);border-radius:6px;
+  padding:7px 12px;font-size:12px;color:var(--text-0);
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+}
 
 /* No-token overlay */
 .no-token{
@@ -444,25 +583,47 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 /* ───────── RESPONSIVE ───────── */
 @media (max-width: 900px){
   :root{--panel-w:100%}
-  .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-  .panel{
-    max-height:40vh;border-right:0;border-bottom:1px solid var(--border);
-  }
-  /* Collapsed: drop the panel row so the map takes the whole height. The
-     desktop rule (0 1fr columns) would otherwise put the map in the panel's
-     row, leaving the lower half of the screen empty. */
+  /* Collapsed (the landscape side panel; the sheet below has no collapse
+     button): the map takes the whole grid. The desktop rule (0 1fr
+     columns) would otherwise leave it a column it doesn't fill. */
   .layout.panel-collapsed{grid-template-columns:1fr;grid-template-rows:1fr}
   .layout.panel-collapsed .panel{display:none}
   .panel-expand{
     left:8px;top:8px;transform:none;
     width:32px;height:28px;border-radius:4px;border-left:1px solid var(--border);
   }
-  .popup{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:55vh;
+  .popup{top:auto;left:8px;right:8px;bottom:calc(var(--bot-h) + 8px);width:auto;max-height:55vh;
     transform:translateY(calc(100% + 24px))}
   .popup.open{transform:translateY(0)}
   .topbar .country-switch{padding-left:8px}
   .bottombar{font-size:10px;padding:0 8px;gap:8px}
   .bb-center{display:none}
+}
+
+/* Phones and narrow windows, landscape phones aside (below): the panel is a
+   sheet over the bottom of the map, so the map keeps the whole height.
+   app.js sets its height (--sheet-h) to one of three stops: "peek" (search
+   and the mix bar), "half" and "full"; and --sheet-peek, which lifts the
+   map's controls and the toast above it. */
+@media (max-width: 900px) and (min-height: 501px), (max-width: 900px) and (orientation: portrait){
+  .layout{grid-template-columns:1fr;grid-template-rows:1fr}
+  .panel{
+    position:absolute;left:0;right:0;bottom:0;z-index:6;
+    height:var(--sheet-h, 40%);max-height:100%;
+    padding-top:0;border-right:0;border-top:1px solid var(--border-hi);
+    border-radius:12px 12px 0 0;
+    box-shadow:0 -8px 24px rgba(0,0,0,.3);
+    overscroll-behavior:contain;
+    transition:height .28s var(--ease);
+  }
+  .panel.is-dragging{transition:none}
+  /* Peek: the sheet shows its top and drags as a whole; no inner scroll. */
+  .panel.is-peek{overflow:hidden;touch-action:none}
+  .panel-collapse{display:none}
+  .search-section{padding-right:0}
+  .sheet-handle{display:flex}
+  .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{bottom:var(--sheet-peek, 0px)}
+  .toast{bottom:calc(var(--sheet-peek, 0px) + 16px)}
 }
 
 /* Landscape phones: the details sheet slides in from the right instead of
@@ -471,18 +632,37 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   .popup{top:calc(var(--top-h) + 8px);bottom:calc(var(--bot-h) + 8px);left:auto;right:8px;
     width:min(360px,48vw);max-height:none;transform:translateX(calc(100% + 24px))}
   .popup.open{transform:translateX(0)}
-  .panel{max-height:none}
   .layout{grid-template-columns:min(300px,40vw) 1fr;grid-template-rows:1fr}
   .layout.panel-collapsed{grid-template-columns:1fr}
 }
+
+/* Tablets and small laptops: the top-bar buttons keep their icon and lose
+   their label (each has a title and an aria-label), or the bar runs past
+   the screen's edge between 640 and 1000 px. */
+@media (max-width: 1024px){
+  .topbar .btn-label{display:none}
+  .topbar .ghost-btn{padding:0;width:34px;height:34px;justify-content:center;flex-shrink:0}
+}
+@media (max-width: 780px){
+  .topbar .w-product{display:none}
+}
+
+/* FR / EN: the other language's page, as a short mono label */
+.topbar .lang-btn{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.06em}
 
 /* Phones: one-line top bar — logo, country, icon buttons. */
 @media (max-width: 640px){
   .topbar{gap:8px;padding:0 10px}
   .topbar .w-word,.topbar .w-product,.country-switch label{display:none}
-  .country-switch{padding-left:0;border-left:0;min-width:0}
+  /* Room for Share: GitHub is also in the panel footer and the bottom bar. */
+  .topbar #githubLink{display:none}
+  /* The country menu takes the room the buttons leave, and shrinks with it:
+     five icon buttons (Solar, Methodology, Share, FR/EN, theme) must fit. */
+  .country-switch{padding-left:0;border-left:0;min-width:0;flex:1 1 auto}
+  .topbar .spacer{display:none}
   /* 16px: iOS Safari zooms the page on focus below that. */
-  .country-switch select{max-width:46vw;font-size:16px;padding:4px 8px}
+  .country-switch select{width:100%;max-width:100%;min-width:0;font-size:16px;padding:4px 8px}
+  .search-input{font-size:16px}
   .topbar .ghost-btn{padding:0;width:34px;height:34px;justify-content:center;flex-shrink:0}
   .topbar .icon-btn{width:34px;height:34px;flex-shrink:0}
   .btn-label{display:none}
