@@ -52,8 +52,9 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   edge-cached 5 min, 503 when REE's last point is over 2 h old. Deployed
   by worker.yml on merge. Not tested against live REE (blocked from cloud
   sessions); built and tested on REE's recorded payload format.
-- Map: Snapshot gets « Record peak · 2026 » 8.4 GW and « Demand · 2025 »
-  49 TWh (ONEE board, 27 Jul 2026, via TelQuel) and a live tile; the two
+- Map: Snapshot gets « Record peak · 2026 » 8.4 GW (ONEE board, 27 Jul
+  2026, via TelQuel) and a live tile (ONEE's 49 TWh for 2025 dropped on
+  2026-11-01: the mix panel already carries Ember's 2025 year); the two
   Spain–Morocco cable popups show the same figure. Config: `demand` and
   `liveFlow` in countries.config.js, checked by validate-countries.mjs.
   CSP connect-src gains the Worker host.

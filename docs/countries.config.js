@@ -95,8 +95,7 @@ window.COUNTRIES = {
       source: "ONEE board of directors, 27 Jul 2026, reported by TelQuel",
       sourceUrl: "https://telquel.ma/instant-t/2026/07/28/electricite-le-maroc-enregistre-un-nouveau-record-historique-de-consommation_2001082",
       figures: [
-        { label: "Record peak · 2026", labelFr: "Pointe record · 2026", value: 8.4, unit: "GW" },
-        { label: "Demand · 2025", labelFr: "Demande · 2025", value: 49, unit: "TWh" }
+        { label: "Record peak · 2026", labelFr: "Pointe record · 2026", value: 8.4, unit: "GW" }
       ]
     },
     // Live flow on the Spain–Morocco link (both cables together), from REE
