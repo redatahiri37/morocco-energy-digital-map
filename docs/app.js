@@ -30,6 +30,7 @@
   }
   const countryLabel = (c)=>(FR && c.labelFr) || c.label;
   const layerTitle = (L)=>(FR && L.titleFr) || L.title;
+  const partnerLabel = (lf)=>(FR && lf.partnerFr) || lf.partner;
   const T = FR ? {
     soon: "bientôt", live: "direct", updated: "mis à jour",
     docTitle: (c)=>`Wattu Energy — carte des infrastructures (${c})`,
@@ -44,6 +45,12 @@
     kpiPipelineTip: "Centrales de la carte en construction ou annoncées. « — » : la source ne liste que les centrales construites.",
     mixSrc: "Mix électrique", boundary: "Frontière", basemap: "Fond de carte",
     mixSrcNote: (y)=>`chiffres ${y} ; nationaux, pas une somme de la carte`,
+    demandSrc: "Demande nationale", demandNote: "Demande", liveNote: "Direct",
+    liveSteps: "pas de 5 minutes, heures dans votre fuseau horaire",
+    liveSrc: (p)=>`Flux en direct, liaison ${p}`, liveSrcNote: "toutes les 5 minutes, via le Worker de Wattu",
+    liveSrcNet: "flux net, tous câbles confondus", cables: (n)=>`${n} câbles`,
+    liveOff: "Indisponible pour le moment", noFlow: "Aucun flux",
+    flowIn: (c, p)=>`Import ${p} → ${c}`, flowOut: (c, p)=>`Export ${c} → ${p}`,
     basemapLi: 'MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) — public, sans jeton.',
     statusSome: (n, t, pipe)=>`${n} sur ${t} actifs cartographiés ` + (pipe ? "sont en construction, annoncés ou planifiés." : "sont en service."),
     statusNonePipe: "Aucun actif cartographié de ce pays n'est en construction ou annoncé : ses sources ne listent que l'existant.",
@@ -96,6 +103,12 @@
     kpiPipelineTip: "Plants on the map under construction or announced. — means the plant source lists built plants only.",
     mixSrc: "Electricity mix", boundary: "Boundary", basemap: "Basemap",
     mixSrcNote: (y)=>`${y} figures; national, not summed from the map`,
+    demandSrc: "National demand", demandNote: "Demand", liveNote: "Live",
+    liveSteps: "5-minute steps, times in your time zone",
+    liveSrc: (p)=>`Live flow, ${p} link`, liveSrcNote: "every 5 minutes, through Wattu's Worker",
+    liveSrcNet: "net flow over all its cables", cables: (n)=>`${n} cables`,
+    liveOff: "Unavailable right now", noFlow: "No flow",
+    flowIn: (c, p)=>`${c} importing from ${p}`, flowOut: (c, p)=>`${c} exporting to ${p}`,
     basemapLi: 'MapLibre GL + <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) — public, no token required.',
     statusSome: (n, t, pipe)=>`${n} of ${t} mapped assets ` + (pipe ? "are under construction, announced or planned." : "are in service."),
     statusNonePipe: "None of this country's mapped assets is under construction or announced: its sources list built ones only.",
@@ -197,6 +210,9 @@
     '<a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> ' +
     T.dataFrom + ' <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ' +
     OIM_ATTR + ' · <a href="https://maplibre.org/" target="_blank" rel="noopener">MapLibre</a>';
+  // Wattu's Worker (solar/proxy): relays live data whose source sends no
+  // CORS header, such as REE's Spain–Morocco flow. Listed in docs/_headers.
+  const LIVE_API = "https://solar-pvgis.redatahiri.workers.dev";
   const COUNTRIES = window.COUNTRIES || {};
   const ENABLED   = (window.COUNTRIES_ENABLED || ["morocco"]).filter(k=>COUNTRIES[k]);
   const REPO_URL  = "https://github.com/redatahiri37/morocco-energy-digital-map";
@@ -679,6 +695,7 @@
     const hasDCmw = fcDC.features.some(f=>f.properties.capacity_estimate_mw != null);
     const hasDCinv = fcDC.features.some(f=>f.properties.investment_usd != null);
     const NA = "—";
+    const d = c.demand, lf = c.liveFlow;
     const fuel = fuelFilter && mixFuel(fuelFilter);
     const prefix = fuel ? escapeHtml(fuelLabel(fuel)) + " · " : "";
     host.innerHTML = `
@@ -691,7 +708,59 @@
                                                : `${nfmt(fcDC.features.length)}<small> ${T.sites}</small>`}</div></div>
       <div class="kpi"><div class="k">${T.dcInvestment}</div>
         <div class="v">${hasDCinv ? fmtInvestment(dcInvest) : NA}</div></div>
+      ${d ? d.figures.map(x=>`<div class="kpi"><div class="k">${escapeHtml((FR && x.labelFr) || x.label)}</div>
+        <div class="v">${num(x.value) != null ? `${nfmt(x.value, 1)}<small> ${escapeHtml(x.unit)}</small>` : NA}</div></div>`).join("") : ""}
+      ${lf ? `<div class="kpi wide" data-live-flow>${liveFlowMarkup(c)}</div>` : ""}
+      ${d || lf ? `<p class="kpi-note micro">
+        ${d ? `${T.demandNote}${COLON} <a href="${escapeHtml(safeUrl(d.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(d.source)}</a>` : ""}
+        ${d && lf ? "<br>" : ""}
+        ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(lf.source)}</a>, ${T.liveSteps}` : ""}
+      </p>` : ""}
     `;
+    if(lf) refreshLiveFlow(c);
+  }
+
+  // ---------- Live cross-border flow ----------
+  // countries.config.js → liveFlow: one figure for the link's cables
+  // together, from the Worker (solar/proxy/flow.js). Asked for when shown
+  // and kept 5 minutes, the source's own step; a failure is kept as long,
+  // so a broken source is not asked again on every click.
+  const liveFlowCache = {};   // path → { t, p }
+  function fetchLiveFlow(lf){
+    const hit = liveFlowCache[lf.path];
+    if(hit && Date.now() - hit.t < 300000) return hit.p;
+    const p = fetch(LIVE_API + lf.path)
+      .then(r=>r.ok ? r.json() : null)
+      .then(d=>d && num(d.net_import_mw) != null && !isNaN(Date.parse(d.at)) ? d : null)
+      .catch(()=>null);
+    liveFlowCache[lf.path] = { t: Date.now(), p };
+    return p;
+  }
+  function liveFlowMarkup(c){
+    const n = c.liveFlow.features.length;
+    return `<div class="k"><span class="live-dot"></span>${escapeHtml(partnerLabel(c.liveFlow))} ⇄ ${escapeHtml(countryLabel(c))} · ${T.live}${n > 1 ? ` · ${T.cables(n)}` : ""}</div>
+      <div class="v" aria-live="polite">…</div>
+      <div class="when micro"></div>`;
+  }
+  // Every live-flow block on the page (KPI tile, open popup) shows the same
+  // answer. Text goes in through textContent; the direction is in words,
+  // never a sign.
+  function refreshLiveFlow(c){
+    const lf = c.liveFlow;
+    fetchLiveFlow(lf).then(d=>{
+      if(COUNTRIES[currentCountry] !== c) return;   // switched country meanwhile
+      document.querySelectorAll("[data-live-flow]").forEach(el=>{
+        const v = el.querySelector(".v"), when = el.querySelector(".when");
+        if(!d){ v.textContent = "—"; when.textContent = T.liveOff; return; }
+        const unit = document.createElement("small");
+        unit.textContent = " MW";
+        v.replaceChildren(nfmt(Math.abs(d.net_import_mw)), unit);
+        const at = new Date(d.at), cl = countryLabel(c), pl = partnerLabel(lf);
+        when.textContent = (d.net_import_mw > 0 ? T.flowIn(cl, pl) : d.net_import_mw < 0 ? T.flowOut(cl, pl) : T.noFlow) +
+          " · " + at.toLocaleTimeString(LOCALE, { hour:"2-digit", minute:"2-digit" });
+        when.title = at.toLocaleString(LOCALE);
+      });
+    });
   }
 
   // Country name wherever the page names one: tab title, brand line,
@@ -713,6 +782,8 @@
     host.innerHTML = c.layers.map(L=>
       `<li><strong>${escapeHtml(layerTitle(L))}${COLON}</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(${T.updated} ${escapeHtml(L.updated === "live" ? T.live : L.updated)})</span></li>`
     ).join("") + (mixData ? `<li><strong>${T.mixSrc}${COLON}</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(T.mixSrcNote(mixData.year))})</span></li>` : "") +
+    (c.demand ? `<li><strong>${T.demandSrc}${COLON}</strong> ${escapeHtml(c.demand.source)} — <a href="${escapeHtml(safeUrl(c.demand.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.demand.sourceUrl)}</a></li>` : "") +
+    (c.liveFlow ? `<li><strong>${escapeHtml(T.liveSrc(partnerLabel(c.liveFlow)))}${COLON}</strong> ${escapeHtml(c.liveFlow.source)}, ${T.liveSrcNote} — <a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.sourceUrl)}</a> <span class="micro">(${T.liveSrcNet})</span></li>` : "") +
     (c.boundary ? `<li><strong>${T.boundary}${COLON}</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
     `<li><strong>${T.basemap}${COLON}</strong> ${T.basemapLi}</li>`;
   }
@@ -1613,11 +1684,15 @@
     const p = f.properties || {};
     selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
     $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>${T.badgeLine}</span>`;
+    const c = COUNTRIES[currentCountry];
+    const live = c.liveFlow && c.liveFlow.features.includes(p.id);
     paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
       <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
+      ${live ? `<div class="live-flow" data-live-flow>${liveFlowMarkup(c)}
+        <div class="micro">${T.source}<a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.source)}</a></div></div>` : ""}
       <div class="stat-grid">
         <div class="cell"><div class="k">${T.voltage}</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
         <div class="cell"><div class="k">${T.status}</div><div class="v cap">${escapeHtml(word(STATUS_WORD_ALL, p.status))}</div></div>
@@ -1641,6 +1716,7 @@
     sheetForPopup();
     popup.setAttribute("aria-hidden","false");
     syncUrl();
+    if(live) refreshLiveFlow(c);
   }
 
   function closePopup(){
