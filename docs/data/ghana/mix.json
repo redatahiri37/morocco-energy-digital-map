@@ -1,0 +1,52 @@
+{
+  "country": "ghana",
+  "iso3": "GHA",
+  "year": 2024,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 24.27,
+  "demand_twh": 21.83,
+  "net_imports_twh": -2.44,
+  "co2_intensity_g_per_kwh": 468.89,
+  "renewables_pct_generation": 36.2,
+  "capacity_gw": 5.21,
+  "renewables_pct_capacity": 34.2,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 14.91,
+      "generation_pct": 61.4,
+      "capacity_gw": 3.06
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 0.57,
+      "generation_pct": 2.4,
+      "capacity_gw": 0.37
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 8.6,
+      "generation_pct": 35.4,
+      "capacity_gw": 1.58
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.17,
+      "generation_pct": 0.7,
+      "capacity_gw": 0.19
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.02,
+      "generation_pct": 0.1,
+      "capacity_gw": 0.01
+    }
+  ]
+}

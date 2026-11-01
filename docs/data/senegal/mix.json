@@ -1,0 +1,68 @@
+{
+  "country": "senegal",
+  "iso3": "SEN",
+  "year": 2024,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 7.63,
+  "demand_twh": 8.13,
+  "net_imports_twh": 0.5,
+  "co2_intensity_g_per_kwh": 539.97,
+  "renewables_pct_generation": 19.8,
+  "capacity_gw": 1.93,
+  "renewables_pct_capacity": null,
+  "capacity_gaps": [
+    "hydro"
+  ],
+  "fuels": [
+    {
+      "fuel": "coal",
+      "label": "Coal",
+      "generation_twh": 0.1,
+      "generation_pct": 1.3,
+      "capacity_gw": 0.16
+    },
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 0.02,
+      "generation_pct": 0.3,
+      "capacity_gw": 0.0
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 6.0,
+      "generation_pct": 78.6,
+      "capacity_gw": 1.29
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 0.31,
+      "generation_pct": 4.1,
+      "capacity_gw": 0.0
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 0.41,
+      "generation_pct": 5.4,
+      "capacity_gw": 0.16
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 0.68,
+      "generation_pct": 8.9,
+      "capacity_gw": 0.27
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.11,
+      "generation_pct": 1.4,
+      "capacity_gw": 0.05
+    }
+  ]
+}

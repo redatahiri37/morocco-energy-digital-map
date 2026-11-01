@@ -1,0 +1,73 @@
+{
+  "country": "south-africa",
+  "iso3": "ZAF",
+  "year": 2025,
+  "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
+  "generation_twh": 242.76,
+  "demand_twh": 236.84,
+  "net_imports_twh": -5.92,
+  "co2_intensity_g_per_kwh": 698.96,
+  "renewables_pct_generation": 13.6,
+  "capacity_gw": 69.73,
+  "renewables_pct_capacity": 23.8,
+  "capacity_gaps": [],
+  "fuels": [
+    {
+      "fuel": "coal",
+      "label": "Coal",
+      "generation_twh": 197.5,
+      "generation_pct": 81.4,
+      "capacity_gw": 47.49
+    },
+    {
+      "fuel": "gas",
+      "label": "Gas",
+      "generation_twh": 0.0,
+      "generation_pct": 0.0,
+      "capacity_gw": 1.29
+    },
+    {
+      "fuel": "oil",
+      "label": "Oil & other fossil",
+      "generation_twh": 1.95,
+      "generation_pct": 0.8,
+      "capacity_gw": 2.42
+    },
+    {
+      "fuel": "nuclear",
+      "label": "Nuclear",
+      "generation_twh": 10.21,
+      "generation_pct": 4.2,
+      "capacity_gw": 1.93
+    },
+    {
+      "fuel": "hydro",
+      "label": "Hydro",
+      "generation_twh": 1.83,
+      "generation_pct": 0.8,
+      "capacity_gw": 0.75
+    },
+    {
+      "fuel": "wind",
+      "label": "Wind",
+      "generation_twh": 11.32,
+      "generation_pct": 4.7,
+      "capacity_gw": 4.33
+    },
+    {
+      "fuel": "solar",
+      "label": "Solar",
+      "generation_twh": 19.48,
+      "generation_pct": 8.0,
+      "capacity_gw": 11.26
+    },
+    {
+      "fuel": "biomass",
+      "label": "Bioenergy",
+      "generation_twh": 0.47,
+      "generation_pct": 0.2,
+      "capacity_gw": 0.26
+    }
+  ]
+}
