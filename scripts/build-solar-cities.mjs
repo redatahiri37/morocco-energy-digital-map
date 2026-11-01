@@ -28,6 +28,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import vm from "node:vm";
+import { langMenu, SIMULATORS } from "../solar/i18n/languages.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://solar.wattu.org";
@@ -133,7 +134,6 @@ function toolLink(c, bill, name = c.name) {
 
 // alt = { fr, ar, en }: root-relative paths of the same page in each
 // language, for hreflang and the language links. Arabic is right to left.
-const LANG_LABEL = { fr: "Français", ar: "العربية", en: "English" };
 const altCity = (c) => ({ fr: `/ville/${c.slug}/`, ar: `/ar/ville/${c.slug}/`, en: `/en/city/${c.slug}/` });
 const ALT_INDEX = { fr: "/villes/", ar: "/ar/villes/", en: "/en/cities/" };
 function layout({ title, description, canonical, depth, body, jsonLd, lang = "fr", alt = null, image = null }) {
@@ -141,8 +141,8 @@ function layout({ title, description, canonical, depth, body, jsonLd, lang = "fr
   const ar = lang === "ar";
   const hreflang = alt ? Object.entries(alt).map(([l, path]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${path}">`).join("\n")
     + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${alt.fr}">\n` : "";
-  const langLinks = alt ? Object.entries(alt).filter(([l]) => l !== lang)
-    .map(([l, path]) => `\n    <a class="nav-lang" href="${path}" lang="${l}" hreflang="${l}">${LANG_LABEL[l]}</a>`).join("") : "";
+  // Tamazight has only the simulator so far: the menu sends there.
+  const langLinks = alt ? "\n    " + langMenu(lang, { ...alt, zgh: SIMULATORS.zgh }) : "";
   const home = { fr: "Wattu Solaire — accueil", ar: "Wattu — الصفحة الرئيسية", en: "Wattu Solar — home" }[lang];
   const homeHref = { fr: up, ar: `${up}ar/`, en: `${up}en/` }[lang];   // each language's simulator
   const nav = {
@@ -869,7 +869,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
 function sitemap(all, guideList, guideListAr = [], guideListEn = []) {
   const urls = [`${SITE}/`, `${SITE}/villes/`, `${SITE}/guide/`,
     ...guideList.map(g => `${SITE}/guide/${g.slug}/`), ...all.map(c => `${SITE}/ville/${c.slug}/`),
-    `${SITE}/ar/`, `${SITE}/en/`,
+    `${SITE}/ar/`, `${SITE}/en/`, `${SITE}/zgh/`,
     `${SITE}/ar/villes/`, ...all.map(c => `${SITE}/ar/ville/${c.slug}/`),
     `${SITE}/en/cities/`, ...all.map(c => `${SITE}/en/city/${c.slug}/`),
     `${SITE}/ar/guide/`, ...guideListAr.map(g => `${SITE}/ar/guide/${g.slug}/`),
@@ -887,7 +887,7 @@ function llmsTxt(all, guideList) {
 
 > Simulateur gratuit de production et de rentabilité des panneaux solaires résidentiels au Maroc. Production calculée avec PVGIS (Commission européenne), économies avec les tarifs ONEE par tranche. Sans inscription, sans commission. Par ${AUTHOR}. Mis à jour le ${today}.
 
-- [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise (aussi en [arabe](${SITE}/ar/) et en [anglais](${SITE}/en/))
+- [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise (aussi en [arabe](${SITE}/ar/), en [anglais](${SITE}/en/) et en [amazigh, tifinagh](${SITE}/zgh/))
 - [Rentabilité par ville](${SITE}/villes/): tableau comparatif de ${all.length} villes marocaines
 - [Données en CSV](${CSV_URL}): production, économies et amortissement des ${all.length} villes, licence CC BY 4.0
 - [الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة](${SITE}/ar/villes/): les mêmes pages villes en arabe marocain (darija)

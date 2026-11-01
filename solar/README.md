@@ -54,6 +54,16 @@ text in `index.html` and the build stops until its translation follows
 (the PR check runs the same script). Arabic register: Darija for headings,
 buttons and questions, plain Arabic for explanations.
 
+`/zgh/` is the simulator in Tamazight (Standard Moroccan Amazigh, Tifinagh
+script), from `i18n/simulator-zgh.mjs` (French string → Tamazight). It is a
+first draft awaiting a native speaker's review; Tamazight has no city pages
+or guides yet, so its links go to the French ones. The Tifinagh font (Noto
+Sans Tifinagh, OFL) is self-hosted in `fonts/` and only downloaded when a
+Tifinagh letter is on screen.
+
+Every page has the same language menu (`i18n/languages.mjs`): a `<details>`
+drop-down, no JavaScript.
+
 ### City pages (search engines and AI assistants)
 
 The estimator computes everything in the browser after an address is typed,

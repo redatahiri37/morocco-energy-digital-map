@@ -106,7 +106,7 @@ jobs:
           cp -r solar/vendor _check/
           cp solar/engine.js solar/app.js solar/analytics.js _check/
           node scripts/build-solar-i18n.mjs _check
-          node scripts/check-sri.mjs _check/ar/index.html _check/en/index.html
+          node scripts/check-sri.mjs _check/ar/index.html _check/en/index.html _check/zgh/index.html
 
       # Share images (og:image): every card renders to a 1200×630 PNG with
       # the runner's Chrome. Arabic cards need an Arabic font.
