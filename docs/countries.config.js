@@ -28,6 +28,11 @@
 // Every country has `labelFr` and every layer `titleFr`: the French page
 // (energy.wattu.org/fr/) shows them. Sources stay as cited.
 //   credits:        data credits in the footer, e.g. "GEM · ONEE · Datacentermap"
+//   demand:         { source, sourceUrl, figures: [{ label, labelFr, value, unit }] } —
+//                   dated national figures, tiles under the KPIs
+//   liveFlow:       { path, features, partner, partnerFr, source, sourceUrl } — live flow
+//                   on the interconnectors whose ids are in `features`, read
+//                   from the Wattu Worker at `path`
 
 // Layers for countries built from open data (see the entries below).
 const GPPD_COUNTRY_LAYERS = [
@@ -84,7 +89,25 @@ window.COUNTRIES = {
     mix:      "mix.json",
     snapshotSource: "GEM · ONEE · operator disclosures, 2026-04",
     snapshotSourceFr: "GEM · ONEE · déclarations des opérateurs, 2026-04",
-    credits: "GEM · ONEE · Datacentermap",
+    credits: "GEM · ONEE · Datacentermap · REE",
+    // National demand: dated figures, not computed from the layers.
+    demand: {
+      source: "ONEE board of directors, 27 Jul 2026, reported by TelQuel",
+      sourceUrl: "https://telquel.ma/instant-t/2026/07/28/electricite-le-maroc-enregistre-un-nouveau-record-historique-de-consommation_2001082",
+      figures: [
+        { label: "Record peak · 2026", labelFr: "Pointe record · 2026", value: 8.4, unit: "GW" },
+        { label: "Demand · 2025", labelFr: "Demande · 2025", value: 49, unit: "TWh" }
+      ]
+    },
+    // Live flow on the Spain–Morocco link (both cables together), from REE
+    // through the Wattu Worker (solar/proxy/flow.js).
+    liveFlow: {
+      path: "/flow/es-ma",
+      features: ["interconnector-es-ma-1", "interconnector-es-ma-2"],
+      partner: "Spain", partnerFr: "Espagne",
+      source: "REE (Red Eléctrica), real-time exchange data",
+      sourceUrl: "https://www.ree.es/en/activities/operation-of-the-electricity-system/international-interconnections"
+    },
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
                 sourceUrl: "https://www.naturalearthdata.com/",
                 note: "Morocco and the Southern Provinces drawn as one territory" },

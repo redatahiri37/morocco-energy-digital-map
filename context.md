@@ -44,6 +44,22 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-18 (map: live Spain–Morocco flow, demand)
+- Morocco has no public live consumption feed (ONEE: annual figures and
+  peaks only; Electricity Maps' MA zone is modelled). The live signal is
+  the Spain–Morocco interconnector from REE (`demanda.ree.es`, 5 min).
+- Worker: `GET /flow/es-ma` (solar/proxy/flow.js) → `{ at, net_import_mw }`,
+  edge-cached 5 min, 503 when REE's last point is over 2 h old. Deployed
+  by worker.yml on merge. Not tested against live REE (blocked from cloud
+  sessions); built and tested on REE's recorded payload format.
+- Map: Snapshot gets « Record peak · 2026 » 8.4 GW and « Demand · 2025 »
+  49 TWh (ONEE board, 27 Jul 2026, via TelQuel) and a live tile; the two
+  Spain–Morocco cable popups show the same figure. Config: `demand` and
+  `liveFlow` in countries.config.js, checked by validate-countries.mjs.
+  CSP connect-src gains the Worker host.
+- After deploy: open energy.wattu.org and check the tile shows a figure,
+  not « Unavailable right now ».
+
 ## Session handoff — 2026-10-12 (solar: UX review, blocks 1 and 2)
 - Fixed: browser/Android Back from the results now returns to the address
   (pushState on entering the results, popstate back); score tooltip no
