@@ -708,7 +708,7 @@
                                                : `${nfmt(fcDC.features.length)}<small> ${T.sites}</small>`}</div></div>
       <div class="kpi"><div class="k">${T.dcInvestment}</div>
         <div class="v">${hasDCinv ? fmtInvestment(dcInvest) : NA}</div></div>
-      ${d ? d.figures.map(x=>`<div class="kpi"><div class="k">${escapeHtml((FR && x.labelFr) || x.label)}</div>
+      ${d ? d.figures.map((x, i)=>`<div class="kpi${d.figures.length % 2 && i === d.figures.length - 1 ? " wide" : ""}"><div class="k">${escapeHtml((FR && x.labelFr) || x.label)}</div>
         <div class="v">${num(x.value) != null ? `${nfmt(x.value, 1)}<small> ${escapeHtml(x.unit)}</small>` : NA}</div></div>`).join("") : ""}
       ${lf ? `<div class="kpi wide" data-live-flow>${liveFlowMarkup(c)}</div>` : ""}
       ${d || lf ? `<p class="kpi-note micro">
