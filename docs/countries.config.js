@@ -76,6 +76,12 @@ window.COUNTRIES = {
     bounds: [[-17.5, 20.5], [-0.8, 36.35]],
     dataPath: "./data/morocco/",
     snapshotSource: "ONEE 2025",
+    // Read by Site check only (not drawn): national 150–400 kV lines for
+    // distance-to-grid anywhere in the country, independent of loaded tiles.
+    siteGrid: { file: "transmission-lines.geojson",
+                source: "World Bank Group masterplan 2018",
+                sourceUrl: "https://datacatalog.worldbank.org/",
+                updated: "2018" },
     credits: "GEM · ONEE · Datacentermap",
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
                 sourceUrl: "https://www.naturalearthdata.com/",

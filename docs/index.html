@@ -53,6 +53,10 @@
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16l-2 10H2z"/><path d="M3 9h16M8.5 4 7.5 14M14.5 4l-1 10M10 14v4M7 21h6l-3-3"/></svg>
     <span class="btn-label">Solaire</span>
   </a>
+  <button id="siteBtn" class="ghost-btn" title="Site check — click the map to screen a data-centre site" aria-label="Site check" aria-pressed="false">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+    <span class="btn-label">Site check</span>
+  </button>
   <button id="methodologyBtn" class="ghost-btn" title="Methodology" aria-label="Methodology">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     <span class="btn-label">Methodology</span>
@@ -117,6 +121,9 @@
       </div>
     </div>
 
+    <!-- Site-check mode hint -->
+    <div id="siteHint" class="site-hint hidden" role="status">Click anywhere to screen a data-centre site · <kbd>Esc</kbd> to exit</div>
+
     <!-- Hover tooltip -->
     <div id="tooltip" class="tooltip"></div>
 
@@ -164,6 +171,7 @@
       <ul class="bullets">
         <li><strong>OpenFreeMap</strong> (<code>tiles.openfreemap.org</code>) — serves the basemap style, vector tiles and label fonts, requested continuously as you pan and zoom.</li>
         <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
+        <li><strong>PVGIS</strong>, via Wattu's proxy (<code>solar-pvgis.redatahiri.workers.dev</code>) — only when you run a <em>Site check</em>: the clicked coordinates are sent to get the solar yield. Nothing else is sent.</li>
       </ul>
       <p class="micro">The map library (MapLibre GL JS, BSD-3-Clause) and the typefaces (Inter, Newsreader, IBM Plex Mono, SIL Open Font License) are served from this site, not from a CDN.</p>
       <h3>Limits</h3>
@@ -173,6 +181,7 @@
         <li>Industrial demand is estimated from public disclosures, not audited.</li>
         <li>Announced DC capacity is the headline, not energised capacity.</li>
         <li>No live data feeds — everything except the OpenInfraMap grid is static GeoJSON.</li>
+        <li><em>Site check</em> is a screening indicator: straight-line distances to the grid, generation and loads within 50 km, connectivity and PVGIS solar yield, scored 1–5. It does not know spare substation capacity, land, water or permitting.</li>
       </ul>
       <p class="micro">See <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/DATA_SOURCES.md" target="_blank" rel="noopener">DATA_SOURCES.md</a> and <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/ASSUMPTIONS.md" target="_blank" rel="noopener">ASSUMPTIONS.md</a> for the full write-up.</p>
     </div>

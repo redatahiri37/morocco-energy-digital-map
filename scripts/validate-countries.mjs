@@ -185,6 +185,26 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
   }
 
+  // Optional reference grid read by Site check (not drawn): lines with a
+  // numeric voltage_kv, or the diagnostic silently finds no grid.
+  if (c.siteGrid) {
+    const sat = `${at}.siteGrid`;
+    for (const f of ["file", "source", "updated"]) if (!str(c.siteGrid[f])) fail(sat, `${f} missing`);
+    if (!/^https:\/\//.test(c.siteGrid.sourceUrl || "")) fail(sat, "sourceUrl must be an https URL");
+    const gpath = str(c.siteGrid.file) ? join(dir, c.siteGrid.file) : null;
+    if (gpath && !existsSync(gpath)) fail(sat, `${c.dataPath}${c.siteGrid.file} does not exist`);
+    else if (gpath) {
+      referenced.add(c.siteGrid.file);
+      try {
+        const gfc = JSON.parse(readFileSync(gpath, "utf8"));
+        const bad = (gfc.features || []).findIndex((f) =>
+          !f.geometry || !["LineString", "MultiLineString"].includes(f.geometry.type) || !num((f.properties || {}).voltage_kv));
+        if (!Array.isArray(gfc.features) || !gfc.features.length) fail(sat, `${c.siteGrid.file} has no features`);
+        else if (bad >= 0) fail(sat, `${c.siteGrid.file} #${bad}: siteGrid features must be lines with a numeric voltage_kv`);
+      } catch (e) { fail(sat, `${c.siteGrid.file} is not valid JSON: ${e.message}`); }
+    }
+  }
+
   const bpath = join(dir, "boundary.geojson");
   if (existsSync(bpath)) {
     try {

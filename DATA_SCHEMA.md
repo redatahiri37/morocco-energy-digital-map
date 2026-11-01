@@ -40,6 +40,7 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `palette` | no | `{ providers: [{ key, color, short }], sectors: { "<sector>": "#rrggbb" } }`. `key` matches `operator` in the data. Unlisted values use the default colour. |
 | `snapshotSource` | no | Short credit above the KPI tiles. |
 | `credits` | no | Data credits in the footer. |
+| `siteGrid` | no | `{ file, source, sourceUrl, updated }`. A national line file in `dataPath` that only **Site check** reads (not drawn), so distance-to-grid works anywhere in the country. LineString / MultiLineString features with a numeric `voltage_kv`; `status: "planned"` marks planned lines. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
 
 Each layer needs `id` (unique within the country, lowercase and dashes),

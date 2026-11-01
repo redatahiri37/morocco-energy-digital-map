@@ -136,6 +136,34 @@ All four patterns are in v1.
   portable to any `morocco-energy-digital-map` repo under GitHub
   Pages `/docs` config.
 
+## 11. Site check — the data-centre screening score
+
+*Added 2026-11.* Click-to-screen mode (top-bar **Site check**). A first
+filter for a DC site, built only from what the map already holds plus
+PVGIS. It is **not** a grid-connection study.
+
+| Criterion | Weight | 5 / 4 / 3 / 2 (else 1) | Data |
+|---|---|---|---|
+| Grid access | 35 % | ≤ 5 / 15 / 30 / 60 km to an existing ≥ 225 kV line | `siteGrid` reference file (Morocco: WBG 2018 masterplan) and live OSM lines from OpenInfraMap tiles; the nearer of the two |
+| Generation nearby | 20 % | ≥ 1000 / 500 / 200 / 50 MW operating within 50 km | curated `power` layer (nameplate, not firm) |
+| Connectivity | 25 % | mean of: cable landing ≤ 25 / 75 / 150 / 300 km, operating DC ≤ 10 / 30 / 75 / 150 km | curated `digital` layers |
+| Solar resource | 20 % | ≥ 1900 / 1700 / 1500 / 1300 kWh/kWp/yr | PVGIS 5.2 via the solar-pvgis Worker: 1 kWp fixed, south-facing, tilt ≈ latitude (≤ 45°), 14 % losses |
+
+- The overall score is the weighted mean over the criteria that could be
+  scored (a PVGIS outage drops solar and renormalises). No grid figure,
+  no overall score.
+- Distances are straight-line on a local flat projection; error is well
+  under 1 % at these ranges, far below the line-routing error.
+- OSM lines and substations are read from the tiles loaded around the
+  site after zooming to 8.5, so they only cover the viewport; the panel
+  states that search radius. Substation voltage comes from the OSM tag.
+- **Not assessed:** spare capacity at substations (not public — confirm
+  with ONEE / the TSO), land, water for cooling, seismic and flood risk,
+  permitting, latency. Thresholds are screening judgement, chosen for a
+  20–200 MW campus; edit `SITE_CRITERIA` in `docs/app.js` and this table
+  together.
+- Shared link: `#site=<country>/<lat>,<lng>` reopens the diagnostic.
+
 ---
 
 ## v1.1 backlog surfaced by these assumptions
@@ -144,5 +172,5 @@ All four patterns are in v1.
 - [ ] `tools/fetch_overpass.sh` — regenerate `grid-lines.geojson` via Overpass
 - [ ] Layer 5 — solar/wind irradiation raster via GSA tiles
 - [ ] MapLibre + OpenFreeMap fallback engine
-- [ ] Grid-suitability index (Pawel-style 1–5 score) for siting DCs
+- [x] Grid-suitability index (Pawel-style 1–5 score) for siting DCs — on click, see §11
 - [ ] Egypt, Senegal, Namibia data folders
