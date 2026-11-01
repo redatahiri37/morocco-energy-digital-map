@@ -101,8 +101,8 @@ export const PAIRS = [
    '<li>La demande industrielle est estimée à partir d\'informations publiques, non auditées.</li>'],
   ['<li>Announced DC capacity is the headline, not energised capacity.</li>',
    '<li>La capacité annoncée des data centers est le chiffre affiché, pas la capacité mise sous tension.</li>'],
-  ['<li>Live data: the OpenInfraMap grid and, for Morocco, the flow on the Spain–Morocco interconnector (REE, 5-minute steps). Morocco publishes no live national consumption; the demand tiles are dated figures. Everything else is static GeoJSON.</li>',
-   '<li>Données en temps réel : le réseau OpenInfraMap et, pour le Maroc, le flux sur l\'interconnexion Espagne–Maroc (REE, pas de 5 minutes). Le Maroc ne publie pas sa consommation nationale en temps réel ; les tuiles de demande sont des chiffres datés. Tout le reste est en GeoJSON statique.</li>'],
+  ['<li>Live data: the OpenInfraMap grid and, for Morocco, the flow on the Spain–Morocco interconnector (REE, 5-minute steps). Morocco publishes no live national consumption; the peak-demand tile is a dated figure. Everything else is static GeoJSON.</li>',
+   '<li>Données en temps réel : le réseau OpenInfraMap et, pour le Maroc, le flux sur l\'interconnexion Espagne–Maroc (REE, pas de 5 minutes). Le Maroc ne publie pas sa consommation nationale en temps réel ; la tuile de pointe est un chiffre daté. Tout le reste est en GeoJSON statique.</li>'],
   ['<p class="micro">See <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/DATA_SOURCES.md" target="_blank" rel="noopener">DATA_SOURCES.md</a> and <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/ASSUMPTIONS.md" target="_blank" rel="noopener">ASSUMPTIONS.md</a> for the full write-up.</p>',
    '<p class="micro">Le détail complet est dans <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/DATA_SOURCES.md" target="_blank" rel="noopener">DATA_SOURCES.md</a> et <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/ASSUMPTIONS.md" target="_blank" rel="noopener">ASSUMPTIONS.md</a> (en anglais).</p>'],
 ];

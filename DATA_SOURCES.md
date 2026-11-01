@@ -100,7 +100,7 @@ grid operator publishes.
 |---|---|---|
 | Live net flow, Spain–Morocco (both cables) | REE, `demanda.ree.es` (Peninsula, `curva=DEMANDAAU`), series `expMar` / `impMar` | 5-minute steps, no account. Read by `solar/proxy/flow.js` (the Worker) because REE sends no CORS header. Same series Electricity Maps uses for ES→MA (`electricitymaps-contrib`, `parsers/ES.py`). |
 | Record peak demand, 8.4 GW (July 2026; previous record 7.99 GW in 2025) | ONEE board of directors, 27 Jul 2026, reported by [TelQuel](https://telquel.ma/instant-t/2026/07/28/electricite-le-maroc-enregistre-un-nouveau-record-historique-de-consommation_2001082) | Also reported by Consonews. The ONEE release itself was not found online. |
-| National demand 2025, 49 TWh (+7.4%) | Same ONEE board session | Energy Institute's Statistical Review 2026 gives 48.2 TWh (+7.35%), a different scope. |
+| National demand 2025, 49 TWh (+7.4%) | Same ONEE board session | Not on the map: the mix panel's 2025 figures are Ember's (47.9 TWh of demand), so the map keeps one source for the year. Energy Institute's Statistical Review 2026 gives 48.2 TWh (+7.35%), a different scope. |
 
 The flow is an import or export, not consumption: at 640 MW of imports,
 Spain covers that much of Morocco's load at that moment, nothing more.
