@@ -56,7 +56,16 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   legend explained them; each collided with a fuel): countries.config.js
   keeps `operators: [{ key, short }]` for tooltips, `palette` now fails
   validation. The map palette check covers these colours and that both
-  layers stay shapes. Still amber: the cluster bubbles.
+  layers stay shapes.
+- Plant clusters: neutral bubbles (LAYER_COLORS cluster / clusterInk:
+  slate-700 on light, slate-300 on dark), the picked fuel's colour under
+  the fuel filter as before. Their source sums MW per fuel (mw_<fuel>,
+  CLUSTER_FUELS, waste in bioenergy) and the tooltip lists the three
+  largest ("Nuclear 77% · Hydro 18% · Wind 3%"). The pipeline halo round
+  plants is that neutral too: no amber left among the map's data marks.
+- Tooltips were placed a panel's width (320 px) right of what they
+  describe on desktop (positionTooltip added the page offset to map
+  pixels; audit item B6) and squeezed near the right edge: both fixed.
 
 ## Session handoff — 2026-10-18 (map: live Spain–Morocco flow, demand)
 - Morocco has no public live consumption feed (ONEE: annual figures and

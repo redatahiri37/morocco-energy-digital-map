@@ -68,6 +68,8 @@
     gap: (names)=>`La source n'indique aucune capacité pour : ${names}, qui produit pourtant ; cette vue la sous-estime. `,
     source: "Source : ",
     clusterTip: (n, mw)=>`${n} centrales · ${mw}`, clusterHint: "Cliquer pour zoomer",
+    fuelShort: { coal:"Charbon", gas:"Gaz", oil:"Fioul", nuclear:"Nucléaire", hydro:"Hydraulique", wind:"Éolien",
+                 solar:"Solaire", biomass:"Bioénergie", geothermal:"Géothermie" },
     estDemand: "env.", cableLanding: "Atterrissement de câble sous-marin",
     badgeGen: "Production", badgeOsm: "Production · OpenStreetMap", badgeIndustry: "Consommateur industriel",
     badgeCable: "Câble sous-marin", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Ligne de transport",
@@ -126,6 +128,8 @@
     gap: (names)=>`The source lists no ${names} capacity though it generates power: this view undercounts it. `,
     source: "Source: ",
     clusterTip: (n, mw)=>`${n} plants · ${mw}`, clusterHint: "Click to zoom in",
+    fuelShort: { coal:"Coal", gas:"Gas", oil:"Oil", nuclear:"Nuclear", hydro:"Hydro", wind:"Wind",
+                 solar:"Solar", biomass:"Bioenergy", geothermal:"Geothermal" },
     estDemand: "est.", cableLanding: "Submarine cable landing",
     badgeGen: "Generation", badgeOsm: "Generation · OpenStreetMap", badgeIndustry: "Industrial consumer",
     badgeCable: "Submarine cable", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Transmission line",
@@ -234,10 +238,12 @@
   // more hues (the fuels hold the colour wheel): data centres are violet
   // diamonds, cable landings violet rings, industrial sites slate squares
   // (a neutral on purpose). Their operator or sector is in the tooltip and
-  // popup. Checked by the same script as the fuels.
+  // popup. Plant clusters mix fuels, so their bubbles are a neutral too
+  // (cluster, with its label ink), apart from the industry slate; so is the
+  // halo of plants in the pipeline. Checked by the same script as the fuels.
   const LAYER_COLORS = {
-    light: { digital:"#7C3AED", industrial:"#64748B" },
-    dark:  { digital:"#8B5CF6", industrial:"#94A3B8" }
+    light: { digital:"#7C3AED", industrial:"#64748B", cluster:"#334155", clusterInk:"#FFFFFF" },
+    dark:  { digital:"#8B5CF6", industrial:"#94A3B8", cluster:"#CBD5E1", clusterInk:"#0B1426" }
   };
   const FUEL_COLOR = {}, LAYER_COLOR = {};   // the current theme's, set by setMapPalette()
   function setMapPalette(){
@@ -818,6 +824,8 @@
   // A mix fuel → the plant fuel_type values it covers on the map.
   const MIX_PLANT_FUELS = { biomass: ["biomass", "waste"] };
   const plantFuels = (fuel)=>MIX_PLANT_FUELS[fuel] || [fuel];
+  // The fuels a plant cluster sums (waste counts as bioenergy, as in the mix).
+  const CLUSTER_FUELS = ["coal", "gas", "oil", "nuclear", "hydro", "wind", "solar", "biomass", "geothermal"];
   const mixFuel = (fuel)=>mixData && mixData.fuels.find(f=>f.fuel === fuel);
 
   // A layer's data as drawn: narrowed to the picked fuel (plant layers) and
@@ -1284,22 +1292,27 @@
     // Dense national fleets (France, Spain: 1,500+ plants) cluster wider so
     // the bubbles don't tile the whole screen on a phone.
     const dense = fc.features.length > 500;
-    // Clusters carry their summed MW, shown instead of a plant count.
-    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35,
-      clusterProperties: { mw: ["+", ["to-number", ["get","capacity_mw"], 0]] } };
+    // Clusters carry their summed MW, shown instead of a plant count, and
+    // the MW of each fuel (as the mix groups them), for the tooltip.
+    const mwOf = ["to-number", ["get","capacity_mw"], 0];
+    const clusterProperties = { mw: ["+", mwOf] };
+    CLUSTER_FUELS.forEach(fuel=>{
+      clusterProperties["mw_" + fuel] = ["+", ["case", ["in", ["get","fuel_type"], ["literal", plantFuels(fuel)]], mwOf, 0]];
+    });
+    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35, clusterProperties };
     addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
-    // Cluster bubbles: amber, or the picked fuel's colour when the mix
-    // legend narrows the layer to one fuel.
+    // Cluster bubbles: a neutral (they mix fuels), or the picked fuel's
+    // colour when the mix legend narrows the layer to one fuel.
     const pickedColor = fuelFilter && FUEL_COLOR[fuelFilter];
     addLayer(L, {
       id: p+"-clusters", type:"circle", source:srcId,
       filter:["has","point_count"],
       paint:{
-        "circle-color": pickedColor || "rgba(245,158,11,0.85)",
-        "circle-opacity": pickedColor ? 0.85 : 1,
+        "circle-color": pickedColor || LAYER_COLOR.cluster,
+        "circle-opacity": pickedColor ? 0.85 : 0.9,
         // Same scale as a plant of the summed MW, never smaller than its
         // label ("999 MW") and capped so a national cluster stays on screen.
         "circle-radius": plantRadiusExpr("mw", (r)=>["max", 21, ["min", 56, r]]),
@@ -1317,7 +1330,7 @@
         "text-size":9.5,
         "text-allow-overlap":true
       },
-      paint:{ "text-color": pickedColor && !isLight(pickedColor) ? "#FFFFFF" : "#070D1A" }
+      paint:{ "text-color": !pickedColor ? LAYER_COLOR.clusterInk : isLight(pickedColor) ? "#070D1A" : "#FFFFFF" }
     });
 
     // Halo for announced/construction status
@@ -1325,7 +1338,7 @@
       id: p+"-halo", type:"circle", source:srcId,
       filter:["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
       paint:{
-        "circle-color":"rgba(245,158,11,0.25)",
+        "circle-color": withAlpha(LAYER_COLOR.cluster, 0.25),
         "circle-radius": plantRadiusExpr("capacity_mw", (r)=>["+", r, 4]),
         "circle-blur":0.3
       }
@@ -1624,17 +1637,28 @@
       <div class="tt-meta">${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
+  // "Wind 62% · Solar 30% · Hydro 8%": a cluster's three largest fuels by
+  // MW, since its bubble is a neutral. Empty under the fuel filter, where
+  // the bubble already wears that fuel's colour.
+  function clusterMix(p){
+    const total = num(p.mw) || 0;
+    const parts = CLUSTER_FUELS.map(f=>[f, num(p["mw_" + f]) || 0]).filter(([, mw])=>mw > 0).sort((a, b)=>b[1] - a[1]);
+    if(!total || !parts.length || fuelFilter) return "";
+    return parts.slice(0, 3).map(([f, mw])=>`${T.fuelShort[f]} ${fmtShare(100 * mw / total)}`).join(" · ");
+  }
   function showClusterTooltip(f, point){
     const p = f.properties || {};
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(T.clusterTip(nfmt(num(p.point_count) || 0), fmtMW(num(p.mw) || 0)))}</div>
-      <div class="tt-metric">${T.clusterHint}</div>`;
+      ${clusterMix(p) ? `<div class="tt-metric">${escapeHtml(clusterMix(p))}</div>` : ""}
+      <div class="tt-meta">${T.clusterHint}</div>`;
     positionTooltip(point);
   }
+  // `point` is in map pixels, and the tooltip sits in .map-wrap with the
+  // map: no page offset to add (that put it a panel's width to the right).
   function positionTooltip(point){
-    const rect = $("#map").getBoundingClientRect();
-    tooltip.style.left = (rect.left + point.x) + "px";
-    tooltip.style.top  = (rect.top  + point.y) + "px";
+    tooltip.style.left = point.x + "px";
+    tooltip.style.top  = point.y + "px";
     tooltip.style.display = "block";
   }
   function hideTooltip(){ tooltip.style.display = "none"; }

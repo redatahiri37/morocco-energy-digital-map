@@ -25,6 +25,8 @@
  *     industry slate a neutral (C < 0.06: the hues belong to the fuels);
  *   - the two apart (Delta E >= 15, colour-blind >= 8);
  *   - and they are still drawn as shapes, or the fuels would collide.
+ * Plant clusters (cluster, clusterInk): a neutral too, 3:1 with the map, its
+ * label ink 4.5:1 on it, and apart from the industry slate (Delta E >= 15).
  *
  *   node scripts/check-map-palette.mjs
  */
@@ -121,18 +123,25 @@ if (!layerBlock) fail("docs/app.js: no `const LAYER_COLORS = { light: {…}, dar
 else for (const [, mode, body] of layerBlock[1].matchAll(/(light|dark):\s*\{([^}]*)\}/g)) {
   const c = Object.fromEntries([...body.matchAll(/(\w+):\s*"(#[0-9A-Fa-f]{6})"/g)].map((m) => [m[1], m[2]]));
   const before = errors;
-  if (!c.digital || !c.industrial) { fail(`LAYER_COLORS.${mode} needs digital and industrial`); continue; }
-  for (const [k, hex] of Object.entries(c))
-    for (const bg of MAP_BG[mode])
+  if (!c.digital || !c.industrial || !c.cluster || !c.clusterInk) { fail(`LAYER_COLORS.${mode} needs digital, industrial, cluster and clusterInk`); continue; }
+  for (const k of ["digital", "industrial", "cluster"])
+    for (const bg of MAP_BG[mode]) {
+      const hex = c[k];
       if (contrast(hex, bg) < 3) fail(`${mode} ${k} ${hex}: contrast ${contrast(hex, bg).toFixed(2)}:1 with ${bg}, below 3:1`);
+    }
   const [L, C] = lc(c.digital);
   if (L < BAND[mode][0] || L > BAND[mode][1]) fail(`${mode} digital ${c.digital}: lightness ${L.toFixed(3)} outside ${BAND[mode].join("–")}`);
   if (C < 0.10) fail(`${mode} digital ${c.digital}: chroma ${C.toFixed(3)} below 0.10`);
   if (lc(c.industrial)[1] >= 0.06) fail(`${mode} industrial ${c.industrial}: chroma ${lc(c.industrial)[1].toFixed(3)}, keep it a neutral (< 0.06)`);
+  if (lc(c.cluster)[1] >= 0.06) fail(`${mode} cluster ${c.cluster}: chroma ${lc(c.cluster)[1].toFixed(3)}, keep it a neutral (< 0.06): clusters mix fuels`);
+  if (contrast(c.cluster, c.clusterInk) < 4.5) fail(`${mode} cluster label ${c.clusterInk} on ${c.cluster}: contrast ${contrast(c.cluster, c.clusterInk).toFixed(2)}:1, below 4.5:1`);
+  const ci = deltaE(c.cluster, c.industrial);
+  if (ci < 15) fail(`${mode} cluster/industrial: Delta E ${ci.toFixed(1)}, below 15`);
   const n = deltaE(c.digital, c.industrial), k = cvd(c.digital, c.industrial);
   if (n < 15) fail(`${mode} digital/industrial: Delta E ${n.toFixed(1)}, below 15`);
   if (k < 8) fail(`${mode} digital/industrial: colour-blind Delta E ${k.toFixed(1)}, below 8`);
-  console.log(`${errors > before ? "    " : "ok  "}  ${mode}: data centres ${c.digital}, industry ${c.industrial}; apart by ${n.toFixed(1)}, colour-blind ${k.toFixed(1)}`);
+  console.log(`${errors > before ? "    " : "ok  "}  ${mode}: data centres ${c.digital}, industry ${c.industrial}; apart by ${n.toFixed(1)}, colour-blind ${k.toFixed(1)}; ` +
+    `clusters ${c.cluster} (label ${contrast(c.cluster, c.clusterInk).toFixed(1)}:1), ${ci.toFixed(1)} from industry`);
 }
 for (const shape of ["square", "diamond"])
   if (!app.includes(`"icon-image": "shape-${shape}"`))
