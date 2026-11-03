@@ -38,7 +38,7 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `dataPath` | yes | `./data/<key>/` |
 | `layers` | yes (with data) | See below. |
 | `boundary` | if `boundary.geojson` exists | `{ source, sourceUrl, note }`. This is the provenance of the outline, shown in Methodology. |
-| `palette` | no | `{ providers: [{ key, color, short }], sectors: { "<sector>": "#rrggbb" } }`. `key` matches `operator` in the data. Unlisted values use the default colour. |
+| `operators` | no | `[{ key, short }]`: short operator names for tooltips. `key` matches `operator` in the data. |
 | `mix` | no (warned if missing) | File name of the national electricity mix in `dataPath`, e.g. `mix.json`. See [Electricity mix](#electricity-mix-mixjson). |
 | `snapshotSource` | no | Short credit for the plant figures in the "Mapped assets" tiles. |
 | `snapshotSourceFr` | no | The same credit in French, when it has words to translate. |
@@ -95,11 +95,11 @@ touch it.
 
 ## `industrial`
 
-Large industrial consumers. Points, coloured by `palette.sectors`.
+Large industrial consumers. Points, drawn as slate squares; the sector is in the tooltip and popup.
 
 | Field | Required | Notes |
 |---|---|---|
-| `sector` | yes | Free text. Matches a `palette.sectors` key for its colour. |
+| `sector` | yes | Free text, shown in the tooltip, popup and search. |
 | `estimated_demand_mw` | yes | Number, or `null` if unknown. |
 | `status` | yes | As for `power`. |
 | `grid_connection` | recommended | e.g. "225 kV, Jorf Lasfar substation". |
@@ -110,9 +110,9 @@ Data centres and submarine-cable landings. Points.
 
 | Field | Required | Notes |
 |---|---|---|
-| `operator` | yes | Matches a `palette.providers` key for its colour. |
-| `category` | yes | `cable_landing` draws as a teal ring. Anything else (`colocation`, `telco`, `hyperscale`, `government`) draws as a data-centre bubble. |
-| `capacity_estimate_mw` | yes | Number, or `null`. Sets the bubble size and feeds "DC pipeline". |
+| `operator` | yes | Shown in the tooltip; an `operators` entry gives its short name. |
+| `category` | yes | `cable_landing` draws as a violet ring. Anything else (`colocation`, `telco`, `hyperscale`, `government`) draws as a violet diamond. |
+| `capacity_estimate_mw` | yes | Number, or `null`. Sets the diamond's size and feeds "DC pipeline". |
 | `status` | yes | As for `power`. `announced`, `planned` and `construction` render faded. |
 | `year` | recommended | Year energised, or target year. |
 | `investment_usd` | recommended | Number. Feeds "DC investment". |

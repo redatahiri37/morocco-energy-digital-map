@@ -44,6 +44,20 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-11-03 (map: industry and data-centre markers)
+- Industry and data centres are told apart from the plants by
+  shape, not by more hues. Data centres = violet diamonds (sized by MW,
+  pipeline faded with a lavender outline), cable landings = violet rings,
+  industrial sites = slate squares. Diamonds and squares are SDF icons
+  made in app.js (addShapeImages, re-added on every build: a new style
+  drops images). LAYER_COLORS per theme next to FUEL_COLORS; markerOf /
+  markHtml give the same shape to swatches (layer list, tooltip, popup,
+  search). The per-country colours by operator and sector are gone (no
+  legend explained them; each collided with a fuel): countries.config.js
+  keeps `operators: [{ key, short }]` for tooltips, `palette` now fails
+  validation. The map palette check covers these colours and that both
+  layers stay shapes. Still amber: the cluster bubbles.
+
 ## Session handoff — 2026-10-18 (map: live Spain–Morocco flow, demand)
 - Morocco has no public live consumption feed (ONEE: annual figures and
   peaks only; Electricity Maps' MA zone is modelled). The live signal is
@@ -155,16 +169,15 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   flyTo / easeTo / fitBounds centre above them; a tapped feature eases
   above the popup. Popup on phones now ends above the bottom bar.
 - Fuel palette (2026-10-27): FUEL_COLORS in app.js, one set per theme
-  (setFuelPalette on load and theme switch; waste = bioenergy's colour).
+  (setMapPalette on load and theme switch; waste = bioenergy's colour).
   Each fuel keeps its usual hue (coal brown, gas orange, oil crimson,
   nuclear purple, hydro blue, wind cyan, solar gold, bioenergy green,
   geothermal pink); L and C were optimised in OKLCH against the dataviz
-  checks. scripts/check-fuel-palette.mjs (CI) re-checks: band, chroma,
+  checks. scripts/check-map-palette.mjs (CI) re-checks: band, chroma,
   contrast with the panel, and the 14 fuel pairs that touch in some mix bar
   (Delta E >= 15, colour-blind >= 6; now >= 8.1). The map can't keep all 9
   apart for colour-blind readers (dark solar/gas collapse for deutans): the
-  mix legend's fuel filter is the remedy. Not re-checked: the industry
-  sector / data-centre operator palettes and the amber cluster bubbles.
+  mix legend's fuel filter is the remedy.
 - Sheet: a drag held still for 120 ms before release no longer counts as a
   flick (settles on the nearest stop).
 
