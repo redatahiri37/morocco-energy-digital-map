@@ -97,8 +97,11 @@ Last reshuffle: **2026-04-19**.
   free; no ingest pipeline needed.
 - **DC detail pane** — on click, show `Tier`, `PUE` (if public),
   `cooling` (air / liquid / immersion), `connected_substation_id`.
-- **Bilingual UI (FR / EN)** — audience is split roughly 50/50;
-  i18n dictionary in `docs/i18n/` driven by `<html lang>` + a top-bar toggle.
+- ~~**Bilingual UI (FR / EN)**~~ — *shipped 2026-10-18 (PR #95):*
+  energy.wattu.org/fr/, built at deploy from `docs/index.html` by
+  `scripts/build-map-i18n.mjs` (table: `scripts/map-i18n-fr.mjs`); app.js
+  texts in its `T` table, picked by `<html lang>`; FR / EN link in the top
+  bar keeps the view.
 
 ## 🟡 Next — picked up once "Now" ships
 

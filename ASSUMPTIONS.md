@@ -162,7 +162,7 @@ PVGIS. It is **not** a grid-connection study.
   permitting, latency. Thresholds are screening judgement, chosen for a
   20–200 MW campus; edit `SITE_CRITERIA` in `docs/app.js` and this table
   together.
-- Shared link: `#site=<country>/<lat>,<lng>` reopens the diagnostic.
+- Shared link: the map's own link format carries it, `#country=<key>&…&site=<lat>,<lng>`, and reopens the diagnostic.
 
 ---
 

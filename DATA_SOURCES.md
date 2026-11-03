@@ -36,6 +36,19 @@ or a PR on GitHub.*
 | Cross-check | Against RTE / REE 2024 statistics: France nuclear 65.7 GW (RTE 63 GW net), Spain nuclear 7.4 GW (REE 7.1), Spain wind 30.7 GW (REE 31), Spain CCGT 27.2 GW (REE 26.2) |
 | Known limits | Closure dates are the dataset's: Spanish coal (Aboño, Los Barrios, Soto de Ribera, Es Murterar) is shown until its listed closure even where units already stopped. No data-centre layer yet (needs a PeeringDB export for FR, ES). |
 
+## Electricity mix — national generation and capacity (added 2026-10-12)
+**Files:** `docs/data/<country>/mix.json`, one per country
+
+| | |
+|---|---|
+| Source | [Ember — Yearly electricity data](https://ember-energy.org/data/yearly-electricity-data/), long-format CSV, release of 2026-06-23 (sha256 pinned in the build script) |
+| Licence | CC BY 4.0 |
+| What it is | Generation (TWh, %) and capacity (GW) by fuel, demand, net imports and power-sector CO₂ intensity, compiled by Ember from national statistics, EIA and IRENA, with Ember estimates for the latest year |
+| Build | `python3 scripts/build-country-mix.py` (all countries) |
+| Year | 2025 for Egypt, Ethiopia, France, Kenya, Morocco, Nigeria, South Africa and Spain; 2024 for Côte d'Ivoire, Ghana, Rwanda and Senegal (latest in the release) |
+| Fuel mapping | Ember's "Other Fossil" (mostly oil and diesel) takes the oil colour; "Other Renewables" (mostly geothermal) the geothermal colour; "Bioenergy" covers the map's biomass and waste plants |
+| Known limits | Kenya: Ember lists no geothermal capacity although geothermal makes 46 % of generation. Senegal: hydro generation (its share of the OMVS dams in Mali) with no domestic capacity. Both are flagged in `capacity_gaps`; the map says the capacity view undercounts them and leaves out the renewables share of capacity |
+
 ## Layer 2 — Transmission Grid
 **File:** `docs/data/morocco/grid-lines.geojson` (editorial overlay only)
 
@@ -74,6 +87,23 @@ tool to identify OIM coverage gaps, not as a displayed geometry source.
 The [Africa Electricity Grids Explorer](https://africagrid.energydata.info/)
 (World Bank / ESMAP) provides Africa-specific regional transmission
 topology, used to cross-check strategic corridor routing.
+
+### Live flow and national demand (added 2026-10-18)
+
+Morocco publishes no live national consumption: ONEE gives annual
+figures and record peaks, and Electricity Maps' Morocco zone is modelled
+(its config has no live parser, only Ember's yearly capacity). The one
+live, measured signal is the Spain–Morocco interconnector, which Spain's
+grid operator publishes.
+
+| Figure | Source | Notes |
+|---|---|---|
+| Live net flow, Spain–Morocco (both cables) | REE, `demanda.ree.es` (Peninsula, `curva=DEMANDAAU`), series `expMar` / `impMar` | 5-minute steps, no account. Read by `solar/proxy/flow.js` (the Worker) because REE sends no CORS header. Same series Electricity Maps uses for ES→MA (`electricitymaps-contrib`, `parsers/ES.py`). |
+| Record peak demand, 8.4 GW (July 2026; previous record 7.99 GW in 2025) | ONEE board of directors, 27 Jul 2026, reported by [TelQuel](https://telquel.ma/instant-t/2026/07/28/electricite-le-maroc-enregistre-un-nouveau-record-historique-de-consommation_2001082) | Also reported by Consonews. The ONEE release itself was not found online. |
+| National demand 2025, 49 TWh (+7.4%) | Same ONEE board session | Not on the map: the mix panel's 2025 figures are Ember's (47.9 TWh of demand), so the map keeps one source for the year. Energy Institute's Statistical Review 2026 gives 48.2 TWh (+7.35%), a different scope. |
+
+The flow is an import or export, not consumption: at 640 MW of imports,
+Spain covers that much of Morocco's load at that moment, nothing more.
 
 ## Layer 3 — Industrial Consumers
 **File:** `docs/data/morocco/industrial.geojson`
@@ -147,7 +177,8 @@ No account, token, or API key is required.
   that could fill this gap in v1.1 for remote regions where OSM is sparse.
 - No substation dataset — only line endpoints. (OIM renders substations
   as polygons/points at zoom ≥ 5; no ingest needed.)
-- No demand time-series — demand is a single annual estimate.
+- No demand time-series — ONEE publishes none. The map shows dated
+  national figures and the live Spain–Morocco flow (see Layer 2).
 - No cross-border interconnection capacities with Spain/Algeria (to be
   added in v1.1).
 - No renewable potential raster (Layer 5).

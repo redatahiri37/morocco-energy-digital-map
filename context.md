@@ -44,6 +44,23 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-10-18 (map: live Spain–Morocco flow, demand)
+- Morocco has no public live consumption feed (ONEE: annual figures and
+  peaks only; Electricity Maps' MA zone is modelled). The live signal is
+  the Spain–Morocco interconnector from REE (`demanda.ree.es`, 5 min).
+- Worker: `GET /flow/es-ma` (solar/proxy/flow.js) → `{ at, net_import_mw }`,
+  edge-cached 5 min, 503 when REE's last point is over 2 h old. Deployed
+  by worker.yml on merge. Not tested against live REE (blocked from cloud
+  sessions); built and tested on REE's recorded payload format.
+- Map: Snapshot gets « Record peak · 2026 » 8.4 GW (ONEE board, 27 Jul
+  2026, via TelQuel) and a live tile (ONEE's 49 TWh for 2025 dropped on
+  2026-11-01: the mix panel already carries Ember's 2025 year); the two
+  Spain–Morocco cable popups show the same figure. Config: `demand` and
+  `liveFlow` in countries.config.js, checked by validate-countries.mjs.
+  CSP connect-src gains the Worker host.
+- After deploy: open energy.wattu.org and check the tile shows a figure,
+  not « Unavailable right now ».
+
 ## Session handoff — 2026-10-12 (solar: UX review, blocks 1 and 2)
 - Fixed: browser/Android Back from the results now returns to the address
   (pushState on entering the results, popstate back); score tooltip no
@@ -71,6 +88,85 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   users commonly rely on) nor on a real phone GPU.
 - Next (owner's call): a lifestyle question for self-consumption
   (calc-engine), summer/winter bills, shorter phone page.
+
+## Session handoff — 2026-10-12 (map: electricity mix per country)
+- New "Electricity mix" block at the top of the map panel, for all 12
+  countries: national generation / capacity by fuel (toggle), renewables
+  share of each, net imports or exports, CO₂ intensity, from Ember's yearly
+  data (CC BY 4.0). Built by scripts/build-country-mix.py into
+  docs/data/<key>/mix.json (Ember release 2026-06-23, sha256 pinned);
+  validated by validate-countries.mjs (4 new self-test cases).
+- The legend is the fuel colour key for the plant dots and filters the
+  plant layers (and OSM plants) to one fuel; KPI tiles and layer counts
+  follow the filter. A coverage line compares the mapped plants with
+  Ember's national capacity (Morocco 71 %, Ethiopia 40 %, Egypt 54 %).
+- KPI tiles: "Tracked capacity" + "Renewables share*" (capacity of mapped
+  plants incl. announced ones, footnote missing) replaced by "In service"
+  and "Pipeline". Morocco's snapshot credit no longer says "ONEE 2025".
+- Plant dots now scale with capacity (area ∝ MW, floor for small plants,
+  grows with zoom; OSM plants on the same curve; small drawn on top).
+  Clusters show their summed MW/GW and size on the same scale (floor so the
+  label fits, cap at 56 px); hover gives "N plants · X GW". A size key under
+  the layer list redraws with the zoom.
+- Status view above the layer list: All / In service / Pipeline (under
+  construction, announced, planned) narrows every layer with a file and the
+  OSM plants (construction / disused tags); kept across country switches.
+  Only Morocco, France and Spain have a pipeline in their files; elsewhere
+  the note says the sources list built assets only.
+- Shareable link: the URL hash holds the country, map view, status view,
+  fuel, mix measure, layers (when not the default) and the open feature
+  (#country=france&map=8.00/50.1880/1.0270&status=pipeline&fuel=wind
+  &feature=power-plants:ppm-fr-15839). Written with replaceState once the
+  page has applied any incoming link; a plain visit keeps a clean URL until
+  the first action. "Share" in the top bar (share sheet on phones, else
+  clipboard) and "Copy link" in each popup. On phones the GitHub button
+  makes room for Share (GitHub stays in the panel footer and bottom bar).
+- Search at the top of the panel: names (and operator, sector, region,
+  fuel) of every mapped asset in all 12 countries, plus country names;
+  accents ignored. Other countries' files load on the first keystroke, not
+  on page load. A result opens its popup (switching country if needed) and
+  lifts a fuel or status filter that would hide it. Arrow keys / Enter /
+  Escape; "/" focuses the box. OSM plants are live tiles: not searchable.
+- French page: energy.wattu.org/fr/, built at deploy from docs/index.html
+  by scripts/build-map-i18n.mjs with scripts/map-i18n-fr.mjs (CI fails on
+  English left in it or a stale table); docs/fr/ is git-ignored. app.js
+  picks its T table by <html lang>; numbers in French format (7,7 GW,
+  62 %); countries.config.js has labelFr / titleFr (validator requires
+  them). Sources, plant names, technology and operators stay as published.
+  Data files load from the site root (dataUrl), so /fr/ shares ./data/.
+  FR / EN link in the top bar keeps the view (#…). Top bar: icons only
+  below 1024 px (it ran past the edge between 640 and 1000 px).
+- Overview: "All countries — overview" at the top of the country menu
+  (#view=overview, &metric=co2 for CO₂). Each enabled country's boundary
+  filled by renewables share of generation (0–100 %) or CO₂ g/kWh (0–800),
+  one sequential blue ramp, reversed in dark mode so low values recede.
+  Ranked list in the panel (hover syncs with the map), tooltip with the top
+  three fuels, click opens the country. Mix and boundary files load on
+  first use only. Hides the mix, layers and KPI sections; leaving it goes
+  through switchCountry. Ember years differ per country (note shows range).
+- Phone sheet: below 900 px (landscape phones, max-height 500, keep the
+  side panel) the panel is a bottom sheet over a full-height map, same
+  media query in style.css and app.js (SHEET_MQ). Stops peek / half / full;
+  peek ends under the mix bar (overview: under its colour key). Grip: tap
+  goes up a stop (full → peek), drag with flick; in peek the whole sheet
+  drags. Search focus → full, pick → peek; map drag, popup, overview row →
+  peek. Map bottom padding = peek, or popup height while one is open
+  (syncMapPad: changed without moving the view, never mid-animation), so
+  flyTo / easeTo / fitBounds centre above them; a tapped feature eases
+  above the popup. Popup on phones now ends above the bottom bar.
+- Fuel palette (2026-10-27): FUEL_COLORS in app.js, one set per theme
+  (setFuelPalette on load and theme switch; waste = bioenergy's colour).
+  Each fuel keeps its usual hue (coal brown, gas orange, oil crimson,
+  nuclear purple, hydro blue, wind cyan, solar gold, bioenergy green,
+  geothermal pink); L and C were optimised in OKLCH against the dataviz
+  checks. scripts/check-fuel-palette.mjs (CI) re-checks: band, chroma,
+  contrast with the panel, and the 14 fuel pairs that touch in some mix bar
+  (Delta E >= 15, colour-blind >= 6; now >= 8.1). The map can't keep all 9
+  apart for colour-blind readers (dark solar/gas collapse for deutans): the
+  mix legend's fuel filter is the remedy. Not re-checked: the industry
+  sector / data-centre operator palettes and the amber cluster bubbles.
+- Sheet: a drag held still for 120 ms before release no longer counts as a
+  flick (settles on the nearest stop).
 
 ## Session handoff — 2026-10-08 (solar: « Trouver un installateur »)
 - New card after « Et maintenant ? »: two Taqa Pro-labelled installers

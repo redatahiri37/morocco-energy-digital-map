@@ -1,8 +1,8 @@
 # Security headers for energy.wattu.org (Cloudflare Pages reads this file).
 # Code (scripts, styles) comes only from this site; tiles and label fonts
-# from OpenFreeMap and OpenInfraMap; PVGIS yields (Site check) from the
-# solar-pvgis Worker, which already allows this origin. A new host must
-# be added here or the browser refuses it. The sha256 is the inline redirect script in
+# from OpenFreeMap and OpenInfraMap; the live Spain–Morocco flow and the
+# Site check PVGIS yield from Wattu's Worker (solar/proxy). A new host must be added here or the
+# browser refuses it. The sha256 is the inline redirect script in
 # index.html; CI recomputes it and fails if they differ. No 'unsafe-inline'
 # anywhere: app.js sets colours through the DOM, never in style="".
 # COOP / CORP / X-Frame-Options: no other site can frame this page, hold a

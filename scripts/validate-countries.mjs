@@ -104,6 +104,8 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
   const at = `countries.${key}`;
   if (!/^[a-z][a-z0-9-]*$/.test(key)) fail(at, "key must be lowercase letters, digits and dashes");
   if (!str(c.label)) fail(at, "label missing");
+  // The French page (fr/, scripts/build-map-i18n.mjs) names every country.
+  if (!str(c.labelFr)) fail(at, "labelFr missing (the French page shows it)");
   if (!/^[A-Z]{2}$/.test(c.iso || "")) fail(at, "iso must be a two-letter ISO 3166-1 code");
   if (!isLngLat(c.center)) fail(at, "center must be [lng, lat]");
   if (!num(c.zoom)) fail(at, "zoom must be a number");
@@ -131,14 +133,28 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
   if (c.boundary && (!str(c.boundary.source) || !/^https:\/\//.test(c.boundary.sourceUrl || "")))
     fail(`${at}.boundary`, "needs source and an https sourceUrl");
 
+  if (c.demand) {
+    const d = c.demand;
+    if (!str(d.source) || !/^https:\/\//.test(d.sourceUrl || "")) fail(`${at}.demand`, "needs source and an https sourceUrl");
+    if (!Array.isArray(d.figures) || !d.figures.length || !d.figures.every((x) => x && str(x.label) && str(x.labelFr) && num(x.value) && str(x.unit)))
+      fail(`${at}.demand`, "figures must be [{ label, labelFr, value: number, unit }]");
+  }
+  const lf = c.liveFlow;
+  if (lf) {
+    if (!/^\/flow\/[a-z-]+$/.test(lf.path || "")) fail(`${at}.liveFlow`, `path must look like "/flow/<route>", got ${JSON.stringify(lf.path)}`);
+    if (!str(lf.partner) || !str(lf.partnerFr) || !str(lf.source) || !/^https:\/\//.test(lf.sourceUrl || "")) fail(`${at}.liveFlow`, "needs partner, partnerFr, source and an https sourceUrl");
+    if (!Array.isArray(lf.features) || !lf.features.length) fail(`${at}.liveFlow`, "features must list interconnector ids");
+  }
+
   const referenced = new Set();
   const seenIds = new Set();
+  const gridIds = new Set();   // feature ids of grid layers, for liveFlow
   for (const L of c.layers || []) {
     const lat = `${at}.layers.${L.id}`;
     if (!/^[a-z][a-z0-9-]*$/.test(L.id || "")) fail(lat, "id must be lowercase letters, digits and dashes");
     if (seenIds.has(L.id)) fail(lat, "duplicate layer id"); seenIds.add(L.id);
     if (!KINDS.includes(L.kind)) { fail(lat, `unknown kind "${L.kind}" (expected ${KINDS.join(" / ")})`); continue; }
-    for (const f of ["title", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
+    for (const f of ["title", "titleFr", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
     if (!/^https:\/\//.test(L.sourceUrl || "")) fail(lat, "sourceUrl must be an https URL");
 
     if (L.visible !== undefined && typeof L.visible !== "boolean") fail(lat, "visible must be true or false");
@@ -169,6 +185,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
         if (!test(p[field])) fail(fat, `${field} ${field in p ? `invalid: ${JSON.stringify(p[field])}` : "missing"}`);
       for (const field of schema.recommended) if (p[field] == null) missingRec[field] = (missingRec[field] || 0) + 1;
       if (p.id != null) { if (featIds.has(p.id)) fail(fat, `duplicate id "${p.id}"`); featIds.add(p.id); }
+      if (L.kind === "grid" && p.id != null) gridIds.add(p.id);
       if (p.source_url != null && !/^https?:\/\//.test(p.source_url)) fail(fat, "source_url must be an http(s) URL");
       // The map writes these into HTML as numbers: a string here would be
       // markup on the page.
@@ -183,6 +200,46 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     });
     for (const [field, n] of Object.entries(missingRec))
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
+  }
+
+  // A renamed interconnector would silently lose its live figure.
+  if (lf && Array.isArray(lf.features))
+    for (const id of lf.features)
+      if (!gridIds.has(id)) fail(`${at}.liveFlow`, `"${id}" is not the id of a grid feature`);
+
+  // National electricity mix (scripts/build-country-mix.py): the panel's bar
+  // writes every number into the page, so each must be a number.
+  if (c.mix === undefined) { if (ENABLED.includes(key)) warn(at, "no `mix` file: the Electricity mix panel is hidden"); }
+  else if (!str(c.mix) || !existsSync(join(dir, c.mix))) fail(`${at}.mix`, `${c.dataPath}${c.mix} does not exist`);
+  else {
+    const mat = `${c.dataPath}${c.mix}`;
+    let m = null;
+    try { m = JSON.parse(readFileSync(join(dir, c.mix), "utf8")); }
+    catch (e) { fail(mat, `not valid JSON: ${e.message}`); }
+    if (m) {
+      if (!Number.isInteger(m.year)) fail(mat, "year must be an integer");
+      if (!str(m.source) || !/^https:\/\//.test(m.source_url || "")) fail(mat, "needs source and an https source_url");
+      for (const f of ["generation_twh", "capacity_gw", "renewables_pct_generation"])
+        if (!num(m[f])) fail(mat, `${f} must be a number, got ${JSON.stringify(m[f])}`);
+      for (const f of ["demand_twh", "net_imports_twh", "co2_intensity_g_per_kwh", "renewables_pct_capacity"])
+        if (m[f] !== undefined && !numOrNull(m[f])) fail(mat, `${f} must be a number or null, got ${JSON.stringify(m[f])}`);
+      if (!Array.isArray(m.capacity_gaps) || !m.capacity_gaps.every((g) => FUELS.includes(g)))
+        fail(mat, "capacity_gaps must list fuels from the schema");
+      if (!Array.isArray(m.fuels) || m.fuels.length === 0) fail(mat, "fuels must be a non-empty list");
+      else {
+        const seen = new Set();
+        for (const f of m.fuels) {
+          const fat = `${mat} fuel ${JSON.stringify(f.fuel)}`;
+          if (!FUELS.includes(f.fuel)) fail(fat, "fuel must be one of the schema's fuel types");
+          if (seen.has(f.fuel)) fail(fat, "listed twice"); seen.add(f.fuel);
+          if (!str(f.label)) fail(fat, "label missing");
+          for (const k of ["generation_twh", "generation_pct", "capacity_gw"])
+            if (!num(f[k]) || f[k] < 0) fail(fat, `${k} must be a number ≥ 0, got ${JSON.stringify(f[k])}`);
+        }
+        const total = m.fuels.reduce((s, f) => s + (num(f.generation_pct) ? f.generation_pct : 0), 0);
+        if (Math.abs(total - 100) > 1) fail(mat, `generation shares add up to ${total.toFixed(1)}%, not 100%`);
+      }
+    }
   }
 
   // Optional reference grid read by Site check (not drawn): lines with a

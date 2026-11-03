@@ -19,7 +19,8 @@ infrastructure map, even though both live in this repo:
 A broken deploy on one **cannot** take the other down. They share no CSS
 (`brand.css` is duplicated deliberately, not imported across the boundary),
 no JS, and no sitemap. The only shared infrastructure is the `solar-pvgis`
-Worker, the Cloudflare account, and DNS.
+Worker (it also serves the map's live Spain–Morocco flow), the Cloudflare
+account, and DNS.
 
 The map links to this tool and vice versa, but only by absolute URL. The old
 `/solar/` path on the map's domain 301-redirects here via `docs/_redirects`.
@@ -52,6 +53,16 @@ picks its own texts from its `I18N` table by `<html lang>`. Change a French
 text in `index.html` and the build stops until its translation follows
 (the PR check runs the same script). Arabic register: Darija for headings,
 buttons and questions, plain Arabic for explanations.
+
+`/zgh/` is the simulator in Tamazight (Standard Moroccan Amazigh, Tifinagh
+script), from `i18n/simulator-zgh.mjs` (French string → Tamazight). It is a
+first draft awaiting a native speaker's review; Tamazight has no city pages
+or guides yet, so its links go to the French ones. The Tifinagh font (Noto
+Sans Tifinagh, OFL) is self-hosted in `fonts/` and only downloaded when a
+Tifinagh letter is on screen.
+
+Every page has the same language menu (`i18n/languages.mjs`): a `<details>`
+drop-down, no JavaScript.
 
 ### City pages (search engines and AI assistants)
 
@@ -125,6 +136,7 @@ What the Worker does:
 - **Edge-caches** JRC responses 24 h, keyed on the sorted param tuple. Repeat lookups never hit JRC.
 - **Rate-limits** 60 req/min/IP (degrades gracefully if the beta binding is unavailable).
 - **Maps errors** to `{ "error": "<message fr>", "status": <code> }` — the client shows the message inline.
+- **Relays** the live Spain–Morocco interconnector flow for the energy map on `GET /flow/es-ma` ([`proxy/flow.js`](proxy/flow.js)): REE's 5-minute data from `demanda.ree.es` (JSONP, no CORS, no account), reduced to `{ at, net_import_mw }`, edge-cached 5 min. If REE stops answering, the map's tile shows "Unavailable right now"; nothing else depends on it.
 - **Collects** usage events on `POST /e` ([`ANALYTICS.md`](ANALYTICS.md)) and Content-Security-Policy violation reports on `POST /csp` ([`SECURITY.md`](../SECURITY.md) › Reading the CSP reports), each kept only in the expected shape.
 - **Scopes CORS** to the Wattu origins (`ALLOWED_ORIGINS` in `proxy/worker.js`: solar.wattu.org, energy.wattu.org and the Pages addresses; no localhost, so a local copy of the page shows the approximate mode unless it points at `wrangler dev`).
 
