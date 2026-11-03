@@ -379,9 +379,11 @@ Accessibility
   • files: docs/app.js (marker styles), docs/style.css
   • verify: simulate deuteranopia → all fuel types still distinguishable
   • 2026-10-27: fuel colours re-stepped per theme and checked in CI
-    (scripts/check-fuel-palette.mjs): fuels side by side in a mix bar stay
+    (scripts/check-map-palette.mjs): fuels side by side in a mix bar stay
     apart under protanopia/deuteranopia. On the map nine hues can't all be;
     the mix legend filters to one fuel. Patterns not done.
+  • 2026-11-03: shape variations for the other layers: data centres are
+    diamonds, cable landings rings, industry squares.
 
 Editorial & Sharing
 - [ ] Add full-screen mode button
