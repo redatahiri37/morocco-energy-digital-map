@@ -221,8 +221,10 @@ for (const [q, want] of [
 ok("replyText: { response }", replyText({ response: " a " }) === "a");
 ok("replyText: string, empty, unknown", replyText("b") === "b" && replyText(null) === "" && replyText({ x: 1 }) === "");
 const o = oneeBill({ bill: 500 });
-ok("ONEE: 500 MAD ↔ kWh like the simulator", o.monthly_kwh === Math.round(Tariff.kwhFromBill(500)) && o.price_of_last_kwh_mad === 1.3817, JSON.stringify(o));
-ok("billFromKwh inverts kwhFromBill", [100, 250, 500, 900, 2400].every((b) => Math.abs(Tariff.billFromKwh(Tariff.kwhFromBill(b)) - b) < 1e-6));
+ok("ONEE: 500 MAD ↔ kWh like the simulator", o.monthly_kwh === Math.round(Tariff.kwhFromBill(500)) && o.price_per_kwh_mad === 1.3817 && o.billing === "selective", JSON.stringify(o));
+ok("ONEE: 120 kWh is progressive", oneeBill({ kwh: 120 }).billing === "progressive" && oneeBill({ kwh: 120 }).price_per_kwh_mad === 1.0732);
+ok("billFromKwh inverts kwhFromBill (bills outside a jump)", [100, 250, 500, 900, 2400].every((b) => Math.abs(Tariff.billFromKwh(Tariff.kwhFromBill(b)) - b) < 1e-6));
+ok("system prompt explains selective billing", /whole month is billed at the price of the tranche reached/.test(SYSTEM) && SYSTEM.includes("210, 310, 510"));
 ok("sameKey", sameKey(KEY, KEY) && !sameKey(KEY + "x", KEY) && !sameKey("", "") && !sameKey(undefined, KEY));
 ok("parseConversation keeps the page language, defaults to fr", parseConversation({ lang: "en", messages: [{ role: "user", content: " hi " }] }).lang === "en" && parseConversation({ lang: "xx", messages: [{ role: "user", content: "hi" }] }).lang === "fr");
 ok("system prompt has the tariff and the law from CONFIG", SYSTEM.includes(String(CONFIG.ONEE_TRANCHES[0][1])) && SYSTEM.includes(`${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}%`));

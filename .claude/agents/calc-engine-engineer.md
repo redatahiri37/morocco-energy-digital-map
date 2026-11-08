@@ -11,13 +11,17 @@ A wrong payback figure is worse than an outage. An outage is obvious; a wrong
 number gets screenshotted, published, and quoted back at the founder by an
 installer who knows the market better than we do.
 
-## The model you own (solar/app.js)
+## The model you own (solar/engine.js)
 
-- `CONFIG.ONEE_TRANCHES` — progressive residential LV schedule, MAD/kWh TTC.
-- `Tariff.kwhFromBill()` — piecewise inversion of that schedule. The user's
+- `CONFIG.ONEE_TRANCHES` — residential LV schedule, MAD/kWh TTC: progressive
+  up to `ONEE_PROGRESSIVE_MAX_KWH` (150), selective above (the whole month at
+  the tranche reached, `ONEE_SELECTIVE_TOLERANCE_KWH` = 10 over each bound).
+- `Tariff.kwhFromBill()` — piecewise inversion of that schedule (a bill that
+  falls in a jump maps to the threshold below). The user's
   only real input is their **monthly bill**; everything downstream depends on
   this being right.
-- `Tariff.avoidedCostPerKwh()` — PV displaces the **top** tranche first. This
+- `Tariff.avoidedCostPerKwh()` — the bill difference per kWh displaced
+  (dropping under a threshold lowers the price of the whole month). This
   is the single most important mechanic in the model and the reason payback
   shortens as the bill grows.
 - `CONFIG.selfConsumptionRatio()` — heuristic curve, **not** validated against

@@ -122,7 +122,7 @@ browsing does not.
 - **PVGIS v5.2** (EU JRC) — annual + monthly kWh per (lat, lon, kWp, tilt, azimuth), via our Cloudflare Worker proxy
 
 ### Data sources
-- **ONEE stepped tariff** (2025, TTC) — hardcoded in `CONFIG.ONEE_TRANCHES`. Source: [kherba.com/tarifs](https://kherba.com/tarifs).
+- **ONEE residential tariff** (2025, TTC) — `CONFIG.ONEE_TRANCHES`. Up to 150 kWh/month progressive (each tranche at its price); above, **selective**: the whole month at the price of the tranche reached, 10 kWh tolerance (price changes above 150, 210, 310, 510 kWh). Savings = the bill difference (`Tariff.avoidedCostPerKwh`), tested in `solar/engine.test.mjs`. Sources: ONEE (one.org.ma, « Tarifs »), [kherba.com/tarifs](https://kherba.com/tarifs).
 - **Grid CO₂ factor** — 0.71 kg/kWh, ONEE 2024 mix.
 - **Installed cost** — 8–15 MAD/Wc range, 11 MAD/Wc central. Source: [lechantier.ma](https://lechantier.ma/en/prix/solaire), May 2026.
 - **Law 82-21** — décret n° 2.25.100 (5 mars 2026). Surplus injection capped at 20% of annual production; feed-in ~0.18 MAD/kWh (MV off-peak, upper bound for LV pending official publication).

@@ -118,6 +118,9 @@ jobs:
           node scripts/render-og.mjs _og _check/og
           test "$(find _check/og -name '*.png' | wc -l)" -eq "$(find _og -name '*.html' | wc -l)"
 
+      - name: Engine tests (ONEE tariff, savings)
+        run: node solar/engine.test.mjs
+
       - name: Worker tests
         working-directory: solar/proxy
         run: |

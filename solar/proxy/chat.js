@@ -145,11 +145,14 @@ const r2 = (n) => Math.round(n * 100) / 100;
 
 export function oneeBill({ bill, kwh }) {
   if (bill) kwh = Tariff.kwhFromBill(bill); else bill = Tariff.billFromKwh(kwh);
-  const tranche = CONFIG.ONEE_TRANCHES.find(([upper]) => kwh <= upper);
+  const selective = kwh > CONFIG.ONEE_PROGRESSIVE_MAX_KWH;
   return {
     monthly_kwh: r0(kwh),
     monthly_bill_mad: r0(bill),
-    price_of_last_kwh_mad: tranche[1],
+    // Progressive (≤150 kWh): the price of the top tranche. Selective: the
+    // price the whole month is billed at.
+    billing: selective ? "selective" : "progressive",
+    price_per_kwh_mad: Tariff.priceAt(kwh),
     average_price_mad_per_kwh: r2(bill / kwh),
   };
 }
@@ -257,7 +260,7 @@ WHEN THE CITY OR THE BILL IS MISSING: ask for it in one short question (a city i
 FACTS
 - Production comes from PVGIS (European Commission). The system covers about ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}% of the yearly consumption, 1 to 10 kWc, ${CONFIG.PANEL_KWP * 1000} Wc panels; a bigger system pays back more slowly because the surplus earns little.
 - Installed price assumed: ${CONFIG.DEFAULT_COST_MAD_PER_WC} MAD/Wc; quotes usually run 8 to 15 MAD/Wc.
-- ONEE residential tariff per month, VAT included: ${TRANCHES}. Solar first removes the most expensive kWh. Regional distributors (Lydec, Redal, Amendis, régies) use close tariffs.
+- ONEE residential tariff per month, VAT included: ${TRANCHES}. Up to ${CONFIG.ONEE_PROGRESSIVE_MAX_KWH} kWh a month each tranche is billed at its own price; above that, billing is selective: the whole month is billed at the price of the tranche reached (${CONFIG.ONEE_SELECTIVE_TOLERANCE_KWH} kWh tolerance, so the price changes above ${CONFIG.ONEE_TRANCHES.filter(([u]) => Number.isFinite(u) && u > CONFIG.ONEE_PROGRESSIVE_MAX_KWH).map(([u]) => u + CONFIG.ONEE_SELECTIVE_TOLERANCE_KWH).join(", ")} kWh). Solar lowers the kWh billed, and bringing a month back under a threshold lowers the price of all its kWh. Regional distributors (Lydec, Redal, Amendis, régies) use close tariffs.
 - Law 82-21 (decree 2.25.100, 5 March 2026): under 11 kW a simple declaration is enough. The surplus may go to the grid up to ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}% of the year's production; the residential buy-back price is not published yet (reference about ${CONFIG.EXPORT_PRICE_MAD_PER_KWH} MAD/kWh at most), so using the power at home pays better than selling it.
 - Installers: Taqa Pro is the quality label of solar installers in Morocco (list on taqapro.ma). Advise at least three quotes for the same power, compared in MAD per Wc.
 - Batteries, off-grid homes, farms, pumping and businesses are outside what Wattu calculates: answer in general terms and say so.
