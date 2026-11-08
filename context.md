@@ -42,7 +42,31 @@ MEA region focus. High technical fluency on energy systems,
 grid economics, infrastructure finance.
 
 ## Current Task
-Work through the map correction issues (#59, #60, #61) — see handoff below.
+Map correction issues #59, #60, #61 and #70 handled on 2026-11-08 (see the
+handoff below). No open correction issue left.
+
+## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
+- Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,
+  Bin el Ouidane 256 → 135, Idriss 1er 432 → 40.6) and three points sat
+  13–18 km off the dam (Idriss 1er, Al Wahda, Oued el Makhazine). Now WRI
+  GPPD v1.3 (pinned commit, as for the other countries) for capacity and
+  year, OSM for the dam position (precision exact). New optional fields
+  annual_generation_gwh / annual_generation_year (WRI estimate for 2017),
+  shown as "Annual output ≈ … GWh" in the popup. Morocco's in-service total
+  went from 7.7 to 7.1 GW (65 % of Ember's 10.9 GW).
+- Guemassa (#60): moved to the Hajar mine, Guemassa massif (Mindat
+  31°21'52"N 8°03'21"W), ~4.5 km from the old point; precision stays
+  approximate (the complex spans mine and plant).
+- Xlinks (#59): started ~190 km off Tan-Tan and ended in the sea off
+  Devon. Now from the Tan-Tan generation area, into the sea NW of Tan-Tan
+  (El Ouatia), to Bideford Bay and the Alverdiscott substation. Not Dakhla:
+  Xlinks says its land part stays in the Tan-Tan region.
+- South Africa (#70, "no DC data"): already fixed by 94dd89d the day the
+  issue was filed (27 PeeringDB sites). PeeringDB has no MW, so the DC
+  KPI tiles stay "—".
+- Network: a personal environment "Wattu maps" allows nominatim,
+  overpass-api.de (resets often), en/fr.wikipedia, wikidata, mindat
+  (Cloudflare challenge: use search snippets) and energy.wattu.org.
 
 ## Session handoff — 2026-11-03 (map: industry and data-centre markers)
 - Industry and data centres are told apart from the plants by

@@ -79,6 +79,7 @@ Power plants. Points, clustered at low zoom, coloured by fuel.
 | `status` | yes | `operational`, `construction`, `announced`, `planned` or `idle`. `construction` and `announced` get a halo. |
 | `commissioning_year` | recommended | Year commissioned, or target year if not operational. |
 | `tech`, `operator`, `region` | recommended | Shown in the popup. |
+| `annual_generation_gwh`, `annual_generation_year` | no | A typical year's output in GWh and the year it describes (Moroccan dams: WRI's estimate for 2017). Shown in the popup as "Annual output ≈ … GWh". Numbers. |
 
 ## `grid`
 

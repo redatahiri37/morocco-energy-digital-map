@@ -34,7 +34,7 @@ const str = (v) => typeof v === "string" && v.trim() !== "";
 
 // Optional fields that must be numbers whenever present, in every kind.
 const NUMERIC_OPTIONAL = ["investment_usd", "commissioning_year", "year", "units",
-  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw"];
+  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw", "annual_generation_gwh", "annual_generation_year"];
 
 // Per kind: geometry types, required fields (with a test), recommended fields.
 export const SCHEMA = {
