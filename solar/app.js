@@ -963,6 +963,8 @@ const State = {
   roof: null,       // { latlngs, src: "osm" | "drawn" } — building footprint, if known
   roofSearch: 0,    // id of the latest building lookup, so a stale one is ignored
   pvSeq: 0,         // id of the latest PVGIS request, so a late older one is dropped
+  pvPendingKey: null, // key of the PVGIS request in flight, so it is not sent twice
+  pvFitRoof: false, // a recalc that waited on that request wanted the map fitted to the roof
   lastPvKey: null,
   lastPerKw: null,  // cached 1 kWc PVGIS response for current (loc, angle, aspect)
   heroAnimated: false,
@@ -1326,6 +1328,7 @@ const UI = {
     MapView.cancelDraw();
     this.setRoofDrawing(false);
     State.roof = null;
+    State.pvFitRoof = false;   // the previous address's roof is gone
     View3D.storeys = null;   // a new building: its own height, or the default
     if (loc.src === "city") {
       // A city centre is nobody's roof: no building lookup, the visitor
@@ -1525,8 +1528,16 @@ const UI = {
       p.angle, p.aspect,
     ].join("|");
 
+    if (key !== State.lastPvKey && key === State.pvPendingKey && !force) {
+      // This location and orientation are already being fetched: that call
+      // renders with the current params when it lands. A second fetch would
+      // only discard the first (and, with it, a pending zoom to the roof).
+      if (fitRoof) State.pvFitRoof = true;
+      return;
+    }
     if (force || key !== State.lastPvKey) {
       const seq = ++State.pvSeq;
+      State.pvPendingKey = key;
       this.setHeroLoading(true);
       let perKw;
       try {
@@ -1546,6 +1557,7 @@ const UI = {
       // A newer request (new address or orientation) owns the result now;
       // an older response arriving late must not overwrite it.
       if (seq !== State.pvSeq) return;
+      State.pvPendingKey = null;
       State.lastPerKw = perKw;
       State.lastPvKey = key;
       this.setHeroLoading(false);
@@ -1580,7 +1592,9 @@ const UI = {
       capexMAD,
       exportAllowed: p.exportAllowed,
     });
-    this.renderRoof(roofInfo, { targetKw, yieldPerKw: State.lastPerKw.yieldPerKw, paybackYr: roi.paybackYr }, { fit: fitRoof });
+    const fit = fitRoof || State.pvFitRoof;
+    State.pvFitRoof = false;
+    this.renderRoof(roofInfo, { targetKw, yieldPerKw: State.lastPerKw.yieldPerKw, paybackYr: roi.paybackYr }, { fit });
 
     // Hero
     const savings = Math.round(roi.annualSavingsMAD);
@@ -1589,7 +1603,9 @@ const UI = {
     State.heroAnimated = true;
     $("chip-size").textContent = bidi(fmtDec(p.peakpower, { trim: true }) + " " + STR.kwc);
     $("chip-production").textContent = bidi(fmtNum(pv.annualKwh) + " kWh");
-    $("chip-payback").textContent = isFinite(roi.paybackYr) ? STR.years(fmtDec(roi.paybackYr), roi.paybackYr) : "—";
+    // A payback past the panels' lifetime is no payback at all.
+    const paysBack = isFinite(roi.paybackYr) && roi.paybackYr <= CONFIG.LIFETIME_YR;
+    $("chip-payback").textContent = paysBack ? STR.years(fmtDec(roi.paybackYr), roi.paybackYr) : "—";
     $("chip-capex").textContent = fmtMAD(capexMAD);
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
     $("co2-line").textContent = STR.co2Line(fmtDec(co2Tons), CONFIG.CO2_KG_PER_KWH.toLocaleString(NUM_LOCALE));
@@ -1598,7 +1614,7 @@ const UI = {
     clearTimeout(this._srTimer);
     this._srTimer = setTimeout(() => {
       $("sr-summary").textContent = STR.srSummary(fmtNum(savings), fmtMAD(p.bill), fmtMAD(capexMAD),
-        isFinite(roi.paybackYr) ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr) : STR.notAmortized(CONFIG.LIFETIME_YR));
+        paysBack ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr) : STR.notAmortized(CONFIG.LIFETIME_YR));
     }, 1000);
 
     // Financing card
@@ -1607,7 +1623,7 @@ const UI = {
     const cashflowY1 = roi.annualSavingsMAD - capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
     setAmount($("fin-cash-capex"), fmtNum(capexMAD), STR.mad);
     $("fin-cash-net").textContent = STR.finCashNet(fmtMAD(cashflowY1));
-    $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
+    $("fin-cash-payback").textContent = paysBack
       ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr)
       : STR.notAmortized(CONFIG.LIFETIME_YR);
 

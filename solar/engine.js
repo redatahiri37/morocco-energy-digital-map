@@ -99,8 +99,11 @@ const CONFIG = {
   // Self-consumption ratio heuristic — fraction of PV production consumed on-site
   // Function of (annual_production / annual_consumption). Empirical residential curve.
   selfConsumptionRatio(sizingRatio) {
-    // sizingRatio = production/consumption
-    // r=0.5 → ~0.85, r=1.0 → ~0.55, r=1.5 → ~0.42, r=2.0 → ~0.33
+    // sizingRatio = production/consumption. What the formula gives:
+    // r→0 → 0.85, r=0.5 → 0.65, r=0.8 → 0.57, r=1.0 → 0.52, r=1.5 → 0.44,
+    // r=2.0 → 0.39, floor 0.30. (An older comment claimed 0.85 at r=0.5 and
+    // 0.33 at r=2; the curve was never changed to match. Recalibrating it
+    // moves every published figure: a model decision, with a source.)
     if (sizingRatio <= 0) return 1;
     return Math.min(1, 0.30 + 0.55 * Math.exp(-0.9 * sizingRatio));
   },
@@ -229,7 +232,9 @@ const ROI = {
     let annualExportableKwh = 0;
 
     for (const monthKwh of pv.monthlyKwh) {
-      const selfKwh = monthKwh * selfRatio;
+      // Never more than the month's consumption: an oversized system would
+      // otherwise "save" more than the whole bill.
+      const selfKwh = Math.min(monthKwh * selfRatio, monthlyConsumption);
       const surplusKwh = monthKwh - selfKwh;
       annualSelfKwh += selfKwh;
       annualExportableKwh += surplusKwh;
