@@ -80,6 +80,8 @@ Power plants. Points, clustered at low zoom, coloured by fuel.
 | `status` | yes | `operational`, `construction`, `announced`, `planned` or `idle`. `construction` and `announced` get a halo. |
 | `commissioning_year` | recommended | Year commissioned, or target year if not operational. |
 | `tech`, `operator`, `region` | recommended | Shown in the popup. |
+| `gppd_id` | recommended (hand-curated plants) | The plant's WRI Global Power Plant Database id, e.g. `WRI1023674`. CI (`scripts/check-gppd.mjs`) then holds its capacity within 10 % of WRI's, its point within 15 km and its fuel. Plants built from WRI already use it as `id`. |
+| `gppd_capacity_note` | no | Why the capacity differs from WRI's (e.g. an extension WRI predates). Turns that check's failure into a note. |
 | `annual_generation_gwh`, `annual_generation_year` | no | A typical year's output in GWh and the year it describes (Moroccan dams: WRI's estimate for 2017). Shown in the popup as "Annual output ≈ … GWh". Numbers. |
 
 ## `grid`

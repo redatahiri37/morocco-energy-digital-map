@@ -64,6 +64,15 @@ handoff below). No open correction issue left.
 - South Africa (#70, "no DC data"): already fixed by 94dd89d the day the
   issue was filed (27 PeeringDB sites). PeeringDB has no MW, so the DC
   KPI tiles stay "—".
+- Root cause of the dam back-and-forth: two hand-typed copies (morocco-grid
+  has the right MW and wrong positions; this repo had 232/256/432 MW since
+  the July merge repair 821a874) and no check against a reference. Guard:
+  scripts/check-gppd.mjs (CI "Plants against the WRI database") holds every
+  plant with `gppd_id` (or a WRI id as `id`) to WRI's capacity ±10 %,
+  position 15 km and fuel; `gppd_capacity_note` documents a real gap.
+  Morocco: 9 plants carry gppd_id (5 dams, Afourer STEP, Aïn Beni Mathar,
+  Tahaddart, Jorf Lasfar). Not 1:1 in WRI, so unchecked: Noor Ouarzazate
+  (WRI splits it), Mohammedia (WRI: coal, 300 MW), wind farms, projects.
 - Network: a personal environment "Wattu maps" allows nominatim,
   overpass-api.de (resets often), en/fr.wikipedia, wikidata, mindat
   (Cloudflare challenge: use search snippets) and energy.wattu.org.
