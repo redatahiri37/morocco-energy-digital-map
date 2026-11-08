@@ -62,6 +62,14 @@ const r = ROI.compute({ pv: flat(1200), monthlyConsumption: 400, capexMAD: 22000
 const self = 100 * r.selfRatio;
 ok("ROI savings = 12 × the month's bill difference",
   near(r.annualSavingsMAD, 12 * (bill(400) - bill(400 - self)), 1e-6), `${r.annualSavingsMAD}`);
+// ── 5. Payback range (self-consumption share ± SELF_RATIO_UNCERTAINTY) ─
+const args = { pv: flat(3300), monthlyConsumption: 362, capexMAD: 22000, exportAllowed: false };
+const range = ROI.paybackRange(args), central = ROI.compute(args).paybackYr;
+ok("payback range brackets the central payback", range.low < central && central < range.high, JSON.stringify(range));
+ok("a higher self-consumption share pays back sooner",
+  ROI.compute({ ...args, selfRatioShift: CONFIG.SELF_RATIO_UNCERTAINTY }).paybackYr === range.low);
+ok("selfRatioShift is clamped to 0–1",
+  ROI.compute({ ...args, selfRatioShift: 5 }).selfRatio === 1 && ROI.compute({ ...args, selfRatioShift: -5 }).selfRatio === 0);
 ok("CONFIG keeps the thresholds in one place",
   CONFIG.ONEE_PROGRESSIVE_MAX_KWH === 150 && CONFIG.ONEE_SELECTIVE_TOLERANCE_KWH === 10);
 

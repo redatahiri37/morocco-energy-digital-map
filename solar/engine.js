@@ -109,6 +109,11 @@ const CONFIG = {
   // Auto-sizing: recommend a system covering this share of annual consumption
   AUTOSIZE_COVER: 0.80,
 
+  // How far the self-consumption share may be off, in points, either way.
+  // No measured Moroccan household load data exists yet, so the payback is
+  // shown as the range this spread gives (ROI.paybackRange), not one figure.
+  SELF_RATIO_UNCERTAINTY: 0.10,
+
   // Self-consumption ratio heuristic — fraction of PV production consumed on-site
   // Function of (annual_production / annual_consumption). Empirical residential curve.
   selfConsumptionRatio(sizingRatio) {
@@ -247,12 +252,15 @@ const Tariff = {
 
 // ── ROI ────────────────────────────────────────────
 const ROI = {
-  compute({ pv, monthlyConsumption, capexMAD, exportAllowed }) {
+  // selfRatioShift moves the self-consumption share by that many points
+  // (0.1 = +10 points), clamped to 0–1: how paybackRange tests the curve.
+  compute({ pv, monthlyConsumption, capexMAD, exportAllowed, selfRatioShift = 0 }) {
     // pv.monthlyKwh: production per month, kWh
     const annualPv = pv.annualKwh;
     const annualCons = monthlyConsumption * 12;
     const sizingRatio = annualPv / Math.max(annualCons, 1);
-    const selfRatio = CONFIG.selfConsumptionRatio(sizingRatio);
+    const selfRatio = Math.min(1, Math.max(0,
+      CONFIG.selfConsumptionRatio(sizingRatio) + selfRatioShift));
 
     // Monthly split — assume same self-consumption ratio across months (simplification)
     let annualSavingsMAD = 0;
@@ -311,6 +319,15 @@ const ROI = {
       npv,
       lifetimeSavingsMAD: cashflow[cashflow.length - 1].cumulative + capexMAD,
     };
+  },
+
+  // Payback with the self-consumption share SELF_RATIO_UNCERTAINTY lower
+  // and higher: { low, high } in years (Infinity when it never pays back).
+  paybackRange(args) {
+    const d = CONFIG.SELF_RATIO_UNCERTAINTY;
+    const a = ROI.compute({ ...args, selfRatioShift: +d }).paybackYr;
+    const b = ROI.compute({ ...args, selfRatioShift: -d }).paybackYr;
+    return { low: Math.min(a, b), high: Math.max(a, b) };
   },
 };
 

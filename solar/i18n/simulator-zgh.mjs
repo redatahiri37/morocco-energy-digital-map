@@ -117,7 +117,8 @@ export const ZGH = new Map([
    "<small>ⴰⴼⴰⵔⵙ / ⴰⵙⴳⴳⵯⴰⵙ</small>"],
   ["<small>amortissement<button",
    "<small>ⵜⵓⵖⴰⵍⵉⵏ ⵏ ⵉⵇⵔⵉⴹⵏ<button"],
-  ["Temps nécessaire pour que les économies remboursent l'investissement de départ.",
+  // Range sentence not translated yet: Tamazight keeps the first sentence.
+  ["Temps nécessaire pour que les économies remboursent l'investissement de départ. Donné en fourchette&nbsp;: la part de votre production que vous consommez vous-même est estimée, à 10 points près, faute de mesures sur des foyers marocains.",
    "ⴰⴽⵓⴷ ⵍⵍⵉ ⵉⵅⵚⵚⴰⵏ ⴰⴷ ⵔⴰⵔⵏ ⵓⵔⴱⴰⵃ ⵉⵇⵔⵉⴹⵏ ⵏ ⵓⵙⵔⵙ."],
   ["<small>investissement<button",
    "<small>ⴰⵜⵉⴳ ⵏ ⵓⵙⵔⵙ<button"],

@@ -1587,6 +1587,10 @@ const UI = {
       capexMAD,
       exportAllowed: p.exportAllowed,
     });
+    // Shown as a range: the share of production used on site is a curve,
+    // not a measurement (CONFIG.SELF_RATIO_UNCERTAINTY).
+    const range = ROI.paybackRange({ pv, monthlyConsumption: consumption, capexMAD, exportAllowed: p.exportAllowed });
+    const paybackText = fmtPaybackRange(range, roi.paybackYr);
     this.renderRoof(roofInfo, { targetKw, yieldPerKw: State.lastPerKw.yieldPerKw, paybackYr: roi.paybackYr }, { fit: fitRoof });
     Copro.render({ roofInfo, yieldPerKw: State.lastPerKw.yieldPerKw, monthlyKwh: consumption, peakpower: p.peakpower });
 
@@ -1597,7 +1601,7 @@ const UI = {
     State.heroAnimated = true;
     $("chip-size").textContent = bidi(fmtDec(p.peakpower, { trim: true }) + " " + STR.kwc);
     $("chip-production").textContent = bidi(fmtNum(pv.annualKwh) + " kWh");
-    $("chip-payback").textContent = isFinite(roi.paybackYr) ? STR.years(fmtDec(roi.paybackYr), roi.paybackYr) : "—";
+    $("chip-payback").textContent = paybackText ? STR.years(paybackText.text, paybackText.n) : "—";
     $("chip-capex").textContent = fmtMAD(capexMAD);
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
     $("co2-line").textContent = STR.co2Line(fmtDec(co2Tons), CONFIG.CO2_KG_PER_KWH.toLocaleString(NUM_LOCALE));
@@ -1606,7 +1610,7 @@ const UI = {
     clearTimeout(this._srTimer);
     this._srTimer = setTimeout(() => {
       $("sr-summary").textContent = STR.srSummary(fmtNum(savings), fmtMAD(p.bill), fmtMAD(capexMAD),
-        isFinite(roi.paybackYr) ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr) : STR.notAmortized(CONFIG.LIFETIME_YR));
+        paybackText ? STR.amortized(paybackText.text, paybackText.n) : STR.notAmortized(CONFIG.LIFETIME_YR));
     }, 1000);
 
     // Financing card
@@ -1615,8 +1619,8 @@ const UI = {
     const cashflowY1 = roi.annualSavingsMAD - capexMAD * CONFIG.OPEX_PCT_CAPEX_YR;
     setAmount($("fin-cash-capex"), fmtNum(capexMAD), STR.mad);
     $("fin-cash-net").textContent = STR.finCashNet(fmtMAD(cashflowY1));
-    $("fin-cash-payback").textContent = isFinite(roi.paybackYr)
-      ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr)
+    $("fin-cash-payback").textContent = paybackText
+      ? STR.amortized(paybackText.text, paybackText.n)
       : STR.notAmortized(CONFIG.LIFETIME_YR);
 
     setAmount($("fin-loan-monthly"), fmtNum(loanMonthly), STR.madMonth);
@@ -1742,6 +1746,18 @@ function fmtNum(n) {
 }
 // One decimal with a French decimal comma: 2,5 · 10,2. Whole values drop
 // the ",0" when `trim` is set (3 kWc, not 3,0 kWc).
+// Payback as « 6–8 » (whole years, the range from ROI.paybackRange), or one
+// figure when both ends round alike; null when even the central case never
+// pays back. n is what the language's plural rules read (the upper end).
+function fmtPaybackRange({ low, high }, central) {
+  if (!isFinite(central)) return null;
+  if (!isFinite(high) || high > CONFIG.LIFETIME_YR) {
+    return { text: bidi(`${Math.round(low)}–${CONFIG.LIFETIME_YR}+`), n: CONFIG.LIFETIME_YR };
+  }
+  const a = Math.round(low), b = Math.round(high);
+  return a === b ? { text: fmtDec(central), n: central } : { text: bidi(`${a}–${b}`), n: b };
+}
+
 function fmtDec(n, { trim = false } = {}) {
   return n.toLocaleString(NUM_LOCALE, { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : 1, maximumFractionDigits: 1 });
 }
