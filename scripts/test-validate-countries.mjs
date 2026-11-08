@@ -91,6 +91,10 @@ const cases = [
     (d) => editJson(d, `${MA}/desalination.geojson`, (fc) => { fc.features[0].properties.category = "reservoir"; })],
   ["water: flow as a string", /flow_m3s must be a number/,
     (d) => editJson(d, `${MA}/water-transfers.geojson`, (fc) => { fc.features[0].properties.flow_m3s = "15"; })],
+  ["lens naming a missing layer", /"rivers" is not a layer of morocco/,
+    (d) => config(d, `window.COUNTRIES.morocco.lenses[1].layers.push("rivers");`)],
+  ["lenses without the default", /needs an "energy" lens/,
+    (d) => config(d, `window.COUNTRIES.morocco.lenses.shift();`)],
   ["schema doc missing", /DATA_SCHEMA.md: missing/,
     (d) => unlinkSync(join(d, "DATA_SCHEMA.md"))],
 ];

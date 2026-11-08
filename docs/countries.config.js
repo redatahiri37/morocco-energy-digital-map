@@ -34,6 +34,9 @@
 //   credits:        data credits in the footer, e.g. "GEM · ONEE · Datacentermap"
 //   demand:         { source, sourceUrl, figures: [{ label, labelFr, value, unit }] } —
 //                   dated national figures, tiles under the KPIs
+//   lenses:         [{ id, label, labelFr, layers?, fuel?, note?, noteFr? }] — the
+//                   Energy / Water / Nexus switch above the layers; `layers`
+//                   lists the ids switched on (none: each layer's default)
 //   liveFlow:       { path, features, partner, partnerFr, source, sourceUrl } — live flow
 //                   on the interconnectors whose ids are in `features`, read
 //                   from the Wattu Worker at `path`
@@ -129,6 +132,20 @@ window.COUNTRIES = {
       { key:"Government of Morocco", short:"Government" },
       { key:"ADD (Agence de Développement du Digital)", short:"ADD" }
     ],
+    // Perspectives above the layer list. Energy keeps each layer's default;
+    // Water shows the water layers with the grid and the hydro plants;
+    // Nexus shows both systems together.
+    lenses: [
+      { id: "energy", label: "Energy", labelFr: "Énergie" },
+      { id: "water", label: "Water", labelFr: "Eau", fuel: "hydro",
+        layers: ["water-transfers", "dams", "desalination", "power-plants", "oim-grid"],
+        note: "Water highways, new dams and desalination, with the grid and the hydro plants. Transfers and desalination are electrical loads.",
+        noteFr: "Autoroutes de l'eau, nouveaux barrages et dessalement, avec le réseau et les centrales hydrauliques. Transferts et dessalement sont des charges électriques." },
+      { id: "nexus", label: "Nexus", labelFr: "Nexus",
+        layers: ["power-plants", "oim-grid", "interconnectors", "planned-corridors", "water-transfers", "dams", "desalination", "industrial", "digital", "datacentres"],
+        note: "Energy, water, industry and data centres together: where new loads meet the grid.",
+        noteFr: "Énergie, eau, industrie et data centers ensemble : là où les nouvelles charges rencontrent le réseau." }
+    ],
     layers: [
       { id: "power-plants", file: "power-plants.geojson", kind: "power",
         title: "Power plants", titleFr: "Centrales électriques",
@@ -156,17 +173,17 @@ window.COUNTRIES = {
         sourceUrl: "https://datacatalog.worldbank.org/",
         updated: "2026-04" },
       // Water–energy nexus: inter-basin transfers, new dams, desalination.
-      { id: "water-transfers", file: "water-transfers.geojson", kind: "water",
+      { id: "water-transfers", file: "water-transfers.geojson", kind: "water", visible: false,
         title: "Water highways", titleFr: "Autoroutes de l'eau",
         source: "Ministry of Equipment and Water and ONEE figures as reported by Le Matin, Médias24, TelQuel, L'Économiste; routes schematic",
         sourceUrl: "https://telquel.ma/2026/03/31/autoroute-de-leau-ce-que-le-cahier-des-charges-revele-de-la-phase-ii-du-projet_1981667",
         updated: "2026-11" },
-      { id: "dams", file: "dams.geojson", kind: "water",
+      { id: "dams", file: "dams.geojson", kind: "water", visible: false,
         title: "New dams (2020–2027 programme)", titleFr: "Nouveaux barrages (programme 2020–2027)",
         source: "Ministry of Equipment and Water figures as reported by Le360, Médias24, Hespress; positions OpenStreetMap or commune (approximate)",
         sourceUrl: "https://fr.le360.ma/economie/un-stockage-supplementaire-de-49-milliards-de-metres-cubes-deau-voici-ce-que-lon-sait-sur-les_HOQ2O6GTKRAP5DX7TPON67EHAA/",
         updated: "2026-11" },
-      { id: "desalination", file: "desalination.geojson", kind: "water",
+      { id: "desalination", file: "desalination.geojson", kind: "water", visible: false,
         title: "Desalination plants", titleFr: "Stations de dessalement",
         source: "ONEE · OCP Green Water · press (LesEco, Le360, Le Desk); positions OpenStreetMap or site (approximate)",
         sourceUrl: "https://www.fedenerg.ma/2026/07/28/onee-mise-en-service-des-ouvrages-400-kv-destines-a-lalimentation-electrique-de-la-station-de-dessalement-de-la-region-casablanca-settat/",

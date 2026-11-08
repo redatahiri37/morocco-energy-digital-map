@@ -214,6 +214,27 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
   }
 
+  // Lenses (Energy / Water / Nexus): a layer id that no longer exists would
+  // silently leave the lens without that layer.
+  if (c.lenses !== undefined) {
+    const lat = `${at}.lenses`;
+    if (!Array.isArray(c.lenses) || !c.lenses.length) fail(lat, "must be a non-empty list");
+    else {
+      const ids = new Set();
+      for (const l of c.lenses) {
+        const where = `${lat}.${l && l.id}`;
+        if (!l || !/^[a-z][a-z0-9-]*$/.test(l.id || "")) { fail(lat, `bad lens id ${JSON.stringify(l && l.id)}`); continue; }
+        if (ids.has(l.id)) fail(where, "duplicate lens id"); ids.add(l.id);
+        if (!str(l.label) || !str(l.labelFr)) fail(where, "needs label and labelFr");
+        if (l.layers !== undefined && (!Array.isArray(l.layers) || !l.layers.length)) fail(where, "layers must be a non-empty list of layer ids");
+        for (const id of l.layers || []) if (!seenIds.has(id)) fail(where, `"${id}" is not a layer of ${key}`);
+        if (l.fuel !== undefined && !FUELS.includes(l.fuel)) fail(where, `fuel must be one of the schema's fuel types, got ${JSON.stringify(l.fuel)}`);
+        if ((l.note !== undefined && !str(l.note)) || (l.noteFr !== undefined && !str(l.noteFr))) fail(where, "note and noteFr must be text");
+      }
+      if (!ids.has("energy")) fail(lat, `needs an "energy" lens, the default view`);
+    }
+  }
+
   // A renamed interconnector would silently lose its live figure.
   if (lf && Array.isArray(lf.features))
     for (const id of lf.features)

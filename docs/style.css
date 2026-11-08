@@ -219,6 +219,13 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 
 /* Overview: every country at once. The country's own sections step aside. */
 .is-overview .mix-section,.is-overview .layers-section,.is-overview .kpi-section{display:none}
+/* Lens (app.js "Lens"): the water perspective hides the electricity mix. */
+.is-overview .lens-section,.lens-water .mix-section{display:none}
+.lens-section{padding-top:10px;padding-bottom:10px}
+.lens-seg{display:flex;width:100%}
+.lens-seg .seg-btn{flex:1}
+.lens-note{margin:8px 0 0;line-height:1.5;color:var(--text-2)}
+.kpi.water .k{color:#3fbfa5}
 .overview-section[hidden]{display:none}
 .seg.ov-metric{display:flex;margin-bottom:10px}   /* full width: beats .seg's inline-flex */
 .ov-metric .seg-btn{flex:1;white-space:nowrap}

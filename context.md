@@ -63,7 +63,12 @@ handoff below). No open correction issue left.
   they are back, starting with Kheng Grou, M'Dez, Ghiss and Dakhla.
 - Desalination popup: stated power if any, else average load at
   3.5 kWh/m³ (DESAL_KWH_PER_M3 in app.js), labelled as an estimate.
-- Next (phase 2): Énergie / Eau / Nexus perspective switch with water KPIs.
+- Phase 2 (same PR): `lenses` in countries.config.js → Énergie / Eau /
+  Nexus switch above the layers (app.js "Lens"), shareable as #lens=water.
+  Water layers start unticked in Energy. Water lens: water layers + grid +
+  hydro plants (fuel filter), mix hidden, water KPI tiles (transfers m³/s,
+  new storage, desalination, est. desalination load vs the 8.4 GW record
+  peak). Nexus: everything with both KPI sets.
 
 ## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
 - Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,

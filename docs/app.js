@@ -98,7 +98,15 @@
     route: "Trajet", storage: "Retenue", height: "Hauteur", river: "Cours d'eau", purpose: "Usage",
     waterCapacity: "Capacité", plantPower: "Puissance", estLoad: "Charge moyenne estimée",
     estLoadNote: (k)=>`hypothèse ${k} kWh/m³`, energySupply: "Énergie", hm3: "Mm³", hm3yr: "Mm³/an",
-    noPlantFigure: "non publiée par site", waterSearch: "Eau"
+    noPlantFigure: "non publiée par site", waterSearch: "Eau",
+    lensLabel: "Perspective",
+    wTransferOn: "Transferts en service", wTransferPipe: "Transferts prévus",
+    wStorageOn: "Nouveaux barrages · en service", wStoragePipe: "Nouveaux barrages · en chantier",
+    wDesalOn: "Dessalement · en service", wDesalPipe: "Dessalement · en chantier",
+    wLoad: "Charge du dessalement (est.)", wLoadNow: "en service", wLoadAll: "avec les chantiers",
+    wOfPeak: (pct)=>`${pct} de la pointe record`,
+    wNoFigure: (n)=>`+ ${n} sans chiffre publié`,
+    wNote: (k)=>`Sommes des couches eau. Charge moyenne : production des usines de dessalement à ${k} kWh/m³ ; pompage des transferts non compté.`
   } : {
     soon: "soon", live: "live", updated: "updated",
     docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
@@ -166,7 +174,15 @@
     route: "Route", storage: "Storage", height: "Height", river: "River", purpose: "Use",
     waterCapacity: "Capacity", plantPower: "Power", estLoad: "Est. average load",
     estLoadNote: (k)=>`assuming ${k} kWh/m³`, energySupply: "Energy", hm3: "million m³", hm3yr: "million m³/yr",
-    noPlantFigure: "not published per plant", waterSearch: "Water"
+    noPlantFigure: "not published per plant", waterSearch: "Water",
+    lensLabel: "Perspective",
+    wTransferOn: "Transfers in service", wTransferPipe: "Transfers planned",
+    wStorageOn: "New dams · in service", wStoragePipe: "New dams · being built",
+    wDesalOn: "Desalination · in service", wDesalPipe: "Desalination · being built",
+    wLoad: "Desalination load (est.)", wLoadNow: "in service", wLoadAll: "with the pipeline",
+    wOfPeak: (pct)=>`${pct} of the record peak`,
+    wNoFigure: (n)=>`+ ${n} with no published figure`,
+    wNote: (k)=>`Summed from the water layers. Average load: desalination output at ${k} kWh/m³; transfer pumping not counted.`
   };
   // Data values shown as words: fuel, status, precision, Moroccan sectors.
   const FUEL_WORD = FR
@@ -393,6 +409,7 @@
   let boundaryData   = null;
   let mixData        = null;   // national mix (mix.json) of the current country
   let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
+  let lens           = "energy"; // countries.config.js lenses: energy / water / nexus
   let statusView     = "all";  // key of STATUS_VIEWS; kept across country switches
   let selected       = null;   // { layer, id } of the feature whose popup is open, if linkable
 
@@ -609,6 +626,7 @@
 
   // Panel, KPIs and methodology for a country whose data is loaded.
   function renderPanel(countryKey){
+    renderLens();
     renderMix();
     renderStatusNote();
     renderLayerList(countryKey);
@@ -778,6 +796,12 @@
     const d = c.demand, lf = c.liveFlow;
     const fuel = fuelFilter && mixFuel(fuelFilter);
     const prefix = fuel ? escapeHtml(fuelLabel(fuel)) + " · " : "";
+    const water = lens !== "energy" ? waterKpis(c) : "";
+    if(lens === "water" && water){
+      if(snap) snap.textContent = "";
+      host.innerHTML = water;
+      return;
+    }
     host.innerHTML = `
       <div class="kpi" title="${escapeHtml(T.kpiServiceTip)}"><div class="k">${prefix}${T.inService}</div>
         <div class="v">${hasPower ? fmtPower(inService) : NA}</div></div>
@@ -796,8 +820,42 @@
         ${d && lf ? "<br>" : ""}
         ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(lf.source)}</a>, ${T.liveSteps}` : ""}
       </p>` : ""}
+      ${water}
     `;
     if(lf) refreshLiveFlow(c);
+  }
+
+  // Water figures, summed from the `water` layers: transfers (m³/s), new
+  // dams (million m³ of storage), desalination (million m³ a year), each in
+  // service and in the pipeline, and the desalination load against the
+  // national record peak. "" when the country has no water layer.
+  function waterKpis(c){
+    const W = featuresOfKind(currentCountry, "water").map(f=>f.properties);
+    if(!W.length) return "";
+    const pick = (cat, on)=>W.filter(p=>p.category === cat && (on ? p.status === "operational" : PIPELINE_STATUS.includes(p.status)));
+    const sum = (ps, k)=>ps.reduce((t, p)=>t + (num(p[k]) || 0), 0);
+    const tile = (label, ps, k, unit)=>{
+      const missing = ps.filter(p=>num(p[k]) == null).length;
+      const v = ps.length - missing ? `${nfmt(sum(ps, k))}<small> ${escapeHtml(unit)}</small>` : "—";
+      return `<div class="kpi water"><div class="k">${escapeHtml(label)}</div><div class="v">${v}</div>${missing ? `<div class="when micro">${escapeHtml(T.wNoFigure(missing))}</div>` : ""}</div>`;
+    };
+    // Average MW from yearly output at DESAL_KWH_PER_M3, for every plant:
+    // a published installed power overstates the average draw.
+    const load = (ps)=>ps.reduce((t, p)=>t + (num(p.capacity_hm3_yr) != null ? p.capacity_hm3_yr * DESAL_KWH_PER_M3 / 8.76 : 0), 0);
+    const now = load(pick("desalination", true)), all = now + load(pick("desalination", false));
+    const peak = c.demand && c.demand.figures.find(x=>x.unit === "GW" && num(x.value) != null);
+    const share = peak ? fmtShare(100 * all / (peak.value * 1000)) : "";
+    return `
+      ${tile(T.wTransferOn, pick("transfer", true), "flow_m3s", "m³/s")}
+      ${tile(T.wTransferPipe, pick("transfer", false), "flow_m3s", "m³/s")}
+      ${tile(T.wStorageOn, pick("dam", true), "storage_hm3", T.hm3)}
+      ${tile(T.wStoragePipe, pick("dam", false), "storage_hm3", T.hm3)}
+      ${tile(T.wDesalOn, pick("desalination", true), "capacity_hm3_yr", T.hm3yr)}
+      ${tile(T.wDesalPipe, pick("desalination", false), "capacity_hm3_yr", T.hm3yr)}
+      <div class="kpi wide water"><div class="k">${escapeHtml(T.wLoad)}</div>
+        <div class="v">≈ ${nfmt(Math.round(now))}<small> MW ${escapeHtml(T.wLoadNow)}</small> · ${nfmt(Math.round(all))}<small> MW ${escapeHtml(T.wLoadAll)}</small></div>
+        ${share ? `<div class="when micro">${escapeHtml(T.wOfPeak(share))}</div>` : ""}</div>
+      <p class="kpi-note micro">${escapeHtml(T.wNote(nfmt(DESAL_KWH_PER_M3, 1)))}</p>`;
   }
 
   // ---------- Live cross-border flow ----------
@@ -925,6 +983,46 @@
     syncUrl();
   }
   $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
+
+  // ---------- Lens: Energy / Water / Nexus ----------
+  // countries.config.js → lenses: each one a set of layers switched on (none:
+  // the layers' own defaults) and, optionally, a fuel the plants narrow to
+  // (Water: hydro, next to the dams). Water hides the mix and shows water
+  // figures in place of the plant ones; Nexus shows both.
+  const lensesOf = (c)=>(c && c.lenses) || [];
+  const lensDef = (id)=>lensesOf(COUNTRIES[currentCountry]).find(x=>x.id === id);
+  // Whether a layer is on by default in the current lens.
+  function lensVisible(L){
+    const d = lensDef(lens);
+    return d && d.layers ? d.layers.includes(L.id) : L.visible !== false;
+  }
+  function applyLens(){
+    COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = lensVisible(L); });
+    const d = lensDef(lens);
+    fuelFilter = d && d.fuel && mixFuel(d.fuel) ? d.fuel : null;
+  }
+  function renderLens(){
+    const host = $("#lensSection");
+    const ls = lensesOf(COUNTRIES[currentCountry]);
+    layout.classList.toggle("lens-water", lens === "water");
+    host.hidden = !ls.length || overview;
+    if(host.hidden){ host.replaceChildren(); return; }
+    const d = lensDef(lens);
+    host.innerHTML = `
+      <div class="seg lens-seg" role="group" aria-label="${escapeHtml(T.lensLabel)}">
+        ${ls.map(l=>`<button type="button" class="seg-btn" data-lens="${escapeHtml(l.id)}" aria-pressed="${l.id === lens}">${escapeHtml((FR && l.labelFr) || l.label)}</button>`).join("")}
+      </div>
+      ${d && (d.note || d.noteFr) ? `<p class="lens-note micro">${escapeHtml((FR && d.noteFr) || d.note)}</p>` : ""}`;
+    host.querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setLens(b.dataset.lens)));
+  }
+  function setLens(id){
+    if(id === lens || !lensDef(id)) return;
+    lens = id;
+    applyLens();
+    renderPanel(currentCountry);
+    if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    syncUrl();
+  }
 
   // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
   const fmtShare = (v)=>v >= 0.95 ? nfmt(v) + PCT : v >= 0.1 ? nfmt(v, 1, 1) + PCT : v > 0 ? "<" + nfmt(0.1, 1, 1) + PCT : "—";
@@ -1977,7 +2075,7 @@
     const q = new URLSearchParams(location.hash.replace(/^#/, ""));
     const link = { country: q.get("country"), status: q.get("status"), fuel: q.get("fuel"),
                    measure: q.get("measure"), layers: null, view: null, feature: null,
-                   overview: q.get("view") === "overview", metric: q.get("metric") };
+                   overview: q.get("view") === "overview", metric: q.get("metric"), lens: q.get("lens") };
     const v = (q.get("map") || "").split("/").map(Number);
     if(v.length === 3 && v.every(Number.isFinite) && Math.abs(v[1]) <= 90 && Math.abs(v[2]) <= 180)
       link.view = { zoom: Math.min(Math.max(v[0], 1), 18), center: [v[2], v[1]] };
@@ -1995,6 +2093,8 @@
   function applyLinkState(link){
     statusView = STATUS_VIEWS[link.status] ? link.status : "all";
     mixMeasure = link.measure === "capacity" ? "capacity" : "generation";
+    lens = link.lens && lensDef(link.lens) ? link.lens : "energy";
+    applyLens();
     fuelFilter = link.fuel && mixFuel(link.fuel) ? link.fuel : null;
     if(link.layers) COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = link.layers.includes(L.id); });
   }
@@ -2011,10 +2111,11 @@
     }
     const parts = [["country", currentCountry]];
     if(map) parts.push(mapPart());
+    if(lens !== "energy") parts.push(["lens", lens]);
     if(statusView !== "all") parts.push(["status", statusView]);
     if(fuelFilter) parts.push(["fuel", fuelFilter]);
     if(mixMeasure !== "generation") parts.push(["measure", mixMeasure]);
-    if(c.layers.some(L=>(visibility[L.id] !== false) !== (L.visible !== false)))
+    if(c.layers.some(L=>(visibility[L.id] !== false) !== lensVisible(L)))
       parts.push(["layers", c.layers.filter(L=>visibility[L.id] !== false).map(L=>L.id).join(",")]);
     if(selected) parts.push(["feature", `${selected.layer}:${selected.id}`]);
     else if(site) parts.push(["site", `${site.lat.toFixed(4)},${site.lng.toFixed(4)}`]);
@@ -3229,6 +3330,7 @@
     hideTooltip();
     hoveredLayer = null;
     fuelFilter = null;
+    lens = "energy";
     if(!(await loadAllData(key))) return; // superseded by a later switch
     if(overview) return;                  // the overview was picked meanwhile
     if(link) applyLinkState(link);
