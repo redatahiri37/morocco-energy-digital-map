@@ -68,6 +68,8 @@
     gap: (names)=>`La source n'indique aucune capacité pour : ${names}, qui produit pourtant ; cette vue la sous-estime. `,
     source: "Source : ",
     clusterTip: (n, mw)=>`${n} centrales · ${mw}`, clusterHint: "Cliquer pour zoomer",
+    fuelShort: { coal:"Charbon", gas:"Gaz", oil:"Fioul", nuclear:"Nucléaire", hydro:"Hydraulique", wind:"Éolien",
+                 solar:"Solaire", biomass:"Bioénergie", geothermal:"Géothermie" },
     estDemand: "env.", cableLanding: "Atterrissement de câble sous-marin",
     badgeGen: "Production", badgeOsm: "Production · OpenStreetMap", badgeIndustry: "Consommateur industriel",
     badgeCable: "Câble sous-marin", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Ligne de transport",
@@ -126,6 +128,8 @@
     gap: (names)=>`The source lists no ${names} capacity though it generates power: this view undercounts it. `,
     source: "Source: ",
     clusterTip: (n, mw)=>`${n} plants · ${mw}`, clusterHint: "Click to zoom in",
+    fuelShort: { coal:"Coal", gas:"Gas", oil:"Oil", nuclear:"Nuclear", hydro:"Hydro", wind:"Wind",
+                 solar:"Solar", biomass:"Bioenergy", geothermal:"Geothermal" },
     estDemand: "est.", cableLanding: "Submarine cable landing",
     badgeGen: "Generation", badgeOsm: "Generation · OpenStreetMap", badgeIndustry: "Industrial consumer",
     badgeCable: "Submarine cable", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Transmission line",
@@ -221,7 +225,7 @@
   // orange, oil crimson, nuclear purple, hydro blue, wind cyan, solar gold,
   // bioenergy green, geothermal pink), its lightness and chroma set per
   // theme so that any two fuels side by side in a country's mix bar stay
-  // apart, also for colour-blind readers. scripts/check-fuel-palette.mjs
+  // apart, also for colour-blind readers. scripts/check-map-palette.mjs
   // holds the rules (CI); change a value only with it passing. Waste plants
   // take bioenergy's colour, as in the mix and its filter.
   const FUEL_COLORS = {
@@ -230,10 +234,23 @@
     dark:  { coal:"#895700", gas:"#EF630A", oil:"#C6335B", nuclear:"#A23DB9", hydro:"#4D7FFF",
              wind:"#00A7BB", solar:"#B98D00", biomass:"#328541", geothermal:"#DE62A3" }
   };
-  const FUEL_COLOR = {};   // the current theme's, set by setFuelPalette()
-  function setFuelPalette(){
-    Object.assign(FUEL_COLOR, FUEL_COLORS[document.body.dataset.theme === "light" ? "light" : "dark"]);
+  // The other point layers are told apart from the plants by shape, not by
+  // more hues (the fuels hold the colour wheel): data centres are violet
+  // diamonds, cable landings violet rings, industrial sites slate squares
+  // (a neutral on purpose). Their operator or sector is in the tooltip and
+  // popup. Plant clusters mix fuels, so their bubbles are a neutral too
+  // (cluster, with its label ink), apart from the industry slate; so is the
+  // halo of plants in the pipeline. Checked by the same script as the fuels.
+  const LAYER_COLORS = {
+    light: { digital:"#7C3AED", industrial:"#64748B", cluster:"#334155", clusterInk:"#FFFFFF" },
+    dark:  { digital:"#8B5CF6", industrial:"#94A3B8", cluster:"#CBD5E1", clusterInk:"#0B1426" }
+  };
+  const FUEL_COLOR = {}, LAYER_COLOR = {};   // the current theme's, set by setMapPalette()
+  function setMapPalette(){
+    const theme = document.body.dataset.theme === "light" ? "light" : "dark";
+    Object.assign(FUEL_COLOR, FUEL_COLORS[theme]);
     FUEL_COLOR.waste = FUEL_COLOR.biomass;
+    Object.assign(LAYER_COLOR, LAYER_COLORS[theme]);
   }
   // Plant dots: area tracks capacity (radius ∝ √MW, with a floor so a 10 MW
   // plant stays visible) and grows with zoom. plantRadius() is the same curve
@@ -262,9 +279,6 @@
   // Capacity in a cluster or tooltip: "850 MW", "4.2 GW".
   const fmtMW = (mw)=>mw >= 1000 ? short(mw/1000) + " GW" : nfmt(mw) + " MW";
 
-  const DIGITAL_COLOR    = "#7C3AED";
-  const INDUSTRIAL_COLOR = "#EA580C";
-  const CABLE_COLOR      = "#2DD4BF";  // teal — was orange, collided with industrial
   const GRID_COLOR       = "#E5E4E0";
 
   // Resolves current theme; called inside buildMapLayers which re-runs on theme change
@@ -272,32 +286,46 @@
   const INTERCONNECTOR_COLOR = () => isDark() ? "#60A5FA" : "#1D4ED8";
   const PLANNED_COLOR = "#a37df0";
 
-  // Palettes are per country (countries.config.js → `palette`): operators
-  // and industrial sectors differ from one market to the next. Anything not
-  // listed falls back to DIGITAL_COLOR / INDUSTRIAL_COLOR.
-  //   palette.providers: [{ key: <operator as in the data>, color, short }]
-  //   palette.sectors:   { <sector as in the data>: color }
-  function palette(){
-    const p = (COUNTRIES[currentCountry] || {}).palette || {};
-    return { providers: p.providers || [], sectors: p.sectors || {} };
+  // Short operator names for tooltips (countries.config.js → `operators`).
+  function operatorShort(op){
+    const o = ((COUNTRIES[currentCountry] || {}).operators || []).find(x=>x.key === op);
+    return o ? o.short : op;
   }
-  // An empty palette must yield a plain colour: ["case", fallback] is not a
-  // valid expression, and MapLibre then drops the layer with only a warning.
-  function providerColorExpr(){
-    if(!palette().providers.length) return DIGITAL_COLOR;
-    const expr = ["case"];
-    palette().providers.forEach(p => { expr.push(["==",["get","operator"], p.key], p.color); });
-    expr.push(DIGITAL_COLOR); // default
-    return expr;
+  const withAlpha = (hex, a)=>`rgba(${[1, 3, 5].map(i=>parseInt(hex.slice(i, i + 2), 16)).join(",")},${a})`;
+
+  // How a point of a layer kind is drawn: on the map, and as its swatch in
+  // the panel, tooltip, popup and search. null for the other kinds: plants
+  // and lines are discs in the caller's colour.
+  function markerOf(kind, p){
+    if(kind === "industrial") return { shape:"square", color: LAYER_COLOR.industrial };
+    if(kind === "digital") return { shape: p && p.category === "cable_landing" ? "ring" : "diamond", color: LAYER_COLOR.digital };
+    return null;
   }
-  function sectorColorExpr(){
-    if(!Object.keys(palette().sectors).length) return INDUSTRIAL_COLOR;
-    const expr = ["case"];
-    Object.entries(palette().sectors).forEach(([k,v])=>{
-      expr.push(["==",["get","sector"],k], v);
-    });
-    expr.push(INDUSTRIAL_COLOR); // default
-    return expr;
+  // A swatch span with that shape; a ring takes its colour as a border.
+  function markHtml(cls, m){
+    return m.shape === "ring"
+      ? `<span class="${cls} shape-ring" data-border="${escapeHtml(m.color)}"></span>`
+      : `<span class="${cls} shape-${m.shape}" data-bg="${escapeHtml(m.color)}"></span>`;
+  }
+
+  // Diamonds and squares are SDF icons made here (no sprite file, no font),
+  // tinted with icon-color and outlined with icon-halo like the discs'
+  // stroke. A new style drops its images, so each build adds them again.
+  const SHAPE_PX = 40, SHAPE_HALF = 12;   // image size; the shape's half-size at icon-size 1
+  function addShapeImages(){
+    for(const shape of ["square", "diamond"]){
+      const id = "shape-" + shape;
+      if(map.hasImage(id)) continue;
+      const n = SHAPE_PX, c = n / 2, data = new Uint8Array(n * n * 4);
+      for(let y = 0; y < n; y++) for(let x = 0; x < n; x++){
+        const dx = Math.abs(x + 0.5 - c), dy = Math.abs(y + 0.5 - c);
+        // Distance to the edge in pixels, negative inside. MapLibre's SDF
+        // puts the edge at 0.75 and reads 8 px per unit: halos need room.
+        const d = shape === "square" ? Math.max(dx, dy) - SHAPE_HALF : (dx + dy - SHAPE_HALF) / Math.SQRT2;
+        data[(y * n + x) * 4 + 3] = Math.max(0, Math.min(255, Math.round(255 * (0.75 - d / 8))));
+      }
+      map.addImage(id, { width: n, height: n, data }, { sdf: true });
+    }
   }
 
   // A layer's `kind` in countries.config.js picks its renderer. Every map
@@ -338,12 +366,12 @@
   };
   const savedTheme = store.get("mg.theme") || "dark";
   document.body.dataset.theme = savedTheme;
-  setFuelPalette();
+  setMapPalette();
   $("#themeToggle").addEventListener("click", ()=>{
     const next = document.body.dataset.theme === "dark" ? "light" : "dark";
     document.body.dataset.theme = next;
     store.set("mg.theme", next);
-    setFuelPalette();
+    setMapPalette();
     if(map){
       // Full reload, not a diff: diffing Positron→Dark patches the basemap in
       // place, which drops our layers and never fires "style.load", so they
@@ -606,12 +634,11 @@
         kind==="power"      ? FUEL_COLOR.solar :
         kind==="oim"        ? "#8a877c" :
         kind==="oim-plants" ? OSM_PLANT_SWATCH :
-        kind==="industrial" ? INDUSTRIAL_COLOR :
-        kind==="digital"    ? DIGITAL_COLOR : "#999"
+        markerOf(kind) ? markerOf(kind).color : "#999"
       );
       const swatch = kind==="grid" || kind==="oim"
         ? `<span class="layer-line${planned ? " dashed" : ""}" data-border="${escapeHtml(dotColor)}"></span>`
-        : `<span class="layer-dot" data-bg="${escapeHtml(dotColor)}"></span>`;
+        : markHtml("layer-dot", { shape: markerOf(kind) ? markerOf(kind).shape : "disc", color: dotColor });
       const row = document.createElement("label");
       row.className = "layer-row";
       row.dataset.layer = L.id;
@@ -800,6 +827,8 @@
   // A mix fuel → the plant fuel_type values it covers on the map.
   const MIX_PLANT_FUELS = { biomass: ["biomass", "waste"] };
   const plantFuels = (fuel)=>MIX_PLANT_FUELS[fuel] || [fuel];
+  // The fuels a plant cluster sums (waste counts as bioenergy, as in the mix).
+  const CLUSTER_FUELS = ["coal", "gas", "oil", "nuclear", "hydro", "wind", "solar", "biomass", "geothermal"];
   const mixFuel = (fuel)=>mixData && mixData.fuels.find(f=>f.fuel === fuel);
 
   // A layer's data as drawn: narrowed to the picked fuel (plant layers) and
@@ -1053,6 +1082,7 @@
     clearDataLayers();
     mapLayers = {};
     if(overview){ buildOverviewLayers(); return; }
+    addShapeImages();
     const c = COUNTRIES[countryKey];
 
     // Each builder call is isolated: if one throws (bad MapLibre
@@ -1266,22 +1296,27 @@
     // Dense national fleets (France, Spain: 1,500+ plants) cluster wider so
     // the bubbles don't tile the whole screen on a phone.
     const dense = fc.features.length > 500;
-    // Clusters carry their summed MW, shown instead of a plant count.
-    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35,
-      clusterProperties: { mw: ["+", ["to-number", ["get","capacity_mw"], 0]] } };
+    // Clusters carry their summed MW, shown instead of a plant count, and
+    // the MW of each fuel (as the mix groups them), for the tooltip.
+    const mwOf = ["to-number", ["get","capacity_mw"], 0];
+    const clusterProperties = { mw: ["+", mwOf] };
+    CLUSTER_FUELS.forEach(fuel=>{
+      clusterProperties["mw_" + fuel] = ["+", ["case", ["in", ["get","fuel_type"], ["literal", plantFuels(fuel)]], mwOf, 0]];
+    });
+    const clusterOpts = { cluster: true, clusterMaxZoom: dense ? 7 : 6, clusterRadius: dense ? 60 : 35, clusterProperties };
     addOrReplace(srcId, { type:"geojson", data: fc, ...clusterOpts });
     // Same clustering on a text-only twin, so a font failure can't blank the bubbles.
     addOrReplace(srcId + "-text", { type:"geojson", data: fc, ...clusterOpts });
 
-    // Cluster bubbles: amber, or the picked fuel's colour when the mix
-    // legend narrows the layer to one fuel.
+    // Cluster bubbles: a neutral (they mix fuels), or the picked fuel's
+    // colour when the mix legend narrows the layer to one fuel.
     const pickedColor = fuelFilter && FUEL_COLOR[fuelFilter];
     addLayer(L, {
       id: p+"-clusters", type:"circle", source:srcId,
       filter:["has","point_count"],
       paint:{
-        "circle-color": pickedColor || "rgba(245,158,11,0.85)",
-        "circle-opacity": pickedColor ? 0.85 : 1,
+        "circle-color": pickedColor || LAYER_COLOR.cluster,
+        "circle-opacity": pickedColor ? 0.85 : 0.9,
         // Same scale as a plant of the summed MW, never smaller than its
         // label ("999 MW") and capped so a national cluster stays on screen.
         "circle-radius": plantRadiusExpr("mw", (r)=>["max", 21, ["min", 56, r]]),
@@ -1299,7 +1334,7 @@
         "text-size":9.5,
         "text-allow-overlap":true
       },
-      paint:{ "text-color": pickedColor && !isLight(pickedColor) ? "#FFFFFF" : "#070D1A" }
+      paint:{ "text-color": !pickedColor ? LAYER_COLOR.clusterInk : isLight(pickedColor) ? "#070D1A" : "#FFFFFF" }
     });
 
     // Halo for announced/construction status
@@ -1307,7 +1342,7 @@
       id: p+"-halo", type:"circle", source:srcId,
       filter:["all",["!",["has","point_count"]],["in",["get","status"],["literal",["announced","construction"]]]],
       paint:{
-        "circle-color":"rgba(245,158,11,0.25)",
+        "circle-color": withAlpha(LAYER_COLOR.cluster, 0.25),
         "circle-radius": plantRadiusExpr("capacity_mw", (r)=>["+", r, 4]),
         "circle-blur":0.3
       }
@@ -1339,19 +1374,24 @@
     });
   }
 
-  // Industrial consumers — coloured by the country's sector palette
+  // Industrial consumers — slate squares; the sector is in tooltip and popup.
   function buildIndustrialLayer(L, data){
     const sourceId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(sourceId, { type:"geojson", data, promoteId: "id" });
 
     addLayer(L, {
-      id: p + "-points", type:"circle", source: sourceId,
+      id: p + "-points", type:"symbol", source: sourceId,
+      layout:{
+        "icon-image": "shape-square",
+        // As large as the discs they replaced (radius 4 → 8 px with zoom).
+        "icon-size":["interpolate",["linear"],["zoom"], 4, 0.3, 7, 0.45, 10, 0.6],
+        "icon-allow-overlap": true, "icon-ignore-placement": true
+      },
       paint:{
-        "circle-color": sectorColorExpr(),
-        "circle-radius":["interpolate",["linear"],["zoom"], 4, 4, 7, 6, 10, 8],
-        "circle-stroke-color": POINT_STROKE(),
-        "circle-stroke-width":1.5,
-        "circle-opacity":[
+        "icon-color": LAYER_COLOR.industrial,
+        "icon-halo-color": POINT_STROKE(),
+        "icon-halo-width": 1.5,
+        "icon-opacity":[
           "case",
           ["boolean",["feature-state","dim"],false], 0.3,
           1
@@ -1417,36 +1457,43 @@
       id: p+"-halo", type:"circle", source: srcId,
       filter:["any",["==",["get","status"],"announced"],["==",["get","status"],"construction"]],
       paint:{
-        "circle-color":"rgba(124,58,237,0.22)",
+        "circle-color": withAlpha(LAYER_COLOR.digital, 0.22),
         "circle-radius":13,
         "circle-blur":0.35
       }
     });
 
-    // Regular DCs (non-cable). Radius scales with capacity; planned/announced
-    // DCs render at lower opacity with a dashed stroke so the pipeline is
-    // visually distinct from energised capacity.
+    // Regular DCs (non-cable): diamonds, sized by capacity, larger ones
+    // drawn below smaller ones. Planned/announced DCs render at lower
+    // opacity with a lavender outline so the pipeline is visually distinct
+    // from energised capacity.
     addLayer(L, {
-      id: p+"-points", type:"circle", source: srcId,
+      id: p+"-points", type:"symbol", source: srcId,
       filter:["!=",["get","category"],"cable_landing"],
-      paint:{
-        "circle-color": providerColorExpr(),
-        "circle-radius":[
+      layout:{
+        "icon-image": "shape-diamond",
+        // The radius the discs had (5 → 22 px), a little larger for a diamond.
+        "icon-size":[
           "interpolate",["linear"],
           ["coalesce",["get","capacity_estimate_mw"], 3],
-          0, 5,
-          10, 7,
-          40, 11,
-          100, 16,
-          300, 22
+          0, 0.5,
+          10, 0.7,
+          40, 1.1,
+          100, 1.6,
+          300, 2.2
         ],
-        "circle-stroke-color":[
+        "symbol-sort-key":["-", 0, ["coalesce",["get","capacity_estimate_mw"], 3]],
+        "icon-allow-overlap": true, "icon-ignore-placement": true
+      },
+      paint:{
+        "icon-color": LAYER_COLOR.digital,
+        "icon-halo-color":[
           "case",
           ["in",["get","status"],["literal",["announced","construction","planned"]]], "rgba(163,125,240,0.9)",
           POINT_STROKE()
         ],
-        "circle-stroke-width":1.5,
-        "circle-opacity":[
+        "icon-halo-width":1.5,
+        "icon-opacity":[
           "case",
           ["boolean",["feature-state","dim"],false], 0.25,
           ["==",["get","status"],"announced"], 0.38,
@@ -1457,17 +1504,18 @@
       }
     }, "point");
 
-    // Cable landings — small teal circle with a contrasting ring. Drawn as
-    // a circle rather than a "◆" glyph so it needs no font to render.
+    // Cable landings — violet rings: hollow, so they read apart from the
+    // diamonds and from every filled disc.
     addLayer(L, {
       id: p+"-cables", type:"circle", source: srcId,
       filter:["==",["get","category"],"cable_landing"],
       paint:{
-        "circle-color": CABLE_COLOR,
-        "circle-radius":["interpolate",["linear"],["zoom"], 4, 4.5, 10, 7],
-        "circle-stroke-color": isDark() ? "#070D1A" : "#ffffff",
-        "circle-stroke-width":2,
-        "circle-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
+        "circle-color": LAYER_COLOR.digital,
+        "circle-opacity": 0,
+        "circle-radius":["interpolate",["linear"],["zoom"], 4, 3.5, 10, 6],
+        "circle-stroke-color": LAYER_COLOR.digital,
+        "circle-stroke-width":2.5,
+        "circle-stroke-opacity":["case",["boolean",["feature-state","dim"],false], 0.3, 1]
       }
     }, "point");
 
@@ -1562,23 +1610,21 @@
     let p = f.properties || {};
     let kind = layerKind(dataLayerId);
     if(kind === "oim-plants"){ p = osmPlantProps(p, f); kind = "power"; }
-    let metric = "", dot = "";
+    let metric = "";
     if(kind === "power")           metric = `${fmtCap(p.capacity_mw)} · ${word(FUEL_WORD, p.fuel_type) || ""}`;
     else if(kind === "industrial") metric = `${word(SECTOR_WORD, p.sector) || ""} · ${T.estDemand} ${fmtCap(p.estimated_demand_mw)}`;
     else if(kind === "digital"){
       if(p.category === "cable_landing"){
         metric = [T.cableLanding, p.operator].filter(Boolean).join(" · ");
-        dot = CABLE_COLOR;
       } else {
-        const prov = palette().providers.find(x => x.key === p.operator);
-        metric = [prov ? prov.short : p.operator,
+        metric = [operatorShort(p.operator),
                   p.capacity_estimate_mw != null ? fmtCap(p.capacity_estimate_mw) : "",
                   word(STATUS_WORD_ALL, p.status)].filter(Boolean).join(" · ");
-        dot = prov ? prov.color : DIGITAL_COLOR;
       }
     }
+    const mark = markerOf(kind, p);
     tooltip.innerHTML = `
-      <div class="tt-name">${dot ? `<span class="tt-dot" data-bg="${escapeHtml(dot)}"></span>` : ""}${escapeHtml(p.name)}</div>
+      <div class="tt-name">${mark ? markHtml("tt-dot", mark) : ""}${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
@@ -1595,17 +1641,28 @@
       <div class="tt-meta">${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}</div>`;
     positionTooltip(point);
   }
+  // "Wind 62% · Solar 30% · Hydro 8%": a cluster's three largest fuels by
+  // MW, since its bubble is a neutral. Empty under the fuel filter, where
+  // the bubble already wears that fuel's colour.
+  function clusterMix(p){
+    const total = num(p.mw) || 0;
+    const parts = CLUSTER_FUELS.map(f=>[f, num(p["mw_" + f]) || 0]).filter(([, mw])=>mw > 0).sort((a, b)=>b[1] - a[1]);
+    if(!total || !parts.length || fuelFilter) return "";
+    return parts.slice(0, 3).map(([f, mw])=>`${T.fuelShort[f]} ${fmtShare(100 * mw / total)}`).join(" · ");
+  }
   function showClusterTooltip(f, point){
     const p = f.properties || {};
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(T.clusterTip(nfmt(num(p.point_count) || 0), fmtMW(num(p.mw) || 0)))}</div>
-      <div class="tt-metric">${T.clusterHint}</div>`;
+      ${clusterMix(p) ? `<div class="tt-metric">${escapeHtml(clusterMix(p))}</div>` : ""}
+      <div class="tt-meta">${T.clusterHint}</div>`;
     positionTooltip(point);
   }
+  // `point` is in map pixels, and the tooltip sits in .map-wrap with the
+  // map: no page offset to add (that put it a panel's width to the right).
   function positionTooltip(point){
-    const rect = $("#map").getBoundingClientRect();
-    tooltip.style.left = (rect.left + point.x) + "px";
-    tooltip.style.top  = (rect.top  + point.y) + "px";
+    tooltip.style.left = point.x + "px";
+    tooltip.style.top  = point.y + "px";
     tooltip.style.display = "block";
   }
   function hideTooltip(){ tooltip.style.display = "none"; }
@@ -1649,12 +1706,10 @@
     const deg = (v)=>nfmt(Math.abs(v), 2, 2) + (FR ? "° " : "°");
     const coords = `${deg(lat)}${lat>=0?"N":"S"}, ${deg(lng)}${lng>=0?"E":T.west}`;
 
-    const dotColor = badgeClass==='power'      ? (FUEL_COLOR[p.fuel_type] || FUEL_COLOR.solar)
-                   : badgeClass==='industrial' ? INDUSTRIAL_COLOR
-                   : badgeClass==='digital'    ? (p.category==='cable_landing' ? CABLE_COLOR : DIGITAL_COLOR)
-                   : GRID_COLOR;
+    const mark = markerOf(badgeClass, p)
+      || { shape:"disc", color: badgeClass==='power' ? (FUEL_COLOR[p.fuel_type] || FUEL_COLOR.solar) : GRID_COLOR };
 
-    $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}"><span class="dot" data-bg="${escapeHtml(dotColor)}"></span>${badgeLabel}</span>`;
+    $("#popupBadge").innerHTML = `<span class="badge ${badgeClass}">${markHtml("dot", mark)}${badgeLabel}</span>`;
     paint($("#popupBadge"));
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
@@ -2484,11 +2539,9 @@
       // Industry carries an estimated demand, not a capacity.
       const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
       const meta = [...what, size, STATUS_WORD[p.status], countryLabel(c)].filter(Boolean).join(" · ");
-      const color = L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888"
-        : L.kind === "industrial" ? INDUSTRIAL_COLOR
-        : L.kind === "digital" ? (p.category === "cable_landing" ? CABLE_COLOR : DIGITAL_COLOR)
-        : INTERCONNECTOR_COLOR();
-      return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, color, mw: mw || 0,
+      const mark = markerOf(L.kind, p)
+        || { shape:"disc", color: L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888" : INTERCONNECTOR_COLOR() };
+      return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, mark, mw: mw || 0,
                nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
                                                p.fuel_type, word(FUEL_WORD, p.fuel_type)].filter(Boolean).join(" ")) };
     })).filter(Boolean);
@@ -2556,7 +2609,9 @@
       li.setAttribute("role", "option");
       li.setAttribute("aria-selected", String(i === activeOption));
       const dot = el("span", "so-dot");
-      if(o.isCountry) dot.textContent = "→"; else dot.style.background = o.color;
+      if(o.isCountry) dot.textContent = "→";
+      else if(o.mark.shape === "ring"){ dot.classList.add("shape-ring"); dot.style.borderColor = o.mark.color; }
+      else { dot.classList.add("shape-" + o.mark.shape); dot.style.background = o.mark.color; }
       const text = el("span", "so-text");
       text.append(markedName(o.name, q), el("span", "so-meta", o.meta));
       li.append(dot, text);

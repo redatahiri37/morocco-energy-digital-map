@@ -44,6 +44,56 @@ grid economics, infrastructure finance.
 ## Current Task
 Work through the map correction issues (#59, #60, #61) — see handoff below.
 
+## Session handoff — 2026-11-07 (solar: « immeuble » mode, co-ownership)
+- New Maison / Appartement switch (landing and results hero), solar/copro.js
+  (loaded before app.js; own 4-language table; zgh falls back to French
+  until a native speaker writes it). Building mode: storeys (shared with the
+  3D view; default R+3 when OSM has no levels) × flats per floor → the
+  auto-size is capped at the flat's share of the roof, the roof score uses
+  that share, and a « Copropriété » card shows whole roof / your share /
+  coverage, a bar strip of coverage by building height (RDC…R+9), three
+  routes (common-areas meter; one system per flat; one plant shared among
+  meters) and the AG steps. URL: m=i, u=<per floor>, e=<storeys>.
+- Law, our reading (reaconsult.ma summary of Law 18-00 as amended by
+  106-12; the adala.justice.gov.ma PDF is a scan, not read): adding
+  equipment = 3/4 of votes (art. 21); one owner's works at own cost on a
+  common part = majority of votes present/represented (art. 20); quorum
+  1st meeting = half the votes (art. 18). No sharing of output among
+  meters found in Law 82-21 / decree 2.25.100 (Greenpeace MENA also calls
+  11 kW low for a building). The card says « information, pas un avis
+  juridique ». To confirm with a lawyer/syndic before promoting the mode.
+- No figure for the common-areas route (no public data on their use).
+  Roof capacity is an upper bound: stairwell, tanks, solar water heaters
+  and dishes are not subtracted (the card says so).
+- CI: copro.js in node --check, the innerHTML grep, both copy steps and
+  the ?v= cache-busting (count 5 → 6); build-solar-i18n versions it too.
+- Not seen with live PVGIS (localhost is refused by the Worker's CORS) nor
+  with a real OSM building (Overpass did not answer locally): tested with a
+  drawn 18 × 14 m roof, fr and ar, desktop and 375 px.
+
+## Session handoff — 2026-11-03 (map: industry and data-centre markers)
+- Industry and data centres are told apart from the plants by
+  shape, not by more hues. Data centres = violet diamonds (sized by MW,
+  pipeline faded with a lavender outline), cable landings = violet rings,
+  industrial sites = slate squares. Diamonds and squares are SDF icons
+  made in app.js (addShapeImages, re-added on every build: a new style
+  drops images). LAYER_COLORS per theme next to FUEL_COLORS; markerOf /
+  markHtml give the same shape to swatches (layer list, tooltip, popup,
+  search). The per-country colours by operator and sector are gone (no
+  legend explained them; each collided with a fuel): countries.config.js
+  keeps `operators: [{ key, short }]` for tooltips, `palette` now fails
+  validation. The map palette check covers these colours and that both
+  layers stay shapes.
+- Plant clusters: neutral bubbles (LAYER_COLORS cluster / clusterInk:
+  slate-700 on light, slate-300 on dark), the picked fuel's colour under
+  the fuel filter as before. Their source sums MW per fuel (mw_<fuel>,
+  CLUSTER_FUELS, waste in bioenergy) and the tooltip lists the three
+  largest ("Nuclear 77% · Hydro 18% · Wind 3%"). The pipeline halo round
+  plants is that neutral too: no amber left among the map's data marks.
+- Tooltips were placed a panel's width (320 px) right of what they
+  describe on desktop (positionTooltip added the page offset to map
+  pixels; audit item B6) and squeezed near the right edge: both fixed.
+
 ## Session handoff — 2026-10-18 (map: live Spain–Morocco flow, demand)
 - Morocco has no public live consumption feed (ONEE: annual figures and
   peaks only; Electricity Maps' MA zone is modelled). The live signal is
@@ -155,16 +205,15 @@ Work through the map correction issues (#59, #60, #61) — see handoff below.
   flyTo / easeTo / fitBounds centre above them; a tapped feature eases
   above the popup. Popup on phones now ends above the bottom bar.
 - Fuel palette (2026-10-27): FUEL_COLORS in app.js, one set per theme
-  (setFuelPalette on load and theme switch; waste = bioenergy's colour).
+  (setMapPalette on load and theme switch; waste = bioenergy's colour).
   Each fuel keeps its usual hue (coal brown, gas orange, oil crimson,
   nuclear purple, hydro blue, wind cyan, solar gold, bioenergy green,
   geothermal pink); L and C were optimised in OKLCH against the dataviz
-  checks. scripts/check-fuel-palette.mjs (CI) re-checks: band, chroma,
+  checks. scripts/check-map-palette.mjs (CI) re-checks: band, chroma,
   contrast with the panel, and the 14 fuel pairs that touch in some mix bar
   (Delta E >= 15, colour-blind >= 6; now >= 8.1). The map can't keep all 9
   apart for colour-blind readers (dark solar/gas collapse for deutans): the
-  mix legend's fuel filter is the remedy. Not re-checked: the industry
-  sector / data-centre operator palettes and the amber cluster bubbles.
+  mix legend's fuel filter is the remedy.
 - Sheet: a drag held still for 120 ms before release no longer counts as a
   flick (settles on the nearest stop).
 

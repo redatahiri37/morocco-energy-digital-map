@@ -18,7 +18,9 @@
 // Layer ids must be unique within a country; map ids derive from them.
 //
 // Optional per country:
-//   palette:        { providers: [{ key, color, short }], sectors: { name: color } }
+//   operators:      [{ key, short }] — short operator names for tooltips; `key`
+//                   is `operator` as in the data. (Layer colours are not per
+//                   country: app.js LAYER_COLORS.)
 //   boundary:       { source, sourceUrl, note } — provenance of boundary.geojson
 //   mix:            national electricity mix file in dataPath, built from Ember
 //                   by scripts/build-country-mix.py (the "Electricity mix" panel)
@@ -116,27 +118,15 @@ window.COUNTRIES = {
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
                 sourceUrl: "https://www.naturalearthdata.com/",
                 note: "Morocco and the Southern Provinces drawn as one territory" },
-    palette: {
-      providers: [
-        { key:"N+ONE",                     color:"#9B6BF0", short:"N+ONE" },
-        { key:"inwi",                      color:"#5BBFD9", short:"inwi" },
-        { key:"Maroc Telecom (IAM)",       color:"#EC4899", short:"Maroc Telecom" },
-        { key:"Naver / Nvidia consortium", color:"#F59E0B", short:"Naver × Nvidia" },
-        { key:"Iozera",                    color:"#F97316", short:"Iozera" },
-        { key:"Government of Morocco",     color:"#10B981", short:"Government" },
-        { key:"ADD (Agence de Développement du Digital)",
-                                           color:"#10B981", short:"ADD" }
-      ],
-      sectors: {
-        "phosphates / fertilisers": "#F59E0B",
-        "phosphate mining":         "#F59E0B",
-        "cement":                   "#A1A1AA",
-        "steel":                    "#64748B",
-        "automotive":               "#0EA5E9",
-        "oil refining":             "#DC2626",
-        "mining / metallurgy":      "#92400E"
-      }
-    },
+    operators: [
+      { key:"N+ONE", short:"N+ONE" },
+      { key:"inwi", short:"inwi" },
+      { key:"Maroc Telecom (IAM)", short:"Maroc Telecom" },
+      { key:"Naver / Nvidia consortium", short:"Naver × Nvidia" },
+      { key:"Iozera", short:"Iozera" },
+      { key:"Government of Morocco", short:"Government" },
+      { key:"ADD (Agence de Développement du Digital)", short:"ADD" }
+    ],
     layers: [
       { id: "power-plants", file: "power-plants.geojson", kind: "power",
         title: "Power plants", titleFr: "Centrales électriques",

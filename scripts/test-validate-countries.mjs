@@ -81,6 +81,10 @@ const cases = [
     (d) => editJson(d, `${MA}/mix.json`, (m) => { m.co2_intensity_g_per_kwh = "<b>602</b>"; })],
   ["mix fuel the map can't colour", /fuel must be one of the schema's fuel types/,
     (d) => editJson(d, `${MA}/mix.json`, (m) => { m.fuels[0].fuel = "Other Fossil"; })],
+  ["operator without a short name", /operators: bad entry/,
+    (d) => config(d, `window.COUNTRIES.morocco.operators[0].short = "";`)],
+  ["per-country colours, no longer read", /palette: is no longer read/,
+    (d) => config(d, `window.COUNTRIES.morocco.palette = { sectors: { cement: "#A1A1AA" } };`)],
   ["schema doc missing", /DATA_SCHEMA.md: missing/,
     (d) => unlinkSync(join(d, "DATA_SCHEMA.md"))],
 ];

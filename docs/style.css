@@ -379,7 +379,7 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
   padding:7px 10px;
   font-size:11px;
   color:var(--text-0);
-  max-width:240px;
+  width:max-content;max-width:240px;   /* no squeeze near the map's right edge */
   transform:translate(-50%,-130%);
   backdrop-filter:blur(6px);
   box-shadow:0 4px 14px rgba(0,0,0,.45);
@@ -421,8 +421,14 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .badge .dot{width:6px;height:6px;border-radius:50%}
 .badge.power{background:rgba(245,158,11,.12);color:#f5b64b}
 .badge.grid{background:rgba(229,228,224,.1);color:#d5d3cd}
-.badge.industrial{background:rgba(234,88,12,.14);color:#f28147}
+.badge.industrial{background:rgba(148,163,184,.16);color:#a8b4c6}
 .badge.digital{background:rgba(124,58,237,.14);color:#a37df0}
+
+/* Marker shapes, as on the map: plants are discs, data centres diamonds,
+   cable landings rings, industrial sites squares (app.js markerOf). */
+.layer-dot.shape-square,.so-dot.shape-square,.tt-dot.shape-square,.dot.shape-square{border-radius:1.5px}
+.layer-dot.shape-diamond,.so-dot.shape-diamond,.tt-dot.shape-diamond,.dot.shape-diamond{border-radius:1px;transform:rotate(45deg) scale(.8)}
+.layer-dot.shape-ring,.so-dot.shape-ring,.tt-dot.shape-ring,.dot.shape-ring{background:none;border:2px solid}
 
 .pop-title{
   font-family:var(--font-display);font-size:24px;font-weight:400;

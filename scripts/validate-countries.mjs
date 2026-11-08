@@ -86,7 +86,6 @@ const ENABLED = sandbox.window.COUNTRIES_ENABLED || [];
 
 const isLngLat = (c) => Array.isArray(c) && c.length === 2 && num(c[0]) && num(c[1]) &&
   c[0] >= -180 && c[0] <= 180 && c[1] >= -90 && c[1] <= 90;
-const isColor = (v) => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v);
 const inBounds = (c, b) => c[0] >= b[0][0] && c[0] <= b[1][0] && c[1] >= b[0][1] && c[1] <= b[1][1];
 const vertices = (g) => g.type === "Point" ? [g.coordinates]
   : g.type === "LineString" ? g.coordinates
@@ -124,12 +123,9 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
   if (!existsSync(dir)) { fail(at, `dataPath ${c.dataPath} does not exist`); continue; }
   if (!Array.isArray(c.layers) || c.layers.length === 0) fail(at, "no layers");
 
-  if (c.palette) {
-    for (const p of c.palette.providers || [])
-      if (!str(p.key) || !isColor(p.color) || !str(p.short)) fail(`${at}.palette.providers`, `bad entry ${JSON.stringify(p)}`);
-    for (const [k, v] of Object.entries(c.palette.sectors || {}))
-      if (!isColor(v)) fail(`${at}.palette.sectors`, `"${k}" colour must be #rrggbb`);
-  }
+  if (c.palette) fail(`${at}.palette`, "is no longer read: data centres and industry have one colour each (LAYER_COLORS in app.js); short operator names go in `operators`");
+  for (const o of c.operators || [])
+    if (!str(o.key) || !str(o.short)) fail(`${at}.operators`, `bad entry ${JSON.stringify(o)}`);
   if (c.boundary && (!str(c.boundary.source) || !/^https:\/\//.test(c.boundary.sourceUrl || "")))
     fail(`${at}.boundary`, "needs source and an https sourceUrl");
 

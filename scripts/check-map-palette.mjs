@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-/* Checks the map's fuel colours (FUEL_COLORS in docs/app.js), in each theme:
+/* Checks the map's colours in docs/app.js, in each theme.
+ *
+ * Fuels (FUEL_COLORS):
  *   - lightness inside the theme's band and enough chroma to read as a hue
  *     (OKLCH L 0.43–0.77 light, 0.48–0.67 dark; C >= 0.10);
  *   - 3:1 contrast with the panel, except the fuels in RELIEF, which rely on
@@ -15,7 +17,18 @@
  * On the map any two fuels can meet: their worst pair is reported, not gated
  * (nine hues can't all be that far apart; the legend filters to one fuel).
  *
- *   node scripts/check-fuel-palette.mjs
+ * Other point layers (LAYER_COLORS): data centres and industry are told apart
+ * from the plants by shape (diamonds, squares), so their colours are checked
+ * against each other, not against the fuels:
+ *   - 3:1 contrast with the map and the panel;
+ *   - the data-centre violet inside the band with chroma >= 0.10, the
+ *     industry slate a neutral (C < 0.06: the hues belong to the fuels);
+ *   - the two apart (Delta E >= 15, colour-blind >= 8);
+ *   - and they are still drawn as shapes, or the fuels would collide.
+ * Plant clusters (cluster, clusterInk): a neutral too, 3:1 with the map, its
+ * label ink 4.5:1 on it, and apart from the industry slate (Delta E >= 15).
+ *
+ *   node scripts/check-map-palette.mjs
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -24,6 +37,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 const SURFACE = { light: "#FFFFFF", dark: "#0B1426" };   // --bg-1, the panel behind the mix bar
 const BAND = { light: [0.43, 0.77], dark: [0.48, 0.67] };
 const RELIEF = { light: ["solar"], dark: [] };            // below 3:1, named in the legend
+const MAP_BG = { light: ["#FFFFFF", "#F5F7FA"], dark: ["#070D1A", "#0B1426"] };   // panel and map background
 
 let errors = 0;
 const fail = (msg) => { console.error("FAIL  " + msg); errors++; };
@@ -103,4 +117,33 @@ for (const mode of ["light", "dark"]) {
     `${worstN[1]}/${worstN[2]} ${worstN[0].toFixed(1)}, colour-blind ${worstC[1]}/${worstC[2]} ${worstC[0].toFixed(1)}` +
     `${worstC[0] >= 6 && worstC[0] < 8 ? " (6–8: gaps + legend)" : ""}; on the map ${all[1]}/${all[2]} ${all[0].toFixed(1)}`);
 }
+// ---- data centres and industry ------------------------------------------------------------
+const layerBlock = app.match(/const LAYER_COLORS = \{([\s\S]*?)\n  \};/);
+if (!layerBlock) fail("docs/app.js: no `const LAYER_COLORS = { light: {…}, dark: {…} };`");
+else for (const [, mode, body] of layerBlock[1].matchAll(/(light|dark):\s*\{([^}]*)\}/g)) {
+  const c = Object.fromEntries([...body.matchAll(/(\w+):\s*"(#[0-9A-Fa-f]{6})"/g)].map((m) => [m[1], m[2]]));
+  const before = errors;
+  if (!c.digital || !c.industrial || !c.cluster || !c.clusterInk) { fail(`LAYER_COLORS.${mode} needs digital, industrial, cluster and clusterInk`); continue; }
+  for (const k of ["digital", "industrial", "cluster"])
+    for (const bg of MAP_BG[mode]) {
+      const hex = c[k];
+      if (contrast(hex, bg) < 3) fail(`${mode} ${k} ${hex}: contrast ${contrast(hex, bg).toFixed(2)}:1 with ${bg}, below 3:1`);
+    }
+  const [L, C] = lc(c.digital);
+  if (L < BAND[mode][0] || L > BAND[mode][1]) fail(`${mode} digital ${c.digital}: lightness ${L.toFixed(3)} outside ${BAND[mode].join("–")}`);
+  if (C < 0.10) fail(`${mode} digital ${c.digital}: chroma ${C.toFixed(3)} below 0.10`);
+  if (lc(c.industrial)[1] >= 0.06) fail(`${mode} industrial ${c.industrial}: chroma ${lc(c.industrial)[1].toFixed(3)}, keep it a neutral (< 0.06)`);
+  if (lc(c.cluster)[1] >= 0.06) fail(`${mode} cluster ${c.cluster}: chroma ${lc(c.cluster)[1].toFixed(3)}, keep it a neutral (< 0.06): clusters mix fuels`);
+  if (contrast(c.cluster, c.clusterInk) < 4.5) fail(`${mode} cluster label ${c.clusterInk} on ${c.cluster}: contrast ${contrast(c.cluster, c.clusterInk).toFixed(2)}:1, below 4.5:1`);
+  const ci = deltaE(c.cluster, c.industrial);
+  if (ci < 15) fail(`${mode} cluster/industrial: Delta E ${ci.toFixed(1)}, below 15`);
+  const n = deltaE(c.digital, c.industrial), k = cvd(c.digital, c.industrial);
+  if (n < 15) fail(`${mode} digital/industrial: Delta E ${n.toFixed(1)}, below 15`);
+  if (k < 8) fail(`${mode} digital/industrial: colour-blind Delta E ${k.toFixed(1)}, below 8`);
+  console.log(`${errors > before ? "    " : "ok  "}  ${mode}: data centres ${c.digital}, industry ${c.industrial}; apart by ${n.toFixed(1)}, colour-blind ${k.toFixed(1)}; ` +
+    `clusters ${c.cluster} (label ${contrast(c.cluster, c.clusterInk).toFixed(1)}:1), ${ci.toFixed(1)} from industry`);
+}
+for (const shape of ["square", "diamond"])
+  if (!app.includes(`"icon-image": "shape-${shape}"`))
+    fail(`docs/app.js: no layer drawn with "shape-${shape}": industry and data centres must stay squares and diamonds, their colours are not checked against the fuels`);
 process.exit(errors ? 1 : 0);
