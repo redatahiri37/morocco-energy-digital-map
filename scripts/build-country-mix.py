@@ -117,6 +117,7 @@ def build(key, iso3, rows):
         "iso3": iso3,
         "year": year,
         "source": f"Ember, Yearly electricity data (release {EMBER_RELEASE}, CC BY 4.0)",
+        "source_fr": f"Ember, Yearly electricity data (version du {EMBER_RELEASE}, CC BY 4.0)",
         "source_url": EMBER_HOME,
         "generation_twh": round(get("Electricity generation", "Total", "Total Generation", "TWh"), 2),
         "demand_twh": get("Electricity demand", "Demand", "Demand", "TWh"),

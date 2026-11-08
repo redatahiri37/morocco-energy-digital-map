@@ -137,7 +137,7 @@
         ]
       },
       "properties": {
-        "id": "jorf-lasfar-coal",
+        "id": "jorf-lasfar-coal", "gppd_id": "WRI1023682",
         "name": "Jorf Lasfar Coal Plant",
         "capacity_mw": 2056,
         "fuel_type": "coal",
@@ -209,7 +209,7 @@
         ]
       },
       "properties": {
-        "id": "beni-mathar-iscc",
+        "id": "beni-mathar-iscc", "gppd_id": "WRI1023670",
         "name": "Aïn Beni Mathar ISCC",
         "capacity_mw": 472,
         "fuel_type": "gas",
@@ -233,7 +233,7 @@
         ]
       },
       "properties": {
-        "id": "tahaddart-ccgt",
+        "id": "tahaddart-ccgt", "gppd_id": "WRI1023677",
         "name": "Tahaddart CCGT",
         "capacity_mw": 384,
         "fuel_type": "gas",
@@ -257,7 +257,7 @@
         ]
       },
       "properties": {
-        "id": "afourer-psh",
+        "id": "afourer-psh", "gppd_id": "WRI1023710",
         "name": "Afourer Pumped Storage",
         "capacity_mw": 465,
         "fuel_type": "hydro",
@@ -329,7 +329,7 @@
         ]
       },
       "properties": {
-        "id": "al-massira-dam",
+        "id": "al-massira-dam", "gppd_id": "WRI1023674",
         "name": "Al Massira Dam",
         "fuel_type": "hydro",
         "capacity_mw": 128,
@@ -352,7 +352,7 @@
         ]
       },
       "properties": {
-        "id": "bin-el-ouidane-dam",
+        "id": "bin-el-ouidane-dam", "gppd_id": "WRI1023675",
         "name": "Bin el Ouidane Dam",
         "fuel_type": "hydro",
         "capacity_mw": 135,
@@ -375,7 +375,7 @@
         ]
       },
       "properties": {
-        "id": "idriss-1er-dam",
+        "id": "idriss-1er-dam", "gppd_id": "WRI1023694",
         "name": "Idriss 1er Dam",
         "fuel_type": "hydro",
         "capacity_mw": 40.6,
@@ -398,7 +398,7 @@
         ]
       },
       "properties": {
-        "id": "oued-el-makhazine-dam",
+        "id": "oued-el-makhazine-dam", "gppd_id": "WRI1023700",
         "name": "Oued el Makhazine Dam",
         "fuel_type": "hydro",
         "capacity_mw": 36,
@@ -421,7 +421,7 @@
         ]
       },
       "properties": {
-        "id": "al-wahda-dam",
+        "id": "al-wahda-dam", "gppd_id": "WRI1023672",
         "name": "Hassan II (Al Wahda) Dam",
         "fuel_type": "hydro",
         "capacity_mw": 240,

@@ -3,6 +3,7 @@
   "iso3": "RWA",
   "year": 2024,
   "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_fr": "Ember, Yearly electricity data (version du 2026-06-23, CC BY 4.0)",
   "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
   "generation_twh": 1.13,
   "demand_twh": 1.22,
