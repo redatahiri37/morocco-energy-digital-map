@@ -109,6 +109,12 @@ window.COUNTRIES = {
       source: "REE (Red Eléctrica), real-time exchange data",
       sourceUrl: "https://www.ree.es/en/activities/operation-of-the-electricity-system/international-interconnections"
     },
+    // Read by Site check only (not drawn): national 150–400 kV lines for
+    // distance-to-grid anywhere in the country, independent of loaded tiles.
+    siteGrid: { file: "transmission-lines.geojson",
+                source: "World Bank Group masterplan 2018",
+                sourceUrl: "https://datacatalog.worldbank.org/",
+                updated: "2018" },
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
                 sourceUrl: "https://www.naturalearthdata.com/",
                 note: "Morocco and the Southern Provinces drawn as one territory" },

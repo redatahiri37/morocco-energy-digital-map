@@ -68,6 +68,33 @@ handoff below). No open correction issue left.
   overpass-api.de (resets often), en/fr.wikipedia, wikidata, mindat
   (Cloudflare challenge: use search snippets) and energy.wattu.org.
 
+## Session handoff — 2026-11-07 (solar: « immeuble » mode, co-ownership)
+- New Maison / Appartement switch (landing and results hero), solar/copro.js
+  (loaded before app.js; own 4-language table; zgh falls back to French
+  until a native speaker writes it). Building mode: storeys (shared with the
+  3D view; default R+3 when OSM has no levels) × flats per floor → the
+  auto-size is capped at the flat's share of the roof, the roof score uses
+  that share, and a « Copropriété » card shows whole roof / your share /
+  coverage, a bar strip of coverage by building height (RDC…R+9), three
+  routes (common-areas meter; one system per flat; one plant shared among
+  meters) and the AG steps. URL: m=i, u=<per floor>, e=<storeys>.
+- Law, our reading (reaconsult.ma summary of Law 18-00 as amended by
+  106-12; the adala.justice.gov.ma PDF is a scan, not read): adding
+  equipment = 3/4 of votes (art. 21); one owner's works at own cost on a
+  common part = majority of votes present/represented (art. 20); quorum
+  1st meeting = half the votes (art. 18). No sharing of output among
+  meters found in Law 82-21 / decree 2.25.100 (Greenpeace MENA also calls
+  11 kW low for a building). The card says « information, pas un avis
+  juridique ». To confirm with a lawyer/syndic before promoting the mode.
+- No figure for the common-areas route (no public data on their use).
+  Roof capacity is an upper bound: stairwell, tanks, solar water heaters
+  and dishes are not subtracted (the card says so).
+- CI: copro.js in node --check, the innerHTML grep, both copy steps and
+  the ?v= cache-busting (count 5 → 6); build-solar-i18n versions it too.
+- Not seen with live PVGIS (localhost is refused by the Worker's CORS) nor
+  with a real OSM building (Overpass did not answer locally): tested with a
+  drawn 18 × 14 m roof, fr and ar, desktop and 375 px.
+
 ## Session handoff — 2026-11-03 (map: industry and data-centre markers)
 - Industry and data centres are told apart from the plants by
   shape, not by more hues. Data centres = violet diamonds (sized by MW,
