@@ -31,6 +31,9 @@
   const countryLabel = (c)=>(FR && c.labelFr) || c.label;
   const layerTitle = (L)=>(FR && L.titleFr) || L.title;
   const partnerLabel = (lf)=>(FR && lf.partnerFr) || lf.partner;
+  // A config source (or boundary note) in the page's language: countries.config.js
+  // keeps the French next to it as sourceFr / noteFr, mix files as source_fr.
+  const srcText = (o, k = "source")=>(FR && (o[k + "Fr"] || o[k + "_fr"])) || o[k];
   const T = FR ? {
     soon: "bientôt", live: "direct", updated: "mis à jour",
     docTitle: (c)=>`Wattu Energy — carte des infrastructures (${c})`,
@@ -644,7 +647,7 @@
       const row = document.createElement("label");
       row.className = "layer-row";
       row.dataset.layer = L.id;
-      row.title = `${L.source} · ${T.updated} ${L.updated === "live" ? T.live : L.updated}`;
+      row.title = `${srcText(L)} · ${T.updated} ${L.updated === "live" ? T.live : L.updated}`;
       row.innerHTML = `
         <input type="checkbox" ${visibility[L.id]!==false?"checked":""}>
         <span class="check"></span>
@@ -744,9 +747,9 @@
         <div class="v">${num(x.value) != null ? `${nfmt(x.value, 1)}<small> ${escapeHtml(x.unit)}</small>` : NA}</div></div>`).join("") : ""}
       ${lf ? `<div class="kpi wide" data-live-flow>${liveFlowMarkup(c)}</div>` : ""}
       ${d || lf ? `<p class="kpi-note micro">
-        ${d ? `${T.demandNote}${COLON} <a href="${escapeHtml(safeUrl(d.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(d.source)}</a>` : ""}
+        ${d ? `${T.demandNote}${COLON} <a href="${escapeHtml(safeUrl(d.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(d))}</a>` : ""}
         ${d && lf ? "<br>" : ""}
-        ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(lf.source)}</a>, ${T.liveSteps}` : ""}
+        ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(lf))}</a>, ${T.liveSteps}` : ""}
       </p>` : ""}
     `;
     if(lf) refreshLiveFlow(c);
@@ -801,7 +804,7 @@
     const c = COUNTRIES[countryKey];
     document.title = T.docTitle(countryLabel(c));
     document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = countryLabel(c); });
-    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? T.credits(c.credits) : ""; });
+    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? T.credits(srcText(c, "credits")) : ""; });
     document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
     if(reportErrorFooter) reportErrorFooter.href = issueUrl(T.issueData(countryLabel(c)));
   }
@@ -812,11 +815,11 @@
     const host = $("#methodologySources");
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
-      `<li><strong>${escapeHtml(layerTitle(L))}${COLON}</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(${T.updated} ${escapeHtml(L.updated === "live" ? T.live : L.updated)})</span></li>`
-    ).join("") + (mixData ? `<li><strong>${T.mixSrc}${COLON}</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(T.mixSrcNote(mixData.year))})</span></li>` : "") +
-    (c.demand ? `<li><strong>${T.demandSrc}${COLON}</strong> ${escapeHtml(c.demand.source)} — <a href="${escapeHtml(safeUrl(c.demand.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.demand.sourceUrl)}</a></li>` : "") +
-    (c.liveFlow ? `<li><strong>${escapeHtml(T.liveSrc(partnerLabel(c.liveFlow)))}${COLON}</strong> ${escapeHtml(c.liveFlow.source)}, ${T.liveSrcNote} — <a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.sourceUrl)}</a> <span class="micro">(${T.liveSrcNet})</span></li>` : "") +
-    (c.boundary ? `<li><strong>${T.boundary}${COLON}</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
+      `<li><strong>${escapeHtml(layerTitle(L))}${COLON}</strong> ${escapeHtml(srcText(L))} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(${T.updated} ${escapeHtml(L.updated === "live" ? T.live : L.updated)})</span></li>`
+    ).join("") + (mixData ? `<li><strong>${T.mixSrc}${COLON}</strong> ${escapeHtml(srcText(mixData))} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(T.mixSrcNote(mixData.year))})</span></li>` : "") +
+    (c.demand ? `<li><strong>${T.demandSrc}${COLON}</strong> ${escapeHtml(srcText(c.demand))} — <a href="${escapeHtml(safeUrl(c.demand.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.demand.sourceUrl)}</a></li>` : "") +
+    (c.liveFlow ? `<li><strong>${escapeHtml(T.liveSrc(partnerLabel(c.liveFlow)))}${COLON}</strong> ${escapeHtml(srcText(c.liveFlow))}, ${T.liveSrcNote} — <a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.sourceUrl)}</a> <span class="micro">(${T.liveSrcNet})</span></li>` : "") +
+    (c.boundary ? `<li><strong>${T.boundary}${COLON}</strong> ${escapeHtml(srcText(c.boundary))} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(srcText(c.boundary, "note"))})</span>` : ""}</li>` : "") +
     `<li><strong>${T.basemap}${COLON}</strong> ${T.basemapLi}</li>`;
   }
 
@@ -1758,7 +1761,7 @@
       <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
       <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
       ${live ? `<div class="live-flow" data-live-flow>${liveFlowMarkup(c)}
-        <div class="micro">${T.source}<a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.source)}</a></div></div>` : ""}
+        <div class="micro">${T.source}<a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(c.liveFlow))}</a></div></div>` : ""}
       <div class="stat-grid">
         <div class="cell"><div class="k">${T.voltage}</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
         <div class="cell"><div class="k">${T.status}</div><div class="v cap">${escapeHtml(word(STATUS_WORD_ALL, p.status))}</div></div>
@@ -2398,7 +2401,7 @@
       const d = [];
       if(st && s.refAvailable)
         d.push(ST.refLine(fmtKm(st.ref225 && st.ref225.km), fmtKm(st.ref400 && st.ref400.km),
-                          escapeHtml(COUNTRIES[currentCountry].siteGrid.source)));
+                          escapeHtml(srcText(COUNTRIES[currentCountry].siteGrid))));
       if(!oim) d.push(pend);
       else if(oim.off) d.push(`<span class="micro">${ST.oimOff}</span>`);
       else if(oim.unavailable) d.push(`<span class="micro">${ST.oimDown(s.refAvailable)}</span>`);
