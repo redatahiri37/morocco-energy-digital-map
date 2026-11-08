@@ -85,7 +85,7 @@ for (const [lang, col] of [["ar", 1], ["en", 2], ["zgh", null]]) {
   const own = lang === "zgh" ? "" : "|villes\\/|cities\\/|guide\\/";
   html = html.replace(new RegExp(`\\b(href|src)="(?!https?:|#|\\/|\\.\\/${own})([^"]+)"`, "g"), '$1="../$2"');
   if (version) {
-    html = html.replace(/((?:href|src)="\.\.\/(?:style\.css|brand\.css|engine\.js|app\.js|analytics\.js))"/g, `$1?v=${encodeURIComponent(version)}"`);
+    html = html.replace(/((?:href|src)="\.\.\/(?:style\.css|brand\.css|engine\.js|copro\.js|app\.js|analytics\.js))"/g, `$1?v=${encodeURIComponent(version)}"`);
   }
   const left = leftoverFrench(html);
   if (left.length) {

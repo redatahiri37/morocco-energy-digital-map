@@ -42,7 +42,79 @@ MEA region focus. High technical fluency on energy systems,
 grid economics, infrastructure finance.
 
 ## Current Task
-Work through the map correction issues (#59, #60, #61) — see handoff below.
+Map correction issues #59, #60, #61 and #70 handled on 2026-11-08 (see the
+handoff below). No open correction issue left.
+
+## Session handoff — 2026-11-08 (map: French sources)
+- /fr/ showed every source and boundary note in English (Methodology list,
+  layer-row hover, demand / live-flow notes, footer credits, Site check).
+  countries.config.js now carries `sourceFr` / `noteFr` / `creditsFr` next
+  to each English text with words in it; mix.json files `source_fr`
+  (build-country-mix.py writes it). app.js reads them through srcText().
+  Dataset, organisation and licence names stay as cited ("Yearly electricity
+  data", "Global Power Plant Database").
+- validate-countries.mjs fails when a source, note or credit with a
+  lowercase word (3+ letters, domains and versions aside) has no French;
+  3 new self-test cases (34 in all).
+
+## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
+- Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,
+  Bin el Ouidane 256 → 135, Idriss 1er 432 → 40.6) and three points sat
+  13–18 km off the dam (Idriss 1er, Al Wahda, Oued el Makhazine). Now WRI
+  GPPD v1.3 (pinned commit, as for the other countries) for capacity and
+  year, OSM for the dam position (precision exact). New optional fields
+  annual_generation_gwh / annual_generation_year (WRI estimate for 2017),
+  shown as "Annual output ≈ … GWh" in the popup. Morocco's in-service total
+  went from 7.7 to 7.1 GW (65 % of Ember's 10.9 GW).
+- Guemassa (#60): moved to the Hajar mine, Guemassa massif (Mindat
+  31°21'52"N 8°03'21"W), ~4.5 km from the old point; precision stays
+  approximate (the complex spans mine and plant).
+- Xlinks (#59): started ~190 km off Tan-Tan and ended in the sea off
+  Devon. Now from the Tan-Tan generation area, into the sea NW of Tan-Tan
+  (El Ouatia), to Bideford Bay and the Alverdiscott substation. Not Dakhla:
+  Xlinks says its land part stays in the Tan-Tan region.
+- South Africa (#70, "no DC data"): already fixed by 94dd89d the day the
+  issue was filed (27 PeeringDB sites). PeeringDB has no MW, so the DC
+  KPI tiles stay "—".
+- Root cause of the dam back-and-forth: two hand-typed copies (morocco-grid
+  has the right MW and wrong positions; this repo had 232/256/432 MW since
+  the July merge repair 821a874) and no check against a reference. Guard:
+  scripts/check-gppd.mjs (CI "Plants against the WRI database") holds every
+  plant with `gppd_id` (or a WRI id as `id`) to WRI's capacity ±10 %,
+  position 15 km and fuel; `gppd_capacity_note` documents a real gap.
+  Morocco: 9 plants carry gppd_id (5 dams, Afourer STEP, Aïn Beni Mathar,
+  Tahaddart, Jorf Lasfar). Not 1:1 in WRI, so unchecked: Noor Ouarzazate
+  (WRI splits it), Mohammedia (WRI: coal, 300 MW), wind farms, projects.
+- Network: a personal environment "Wattu maps" allows nominatim,
+  overpass-api.de (resets often), en/fr.wikipedia, wikidata, mindat
+  (Cloudflare challenge: use search snippets) and energy.wattu.org.
+
+## Session handoff — 2026-11-07 (solar: « immeuble » mode, co-ownership)
+- New Maison / Appartement switch (landing and results hero), solar/copro.js
+  (loaded before app.js; own 4-language table; zgh falls back to French
+  until a native speaker writes it). Building mode: storeys (shared with the
+  3D view; default R+3 when OSM has no levels) × flats per floor → the
+  auto-size is capped at the flat's share of the roof, the roof score uses
+  that share, and a « Copropriété » card shows whole roof / your share /
+  coverage, a bar strip of coverage by building height (RDC…R+9), three
+  routes (common-areas meter; one system per flat; one plant shared among
+  meters) and the AG steps. URL: m=i, u=<per floor>, e=<storeys>.
+- Law, our reading (reaconsult.ma summary of Law 18-00 as amended by
+  106-12; the adala.justice.gov.ma PDF is a scan, not read): adding
+  equipment = 3/4 of votes (art. 21); one owner's works at own cost on a
+  common part = majority of votes present/represented (art. 20); quorum
+  1st meeting = half the votes (art. 18). No sharing of output among
+  meters found in Law 82-21 / decree 2.25.100 (Greenpeace MENA also calls
+  11 kW low for a building). The card says « information, pas un avis
+  juridique ». To confirm with a lawyer/syndic before promoting the mode.
+- No figure for the common-areas route (no public data on their use).
+  Roof capacity is an upper bound: stairwell, tanks, solar water heaters
+  and dishes are not subtracted (the card says so).
+- CI: copro.js in node --check, the innerHTML grep, both copy steps and
+  the ?v= cache-busting (count 5 → 6); build-solar-i18n versions it too.
+- Not seen with live PVGIS (localhost is refused by the Worker's CORS) nor
+  with a real OSM building (Overpass did not answer locally): tested with a
+  drawn 18 × 14 m roof, fr and ar, desktop and 375 px.
 
 ## Session handoff — 2026-11-03 (map: industry and data-centre markers)
 - Industry and data centres are told apart from the plants by

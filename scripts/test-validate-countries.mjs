@@ -26,6 +26,12 @@ const config = (dir, js) => edit(dir, "docs/countries.config.js", (s) => s + "\n
 
 const MA = "docs/data/morocco";
 const cases = [
+  ["layer source without its French", /sourceFr missing: "Global Energy Monitor · ONEE · operator disclosures"/,
+    (d) => config(d, `delete window.COUNTRIES.morocco.layers[0].sourceFr;`)],
+  ["boundary note without its French", /noteFr missing/,
+    (d) => config(d, `delete window.COUNTRIES.egypt.boundary.noteFr;`)],
+  ["mix source without its French", /source_fr missing/,
+    (d) => editJson(d, `${MA}/mix.json`, (m) => { delete m.source_fr; })],
   ["unknown layer kind", /unknown kind "points"/,
     (d) => config(d, `window.COUNTRIES.morocco.layers[0].kind = "points";`)],
   ["file on a live layer", /oim-plants layers take file: null/,
@@ -53,6 +59,10 @@ const cases = [
     (d) => editJson(d, `${MA}/industrial.geojson`, (fc) => { fc.features[0].geometry = { type: "LineString", coordinates: [[-7, 33], [-7.1, 33.1]] }; })],
   ["duplicate feature id", /duplicate id/,
     (d) => editJson(d, `${MA}/digital.geojson`, (fc) => { fc.features[1].properties.id = fc.features[0].properties.id; })],
+  ["siteGrid file missing", /siteGrid.*does not exist/,
+    (d) => config(d, `window.COUNTRIES.morocco.siteGrid.file = "nope.geojson";`)],
+  ["siteGrid line without numeric voltage", /siteGrid features must be lines with a numeric voltage_kv/,
+    (d) => editJson(d, `${MA}/transmission-lines.geojson`, (fc) => { fc.features[0].properties.voltage_kv = "225"; })],
   ["boundary without provenance", /no `boundary` provenance/,
     (d) => config(d, `delete window.COUNTRIES.morocco.boundary;`)],
   ["broken JSON", /not valid JSON/,

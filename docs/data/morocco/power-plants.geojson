@@ -137,7 +137,7 @@
         ]
       },
       "properties": {
-        "id": "jorf-lasfar-coal",
+        "id": "jorf-lasfar-coal", "gppd_id": "WRI1023682",
         "name": "Jorf Lasfar Coal Plant",
         "capacity_mw": 2056,
         "fuel_type": "coal",
@@ -209,7 +209,7 @@
         ]
       },
       "properties": {
-        "id": "beni-mathar-iscc",
+        "id": "beni-mathar-iscc", "gppd_id": "WRI1023670",
         "name": "Aïn Beni Mathar ISCC",
         "capacity_mw": 472,
         "fuel_type": "gas",
@@ -233,7 +233,7 @@
         ]
       },
       "properties": {
-        "id": "tahaddart-ccgt",
+        "id": "tahaddart-ccgt", "gppd_id": "WRI1023677",
         "name": "Tahaddart CCGT",
         "capacity_mw": 384,
         "fuel_type": "gas",
@@ -257,7 +257,7 @@
         ]
       },
       "properties": {
-        "id": "afourer-psh",
+        "id": "afourer-psh", "gppd_id": "WRI1023710",
         "name": "Afourer Pumped Storage",
         "capacity_mw": 465,
         "fuel_type": "hydro",
@@ -324,18 +324,22 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -7.635,
-          32.481
+          -7.6374,
+          32.4756
         ]
       },
-      "properties": { "id": "al-massira-dam",
+      "properties": {
+        "id": "al-massira-dam", "gppd_id": "WRI1023674",
         "name": "Al Massira Dam",
         "fuel_type": "hydro",
-        "capacity_mw": 232,
+        "capacity_mw": 128,
         "status": "operational",
-        "commissioning_year": 1979,
-        "source": "ONEE / Global Energy Monitor",
-        "source_url": "https://globalenergymonitor.org/projects/global-hydropower-tracker/"
+        "commissioning_year": 1980,
+        "source": "WRI Global Power Plant Database v1.3 (Arab Union of Electricity / GEODB) · position: OpenStreetMap dam",
+        "source_url": "https://github.com/wri/global-power-plant-database",
+        "annual_generation_gwh": 169,
+        "annual_generation_year": 2017,
+        "precision": "exact"
       }
     },
     {
@@ -343,18 +347,22 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6.445,
-          32.092
+          -6.4639,
+          32.1069
         ]
       },
-      "properties": { "id": "bin-el-ouidane-dam",
+      "properties": {
+        "id": "bin-el-ouidane-dam", "gppd_id": "WRI1023675",
         "name": "Bin el Ouidane Dam",
         "fuel_type": "hydro",
-        "capacity_mw": 256,
+        "capacity_mw": 135,
         "status": "operational",
-        "commissioning_year": 1954,
-        "source": "ONEE / Global Energy Monitor",
-        "source_url": "https://globalenergymonitor.org/projects/global-hydropower-tracker/"
+        "commissioning_year": 1955,
+        "source": "WRI Global Power Plant Database v1.3 (Arab Union of Electricity / GEODB) · position: OpenStreetMap dam",
+        "source_url": "https://github.com/wri/global-power-plant-database",
+        "annual_generation_gwh": 161,
+        "annual_generation_year": 2017,
+        "precision": "exact"
       }
     },
     {
@@ -362,18 +370,22 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -4.555,
-          34.198
+          -4.7492,
+          34.1615
         ]
       },
-      "properties": { "id": "idriss-1er-dam",
+      "properties": {
+        "id": "idriss-1er-dam", "gppd_id": "WRI1023694",
         "name": "Idriss 1er Dam",
         "fuel_type": "hydro",
-        "capacity_mw": 432,
+        "capacity_mw": 40.6,
         "status": "operational",
-        "commissioning_year": 1973,
-        "source": "ONEE / Global Energy Monitor",
-        "source_url": "https://globalenergymonitor.org/projects/global-hydropower-tracker/"
+        "commissioning_year": 1978,
+        "source": "WRI Global Power Plant Database v1.3 (Arab Union of Electricity / GEODB) · position: OpenStreetMap dam",
+        "source_url": "https://github.com/wri/global-power-plant-database",
+        "annual_generation_gwh": 57,
+        "annual_generation_year": 2017,
+        "precision": "exact"
       }
     },
     {
@@ -381,18 +393,22 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -5.699,
-          34.945
+          -5.8398,
+          34.9416
         ]
       },
-      "properties": { "id": "oued-el-makhazine-dam",
+      "properties": {
+        "id": "oued-el-makhazine-dam", "gppd_id": "WRI1023700",
         "name": "Oued el Makhazine Dam",
         "fuel_type": "hydro",
-        "capacity_mw": 35,
+        "capacity_mw": 36,
         "status": "operational",
         "commissioning_year": 1979,
-        "source": "ONEE / Global Energy Monitor",
-        "source_url": "https://globalenergymonitor.org/projects/global-hydropower-tracker/"
+        "source": "WRI Global Power Plant Database v1.3 (Arab Union of Electricity / GEODB) · position: OpenStreetMap dam",
+        "source_url": "https://github.com/wri/global-power-plant-database",
+        "annual_generation_gwh": 40,
+        "annual_generation_year": 2017,
+        "precision": "exact"
       }
     },
     {
@@ -400,18 +416,22 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -5.082,
-          34.516
+          -5.2002,
+          34.5979
         ]
       },
-      "properties": { "id": "al-wahda-dam",
+      "properties": {
+        "id": "al-wahda-dam", "gppd_id": "WRI1023672",
         "name": "Hassan II (Al Wahda) Dam",
         "fuel_type": "hydro",
         "capacity_mw": 240,
         "status": "operational",
-        "commissioning_year": 1996,
-        "source": "ONEE / Global Energy Monitor",
-        "source_url": "https://globalenergymonitor.org/projects/global-hydropower-tracker/"
+        "commissioning_year": 1998,
+        "source": "WRI Global Power Plant Database v1.3 (Arab Union of Electricity / GEODB) · position: OpenStreetMap dam",
+        "source_url": "https://github.com/wri/global-power-plant-database",
+        "annual_generation_gwh": 177,
+        "annual_generation_year": 2017,
+        "precision": "exact"
       }
     }
   ]

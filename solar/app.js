@@ -729,7 +729,8 @@ const View3D = {
   },
 
   storeysNow() {
-    return this.storeys || (State.roof && State.roof.levels) || CONFIG.DEFAULT_STOREYS;
+    return this.storeys || (State.roof && State.roof.levels) ||
+      (Copro.on ? Copro.DEFAULT_STOREYS : CONFIG.DEFAULT_STOREYS);
   },
 
   async show() {
@@ -938,6 +939,7 @@ const View3D = {
       Analytics.once("param_change:storeys", "param_change", { field: "storeys" });
       this.storeys = Math.max(1, Math.min(CONFIG.MAX_STOREYS, this.storeysNow() + dn));
       this.update();
+      if (Copro.on) UI.recalc();   // the building mode splits the roof by storey
     };
     $("storeys-minus").addEventListener("click", () => step(-1));
     $("storeys-plus").addEventListener("click", () => step(1));
@@ -1163,6 +1165,7 @@ const UI = {
     });
     if (!State.sizeAuto) q.set("p", p.peakpower);
     if (p.exportAllowed) q.set("x", "1");
+    Copro.toUrl(q);
     if (withLabel && l.label) q.set("n", l.label.slice(0, 120));
     // Safari throws past ~100 calls in 30 s; a lost update is harmless.
     // replaceState keeps the entry's state, so Back still knows it.
@@ -1195,6 +1198,7 @@ const UI = {
     }
     State.params.exportAllowed = q.get("x") === "1";
     $("export-toggle").checked = State.params.exportAllowed;
+    Copro.fromUrl(q);
     this.syncBillPresets();
     this.renderParamLabels();
     State.candidates = [];
@@ -1329,7 +1333,8 @@ const UI = {
     this.setRoofDrawing(false);
     State.roof = null;
     State.pvFitRoof = false;   // the previous address's roof is gone
-    View3D.storeys = null;   // a new building: its own height, or the default
+    // A new building: its own height, or the default (a shared link keeps its own).
+    View3D.storeys = loc.src === "link" ? Copro.linkStoreys : null;
     if (loc.src === "city") {
       // A city centre is nobody's roof: no building lookup, the visitor
       // finds the house and draws it.
@@ -1416,7 +1421,8 @@ const UI = {
     // Score: three transparent 0–100 notes, explained in the "?" tooltip.
     const clamp = x => Math.max(0, Math.min(100, Math.round(x)));
     const notes = {
-      roof: clamp(100 * info.capacityKw / Math.max(m.targetKw, 0.5)),
+      // In a building, the roof note is this flat's share of the roof.
+      roof: clamp(100 * (Copro.on ? info.capacityKw / Copro.units() : info.capacityKw) / Math.max(m.targetKw, 0.5)),
       sun: clamp(100 * (m.yieldPerKw - 1200) / (1900 - 1200)),
       roi: isFinite(m.paybackYr) ? clamp(100 * (15 - m.paybackYr) / (15 - 4)) : 0,
     };
@@ -1577,8 +1583,9 @@ const UI = {
     const roofInfo = this.roofLayout();
     const targetKw = Sizing.targetKw(consumption, State.lastPerKw.yieldPerKw);
     if (State.sizeAuto) {
-      // Never recommend more than the roof holds (when the roof is known).
-      const roofMax = roofInfo ? Math.floor(roofInfo.capacityKw * 2) / 2 : Infinity;
+      // Never recommend more than the roof holds (when the roof is known),
+      // nor, in a building, more than this flat's share of it.
+      const roofMax = Math.min(roofInfo ? Math.floor(roofInfo.capacityKw * 2) / 2 : Infinity, Copro.capKw(roofInfo));
       p.peakpower = Sizing.autoKw(consumption, State.lastPerKw.yieldPerKw, roofMax);
       $("peakpower").value = p.peakpower;
       this.renderParamLabels();
@@ -1595,6 +1602,7 @@ const UI = {
     const fit = fitRoof || State.pvFitRoof;
     State.pvFitRoof = false;
     this.renderRoof(roofInfo, { targetKw, yieldPerKw: State.lastPerKw.yieldPerKw, paybackYr: roi.paybackYr }, { fit });
+    Copro.render({ roofInfo, yieldPerKw: State.lastPerKw.yieldPerKw, monthlyKwh: consumption, peakpower: p.peakpower });
 
     // Hero
     const savings = Math.round(roi.annualSavingsMAD);
@@ -1815,6 +1823,7 @@ const Installers = {
 document.addEventListener("DOMContentLoaded", () => {
   Analytics.init();
   Chart_.init();
+  Copro.init(() => UI.recalc());   // before UI.init: a shared link may carry the mode
   UI.init();
   View3D.init();
   Tooltips.init();

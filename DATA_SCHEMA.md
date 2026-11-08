@@ -43,13 +43,24 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `snapshotSource` | no | Short credit for the plant figures in the "Mapped assets" tiles. |
 | `snapshotSourceFr` | no | The same credit in French, when it has words to translate. |
 | `credits` | no | Data credits in the footer. |
+| `creditsFr` | no | The same credits in French, when they have words to translate. |
 | `demand` | no | `{ source, sourceUrl, figures: [{ label, labelFr, value, unit }] }`. Dated national figures (peak, annual demand), shown as tiles under the KPIs with their source. `value` is a number. |
 | `liveFlow` | no | `{ path, features, partner, partnerFr, source, sourceUrl }`. Live net flow on an interconnector, read from the Wattu Worker at `path` (`/flow/<route>`, see `solar/proxy/flow.js`). Shown as a KPI tile and in the popup of each line whose `id` is in `features`; every id must belong to a `grid` feature. |
+| `siteGrid` | no | `{ file, source, sourceUrl, updated }`. A national line file in `dataPath` that only **Site check** reads (not drawn), so distance-to-grid works anywhere in the country. LineString / MultiLineString features with a numeric `voltage_kv`; `status: "planned"` marks planned lines. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
 
 Each layer needs `id` (unique within the country, lowercase and dashes),
 `kind`, `file`, `title`, `titleFr` (French title), `source`, `sourceUrl`
-(https) and `updated`. Sources are cited as published, in one language.
+(https) and `updated`.
+
+**French.** A `source` (layers, `demand`, `liveFlow`, `siteGrid`,
+`boundary`), a boundary `note`, `credits` or `snapshotSource` with words to
+translate carries its French in `sourceFr` / `noteFr` / `creditsFr` /
+`snapshotSourceFr`, shown on `/fr/`. Names of datasets, organisations and
+licences stay as cited. The validator asks for the French whenever the
+English has a lowercase word of three letters or more (domains and version
+numbers aside): "Global Energy Monitor · ONEE · operator disclosures" needs
+it, "Natural Earth 1:50m Admin 0" does not.
 
 `boundary.geojson` is optional. It holds Polygon or MultiPolygon features
 only.
@@ -79,6 +90,9 @@ Power plants. Points, clustered at low zoom, coloured by fuel.
 | `status` | yes | `operational`, `construction`, `announced`, `planned` or `idle`. `construction` and `announced` get a halo. |
 | `commissioning_year` | recommended | Year commissioned, or target year if not operational. |
 | `tech`, `operator`, `region` | recommended | Shown in the popup. |
+| `gppd_id` | recommended (hand-curated plants) | The plant's WRI Global Power Plant Database id, e.g. `WRI1023674`. CI (`scripts/check-gppd.mjs`) then holds its capacity within 10 % of WRI's, its point within 15 km and its fuel. Plants built from WRI already use it as `id`. |
+| `gppd_capacity_note` | no | Why the capacity differs from WRI's (e.g. an extension WRI predates). Turns that check's failure into a note. |
+| `annual_generation_gwh`, `annual_generation_year` | no | A typical year's output in GWh and the year it describes (Moroccan dams: WRI's estimate for 2017). Shown in the popup as "Annual output ≈ … GWh". Numbers. |
 
 ## `grid`
 
@@ -143,6 +157,7 @@ the map. Built from Ember's yearly data by
 |---|---|---|
 | `year` | yes | Integer. Latest year Ember has generation for. |
 | `source`, `source_url` | yes | Citation and https link, shown under the bar and in Methodology. |
+| `source_fr` | yes | The citation in French, for `/fr/`. |
 | `generation_twh` | yes | Total generation. |
 | `capacity_gw` | yes | Sum of the fuels' capacity. |
 | `renewables_pct_generation` | yes | Ember's renewables share of generation. |

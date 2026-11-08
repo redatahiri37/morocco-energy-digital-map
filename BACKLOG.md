@@ -148,9 +148,11 @@ Last reshuffle: **2026-04-19**.
   https://www.itu.int/en/ITU-D/Technology/Pages/InteractiveTransmissionMaps.aspx
 
 ## 🔵 Later — v1.2+ scope
-- **Grid-suitability index (Pawel-style 1–5 score)** — per 0.1° cell,
-  blend: nearest HV line (km), available generation within 50 km,
-  renewables share, cooling-water proximity, seismic risk.
+- ~~**Grid-suitability index (Pawel-style 1–5 score)**~~ — *shipped as
+  on-click **Site check** (2026-11, see ASSUMPTIONS.md §11): grid
+  distance, generation and loads within 50 km, connectivity, PVGIS yield.*
+  Still open: a pre-computed per-0.1° raster, cooling-water proximity,
+  seismic risk.
 - **Layer 5 — renewable potential raster** — Global Solar Atlas GHI +
   Global Wind Atlas capacity factor as colored hillshade overlays.
 - **Submarine cable full routes** — right now we only show landings.

@@ -31,10 +31,15 @@ const FUELS = ["solar", "wind", "hydro", "coal", "gas", "oil", "nuclear", "geoth
 const num = (v) => typeof v === "number" && Number.isFinite(v);
 const numOrNull = (v) => v === null || num(v);
 const str = (v) => typeof v === "string" && v.trim() !== "";
+// A source or note has words to translate when it holds a lowercase word of
+// three letters or more, domains and versions aside ("Datacentermap.com",
+// "v0.9.0", "1:50m"): names of datasets and organisations are capitalised.
+const LOWERCASE_NAMES = ["powerplantmatching"];
+const hasWords = (s) => s.split(/[\s,;:()·/]+/).some((w) => !/[.\d]/.test(w) && /^\p{Ll}{3,}/u.test(w) && !LOWERCASE_NAMES.includes(w));
 
 // Optional fields that must be numbers whenever present, in every kind.
 const NUMERIC_OPTIONAL = ["investment_usd", "commissioning_year", "year", "units",
-  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw"];
+  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw", "annual_generation_gwh", "annual_generation_year"];
 
 // Per kind: geometry types, required fields (with a test), recommended fields.
 export const SCHEMA = {
@@ -74,6 +79,10 @@ export const SCHEMA = {
 
 const errors = [], warnings = [];
 const fail = (where, msg) => errors.push(`${where}: ${msg}`);
+// The French page shows `<field>Fr` (`source_fr` in mix files) for such a text.
+const needFr = (where, o, k, kFr = k + "Fr") => {
+  if (o && str(o[k]) && hasWords(o[k]) && !str(o[kFr])) fail(where, `${kFr} missing: "${o[k]}" has words to translate for the French page`);
+};
 const warn = (where, msg) => warnings.push(`${where}: ${msg}`);
 
 // ---------------------------------------------------------------------------
@@ -128,6 +137,10 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (!str(o.key) || !str(o.short)) fail(`${at}.operators`, `bad entry ${JSON.stringify(o)}`);
   if (c.boundary && (!str(c.boundary.source) || !/^https:\/\//.test(c.boundary.sourceUrl || "")))
     fail(`${at}.boundary`, "needs source and an https sourceUrl");
+  needFr(at, c, "credits"); needFr(at, c, "snapshotSource");
+  needFr(`${at}.boundary`, c.boundary, "source"); needFr(`${at}.boundary`, c.boundary, "note");
+  needFr(`${at}.demand`, c.demand, "source"); needFr(`${at}.liveFlow`, c.liveFlow, "source");
+  needFr(`${at}.siteGrid`, c.siteGrid, "source");
 
   if (c.demand) {
     const d = c.demand;
@@ -152,6 +165,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (!KINDS.includes(L.kind)) { fail(lat, `unknown kind "${L.kind}" (expected ${KINDS.join(" / ")})`); continue; }
     for (const f of ["title", "titleFr", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
     if (!/^https:\/\//.test(L.sourceUrl || "")) fail(lat, "sourceUrl must be an https URL");
+    needFr(lat, L, "source");
 
     if (L.visible !== undefined && typeof L.visible !== "boolean") fail(lat, "visible must be true or false");
     if (LIVE_KINDS.includes(L.kind)) { if (L.file) fail(lat, `${L.kind} layers take file: null`); continue; }
@@ -215,6 +229,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (m) {
       if (!Number.isInteger(m.year)) fail(mat, "year must be an integer");
       if (!str(m.source) || !/^https:\/\//.test(m.source_url || "")) fail(mat, "needs source and an https source_url");
+      needFr(mat, m, "source", "source_fr");
       for (const f of ["generation_twh", "capacity_gw", "renewables_pct_generation"])
         if (!num(m[f])) fail(mat, `${f} must be a number, got ${JSON.stringify(m[f])}`);
       for (const f of ["demand_twh", "net_imports_twh", "co2_intensity_g_per_kwh", "renewables_pct_capacity"])
@@ -235,6 +250,26 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
         const total = m.fuels.reduce((s, f) => s + (num(f.generation_pct) ? f.generation_pct : 0), 0);
         if (Math.abs(total - 100) > 1) fail(mat, `generation shares add up to ${total.toFixed(1)}%, not 100%`);
       }
+    }
+  }
+
+  // Optional reference grid read by Site check (not drawn): lines with a
+  // numeric voltage_kv, or the diagnostic silently finds no grid.
+  if (c.siteGrid) {
+    const sat = `${at}.siteGrid`;
+    for (const f of ["file", "source", "updated"]) if (!str(c.siteGrid[f])) fail(sat, `${f} missing`);
+    if (!/^https:\/\//.test(c.siteGrid.sourceUrl || "")) fail(sat, "sourceUrl must be an https URL");
+    const gpath = str(c.siteGrid.file) ? join(dir, c.siteGrid.file) : null;
+    if (gpath && !existsSync(gpath)) fail(sat, `${c.dataPath}${c.siteGrid.file} does not exist`);
+    else if (gpath) {
+      referenced.add(c.siteGrid.file);
+      try {
+        const gfc = JSON.parse(readFileSync(gpath, "utf8"));
+        const bad = (gfc.features || []).findIndex((f) =>
+          !f.geometry || !["LineString", "MultiLineString"].includes(f.geometry.type) || !num((f.properties || {}).voltage_kv));
+        if (!Array.isArray(gfc.features) || !gfc.features.length) fail(sat, `${c.siteGrid.file} has no features`);
+        else if (bad >= 0) fail(sat, `${c.siteGrid.file} #${bad}: siteGrid features must be lines with a numeric voltage_kv`);
+      } catch (e) { fail(sat, `${c.siteGrid.file} is not valid JSON: ${e.message}`); }
     }
   }
 
