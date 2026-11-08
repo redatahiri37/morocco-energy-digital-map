@@ -3,6 +3,7 @@
   "iso3": "ETH",
   "year": 2025,
   "source": "Ember, Yearly electricity data (release 2026-06-23, CC BY 4.0)",
+  "source_fr": "Ember, Yearly electricity data (version du 2026-06-23, CC BY 4.0)",
   "source_url": "https://ember-energy.org/data/yearly-electricity-data/",
   "generation_twh": 33.37,
   "demand_twh": 31.02,

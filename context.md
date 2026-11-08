@@ -45,6 +45,25 @@ grid economics, infrastructure finance.
 Map correction issues #59, #60, #61 and #70 handled on 2026-11-08 (see the
 handoff below). No open correction issue left.
 
+## Session handoff — 2026-11-08 (map: French sources)
+- /fr/ showed every source and boundary note in English (Methodology list,
+  layer-row hover, demand / live-flow notes, footer credits, Site check).
+  countries.config.js now carries `sourceFr` / `noteFr` / `creditsFr` next
+  to each English text with words in it; mix.json files `source_fr`
+  (build-country-mix.py writes it). app.js reads them through srcText().
+  Dataset, organisation and licence names stay as cited ("Yearly electricity
+  data", "Global Power Plant Database").
+- validate-countries.mjs fails when a source, note or credit with a
+  lowercase word (3+ letters, domains and versions aside) has no French;
+  3 new self-test cases (34 in all).
+- Status view now narrows the OpenInfraMap grid too (lines, substations):
+  OIM tiles give lines and substations the same `construction` / `disused`
+  booleans as plants (tegola layers.yml, lifecycle field set);
+  oimStatusFilters() serves both layers.
+- Search swatches took their colour when the index was built, so they kept
+  the old theme's after a toggle; entries now keep kind / category / fuel
+  and entryMark() colours them at render.
+
 ## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
 - Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,
   Bin el Ouidane 256 → 135, Idriss 1er 432 → 40.6) and three points sat
