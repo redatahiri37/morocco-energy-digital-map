@@ -119,6 +119,32 @@ Data centres and submarine-cable landings. Points.
 | `year` | recommended | Year energised, or target year. |
 | `investment_usd` | recommended | Number. Feeds "DC investment". |
 
+## `water`
+
+Water infrastructure: inter-basin transfers ("water highways"), dams and
+desalination plants. One kind, three categories; each category has its
+own geometry and its own mark (teal lines, triangles, hexagons). The point
+of the layer is the water–energy nexus: transfers and desalination are
+electrical loads, so the popup gives their pumping or plant power where a
+source states it, and for desalination an average load estimated at
+3.5 kWh/m³ when it doesn't.
+
+| Field | Required | Notes |
+|---|---|---|
+| `category` | yes | `transfer` (LineString or MultiLineString, drawn with flow arrows from the first vertex to the last), `dam` or `desalination` (Point). The validator rejects a geometry that doesn't match. |
+| `status` | yes | As for `power`. `operational` transfers are solid, the others dashed; `construction`, `announced` and `planned` points get a halo. |
+| `year` | recommended | Year commissioned, or target year. |
+| `region` | recommended | Shown under the title. |
+| `name_fr` | no | French name, shown on the French page. |
+| `note`, `note_fr` | no | One or two sentences of context, shown in the popup (`note_fr` on the French page). Say there when a position is approximate and why. |
+| `flow_m3s`, `length_km`, `pumping_stations`, `pumping_mva` | no | Transfers. Numbers. `flow_m3s` sets the line width. |
+| `from_basin`, `to_basin` | no | Transfers. Text. |
+| `storage_hm3`, `height_m` | no | Dams. Numbers; `storage_hm3` (million m³) sets the triangle's size. |
+| `river`, `purpose`, `purpose_fr` | no | Dams. Text; `purpose_fr` on the French page. |
+| `capacity_hm3_yr` | no | Desalination: million m³ a year, number or `null` when the operator publishes no per-plant figure. Sets the hexagon's size. |
+| `power_mw` | no | Desalination: installed or dedicated power, as the source states it (the `note` says which). |
+| `operator`, `energy_supply`, `energy_supply_fr` | no | Desalination. Text; `energy_supply_fr` on the French page. |
+
 ## `oim`
 
 The OpenInfraMap live grid (OSM data, worldwide). No file: set `file: null`.

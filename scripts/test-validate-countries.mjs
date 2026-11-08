@@ -85,6 +85,12 @@ const cases = [
     (d) => config(d, `window.COUNTRIES.morocco.operators[0].short = "";`)],
   ["per-country colours, no longer read", /palette: is no longer read/,
     (d) => config(d, `window.COUNTRIES.morocco.palette = { sectors: { cement: "#A1A1AA" } };`)],
+  ["water: dam drawn as a line", /a dam must be Point, got LineString/,
+    (d) => editJson(d, `${MA}/dams.geojson`, (fc) => { fc.features[0].geometry = { type: "LineString", coordinates: [[-5, 33], [-5.1, 33.1]] }; })],
+  ["water: unknown category", /category invalid: "reservoir"/,
+    (d) => editJson(d, `${MA}/desalination.geojson`, (fc) => { fc.features[0].properties.category = "reservoir"; })],
+  ["water: flow as a string", /flow_m3s must be a number/,
+    (d) => editJson(d, `${MA}/water-transfers.geojson`, (fc) => { fc.features[0].properties.flow_m3s = "15"; })],
   ["schema doc missing", /DATA_SCHEMA.md: missing/,
     (d) => unlinkSync(join(d, "DATA_SCHEMA.md"))],
 ];

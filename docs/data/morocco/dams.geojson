@@ -1,0 +1,282 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.0,
+     32.3
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-kheng-grou",
+    "name": "Kheng Grou Dam",
+    "name_fr": "Barrage Kheng Grou",
+    "category": "dam",
+    "status": "construction",
+    "year": 2027,
+    "storage_hm3": 1070,
+    "river": "Oued Kheng Grou (Guir basin)",
+    "purpose": "Drinking water · irrigation",
+    "purpose_fr": "Eau potable · irrigation",
+    "region": "Figuig",
+    "note": "Fifth-largest dam in Morocco. 91 % built in October 2026, impounding from December 2026. About 45 km east of Bni Tadjite (Amoughar – Ksar Moughal commune); position approximate.",
+    "note_fr": "Cinquième plus grand barrage du Maroc. Réalisé à 91 % en octobre 2026, mise en eau à partir de décembre 2026. À environ 45 km à l'est de Bni Tadjite (commune Amoughar – Ksar Moughal) ; position approximative.",
+    "precision": "approximate",
+    "source": "Le360, Oct 2026 · Médias24, Aug 2026",
+    "source_url": "https://fr.le360.ma/economie/barrage-de-kheng-grou-a-figuig-les-travaux-atteignent-91-livraison-prevue-avant-fin-2026_PESLRS3UTZADXMTJTW4JMTOXCU/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.9067,
+     34.6749
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-ratba",
+    "name": "Ratba Dam",
+    "name_fr": "Barrage Ratba",
+    "category": "dam",
+    "status": "construction",
+    "year": 2028,
+    "storage_hm3": 1009,
+    "river": "Oued Aoulaï (Ouergha tributary)",
+    "purpose": "Drinking water · irrigation",
+    "purpose_fr": "Eau potable · irrigation",
+    "region": "Taounate",
+    "note": "Second-largest dam in the Sebou basin after Al Wahda. About 50 % built in May 2026; sources give 2028 or 2030 for completion. Placed at the Oudka commune; position approximate.",
+    "note_fr": "Deuxième barrage du bassin du Sebou après Al Wahda. Réalisé à environ 50 % en mai 2026 ; achèvement annoncé pour 2028 ou 2030 selon les sources. Placé à la commune d'Oudka ; position approximative.",
+    "precision": "approximate",
+    "source": "Le360, May 2026",
+    "source_url": "https://fr.le360.ma/economie/province-de-taounate-le-barrage-ratba-affiche-un-taux-davancement-de-50-mise-en-service-prevue-fin_5PFL4HK7ONGCZGVHI4XY6SOW6M/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.45,
+     33.48
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-mdez",
+    "name": "M'Dez Dam",
+    "name_fr": "Barrage M'Dez",
+    "category": "dam",
+    "status": "operational",
+    "year": 2024,
+    "storage_hm3": 700,
+    "height_m": 109,
+    "river": "Upper Sebou",
+    "purpose": "Irrigation (Saïss plain) · drinking water",
+    "purpose_fr": "Irrigation (plaine du Saïss) · eau potable",
+    "region": "Sefrou",
+    "note": "Impounding started early, in February 2024. About 125 million m³ a year for the Saïss plain. 58 km south-east of Sefrou; position approximate.",
+    "note_fr": "Mise en eau anticipée en février 2024. Environ 125 millions de m³ par an pour la plaine du Saïss. À 58 km au sud-est de Sefrou ; position approximative.",
+    "precision": "approximate",
+    "source": "h24info · Encardio",
+    "source_url": "https://encardio.com/projects/mdez-dam"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.3178,
+     33.5817
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-tiddas",
+    "name": "Tiddas Dam",
+    "name_fr": "Barrage Tiddas",
+    "category": "dam",
+    "status": "operational",
+    "storage_hm3": 507,
+    "river": "Oued Bouregreg",
+    "purpose": "Drinking water (Kénitra – Marrakech axis)",
+    "purpose_fr": "Eau potable (axe Kénitra – Marrakech)",
+    "region": "Khémisset",
+    "note": "Completed under the 2020–2027 national programme; impounding under way.",
+    "note_fr": "Achevé dans le cadre du programme national 2020–2027 ; remplissage en cours.",
+    "precision": "exact",
+    "source": "Le360 · OpenStreetMap (position)",
+    "source_url": "https://fr.le360.ma/economie/le-barrage-de-tiddas-coutera-867-mdh-27983/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.5614,
+     30.8213
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-agdez",
+    "name": "Agdez Dam",
+    "name_fr": "Barrage Agdez",
+    "category": "dam",
+    "status": "operational",
+    "year": 2023,
+    "storage_hm3": 240,
+    "river": "Oued Drâa",
+    "purpose": "Drinking water · irrigation",
+    "purpose_fr": "Eau potable · irrigation",
+    "region": "Zagora",
+    "note": "Commissioned in April 2023. Capacity given as 240–247 million m³ depending on the source (240: the minister).",
+    "note_fr": "Mis en service en avril 2023. Capacité de 240 à 247 millions de m³ selon les sources (240 : le ministre).",
+    "precision": "exact",
+    "source": "Hespress · OpenStreetMap (position)",
+    "source_url": "https://fr.hespress.com/319055-319055.html"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.786,
+     32.1663
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-kaddoussa",
+    "name": "Kaddoussa Dam",
+    "name_fr": "Barrage Kaddoussa",
+    "category": "dam",
+    "status": "operational",
+    "year": 2021,
+    "storage_hm3": 220,
+    "river": "Oued Guir",
+    "purpose": "Drinking water · irrigation",
+    "purpose_fr": "Eau potable · irrigation",
+    "region": "Errachidia",
+    "precision": "exact",
+    "source": "Médias24, Nov 2021 · OpenStreetMap (position)",
+    "source_url": "https://fr.le360.ma/societe/barrage-kaddoussa-un-ouvrage-vital-pour-lapprovisionnement-en-eau-potable-du-sahara-oriental_5OTA5H46W5CXPDSHFJUXIWBR7E/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.5566,
+     34.4352
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-sidi-abbou",
+    "name": "Sidi Abbou Dam",
+    "name_fr": "Barrage Sidi Abbou",
+    "category": "dam",
+    "status": "operational",
+    "year": 2025,
+    "storage_hm3": 200,
+    "river": "Oued Leben",
+    "purpose": "Drinking water · irrigation",
+    "purpose_fr": "Eau potable · irrigation",
+    "region": "Taounate",
+    "note": "97 % built in October 2025, reported complete since. Reservoir of 833 ha across Taounate and Taza. Placed at the Aïn Maâtouf commune; position approximate.",
+    "note_fr": "Réalisé à 97 % en octobre 2025, annoncé achevé depuis. Retenue de 833 ha entre Taounate et Taza. Placé à la commune d'Aïn Maâtouf ; position approximative.",
+    "precision": "approximate",
+    "source": "Le360, Oct 2025",
+    "source_url": "https://fr.le360.ma/economie/securite-hydrique-le-barrage-sidi-abou-acheve-a-97-les-premieres-eaux-attendues-fin-2025_ODN75VLOJZAZLFMWWOCNGDFS6I/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.0036,
+     35.073
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-ghiss",
+    "name": "Ghiss Dam",
+    "name_fr": "Barrage Ghiss",
+    "category": "dam",
+    "status": "operational",
+    "year": 2025,
+    "storage_hm3": 93,
+    "height_m": 86,
+    "river": "Oued Ghiss",
+    "purpose": "Drinking water (Al Hoceima) · irrigation",
+    "purpose_fr": "Eau potable (Al Hoceima) · irrigation",
+    "region": "Al Hoceima",
+    "note": "Started filling early in 2025. Placed on the Oued Ghiss; position approximate.",
+    "note_fr": "Remplissage commencé début 2025. Placé sur l'oued Ghiss ; position approximative.",
+    "precision": "approximate",
+    "source": "Encardio · press, 2025",
+    "source_url": "https://dev.encardio.com/projects/ghiss-dam"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -9.7404,
+     28.9494
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-fask",
+    "name": "Fask Dam",
+    "name_fr": "Barrage Fask",
+    "category": "dam",
+    "status": "operational",
+    "year": 2024,
+    "storage_hm3": 79,
+    "purpose": "Drinking water · irrigation",
+    "purpose_fr": "Eau potable · irrigation",
+    "region": "Guelmim",
+    "note": "Largest dam in the southern provinces; works completed end of March 2024. Capacity 78–80 million m³ depending on the source.",
+    "note_fr": "Plus grand barrage des provinces du Sud ; travaux achevés fin mars 2024. Capacité de 78 à 80 millions de m³ selon les sources.",
+    "precision": "exact",
+    "source": "Le360, 2024 · OpenStreetMap (position)",
+    "source_url": "https://fr.le360.ma/economie/le-barrage-fask-le-plus-grand-du-sud-marocain-recoit-sa-premiere-charge-deau_TMS6FOG5DJBTNDKMZQLXSM7ZFQ/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.1829,
+     32.4162
+    ]
+   },
+   "properties": {
+    "id": "ma-dam-taghzirt",
+    "name": "Taghzirt Dam",
+    "name_fr": "Barrage Taghzirt",
+    "category": "dam",
+    "status": "construction",
+    "year": 2027,
+    "storage_hm3": 85,
+    "purpose": "Drinking water · hydropower",
+    "purpose_fr": "Eau potable · hydroélectricité",
+    "region": "Béni Mellal",
+    "note": "Placed at the Taghzirt commune; position approximate.",
+    "note_fr": "Placé à la commune de Taghzirt ; position approximative.",
+    "precision": "approximate",
+    "source": "Le Matin · Le360, 2026",
+    "source_url": "https://fr.le360.ma/economie/un-stockage-supplementaire-de-49-milliards-de-metres-cubes-deau-voici-ce-que-lon-sait-sur-les_HOQ2O6GTKRAP5DX7TPON67EHAA/"
+   }
+  }
+ ]
+}

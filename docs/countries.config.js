@@ -12,6 +12,8 @@
 //   grid        transmission lines — styled by status and voltage_kv
 //   industrial  industrial consumers — coloured by palette.sectors
 //   digital     data centres + cable landings — coloured by palette.providers
+//   water       water transfers (lines), dams and desalination plants (points);
+//               `category` per feature: transfer / dam / desalination
 //   oim         OpenInfraMap live grid tiles (worldwide; file: null)
 //   oim-plants  OpenInfraMap live OSM power plants (worldwide; file: null).
 //               Not counted in the KPIs; `visible: false` starts it unticked.
@@ -153,6 +155,22 @@ window.COUNTRIES = {
         source: "Xlinks · MIICEN · World Bank Group 2018 masterplan",
         sourceUrl: "https://datacatalog.worldbank.org/",
         updated: "2026-04" },
+      // Water–energy nexus: inter-basin transfers, new dams, desalination.
+      { id: "water-transfers", file: "water-transfers.geojson", kind: "water",
+        title: "Water highways", titleFr: "Autoroutes de l'eau",
+        source: "Ministry of Equipment and Water and ONEE figures as reported by Le Matin, Médias24, TelQuel, L'Économiste; routes schematic",
+        sourceUrl: "https://telquel.ma/2026/03/31/autoroute-de-leau-ce-que-le-cahier-des-charges-revele-de-la-phase-ii-du-projet_1981667",
+        updated: "2026-11" },
+      { id: "dams", file: "dams.geojson", kind: "water",
+        title: "New dams (2020–2027 programme)", titleFr: "Nouveaux barrages (programme 2020–2027)",
+        source: "Ministry of Equipment and Water figures as reported by Le360, Médias24, Hespress; positions OpenStreetMap or commune (approximate)",
+        sourceUrl: "https://fr.le360.ma/economie/un-stockage-supplementaire-de-49-milliards-de-metres-cubes-deau-voici-ce-que-lon-sait-sur-les_HOQ2O6GTKRAP5DX7TPON67EHAA/",
+        updated: "2026-11" },
+      { id: "desalination", file: "desalination.geojson", kind: "water",
+        title: "Desalination plants", titleFr: "Stations de dessalement",
+        source: "ONEE · OCP Green Water · press (LesEco, Le360, Le Desk); positions OpenStreetMap or site (approximate)",
+        sourceUrl: "https://www.fedenerg.ma/2026/07/28/onee-mise-en-service-des-ouvrages-400-kv-destines-a-lalimentation-electrique-de-la-station-de-dessalement-de-la-region-casablanca-settat/",
+        updated: "2026-11" },
       { id: "industrial", file: "industrial.geojson", kind: "industrial",
         title: "Industry", titleFr: "Industrie",
         source: "OCP · Holcim · SONASID · Renault · public disclosures",

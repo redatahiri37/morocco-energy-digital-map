@@ -45,6 +45,26 @@ grid economics, infrastructure finance.
 Map correction issues #59, #60, #61 and #70 handled on 2026-11-08 (see the
 handoff below). No open correction issue left.
 
+## Session handoff — 2026-11-08 (map: water perspective, phase 1)
+- New layer kind `water` (DATA_SCHEMA.md): `category` transfer (line, flow
+  arrows first → last vertex, dashed unless in service), dam (triangle,
+  sized by storage_hm3), desalination (hexagon, sized by capacity_hm3_yr).
+  One teal (LAYER_COLORS.water, checked by check-map-palette.mjs).
+- Morocco: water-transfers.geojson (Sebou–Bouregreg 2023, Al Massira–
+  Marrakech 2022, phase II Bouregreg–Al Massira planned, Laou–Loukkos–Sebou
+  study), dams.geojson (10 dams of the 2020–2027 programme), desalination.
+  geojson (Casablanca, Jorf Lasfar, Safi, Chtouka, Laâyoune, Dakhla).
+  Bilingual: name_fr, note_fr, purpose_fr, energy_supply_fr.
+- Positions: OSM where the dam or plant is mapped (Tiddas, Agdez,
+  Kaddoussa, Fask, Douira, Laâyoune); otherwise the commune or the distance
+  the press gives, `precision: approximate`, said in the note. Transfer
+  routes are schematic. Overpass and the Wikimedia APIs were unreachable
+  (reset / 429) this session, so no coord-validator pass: re-run it when
+  they are back, starting with Kheng Grou, M'Dez, Ghiss and Dakhla.
+- Desalination popup: stated power if any, else average load at
+  3.5 kWh/m³ (DESAL_KWH_PER_M3 in app.js), labelled as an estimate.
+- Next (phase 2): Énergie / Eau / Nexus perspective switch with water KPIs.
+
 ## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
 - Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,
   Bin el Ouidane 256 → 135, Idriss 1er 432 → 40.6) and three points sat
