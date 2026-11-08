@@ -70,6 +70,18 @@ handoff below). No open correction issue left.
   new storage, desalination, est. desalination load vs the 8.4 GW record
   peak). Nexus: everything with both KPI sets.
 
+## Session handoff — 2026-11-08 (map: French sources)
+- /fr/ showed every source and boundary note in English (Methodology list,
+  layer-row hover, demand / live-flow notes, footer credits, Site check).
+  countries.config.js now carries `sourceFr` / `noteFr` / `creditsFr` next
+  to each English text with words in it; mix.json files `source_fr`
+  (build-country-mix.py writes it). app.js reads them through srcText().
+  Dataset, organisation and licence names stay as cited ("Yearly electricity
+  data", "Global Power Plant Database").
+- validate-countries.mjs fails when a source, note or credit with a
+  lowercase word (3+ letters, domains and versions aside) has no French;
+  3 new self-test cases (34 in all).
+
 ## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
 - Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,
   Bin el Ouidane 256 → 135, Idriss 1er 432 → 40.6) and three points sat
@@ -89,6 +101,15 @@ handoff below). No open correction issue left.
 - South Africa (#70, "no DC data"): already fixed by 94dd89d the day the
   issue was filed (27 PeeringDB sites). PeeringDB has no MW, so the DC
   KPI tiles stay "—".
+- Root cause of the dam back-and-forth: two hand-typed copies (morocco-grid
+  has the right MW and wrong positions; this repo had 232/256/432 MW since
+  the July merge repair 821a874) and no check against a reference. Guard:
+  scripts/check-gppd.mjs (CI "Plants against the WRI database") holds every
+  plant with `gppd_id` (or a WRI id as `id`) to WRI's capacity ±10 %,
+  position 15 km and fuel; `gppd_capacity_note` documents a real gap.
+  Morocco: 9 plants carry gppd_id (5 dams, Afourer STEP, Aïn Beni Mathar,
+  Tahaddart, Jorf Lasfar). Not 1:1 in WRI, so unchecked: Noor Ouarzazate
+  (WRI splits it), Mohammedia (WRI: coal, 300 MW), wind farms, projects.
 - Network: a personal environment "Wattu maps" allows nominatim,
   overpass-api.de (resets often), en/fr.wikipedia, wikidata, mindat
   (Cloudflare challenge: use search snippets) and energy.wattu.org.

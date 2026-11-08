@@ -26,6 +26,12 @@ const config = (dir, js) => edit(dir, "docs/countries.config.js", (s) => s + "\n
 
 const MA = "docs/data/morocco";
 const cases = [
+  ["layer source without its French", /sourceFr missing: "Global Energy Monitor · ONEE · operator disclosures"/,
+    (d) => config(d, `delete window.COUNTRIES.morocco.layers[0].sourceFr;`)],
+  ["boundary note without its French", /noteFr missing/,
+    (d) => config(d, `delete window.COUNTRIES.egypt.boundary.noteFr;`)],
+  ["mix source without its French", /source_fr missing/,
+    (d) => editJson(d, `${MA}/mix.json`, (m) => { delete m.source_fr; })],
   ["unknown layer kind", /unknown kind "points"/,
     (d) => config(d, `window.COUNTRIES.morocco.layers[0].kind = "points";`)],
   ["file on a live layer", /oim-plants layers take file: null/,

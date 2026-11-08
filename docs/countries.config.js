@@ -30,8 +30,12 @@
 //   snapshotSourceFr: the same in French, when it has words to translate
 //
 // Every country has `labelFr` and every layer `titleFr`: the French page
-// (energy.wattu.org/fr/) shows them. Sources stay as cited.
+// (energy.wattu.org/fr/) shows them. A `source` (layers, demand, liveFlow,
+// siteGrid, boundary) or boundary `note` with words to translate has its
+// French next to it, `sourceFr` / `noteFr` (the validator asks for it);
+// names of datasets, organisations and licences stay as cited.
 //   credits:        data credits in the footer, e.g. "GEM · ONEE · Datacentermap"
+//   creditsFr:      the same in French, when it has words to translate
 //   demand:         { source, sourceUrl, figures: [{ label, labelFr, value, unit }] } —
 //                   dated national figures, tiles under the KPIs
 //   lenses:         [{ id, label, labelFr, layers?, fuel?, note?, noteFr? }] — the
@@ -46,21 +50,25 @@ const GPPD_COUNTRY_LAYERS = [
   { id: "power-plants", file: "power-plants.geojson", kind: "power",
     title: "Power plants", titleFr: "Centrales électriques",
     source: "WRI Global Power Plant Database v1.3 (2021, CC BY 4.0); unmaintained since 2022, so recent plants are missing",
+    sourceFr: "WRI Global Power Plant Database v1.3 (2021, CC BY 4.0)\u00a0; plus mise à jour depuis 2022, les centrales récentes manquent",
     sourceUrl: "https://datasets.wri.org/dataset/globalpowerplantdatabase",
     updated: "2021" },
   { id: "datacentres", file: "datacentres.geojson", kind: "digital",
     title: "Data centres", titleFr: "Data centers",
     source: "PeeringDB facility registry (operator-maintained); colocation sites only, no MW figures",
+    sourceFr: "Registre des sites PeeringDB (tenu par les opérateurs)\u00a0; sites de colocation uniquement, sans puissance en MW",
     sourceUrl: "https://www.peeringdb.com/",
     updated: "2026-09" },
   { id: "osm-plants", file: null, kind: "oim-plants",
     title: "OSM power plants", titleFr: "Centrales OSM",
     source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+    sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)\u00a0; toutes les centrales à partir du zoom 8, les plus grandes avant",
     sourceUrl: "https://openinframap.org/",
     updated: "live" },
   { id: "oim-grid", file: null, kind: "oim",
     title: "Transmission grid", titleFr: "Réseau de transport",
     source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+    sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)",
     sourceUrl: "https://openinframap.org/",
     updated: "live" }
 ];
@@ -71,16 +79,19 @@ const PPM_COUNTRY_LAYERS = [
   { id: "power-plants", file: "power-plants.geojson", kind: "power",
     title: "Power plants ≥ 10 MW", titleFr: "Centrales ≥ 10 MW",
     source: "powerplantmatching v0.9.0 (PyPSA / KIT, 2026-10-03, CC BY 4.0): ENTSO-E, JRC, Open Power System Data, Global Energy Monitor and others reconciled; units on one site merged; plants under 10 MW, rooftop solar included, left out; closures as dated by the dataset",
+    sourceFr: "powerplantmatching v0.9.0 (PyPSA / KIT, 2026-10-03, CC BY 4.0)\u00a0: ENTSO-E, JRC, Open Power System Data, Global Energy Monitor et d'autres sources rapprochées\u00a0; unités d'un même site fusionnées\u00a0; centrales de moins de 10 MW, solaire en toiture compris, exclues\u00a0; fermetures datées par le jeu de données",
     sourceUrl: "https://github.com/PyPSA/powerplantmatching",
     updated: "2026-10" },
   { id: "osm-plants", file: null, kind: "oim-plants",
     title: "OSM power plants", titleFr: "Centrales OSM",
     source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+    sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)\u00a0; toutes les centrales à partir du zoom 8, les plus grandes avant",
     sourceUrl: "https://openinframap.org/",
     updated: "live", visible: false },
   { id: "oim-grid", file: null, kind: "oim",
     title: "Transmission grid", titleFr: "Réseau de transport",
     source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+    sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)",
     sourceUrl: "https://openinframap.org/",
     updated: "live" }
 ];
@@ -100,6 +111,7 @@ window.COUNTRIES = {
     // National demand: dated figures, not computed from the layers.
     demand: {
       source: "ONEE board of directors, 27 Jul 2026, reported by TelQuel",
+      sourceFr: "Conseil d'administration de l'ONEE, 27 juillet 2026, rapporté par TelQuel",
       sourceUrl: "https://telquel.ma/instant-t/2026/07/28/electricite-le-maroc-enregistre-un-nouveau-record-historique-de-consommation_2001082",
       figures: [
         { label: "Record peak · 2026", labelFr: "Pointe record · 2026", value: 8.4, unit: "GW" }
@@ -112,17 +124,21 @@ window.COUNTRIES = {
       features: ["interconnector-es-ma-1", "interconnector-es-ma-2"],
       partner: "Spain", partnerFr: "Espagne",
       source: "REE (Red Eléctrica), real-time exchange data",
+      sourceFr: "REE (Red Eléctrica), données d'échanges en temps réel",
       sourceUrl: "https://www.ree.es/en/activities/operation-of-the-electricity-system/international-interconnections"
     },
     // Read by Site check only (not drawn): national 150–400 kV lines for
     // distance-to-grid anywhere in the country, independent of loaded tiles.
     siteGrid: { file: "transmission-lines.geojson",
                 source: "World Bank Group masterplan 2018",
+                sourceFr: "Schéma directeur 2018 du Groupe Banque mondiale",
                 sourceUrl: "https://datacatalog.worldbank.org/",
                 updated: "2018" },
     boundary: { source: "Natural Earth 1:50m Admin 0, dissolved",
+                sourceFr: "Natural Earth 1:50m Admin 0, fusionné",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "Morocco and the Southern Provinces drawn as one territory" },
+                note: "Morocco and the Southern Provinces drawn as one territory",
+                noteFr: "Maroc et Provinces du Sud tracés comme un seul territoire" },
     operators: [
       { key:"N+ONE", short:"N+ONE" },
       { key:"inwi", short:"inwi" },
@@ -150,52 +166,62 @@ window.COUNTRIES = {
       { id: "power-plants", file: "power-plants.geojson", kind: "power",
         title: "Power plants", titleFr: "Centrales électriques",
         source: "Global Energy Monitor · ONEE · operator disclosures",
+        sourceFr: "Global Energy Monitor · ONEE · déclarations des opérateurs",
         sourceUrl: "https://globalenergymonitor.org/projects/global-power-plant-tracker/",
         updated: "2026-04" },
       { id: "oim-grid", file: null, kind: "oim",
         title: "Transmission grid", titleFr: "Réseau de transport",
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+        sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)",
         sourceUrl: "https://openinframap.org/",
         updated: "live" },
       { id: "osm-plants", file: null, kind: "oim-plants", visible: false,
         title: "OSM power plants", titleFr: "Centrales OSM",
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+        sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)\u00a0; toutes les centrales à partir du zoom 8, les plus grandes avant",
         sourceUrl: "https://openinframap.org/",
         updated: "live" },
       { id: "interconnectors", file: "interconnectors.geojson", kind: "grid",
         title: "Interconnectors", titleFr: "Interconnexions",
         source: "REE · ONEE · editorial overlay on OpenInfraMap",
+        sourceFr: "REE · ONEE · tracé éditorial sur fond OpenInfraMap",
         sourceUrl: "https://openinframap.org/",
         updated: "2026-04" },
       { id: "planned-corridors", file: "planned-corridors.geojson", kind: "grid",
         title: "Planned corridors", titleFr: "Corridors prévus",
         source: "Xlinks · MIICEN · World Bank Group 2018 masterplan",
+        sourceFr: "Xlinks · MIICEN · schéma directeur 2018 du Groupe Banque mondiale",
         sourceUrl: "https://datacatalog.worldbank.org/",
         updated: "2026-04" },
       // Water–energy nexus: inter-basin transfers, new dams, desalination.
       { id: "water-transfers", file: "water-transfers.geojson", kind: "water", visible: false,
         title: "Water highways", titleFr: "Autoroutes de l'eau",
         source: "Ministry of Equipment and Water and ONEE figures as reported by Le Matin, Médias24, TelQuel, L'Économiste; routes schematic",
+        sourceFr: "Chiffres du ministère de l'Équipement et de l'Eau et de l'ONEE repris par Le Matin, Médias24, TelQuel, L'Économiste ; tracés schématiques",
         sourceUrl: "https://telquel.ma/2026/03/31/autoroute-de-leau-ce-que-le-cahier-des-charges-revele-de-la-phase-ii-du-projet_1981667",
         updated: "2026-11" },
       { id: "dams", file: "dams.geojson", kind: "water", visible: false,
         title: "New dams (2020–2027 programme)", titleFr: "Nouveaux barrages (programme 2020–2027)",
         source: "Ministry of Equipment and Water figures as reported by Le360, Médias24, Hespress; positions OpenStreetMap or commune (approximate)",
+        sourceFr: "Chiffres du ministère de l'Équipement et de l'Eau repris par Le360, Médias24, Hespress ; positions OpenStreetMap ou commune (approximatives)",
         sourceUrl: "https://fr.le360.ma/economie/un-stockage-supplementaire-de-49-milliards-de-metres-cubes-deau-voici-ce-que-lon-sait-sur-les_HOQ2O6GTKRAP5DX7TPON67EHAA/",
         updated: "2026-11" },
       { id: "desalination", file: "desalination.geojson", kind: "water", visible: false,
         title: "Desalination plants", titleFr: "Stations de dessalement",
         source: "ONEE · OCP Green Water · press (LesEco, Le360, Le Desk); positions OpenStreetMap or site (approximate)",
+        sourceFr: "ONEE · OCP Green Water · presse (LesEco, Le360, Le Desk) ; positions OpenStreetMap ou site (approximatives)",
         sourceUrl: "https://www.fedenerg.ma/2026/07/28/onee-mise-en-service-des-ouvrages-400-kv-destines-a-lalimentation-electrique-de-la-station-de-dessalement-de-la-region-casablanca-settat/",
         updated: "2026-11" },
       { id: "industrial", file: "industrial.geojson", kind: "industrial",
         title: "Industry", titleFr: "Industrie",
         source: "OCP · Holcim · SONASID · Renault · public disclosures",
+        sourceFr: "OCP · Holcim · SONASID · Renault · informations publiques",
         sourceUrl: "https://www.ocpgroup.ma/",
         updated: "2026-04" },
       { id: "digital", file: "digital.geojson", kind: "digital",
         title: "Data centres & cables", titleFr: "Data centers et câbles",
         source: "Datacentermap.com · OSM · press releases",
+        sourceFr: "Datacentermap.com · OSM · communiqués de presse",
         sourceUrl: "https://www.datacentermap.com/morocco/",
         updated: "2026-03" },
       // PeeringDB sites not already in the curated layer above (same
@@ -203,6 +229,7 @@ window.COUNTRIES = {
       { id: "datacentres", file: "datacentres.geojson", kind: "digital",
         title: "More colocation sites (PeeringDB)", titleFr: "Autres sites de colocation (PeeringDB)",
         source: "PeeringDB facility registry (operator-maintained); no MW figures",
+        sourceFr: "Registre des sites PeeringDB (tenu par les opérateurs)\u00a0; sans puissance en MW",
         sourceUrl: "https://www.peeringdb.com/",
         updated: "2026-09" }
     ]
@@ -224,7 +251,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries" },
+                note: "public domain; de facto boundaries",
+                noteFr: "domaine public\u00a0; frontières de facto" },
     layers: GPPD_COUNTRY_LAYERS
   },
   egypt: {
@@ -239,7 +267,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries: the Halaib Triangle is drawn as administered by Egypt, Bir Tawil is not included" },
+                note: "public domain; de facto boundaries: the Halaib Triangle is drawn as administered by Egypt, Bir Tawil is not included",
+                noteFr: "domaine public\u00a0; frontières de facto\u00a0: le triangle de Halaïb est tracé comme administré par l'Égypte, Bir Tawil n'est pas inclus" },
     layers: GPPD_COUNTRY_LAYERS
   },
   ethiopia: {
@@ -254,7 +283,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries" },
+                note: "public domain; de facto boundaries",
+                noteFr: "domaine public\u00a0; frontières de facto" },
     layers: GPPD_COUNTRY_LAYERS
   },
   ghana: {
@@ -269,7 +299,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries" },
+                note: "public domain; de facto boundaries",
+                noteFr: "domaine public\u00a0; frontières de facto" },
     layers: GPPD_COUNTRY_LAYERS
   },
   kenya: {
@@ -284,7 +315,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries" },
+                note: "public domain; de facto boundaries",
+                noteFr: "domaine public\u00a0; frontières de facto" },
     layers: GPPD_COUNTRY_LAYERS
   },
   nigeria: {
@@ -299,7 +331,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries" },
+                note: "public domain; de facto boundaries",
+                noteFr: "domaine public\u00a0; frontières de facto" },
     layers: GPPD_COUNTRY_LAYERS
   },
   rwanda: {
@@ -314,7 +347,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries" },
+                note: "public domain; de facto boundaries",
+                noteFr: "domaine public\u00a0; frontières de facto" },
     layers: GPPD_COUNTRY_LAYERS
   },
   "south-africa": {
@@ -329,7 +363,8 @@ window.COUNTRIES = {
     credits: "WRI Global Power Plant Database (CC BY 4.0) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; de facto boundaries; Prince Edward Islands omitted" },
+                note: "public domain; de facto boundaries; Prince Edward Islands omitted",
+                noteFr: "domaine public\u00a0; frontières de facto\u00a0; îles du Prince-Édouard omises" },
     layers: GPPD_COUNTRY_LAYERS
   },
 
@@ -347,28 +382,34 @@ window.COUNTRIES = {
     snapshotSource: "owner list, unverified",
     snapshotSourceFr: "liste du propriétaire, non vérifiée",
     credits: "owner-supplied plant list (unverified) · PeeringDB",
+    creditsFr: "liste de centrales du propriétaire (non vérifiée) · PeeringDB",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain" },
+                note: "public domain",
+                noteFr: "domaine public" },
     layers: [
       { id: "power-plants", file: "power-plants.geojson", kind: "power",
         title: "Power plants", titleFr: "Centrales électriques",
         source: "Owner-supplied list (compiled with ChatGPT), not yet checked against primary sources",
+        sourceFr: "Liste fournie par le propriétaire (compilée avec ChatGPT), pas encore vérifiée sur des sources primaires",
         sourceUrl: "https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/docs/data/senegal/power-plants.geojson",
         updated: "2026-09" },
       { id: "datacentres", file: "datacentres.geojson", kind: "digital",
         title: "Data centres", titleFr: "Data centers",
         source: "PeeringDB facility registry (operator-maintained); colocation sites only, no MW figures",
+        sourceFr: "Registre des sites PeeringDB (tenu par les opérateurs)\u00a0; sites de colocation uniquement, sans puissance en MW",
         sourceUrl: "https://www.peeringdb.com/",
         updated: "2026-09" },
       { id: "osm-plants", file: null, kind: "oim-plants",
         title: "OSM power plants", titleFr: "Centrales OSM",
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL); all plants from zoom 8, larger ones earlier",
+        sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)\u00a0; toutes les centrales à partir du zoom 8, les plus grandes avant",
         sourceUrl: "https://openinframap.org/",
         updated: "live" },
       { id: "oim-grid", file: null, kind: "oim",
         title: "Transmission grid", titleFr: "Réseau de transport",
         source: "OpenStreetMap contributors · OpenInfraMap (ODbL)",
+        sourceFr: "Contributeurs OpenStreetMap · OpenInfraMap (ODbL)",
         sourceUrl: "https://openinframap.org/",
         updated: "live" }
     ]
@@ -385,7 +426,8 @@ window.COUNTRIES = {
     credits: "powerplantmatching (CC BY 4.0)",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; metropolitan France and Corsica" },
+                note: "public domain; metropolitan France and Corsica",
+                noteFr: "domaine public\u00a0; France métropolitaine et Corse" },
     layers: PPM_COUNTRY_LAYERS
   },
   spain: {
@@ -400,7 +442,8 @@ window.COUNTRIES = {
     credits: "powerplantmatching (CC BY 4.0)",
     boundary: { source: "Natural Earth 1:50m Admin 0",
                 sourceUrl: "https://www.naturalearthdata.com/",
-                note: "public domain; peninsula, Balearic and Canary Islands" },
+                note: "public domain; peninsula, Balearic and Canary Islands",
+                noteFr: "domaine public\u00a0; péninsule, Baléares et Canaries" },
     layers: PPM_COUNTRY_LAYERS
   },
   namibia: { label: "Namibia", labelFr: "Namibie", iso: "NA", center: [17.5, -22.5], zoom: 5.2,
