@@ -45,6 +45,7 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `credits` | no | Data credits in the footer. |
 | `demand` | no | `{ source, sourceUrl, figures: [{ label, labelFr, value, unit }] }`. Dated national figures (peak, annual demand), shown as tiles under the KPIs with their source. `value` is a number. |
 | `liveFlow` | no | `{ path, features, partner, partnerFr, source, sourceUrl }`. Live net flow on an interconnector, read from the Wattu Worker at `path` (`/flow/<route>`, see `solar/proxy/flow.js`). Shown as a KPI tile and in the popup of each line whose `id` is in `features`; every id must belong to a `grid` feature. |
+| `siteGrid` | no | `{ file, source, sourceUrl, updated }`. A national line file in `dataPath` that only **Site check** reads (not drawn), so distance-to-grid works anywhere in the country. LineString / MultiLineString features with a numeric `voltage_kv`; `status: "planned"` marks planned lines. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
 
 Each layer needs `id` (unique within the country, lowercase and dashes),
