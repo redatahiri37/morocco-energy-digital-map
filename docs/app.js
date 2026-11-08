@@ -74,6 +74,7 @@
     badgeGen: "Production", badgeOsm: "Production · OpenStreetMap", badgeIndustry: "Consommateur industriel",
     badgeCable: "Câble sous-marin", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Ligne de transport",
     capacity: "Puissance", fuel: "Filière", technology: "Technologie", commissioned: "Mise en service", targetYear: "Année visée",
+    annualOutput: "Production annuelle", annualOutputNote: (y)=>`estimation WRI, ${y}`,
     sector: "Secteur", estDemandK: "Demande estimée", gridConnection: "Raccordement", precision: "Précision",
     operator: "Opérateur", investment: "Investissement", energised: "Mise sous tension",
     voltage: "Tension", status: "Statut", kind: "Type", hvdcPlanned: "HVDC (prévu)", ac: "Alternatif",
@@ -134,6 +135,7 @@
     badgeGen: "Generation", badgeOsm: "Generation · OpenStreetMap", badgeIndustry: "Industrial consumer",
     badgeCable: "Submarine cable", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Transmission line",
     capacity: "Capacity", fuel: "Fuel", technology: "Technology", commissioned: "Commissioned", targetYear: "Target year",
+    annualOutput: "Annual output", annualOutputNote: (y)=>`WRI estimate, ${y}`,
     sector: "Sector", estDemandK: "Est. demand", gridConnection: "Grid connection", precision: "Precision",
     operator: "Operator", investment: "Investment", energised: "Energised",
     voltage: "Voltage", status: "Status", kind: "Kind", hvdcPlanned: "HVDC (planned)", ac: "AC",
@@ -1688,6 +1690,9 @@
         <div class="cell"><div class="k">${T.fuel}</div><div class="v cap">${escapeHtml(word(FUEL_WORD, p.fuel_type))}</div></div>
         <div class="cell"><div class="k">${T.technology}</div><div class="v sm">${escapeHtml(p.tech || "—")}</div></div>
         <div class="cell"><div class="k">${p.status==="operational" ? T.commissioned : T.targetYear}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>`;
+      // Dams: a typical year's output (WRI's estimate), next to the capacity.
+      if(num(p.annual_generation_gwh) != null) stats += `
+        <div class="cell"><div class="k">${T.annualOutput}</div><div class="v">≈ ${escapeHtml(nfmt(p.annual_generation_gwh))} GWh</div>${num(p.annual_generation_year) != null ? `<div class="micro">${escapeHtml(T.annualOutputNote(p.annual_generation_year))}</div>` : ""}</div>`;
     } else if(kind === "industrial"){
       stats = `
         <div class="cell"><div class="k">${T.sector}</div><div class="v sm">${escapeHtml(word(SECTOR_WORD, p.sector))}</div></div>
