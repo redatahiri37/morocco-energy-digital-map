@@ -172,8 +172,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -4.5566,
-     34.4352
+     -4.4764,
+     34.4115
     ]
    },
    "properties": {
@@ -188,8 +188,8 @@
     "purpose": "Drinking water · irrigation",
     "purpose_fr": "Eau potable · irrigation",
     "region": "Taounate",
-    "note": "97 % built in October 2025, reported complete since. Reservoir of 833 ha across Taounate and Taza. Placed at the Aïn Maâtouf commune; position approximate.",
-    "note_fr": "Réalisé à 97 % en octobre 2025, annoncé achevé depuis. Retenue de 833 ha entre Taounate et Taza. Placé à la commune d'Aïn Maâtouf ; position approximative.",
+    "note": "97 % built in October 2025, reported complete since. Reservoir of 833 ha across Taounate and Taza. Placed on the Oued Leben where it crosses the Aïn Maâtouf commune (OSM river); the dam itself is not mapped, position approximate (±3 km).",
+    "note_fr": "Réalisé à 97 % en octobre 2025, annoncé achevé depuis. Retenue de 833 ha entre Taounate et Taza. Placé sur l'oued Leben dans la commune d'Aïn Maâtouf (rivière OSM) ; le barrage n'est pas cartographié, position approximative (±3 km).",
     "precision": "approximate",
     "source": "Le360, Oct 2025",
     "source_url": "https://fr.le360.ma/economie/securite-hydrique-le-barrage-sidi-abou-acheve-a-97-les-premieres-eaux-attendues-fin-2025_ODN75VLOJZAZLFMWWOCNGDFS6I/"

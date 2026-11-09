@@ -58,9 +58,12 @@ handoff below). No open correction issue left.
 - Positions: OSM where the dam or plant is mapped (Tiddas, Agdez,
   Kaddoussa, Fask, Douira, Laâyoune); otherwise the commune or the distance
   the press gives, `precision: approximate`, said in the note. Transfer
-  routes are schematic. Overpass and the Wikimedia APIs were unreachable
-  (reset / 429) this session, so no coord-validator pass: re-run it when
-  they are back, starting with Kheng Grou, M'Dez, Ghiss and Dakhla.
+  routes are schematic. coord-validator (Nominatim only; Overpass and
+  Wikidata blocked) on 2026-11-09: 3 FAILs fixed (Sidi Abbou → on the Oued
+  Leben, Safi desal → OCP site south of the city, Dakhla desal → on land in
+  Bir Anzarane); 5 PASS; Kheng Grou, Ratba, M'Dez, Ghiss, Taghzirt,
+  Casablanca desal and the Sebou guard-dam start remain UNVERIFIED
+  (commune or river proxies, not mapped in OSM).
 - Desalination popup: stated power if any, else average load at
   3.5 kWh/m³ (DESAL_KWH_PER_M3 in app.js), labelled as an estimate.
 - Phase 2 (same PR): `lenses` in countries.config.js → Énergie / Eau /
