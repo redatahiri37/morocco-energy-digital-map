@@ -81,6 +81,13 @@ handoff below). No open correction issue left.
 - validate-countries.mjs fails when a source, note or credit with a
   lowercase word (3+ letters, domains and versions aside) has no French;
   3 new self-test cases (34 in all).
+- Status view now narrows the OpenInfraMap grid too (lines, substations):
+  OIM tiles give lines and substations the same `construction` / `disused`
+  booleans as plants (tegola layers.yml, lifecycle field set);
+  oimStatusFilters() serves both layers.
+- Search swatches took their colour when the index was built, so they kept
+  the old theme's after a toggle; entries now keep kind / category / fuel
+  and entryMark() colours them at render.
 
 ## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
 - Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,

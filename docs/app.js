@@ -1282,32 +1282,48 @@
     });
   }
 
+  // The status view on OpenInfraMap features: lines, substations and plants
+  // carry `construction` (being built) and `disused` (closed) from OSM. An
+  // empty list under "All".
+  function oimStatusFilters(){
+    const tagged = (k)=>["to-boolean", ["coalesce", ["get", k], false]];
+    if(statusView === "service") return [["!", tagged("construction")], ["!", tagged("disused")]];
+    if(statusView === "pipeline") return [tagged("construction")];
+    return [];
+  }
+
   function buildOimLayer(L){
     const src = OIM_SRC, p = "lyr-" + L.id;
     ensureOimSource();
+    // Every grid sublayer follows the status view, like the plants.
+    const status = oimStatusFilters();
+    const addOim = (spec)=>{
+      if(status.length) spec.filter = spec.filter ? ["all", spec.filter, ...status] : ["all", ...status];
+      addLayer(L, spec);
+    };
 
     // Lines — styled by voltage. OIM exposes a numeric `voltage` (volts).
     // Non-numeric / multi-voltage tags coerce to 0 and fall into LV.
     const voltExpr = ["coalesce", ["to-number", ["get","voltage"]], 0];
-    addLayer(L, {
+    addOim({
       id: p + "-line-lv", type:"line", source:src, "source-layer":"power_line",
       filter:["<", voltExpr, 100000],
       minzoom: 8,
       paint:{ "line-color": isDark() ? "rgba(229,228,224,0.22)" : "rgba(50,50,50,0.25)", "line-width":0.6 }
     });
-    addLayer(L, {
+    addOim({
       id: p + "-line-mv", type:"line", source:src, "source-layer":"power_line",
       filter:["all",[">=",voltExpr,100000],["<",voltExpr,300000]],
       paint:{ "line-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.65)", "line-width":1.0 }
     });
-    addLayer(L, {
+    addOim({
       id: p + "-line-hv", type:"line", source:src, "source-layer":"power_line",
       filter:[">=", voltExpr, 300000],
       paint:{ "line-color": isDark() ? GRID_COLOR : "#3b3b3f", "line-width":1.8, "line-opacity":0.9 }
     });
 
     // Substations — polygon at high zoom, points at low zoom
-    addLayer(L, {
+    addOim({
       id: p + "-substation-poly", type:"fill", source:src, "source-layer":"power_substation",
       minzoom: 10,
       paint:{
@@ -1315,7 +1331,7 @@
         "fill-outline-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.5)"
       }
     });
-    addLayer(L, {
+    addOim({
       id: p + "-substation-pt", type:"circle", source:src, "source-layer":"power_substation_point",
       minzoom: 5,
       paint:{
@@ -1361,10 +1377,7 @@
       const keep = plantFuels(fuelFilter);
       filters.push(["in", ["get","source"], ["literal", Object.keys(OSM_FUEL).filter(k=>keep.includes(OSM_FUEL[k]))]]);
     }
-    // OSM tags a plant being built with `construction`, a closed one `disused`.
-    const tagged = (k)=>["to-boolean", ["coalesce", ["get", k], false]];
-    if(statusView === "service") filters.push(["!", tagged("construction")], ["!", tagged("disused")]);
-    if(statusView === "pipeline") filters.push(tagged("construction"));
+    filters.push(...oimStatusFilters());
     if(filters.length) spec.filter = ["all", ...filters];
     addLayer(L, spec, "point");
   }
@@ -2815,8 +2828,8 @@
       // Industry carries an estimated demand, not a capacity.
       const size = mw == null || L.kind === "grid" || L.kind === "water" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
       const meta = [...what, size, STATUS_WORD[p.status], countryLabel(c)].filter(Boolean).join(" · ");
-      const mark = markerOf(L.kind, p)
-        || { shape:"disc", color: L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888" : INTERCONNECTOR_COLOR() };
+      // What the swatch needs, not its colour: the index outlives a theme switch.
+      const mark = { kind: L.kind, category: p.category, fuel: p.fuel_type };
       const shown = L.kind === "water" ? featName(p) : p.name;
       return { country: countryKey, layer: L.id, id: String(p.id), name: String(shown), meta, mark, mw: mw || 0,
                nameN: norm(shown), hay: norm([p.name, p.name_fr, T.waterCat && T.waterCat[p.category], p.river, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
@@ -2867,6 +2880,12 @@
     renderResults(q, !allEntries);
   }
 
+  // A result's swatch in the current theme's colours.
+  function entryMark(m){
+    return markerOf(m.kind, { category: m.category })
+      || { shape:"disc", color: m.kind === "power" ? FUEL_COLOR[m.fuel] || "#888" : INTERCONNECTOR_COLOR() };
+  }
+
   // Name with the match marked, as DOM nodes.
   function markedName(name, q){
     const span = el("span", "so-name");
@@ -2886,9 +2905,10 @@
       li.setAttribute("role", "option");
       li.setAttribute("aria-selected", String(i === activeOption));
       const dot = el("span", "so-dot");
+      const m = o.isCountry ? null : entryMark(o.mark);
       if(o.isCountry) dot.textContent = "→";
-      else if(o.mark.shape === "ring"){ dot.classList.add("shape-ring"); dot.style.borderColor = o.mark.color; }
-      else { dot.classList.add("shape-" + o.mark.shape); dot.style.background = o.mark.color; }
+      else if(m.shape === "ring"){ dot.classList.add("shape-ring"); dot.style.borderColor = m.color; }
+      else { dot.classList.add("shape-" + m.shape); dot.style.background = m.color; }
       const text = el("span", "so-text");
       text.append(markedName(o.name, q), el("span", "so-meta", o.meta));
       li.append(dot, text);
