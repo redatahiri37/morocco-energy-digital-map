@@ -108,14 +108,14 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -5.8,
-          34.6
+          -4.0101,
+          34.2302
         ]
       },
       "properties": {
         "id": "taza-wind",
         "name": "Taza Wind Farm",
-        "capacity_mw": 150,
+        "capacity_mw": 87,
         "fuel_type": "wind",
         "tech": "Onshore wind",
         "status": "operational",
@@ -123,8 +123,8 @@
         "operator": "EDF Renewables / Mitsui",
         "region": "Fès-Meknès",
         "precision": "approximate",
-        "source": "GEM",
-        "source_url": "https://globalenergymonitor.org/projects/global-wind-power-tracker/"
+        "source": "Wikipedia (fr), list of Moroccan wind farms: 27 turbines, 87 MW · position: Taza (town)",
+        "source_url": "https://fr.wikipedia.org/wiki/Liste_des_parcs_%C3%A9oliens_au_Maroc"
       }
     },
     {
@@ -432,6 +432,279 @@
         "annual_generation_gwh": 177,
         "annual_generation_year": 2017,
         "precision": "exact"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -11.9966,
+          27.9399
+        ]
+      },
+      "properties": {
+        "id": "akhfennir-wind",
+        "gppd_id": "WRI1023701",
+        "name": "Akhfennir Wind Farm",
+        "capacity_mw": 197.1,
+        "fuel_type": "wind",
+        "tech": "Onshore wind, two phases (101.9 MW in 2013, 95.2 MW in 2016)",
+        "status": "operational",
+        "commissioning_year": 2016,
+        "operator": "Nareva",
+        "region": "Laâyoune-Sakia El Hamra",
+        "precision": "exact",
+        "source": "Wikipedia (fr), list of Moroccan wind farms · position: OpenStreetMap · WRI GPPD v1.3",
+        "source_url": "https://www.openstreetmap.org/way/388842420"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.7985,
+          31.3982
+        ]
+      },
+      "properties": {
+        "id": "amogdoul-wind",
+        "gppd_id": "WRI1023702",
+        "name": "Amogdoul Wind Farm (Essaouira)",
+        "capacity_mw": 60,
+        "fuel_type": "wind",
+        "tech": "Onshore wind",
+        "status": "operational",
+        "commissioning_year": 2007,
+        "operator": "ONEE",
+        "region": "Marrakech-Safi",
+        "precision": "exact",
+        "source": "WRI GPPD v1.3 · Wikipedia (fr) · position: OpenStreetMap",
+        "source_url": "https://www.openstreetmap.org/way/391303771"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13.3862,
+          27.0204
+        ]
+      },
+      "properties": {
+        "id": "foum-el-oued-wind",
+        "gppd_id": "WRI1023705",
+        "name": "Foum El Oued Wind Farm (Laâyoune)",
+        "capacity_mw": 50,
+        "fuel_type": "wind",
+        "tech": "Onshore wind",
+        "status": "operational",
+        "commissioning_year": 2013,
+        "operator": "Nareva",
+        "region": "Laâyoune-Sakia El Hamra",
+        "precision": "exact",
+        "source": "WRI GPPD v1.3 · Wikipedia (fr) · position: OpenStreetMap",
+        "source_url": "https://www.openstreetmap.org/way/530569765"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.493,
+          35.8054
+        ]
+      },
+      "properties": {
+        "id": "haouma-wind",
+        "gppd_id": "WRI1023706",
+        "name": "Haouma Wind Farm",
+        "capacity_mw": 50,
+        "fuel_type": "wind",
+        "tech": "Onshore wind",
+        "status": "operational",
+        "commissioning_year": 2013,
+        "operator": "Nareva",
+        "region": "Tanger-Tétouan-Al Hoceïma",
+        "precision": "approximate",
+        "source": "WRI GPPD v1.3 · Wikipedia (fr)",
+        "source_url": "https://fr.wikipedia.org/wiki/Liste_des_parcs_%C3%A9oliens_au_Maroc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.571,
+          35.7545
+        ]
+      },
+      "properties": {
+        "id": "khalladi-wind",
+        "gppd_id": "WRI1023707",
+        "name": "Khalladi Wind Farm",
+        "capacity_mw": 120,
+        "fuel_type": "wind",
+        "tech": "Onshore wind",
+        "status": "operational",
+        "commissioning_year": 2017,
+        "operator": "ACWA Power",
+        "region": "Tanger-Tétouan-Al Hoceïma",
+        "precision": "approximate",
+        "source": "WRI GPPD v1.3 · Wikipedia (fr)",
+        "source_url": "https://fr.wikipedia.org/wiki/Liste_des_parcs_%C3%A9oliens_au_Maroc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.6078,
+          35.6467
+        ]
+      },
+      "properties": {
+        "id": "tanger-i-wind",
+        "gppd_id": "WRI1023704",
+        "name": "Tanger I Wind Farm",
+        "capacity_mw": 140,
+        "fuel_type": "wind",
+        "tech": "Onshore wind",
+        "status": "operational",
+        "commissioning_year": 2011,
+        "operator": "ONEE",
+        "region": "Tanger-Tétouan-Al Hoceïma",
+        "precision": "approximate",
+        "source": "WRI GPPD v1.3 · Wikipedia (fr)",
+        "source_url": "https://fr.wikipedia.org/wiki/Liste_des_parcs_%C3%A9oliens_au_Maroc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.7922,
+          32.6816
+        ]
+      },
+      "properties": {
+        "id": "midelt-wind",
+        "gppd_id": "WRI1061201",
+        "gppd_capacity_note": "WRI v1.3 (2021) has the first 150 MW; 210 MW once complete (Wikipedia fr)",
+        "name": "Midelt Wind Farm",
+        "capacity_mw": 210,
+        "fuel_type": "wind",
+        "tech": "Onshore wind",
+        "status": "operational",
+        "commissioning_year": 2020,
+        "operator": "Nareva",
+        "region": "Drâa-Tafilalet",
+        "precision": "approximate",
+        "source": "Wikipedia (fr), list of Moroccan wind farms · position: WRI GPPD v1.3",
+        "source_url": "https://fr.wikipedia.org/wiki/Liste_des_parcs_%C3%A9oliens_au_Maroc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -14.683,
+          25.6146
+        ]
+      },
+      "properties": {
+        "id": "aftissat-wind",
+        "name": "Aftissat Wind Farm",
+        "capacity_mw": 401.6,
+        "fuel_type": "wind",
+        "tech": "Onshore wind, two phases (201.6 MW in 2019, 200 MW in 2023)",
+        "status": "operational",
+        "commissioning_year": 2023,
+        "operator": "Nareva",
+        "region": "Laâyoune-Sakia El Hamra",
+        "precision": "approximate",
+        "source": "Wikipedia (fr), list of Moroccan wind farms · position: Aftissat village (OpenStreetMap)",
+        "source_url": "https://fr.wikipedia.org/wiki/Liste_des_parcs_%C3%A9oliens_au_Maroc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.1902,
+          34.3098
+        ]
+      },
+      "properties": {
+        "id": "jerada-coal",
+        "gppd_id": "WRI1023681",
+        "name": "Jerada Power Station",
+        "capacity_mw": 515,
+        "fuel_type": "coal",
+        "tech": "Coal-fired steam",
+        "status": "operational",
+        "operator": "ONEE",
+        "region": "Oriental",
+        "precision": "approximate",
+        "source": "WRI GPPD v1.3 (Global Coal Plant Tracker)",
+        "source_url": "https://github.com/wri/global-power-plant-database"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.6777,
+          33.9317
+        ]
+      },
+      "properties": {
+        "id": "allal-al-fassi-dam",
+        "gppd_id": "WRI1023673",
+        "name": "Allal Al Fassi Dam",
+        "capacity_mw": 240,
+        "fuel_type": "hydro",
+        "tech": "Hydro (Sebou)",
+        "status": "operational",
+        "commissioning_year": 1994,
+        "operator": "ONEE",
+        "region": "Fès-Meknès",
+        "precision": "exact",
+        "source": "WRI GPPD v1.3 (Arab Union of Electricity) · position: OpenStreetMap dam",
+        "source_url": "https://www.openstreetmap.org/way/504108030"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.8228,
+          31.8144
+        ]
+      },
+      "properties": {
+        "id": "hassan-1er-dam",
+        "name": "Hassan I Dam",
+        "capacity_mw": 67,
+        "fuel_type": "hydro",
+        "tech": "Hydro (Lakhdar)",
+        "status": "operational",
+        "commissioning_year": 1986,
+        "operator": "ONEE",
+        "region": "Béni Mellal-Khénifra",
+        "precision": "exact",
+        "source": "WRI GPPD v1.3 (capacity; its point is 24 km off) · position: Wikipedia",
+        "source_url": "https://en.wikipedia.org/wiki/Hassan_I_Dam"
       }
     }
   ]

@@ -45,6 +45,23 @@ grid economics, infrastructure finance.
 Map correction issues #59, #60, #61 and #70 handled on 2026-11-08 (see the
 handoff below). No open correction issue left.
 
+## Session handoff — 2026-11-09 (map: one Moroccan plant list)
+- This map's docs/data/morocco/power-plants.geojson is the reference; the
+  older morocco-grid repo (42 plants, never deployed) had wrong points
+  (Taza 203 km, Idriss I 74 km, Tahaddart 51 km, Akhfennir 144 km) and
+  plants that don't exist (Nador West Med coal, Hassan II "STEP").
+- Ported 11 plants, each checked against two sources (WRI, OSM, Wikipedia
+  fr list of wind farms, en/fr articles): Akhfennir 197.1, Amogdoul 60,
+  Foum El Oued 50, Haouma 50, Khalladi 120, Tanger I 140, Midelt 210
+  (gppd_capacity_note: WRI has 150), Aftissat 401.6, Jerada 515, Allal Al
+  Fassi 240, Hassan I 67 (no gppd_id: WRI's point is 24 km off). Taza
+  fixed: 87 MW (27 turbines), at Taza, not near Ouezzane.
+- WRI is wrong too in places: "Parc Eolien Tarfaya" sits near Tétouan,
+  Hassan I 24 km off. Not ported (no position found): Noor Laâyoune /
+  Boujdour PV, Boujdour wind 300 MW, and the planned Tiskrad, Jbel Lahdid,
+  Tanger II, Noor Atlas, Sebkhate Tah. Unchecked: tensift-essaouira.
+- Morocco now covers 84 % of Ember's installed capacity (was 71 %).
+
 ## Session handoff — 2026-11-08 (map: French sources)
 - /fr/ showed every source and boundary note in English (Methodology list,
   layer-row hover, demand / live-flow notes, footer credits, Site check).
