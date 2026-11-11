@@ -1,0 +1,164 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.1268,
+     33.405
+    ]
+   },
+   "properties": {
+    "id": "ma-desal-casablanca",
+    "name": "Casablanca-Settat desalination plant",
+    "name_fr": "Station de dessalement de Casablanca-Settat",
+    "category": "desalination",
+    "status": "construction",
+    "year": 2027,
+    "capacity_hm3_yr": 300,
+    "operator": "Acciona · Green of Africa (ONEE concession)",
+    "energy_supply": "100 % renewable (per ONEE); 400 kV connection, 300 MVA substation at Lamharza Essahel",
+    "energy_supply_fr": "100 % renouvelable (selon l'ONEE) ; raccordement 400 kV, poste de 300 MVA à Lamharza Essahel",
+    "region": "El Jadida (Lamharza Essahel)",
+    "note": "Largest in Africa. First tranche 200 million m³ a year (548,000 m³/d), expected February 2027; 300 million m³ a year with the second tranche (mid-2028), 50 of them for irrigation. Placed at the commune; position approximate.",
+    "note_fr": "La plus grande d'Afrique. Première tranche de 200 millions de m³ par an (548 000 m³/j), attendue en février 2027 ; 300 millions de m³ par an avec la deuxième tranche (mi-2028), dont 50 pour l'irrigation. Placée à la commune ; position approximative.",
+    "precision": "approximate",
+    "source": "LesEco · Le360 · ONEE (fedenerg), 2026",
+    "source_url": "https://www.fedenerg.ma/2026/07/28/onee-mise-en-service-des-ouvrages-400-kv-destines-a-lalimentation-electrique-de-la-station-de-dessalement-de-la-region-casablanca-settat/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.63,
+     33.11
+    ]
+   },
+   "properties": {
+    "id": "ma-desal-jorf-lasfar",
+    "name": "Jorf Lasfar desalination (OCP Green Water)",
+    "name_fr": "Dessalement de Jorf Lasfar (OCP Green Water)",
+    "category": "desalination",
+    "status": "operational",
+    "year": 2015,
+    "capacity_hm3_yr": null,
+    "operator": "OCP Green Water",
+    "region": "El Jadida",
+    "note": "Supplies the south of Casablanca, Settat and Berrechid since 2024. OCP Green Water reported 340 million m³ a year across all its plants at 30 June 2026; its northern zone (Jorf Lasfar, El Jadida, Casablanca, Khouribga) is to reach 215. No per-plant figure published. Drawn on the OCP site; position approximate.",
+    "note_fr": "Alimente le sud de Casablanca, Settat et Berrechid depuis 2024. OCP Green Water déclarait 340 millions de m³ par an pour toutes ses stations au 30 juin 2026 ; sa zone nord (Jorf Lasfar, El Jadida, Casablanca, Khouribga) doit atteindre 215. Pas de chiffre publié par station. Placée sur le site OCP ; position approximative.",
+    "precision": "approximate",
+    "source": "Le Desk, Oct 2026 · Médias24, 2024",
+    "source_url": "https://ledesk.ma/2026/10/05/ocp-prepare-louverture-de-ses-societes-de-dessalement-a-des-investisseurs-exterieurs/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -9.2572,
+     32.2374
+    ]
+   },
+   "properties": {
+    "id": "ma-desal-safi",
+    "name": "Safi desalination (OCP Green Water)",
+    "name_fr": "Dessalement de Safi (OCP Green Water)",
+    "category": "desalination",
+    "status": "operational",
+    "year": 2023,
+    "capacity_hm3_yr": null,
+    "operator": "OCP Green Water",
+    "region": "Safi",
+    "note": "Partial operation since 2023, full capacity expected at the end of 2026. OCP's central zone (Safi, Benguerir, Youssoufia, Marrakech) is to reach 195 million m³ a year. Drawn at the OCP site south of Safi (OSM anchor: OCP training centre), not in the port; position approximate.",
+    "note_fr": "Exploitation partielle depuis 2023, pleine capacité attendue fin 2026. La zone centre d'OCP (Safi, Benguerir, Youssoufia, Marrakech) doit atteindre 195 millions de m³ par an. Placée sur le site OCP au sud de Safi (repère OSM : centre de formation OCP), pas dans le port ; position approximative.",
+    "precision": "approximate",
+    "source": "Le Desk, Aug 2026 · Médias24, 2023 · OpenStreetMap (position)",
+    "source_url": "https://ledesk.ma/2026/08/07/ocp-green-water-filialise-ses-actifs-de-dessalement-pour-lever-de-la-dette-dediee/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -9.6481,
+     30.1384
+    ]
+   },
+   "properties": {
+    "id": "ma-desal-chtouka",
+    "name": "Chtouka Aït Baha desalination plant (Douira)",
+    "name_fr": "Station de dessalement de Chtouka Aït Baha (Douira)",
+    "category": "desalination",
+    "status": "operational",
+    "year": 2022,
+    "capacity_hm3_yr": 100,
+    "power_mw": 68,
+    "region": "Chtouka Aït Baha (Agadir)",
+    "note": "275,000 m³/d since January 2022 (150,000 drinking water, 125,000 irrigation), about 100 million m³ a year; extension to 400,000 m³/d under way. 68 MW is the installed power once extended; a 150 MW wind farm is planned to supply it.",
+    "note_fr": "275 000 m³/j depuis janvier 2022 (150 000 pour l'eau potable, 125 000 pour l'irrigation), soit environ 100 millions de m³ par an ; extension à 400 000 m³/j en cours. 68 MW est la puissance installée après extension ; un parc éolien de 150 MW est prévu pour l'alimenter.",
+    "precision": "exact",
+    "source": "Hespress · L'Economiste · OpenStreetMap (position)",
+    "source_url": "https://www.leconomiste.com/flash-infos/chtouka-ait-baha-la-capacite-de-la-station-de-dessalement-portee-400-000-m3-j-l-horizon/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -13.4092,
+     27.1037
+    ]
+   },
+   "properties": {
+    "id": "ma-desal-laayoune",
+    "name": "Laâyoune desalination plant",
+    "name_fr": "Station de dessalement de Laâyoune",
+    "category": "desalination",
+    "status": "operational",
+    "capacity_hm3_yr": 19,
+    "operator": "ONEE",
+    "region": "Laâyoune",
+    "note": "52,000 m³/d today (about 19 million m³ a year), 60,000 m³/d targeted by 2030 with an extension of over 450 million dirhams.",
+    "note_fr": "52 000 m³/j aujourd'hui (environ 19 millions de m³ par an), 60 000 m³/j visés à l'horizon 2030 avec une extension de plus de 450 millions de dirhams.",
+    "precision": "exact",
+    "source": "LesEco · OpenStreetMap (position)",
+    "source_url": "https://leseco.ma/maroc/eau-potable-laayoune-se-dote-dune-extension-pour-sa-station-de-dessalement.html"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -14.95,
+     24.6
+    ]
+   },
+   "properties": {
+    "id": "ma-desal-dakhla",
+    "name": "Dakhla desalination plant (Bir Anzarane)",
+    "name_fr": "Station de dessalement de Dakhla (Bir Anzarane)",
+    "category": "desalination",
+    "status": "construction",
+    "year": 2026,
+    "capacity_hm3_yr": 37,
+    "power_mw": 60,
+    "energy_supply": "Dedicated 60 MW wind farm (already running)",
+    "energy_supply_fr": "Parc éolien dédié de 60 MW (déjà en service)",
+    "region": "Oued Ed-Dahab (Bir Anzarane)",
+    "note": "30 million m³ a year for 5,000 ha of irrigation, 7 for drinking water. Plant 97 % built; commissioning expected mid-2026. About 130 km north of Dakhla; drawn on the coast of the Bir Anzarane commune (OSM), position approximate.",
+    "note_fr": "30 millions de m³ par an pour 5 000 ha irrigués, 7 pour l'eau potable. Station réalisée à 97 % ; mise en service attendue mi-2026. À environ 130 km au nord de Dakhla ; placée sur la côte de la commune de Bir Anzarane (OSM), position approximative.",
+    "precision": "approximate",
+    "source": "Le360 · Dakhla Spot, 2026",
+    "source_url": "https://fr.le360.ma/economie/la-station-de-dessalement-de-dakhla-a-97-de-realisation_K4LXFWTWKBBGBBHECL2TAKXIPU/"
+   }
+  }
+ ]
+}

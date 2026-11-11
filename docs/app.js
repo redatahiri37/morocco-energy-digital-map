@@ -94,7 +94,22 @@
     legendRenew: "Renouvelables, part de la production", legendCo2: "CO₂ du secteur électrique par kWh produit",
     overviewNote: (years)=>`Ember, dernière année par pays (${years}). Cliquer sur un pays pour l'ouvrir.`,
     clickToOpen: "Cliquer pour ouvrir", noData: "Pas de données de mix", openCountry: (c)=>`Ouvrir : ${c}`,
-    sheetMore: "Afficher plus", sheetLess: "Afficher moins"
+    sheetMore: "Afficher plus", sheetLess: "Afficher moins",
+    waterCat: { transfer:"Transfert d'eau", dam:"Barrage", desalination:"Dessalement" },
+    badgeWater: { transfer:"Autoroute de l'eau", dam:"Barrage", desalination:"Station de dessalement" },
+    flow: "Débit", length: "Longueur", pumping: "Pompage", pumpingStations: (n)=>`${n} station${n > 1 ? "s" : ""} de pompage`,
+    route: "Trajet", storage: "Retenue", height: "Hauteur", river: "Cours d'eau", purpose: "Usage",
+    waterCapacity: "Capacité", plantPower: "Puissance", estLoad: "Charge moyenne estimée",
+    estLoadNote: (k)=>`hypothèse ${k} kWh/m³`, energySupply: "Énergie", hm3: "Mm³", hm3yr: "Mm³/an",
+    noPlantFigure: "non publiée par site", waterSearch: "Eau",
+    lensLabel: "Perspective",
+    wTransferOn: "Transferts en service", wTransferPipe: "Transferts prévus",
+    wStorageOn: "Nouveaux barrages · en service", wStoragePipe: "Nouveaux barrages · en chantier",
+    wDesalOn: "Dessalement · en service", wDesalPipe: "Dessalement · en chantier",
+    wLoad: "Charge du dessalement (est.)", wLoadNow: "en service", wLoadAll: "avec les chantiers",
+    wOfPeak: (pct)=>`${pct} de la pointe record`,
+    wNoFigure: (n)=>`+ ${n} sans chiffre publié`,
+    wNote: (k)=>`Sommes des couches eau. Charge moyenne : production des usines de dessalement à ${k} kWh/m³ ; pompage des transferts non compté.`
   } : {
     soon: "soon", live: "live", updated: "updated",
     docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
@@ -155,7 +170,22 @@
     legendRenew: "Renewables, share of generation", legendCo2: "Power-sector CO₂ per kWh generated",
     overviewNote: (years)=>`Ember, latest year per country (${years}). Click a country to open it.`,
     clickToOpen: "Click to open", noData: "No mix data", openCountry: (c)=>`Open ${c}`,
-    sheetMore: "Show more", sheetLess: "Show less"
+    sheetMore: "Show more", sheetLess: "Show less",
+    waterCat: { transfer:"Water transfer", dam:"Dam", desalination:"Desalination" },
+    badgeWater: { transfer:"Water highway", dam:"Dam", desalination:"Desalination plant" },
+    flow: "Flow", length: "Length", pumping: "Pumping", pumpingStations: (n)=>`${n} pumping station${n > 1 ? "s" : ""}`,
+    route: "Route", storage: "Storage", height: "Height", river: "River", purpose: "Use",
+    waterCapacity: "Capacity", plantPower: "Power", estLoad: "Est. average load",
+    estLoadNote: (k)=>`assuming ${k} kWh/m³`, energySupply: "Energy", hm3: "million m³", hm3yr: "million m³/yr",
+    noPlantFigure: "not published per plant", waterSearch: "Water",
+    lensLabel: "Perspective",
+    wTransferOn: "Transfers in service", wTransferPipe: "Transfers planned",
+    wStorageOn: "New dams · in service", wStoragePipe: "New dams · being built",
+    wDesalOn: "Desalination · in service", wDesalPipe: "Desalination · being built",
+    wLoad: "Desalination load (est.)", wLoadNow: "in service", wLoadAll: "with the pipeline",
+    wOfPeak: (pct)=>`${pct} of the record peak`,
+    wNoFigure: (n)=>`+ ${n} with no published figure`,
+    wNote: (k)=>`Summed from the water layers. Average load: desalination output at ${k} kWh/m³; transfer pumping not counted.`
   };
   // Data values shown as words: fuel, status, precision, Moroccan sectors.
   const FUEL_WORD = FR
@@ -239,6 +269,8 @@
     dark:  { coal:"#895700", gas:"#EF630A", oil:"#C6335B", nuclear:"#A23DB9", hydro:"#4D7FFF",
              wind:"#00A7BB", solar:"#B98D00", biomass:"#328541", geothermal:"#DE62A3" }
   };
+  // Water (transfers, dams, desalination) is one teal, its categories told
+  // apart by mark: lines with flow arrows, triangles, hexagons.
   // The other point layers are told apart from the plants by shape, not by
   // more hues (the fuels hold the colour wheel): data centres are violet
   // diamonds, cable landings violet rings, industrial sites slate squares
@@ -247,8 +279,8 @@
   // (cluster, with its label ink), apart from the industry slate; so is the
   // halo of plants in the pipeline. Checked by the same script as the fuels.
   const LAYER_COLORS = {
-    light: { digital:"#7C3AED", industrial:"#64748B", cluster:"#334155", clusterInk:"#FFFFFF" },
-    dark:  { digital:"#8B5CF6", industrial:"#94A3B8", cluster:"#CBD5E1", clusterInk:"#0B1426" }
+    light: { digital:"#7C3AED", industrial:"#64748B", water:"#00897B", cluster:"#334155", clusterInk:"#FFFFFF" },
+    dark:  { digital:"#8B5CF6", industrial:"#94A3B8", water:"#16A085", cluster:"#CBD5E1", clusterInk:"#0B1426" }
   };
   const FUEL_COLOR = {}, LAYER_COLOR = {};   // the current theme's, set by setMapPalette()
   function setMapPalette(){
@@ -304,10 +336,12 @@
   function markerOf(kind, p){
     if(kind === "industrial") return { shape:"square", color: LAYER_COLOR.industrial };
     if(kind === "digital") return { shape: p && p.category === "cable_landing" ? "ring" : "diamond", color: LAYER_COLOR.digital };
+    if(kind === "water") return { shape: p && p.category === "desalination" ? "hexagon" : p && p.category === "transfer" ? "line" : "triangle", color: LAYER_COLOR.water };
     return null;
   }
   // A swatch span with that shape; a ring takes its colour as a border.
   function markHtml(cls, m){
+    if(m.shape === "line") return `<span class="${cls} shape-line" data-bg="${escapeHtml(m.color)}"></span>`;
     return m.shape === "ring"
       ? `<span class="${cls} shape-ring" data-border="${escapeHtml(m.color)}"></span>`
       : `<span class="${cls} shape-${m.shape}" data-bg="${escapeHtml(m.color)}"></span>`;
@@ -318,7 +352,7 @@
   // stroke. A new style drops its images, so each build adds them again.
   const SHAPE_PX = 40, SHAPE_HALF = 12;   // image size; the shape's half-size at icon-size 1
   function addShapeImages(){
-    for(const shape of ["square", "diamond"]){
+    for(const shape of ["square", "diamond", "triangle", "hexagon", "arrow"]){
       const id = "shape-" + shape;
       if(map.hasImage(id)) continue;
       const n = SHAPE_PX, c = n / 2, data = new Uint8Array(n * n * 4);
@@ -326,18 +360,43 @@
         const dx = Math.abs(x + 0.5 - c), dy = Math.abs(y + 0.5 - c);
         // Distance to the edge in pixels, negative inside. MapLibre's SDF
         // puts the edge at 0.75 and reads 8 px per unit: halos need room.
-        const d = shape === "square" ? Math.max(dx, dy) - SHAPE_HALF : (dx + dy - SHAPE_HALF) / Math.SQRT2;
+        const d = shapeDistance(shape, x + 0.5 - c, y + 0.5 - c, dx, dy);
         data[(y * n + x) * 4 + 3] = Math.max(0, Math.min(255, Math.round(255 * (0.75 - d / 8))));
       }
       map.addImage(id, { width: n, height: n, data }, { sdf: true });
     }
   }
 
+  // Signed distance (px, negative inside) to the edge of each SDF shape.
+  // `x`, `y` from the centre (y down); `dx`, `dy` their absolute values.
+  // Triangle and arrow are the max of their edges' half-planes: exact
+  // inside, slightly round outside the corners, which a halo hides.
+  function shapeDistance(shape, x, y, dx, dy){
+    const H = SHAPE_HALF, R3 = Math.sqrt(3) / 2;
+    if(shape === "square") return Math.max(dx, dy) - H;
+    if(shape === "diamond") return (dx + dy - H) / Math.SQRT2;
+    if(shape === "hexagon") return Math.max(dx * R3 + dy / 2, dy) - H * R3 * 1.1;
+    if(shape === "triangle"){
+      // Point down, like a dam's cross-section seen on the map.
+      const yy = y + H * 0.2;
+      return Math.max(-yy - H * 0.75, (yy * 0.5 + dx * R3) - H * 0.55);
+    }
+    // arrow: a chevron ">" pointing right (+x), for symbol-placement "line":
+    // distance to its two strokes, minus their half-width.
+    const seg = (ax, ay, bx, by)=>{
+      const vx = bx - ax, vy = by - ay;
+      const t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy)));
+      return Math.hypot(x - ax - t * vx, y - ay - t * vy);
+    };
+    const tip = H * 0.45, back = -H * 0.45, arm = H * 0.75;
+    return Math.min(seg(back, -arm, tip, 0), seg(back, arm, tip, 0)) - H * 0.22;
+  }
+
   // A layer's `kind` in countries.config.js picks its renderer. Every map
   // layer and source id is derived from the config layer id, so any number
   // of layers of any kind can coexist and nothing here names a Moroccan file.
   // The order is the draw order, bottom to top.
-  const KINDS = ["oim", "oim-plants", "grid", "power", "industrial", "digital"];
+  const KINDS = ["oim", "oim-plants", "grid", "water", "power", "industrial", "digital"];
   const LIVE_KINDS = ["oim", "oim-plants"]; // drawn from OpenInfraMap tiles, no file
 
   // Rebuilt by buildMapLayers(): map layer id → { dataLayerId, kind, src, role }.
@@ -353,6 +412,7 @@
   let boundaryData   = null;
   let mixData        = null;   // national mix (mix.json) of the current country
   let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
+  let lens           = "energy"; // countries.config.js lenses: energy / water / nexus
   let statusView     = "all";  // key of STATUS_VIEWS; kept across country switches
   let selected       = null;   // { layer, id } of the feature whose popup is open, if linkable
 
@@ -569,6 +629,7 @@
 
   // Panel, KPIs and methodology for a country whose data is loaded.
   function renderPanel(countryKey){
+    renderLens();
     renderMix();
     renderStatusNote();
     renderLayerList(countryKey);
@@ -641,7 +702,12 @@
         kind==="oim-plants" ? OSM_PLANT_SWATCH :
         markerOf(kind) ? markerOf(kind).color : "#999"
       );
-      const swatch = kind==="grid" || kind==="oim"
+      const waterLine = kind==="water" && fc.features.length > 0 && fc.features.every(f=>f.properties.category === "transfer");
+      const swatch = waterLine
+        ? `<span class="layer-line" data-border="${escapeHtml(LAYER_COLOR.water)}"></span>`
+        : kind==="water"
+        ? markHtml("layer-dot", markerOf(kind, fc.features[0] && fc.features[0].properties))
+        : kind==="grid" || kind==="oim"
         ? `<span class="layer-line${planned ? " dashed" : ""}" data-border="${escapeHtml(dotColor)}"></span>`
         : markHtml("layer-dot", { shape: markerOf(kind) ? markerOf(kind).shape : "disc", color: dotColor });
       const row = document.createElement("label");
@@ -733,6 +799,12 @@
     const d = c.demand, lf = c.liveFlow;
     const fuel = fuelFilter && mixFuel(fuelFilter);
     const prefix = fuel ? escapeHtml(fuelLabel(fuel)) + " · " : "";
+    const water = lens !== "energy" ? waterKpis(c) : "";
+    if(lens === "water" && water){
+      if(snap) snap.textContent = "";
+      host.innerHTML = water;
+      return;
+    }
     host.innerHTML = `
       <div class="kpi" title="${escapeHtml(T.kpiServiceTip)}"><div class="k">${prefix}${T.inService}</div>
         <div class="v">${hasPower ? fmtPower(inService) : NA}</div></div>
@@ -751,8 +823,42 @@
         ${d && lf ? "<br>" : ""}
         ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(lf))}</a>, ${T.liveSteps}` : ""}
       </p>` : ""}
+      ${water}
     `;
     if(lf) refreshLiveFlow(c);
+  }
+
+  // Water figures, summed from the `water` layers: transfers (m³/s), new
+  // dams (million m³ of storage), desalination (million m³ a year), each in
+  // service and in the pipeline, and the desalination load against the
+  // national record peak. "" when the country has no water layer.
+  function waterKpis(c){
+    const W = featuresOfKind(currentCountry, "water").map(f=>f.properties);
+    if(!W.length) return "";
+    const pick = (cat, on)=>W.filter(p=>p.category === cat && (on ? p.status === "operational" : PIPELINE_STATUS.includes(p.status)));
+    const sum = (ps, k)=>ps.reduce((t, p)=>t + (num(p[k]) || 0), 0);
+    const tile = (label, ps, k, unit)=>{
+      const missing = ps.filter(p=>num(p[k]) == null).length;
+      const v = ps.length - missing ? `${nfmt(sum(ps, k))}<small> ${escapeHtml(unit)}</small>` : "—";
+      return `<div class="kpi water"><div class="k">${escapeHtml(label)}</div><div class="v">${v}</div>${missing ? `<div class="when micro">${escapeHtml(T.wNoFigure(missing))}</div>` : ""}</div>`;
+    };
+    // Average MW from yearly output at DESAL_KWH_PER_M3, for every plant:
+    // a published installed power overstates the average draw.
+    const load = (ps)=>ps.reduce((t, p)=>t + (num(p.capacity_hm3_yr) != null ? p.capacity_hm3_yr * DESAL_KWH_PER_M3 / 8.76 : 0), 0);
+    const now = load(pick("desalination", true)), all = now + load(pick("desalination", false));
+    const peak = c.demand && c.demand.figures.find(x=>x.unit === "GW" && num(x.value) != null);
+    const share = peak ? fmtShare(100 * all / (peak.value * 1000)) : "";
+    return `
+      ${tile(T.wTransferOn, pick("transfer", true), "flow_m3s", "m³/s")}
+      ${tile(T.wTransferPipe, pick("transfer", false), "flow_m3s", "m³/s")}
+      ${tile(T.wStorageOn, pick("dam", true), "storage_hm3", T.hm3)}
+      ${tile(T.wStoragePipe, pick("dam", false), "storage_hm3", T.hm3)}
+      ${tile(T.wDesalOn, pick("desalination", true), "capacity_hm3_yr", T.hm3yr)}
+      ${tile(T.wDesalPipe, pick("desalination", false), "capacity_hm3_yr", T.hm3yr)}
+      <div class="kpi wide water"><div class="k">${escapeHtml(T.wLoad)}</div>
+        <div class="v">≈ ${nfmt(Math.round(now))}<small> MW ${escapeHtml(T.wLoadNow)}</small> · ${nfmt(Math.round(all))}<small> MW ${escapeHtml(T.wLoadAll)}</small></div>
+        ${share ? `<div class="when micro">${escapeHtml(T.wOfPeak(share))}</div>` : ""}</div>
+      <p class="kpi-note micro">${escapeHtml(T.wNote(nfmt(DESAL_KWH_PER_M3, 1)))}</p>`;
   }
 
   // ---------- Live cross-border flow ----------
@@ -880,6 +986,46 @@
     syncUrl();
   }
   $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
+
+  // ---------- Lens: Energy / Water / Nexus ----------
+  // countries.config.js → lenses: each one a set of layers switched on (none:
+  // the layers' own defaults) and, optionally, a fuel the plants narrow to
+  // (Water: hydro, next to the dams). Water hides the mix and shows water
+  // figures in place of the plant ones; Nexus shows both.
+  const lensesOf = (c)=>(c && c.lenses) || [];
+  const lensDef = (id)=>lensesOf(COUNTRIES[currentCountry]).find(x=>x.id === id);
+  // Whether a layer is on by default in the current lens.
+  function lensVisible(L){
+    const d = lensDef(lens);
+    return d && d.layers ? d.layers.includes(L.id) : L.visible !== false;
+  }
+  function applyLens(){
+    COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = lensVisible(L); });
+    const d = lensDef(lens);
+    fuelFilter = d && d.fuel && mixFuel(d.fuel) ? d.fuel : null;
+  }
+  function renderLens(){
+    const host = $("#lensSection");
+    const ls = lensesOf(COUNTRIES[currentCountry]);
+    layout.classList.toggle("lens-water", lens === "water");
+    host.hidden = !ls.length || overview;
+    if(host.hidden){ host.replaceChildren(); return; }
+    const d = lensDef(lens);
+    host.innerHTML = `
+      <div class="seg lens-seg" role="group" aria-label="${escapeHtml(T.lensLabel)}">
+        ${ls.map(l=>`<button type="button" class="seg-btn" data-lens="${escapeHtml(l.id)}" aria-pressed="${l.id === lens}">${escapeHtml((FR && l.labelFr) || l.label)}</button>`).join("")}
+      </div>
+      ${d && (d.note || d.noteFr) ? `<p class="lens-note micro">${escapeHtml((FR && d.noteFr) || d.note)}</p>` : ""}`;
+    host.querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setLens(b.dataset.lens)));
+  }
+  function setLens(id){
+    if(id === lens || !lensDef(id)) return;
+    lens = id;
+    applyLens();
+    renderPanel(currentCountry);
+    if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    syncUrl();
+  }
 
   // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
   const fmtShare = (v)=>v >= 0.95 ? nfmt(v) + PCT : v >= 0.1 ? nfmt(v, 1, 1) + PCT : v > 0 ? "<" + nfmt(0.1, 1, 1) + PCT : "—";
@@ -1103,7 +1249,8 @@
       grid:       (L)=>buildLineLayer(L, layerView(L)),
       power:      (L)=>buildPowerLayer(L, layerView(L)),
       industrial: (L)=>buildIndustrialLayer(L, layerView(L)),
-      digital:    (L)=>buildDigitalLayer(L, layerView(L))
+      digital:    (L)=>buildDigitalLayer(L, layerView(L)),
+      water:      (L)=>buildWaterLayer(L, layerView(L))
     };
     c.layers.filter(L=>!KINDS.includes(L.kind)).forEach(L=>
       console.error("[MoroccoMap] unknown layer kind:", L.id, L.kind));
@@ -1466,6 +1613,52 @@
     addLayer(L, spec);
   }
 
+  // Water: transfers as teal lines (width by flow, dashed unless in
+  // service) with arrows in the direction of flow (first vertex → last);
+  // dams as triangles sized by storage, desalination plants as hexagons
+  // sized by capacity. Pipeline points get a halo, as elsewhere.
+  // French names (`name_fr`) label the French page.
+  const featName = (p)=>(FR && p.name_fr) || p.name;
+  function buildWaterLayer(L, fc){
+    const srcId = "src-" + L.id, p = "lyr-" + L.id, color = LAYER_COLOR.water;
+    addOrReplace(srcId, { type:"geojson", data: fc });
+    const isLine = ["==", ["get","category"], "transfer"];
+    const inService = ["==", ["get","status"], "operational"];
+    const width = ["interpolate", ["linear"], ["coalesce", ["get","flow_m3s"], 10], 5, 2.2, 15, 3.2, 45, 5];
+    const dim = ["case", ["boolean", ["feature-state","dim"], false], 0.3, 1];
+    addLayer(L, { id:p+"-lines", type:"line", source:srcId, filter:["all", isLine, inService],
+      layout:{ "line-cap":"round", "line-join":"round" },
+      paint:{ "line-color": color, "line-width": width, "line-opacity": 0.95 }}, "line");
+    addLayer(L, { id:p+"-lines-pipe", type:"line", source:srcId, filter:["all", isLine, ["!", inService]],
+      layout:{ "line-join":"round" },
+      paint:{ "line-color": color, "line-width": width, "line-opacity": 0.85, "line-dasharray":[2, 1.5] }}, "line");
+    addLayer(L, { id:p+"-arrows", type:"symbol", source:srcId, filter:isLine,
+      layout:{ "symbol-placement":"line", "symbol-spacing": 70, "icon-image":"shape-arrow",
+               "icon-size":["interpolate",["linear"],["zoom"], 4, 0.3, 8, 0.45], "icon-rotation-alignment":"map",
+               "icon-allow-overlap": true, "icon-ignore-placement": true },
+      paint:{ "icon-color": color, "icon-halo-color": POINT_STROKE(), "icon-halo-width": 1 }});
+
+    const pts = ["!=", ["get","category"], "transfer"];
+    // Size: storage (dams, 10–1,100 million m³) or yearly output (plants).
+    const size = ["interpolate", ["linear"], ["sqrt", ["coalesce", ["get","storage_hm3"], ["get","capacity_hm3_yr"], 30]],
+      3, 0.35, 10, 0.55, 33, 0.85];
+    addLayer(L, { id:p+"-halo", type:"circle", source:srcId,
+      filter:["all", pts, ["in", ["get","status"], ["literal", PIPELINE_STATUS]]],
+      paint:{ "circle-color": withAlpha(color, 0.22), "circle-radius":14, "circle-blur":0.35 }});
+    addLayer(L, { id:p+"-points", type:"symbol", source:srcId, filter:pts,
+      layout:{ "icon-image":["case", ["==", ["get","category"], "desalination"], "shape-hexagon", "shape-triangle"],
+               // Zoom must be the outer interpolation; storage scales inside it.
+               "icon-size":["interpolate",["linear"],["zoom"], 4, ["*", 0.75, size], 7, size, 10, ["*", 1.2, size]],
+               "icon-allow-overlap": true, "icon-ignore-placement": true },
+      paint:{ "icon-color": color, "icon-halo-color": POINT_STROKE(), "icon-halo-width": 1.5, "icon-opacity": dim }}, "point");
+    addOrReplace(srcId + "-text", { type:"geojson", data: fc });
+    const labelField = FR ? "label_fr" : "name";
+    if(FR) fc.features.forEach(f=>{ f.properties.label_fr = featName(f.properties); });
+    addLabelLayer(L, p+"-labels", srcId + "-text", labelField, 6.5, 1.3, pts);
+    addLabelLayer(L, p+"-line-labels", srcId + "-text", labelField, 7, 0, isLine,
+      { "symbol-placement":"line", "text-anchor":"center", "text-offset":[0, -1], "text-size":10 });
+  }
+
   function buildDigitalLayer(L, fc){
     const srcId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(srcId, { type:"geojson", data: fc, promoteId: "id" });
@@ -1561,7 +1754,7 @@
         setHoverDim(m.src, m.dataLayerId, f.id);
         showPointTooltip(m.dataLayerId, f, e.point);
       } else if(m.role === "line"){
-        showLineTooltip(f, e.point);
+        showLineTooltip(f, e.point, m.dataLayerId);
       } else if(m.role === "cluster"){
         showClusterTooltip(f, e.point);
       }
@@ -1640,9 +1833,10 @@
                   word(STATUS_WORD_ALL, p.status)].filter(Boolean).join(" · ");
       }
     }
+    else if(kind === "water") metric = waterMetric(p);
     const mark = markerOf(kind, p);
     tooltip.innerHTML = `
-      <div class="tt-name">${mark ? markHtml("tt-dot", mark) : ""}${escapeHtml(p.name)}</div>
+      <div class="tt-name">${mark ? markHtml("tt-dot", mark) : ""}${escapeHtml(kind === "water" ? featName(p) : p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
@@ -1651,8 +1845,16 @@
     paint(tooltip);
     positionTooltip(point);
   }
-  function showLineTooltip(f, point){
+  // "Dam · 1,070 million m³ · construction": the tooltip line of a water feature.
+  function waterMetric(p, noStatus){
+    const size = p.category === "transfer" ? (num(p.flow_m3s) != null ? `${nfmt(p.flow_m3s)} m³/s` : "")
+      : p.category === "dam" ? (num(p.storage_hm3) != null ? `${nfmt(p.storage_hm3)} ${T.hm3}` : "")
+      : num(p.capacity_hm3_yr) != null ? `${nfmt(p.capacity_hm3_yr)} ${T.hm3yr}` : "";
+    return [T.waterCat[p.category], size, noStatus ? "" : word(STATUS_WORD_ALL, p.status)].filter(Boolean).join(" · ");
+  }
+  function showLineTooltip(f, point, dataLayerId){
     const p = f.properties || {};
+    if(layerKind(dataLayerId) === "water"){ showPointTooltip(dataLayerId, f, point); return; }
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(word(STATUS_WORD_ALL, p.status) || "")}</div>
@@ -1687,6 +1889,7 @@
 
   // ---------- Popup ----------
   function openPointPopup(dataLayerId, f){
+    if(layerKind(dataLayerId) === "water") return openWaterPopup(dataLayerId, f);
     clearSite();
     let p = f.properties || {};
     // OSM plants have no stable id of ours: the link keeps the view only.
@@ -1762,6 +1965,7 @@
   }
 
   function openLinePopup(dataLayerId, f){
+    if(layerKind(dataLayerId) === "water") return openWaterPopup(dataLayerId, f);
     clearSite();
     const p = f.properties || {};
     selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
@@ -1801,6 +2005,66 @@
     if(live) refreshLiveFlow(c);
   }
 
+  // Desalination with no stated power: average load from its yearly output
+  // at a typical seawater reverse-osmosis figure (intake to storage).
+  const DESAL_KWH_PER_M3 = 3.5;
+  function openWaterPopup(dataLayerId, f){
+    clearSite();
+    const p = f.properties || {};
+    selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
+    const mark = markerOf("water", p);
+    const cell = (k, v, note)=>`<div class="cell"><div class="k">${k}</div><div class="v sm">${v}</div>${note ? `<div class="micro">${escapeHtml(note)}</div>` : ""}</div>`;
+    const n = (v, unit)=>num(v) != null ? `${escapeHtml(nfmt(v))} ${unit}` : "—";
+    const when = cell(p.status === "operational" ? T.commissioned : T.targetYear, escapeHtml(p.year || "—"));
+    let stats = "";
+    if(p.category === "transfer"){
+      stats = cell(T.flow, n(p.flow_m3s, "m³/s")) + cell(T.length, n(p.length_km, "km")) +
+        cell(T.pumping, num(p.pumping_mva) != null ? n(p.pumping_mva, "MVA") : num(p.pumping_stations) != null ? escapeHtml(T.pumpingStations(p.pumping_stations)) : "—",
+             num(p.pumping_mva) != null && num(p.pumping_stations) != null ? T.pumpingStations(p.pumping_stations) : "") + when;
+      if(p.from_basin || p.to_basin) stats += cell(T.route, `${escapeHtml(p.from_basin || "—")} → ${escapeHtml(p.to_basin || "—")}`);
+    } else if(p.category === "dam"){
+      stats = cell(T.storage, n(p.storage_hm3, T.hm3)) + cell(T.height, n(p.height_m, "m")) +
+        cell(T.river, escapeHtml(p.river || "—")) + when;
+      if(p.purpose) stats += cell(T.purpose, escapeHtml((FR && p.purpose_fr) || p.purpose));
+    } else {
+      const cap = num(p.capacity_hm3_yr);
+      // million m³/yr × kWh/m³ = GWh/yr; / 8.76 = average MW.
+      const est = cap != null ? cap * DESAL_KWH_PER_M3 / 8.76 : null;
+      stats = cell(T.waterCapacity, cap != null ? n(cap, T.hm3yr) : escapeHtml(T.noPlantFigure)) +
+        (num(p.power_mw) != null ? cell(T.plantPower, n(p.power_mw, "MW"))
+          : cell(T.estLoad, est != null ? `≈ ${escapeHtml(nfmt(Math.round(est)))} MW` : "—", est != null ? T.estLoadNote(nfmt(DESAL_KWH_PER_M3, 1)) : "")) +
+        cell(T.operator, escapeHtml(p.operator || "—")) + when;
+      if(p.energy_supply) stats += cell(T.energySupply, escapeHtml((FR && p.energy_supply_fr) || p.energy_supply));
+    }
+    stats += cell(T.precision, escapeHtml(word(PRECISION_WORD, p.precision || "approximate")));
+    $("#popupBadge").innerHTML = `<span class="badge water">${markHtml("dot", mark)}${escapeHtml(T.badgeWater[p.category] || "")}</span>`;
+    paint($("#popupBadge"));
+    $("#popupBody").innerHTML = `
+      <h1 class="pop-title">${escapeHtml(featName(p))}</h1>
+      <div class="pop-sub">${escapeHtml(p.region || "")}</div>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
+      <div class="stat-grid">${stats}</div>
+      ${p.note ? `<p class="pop-note">${escapeHtml((FR && p.note_fr) || p.note)}</p>` : ""}
+      <div class="source-row">
+        <span class="src">${escapeHtml(p.source || "—")}</span>
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
+      </div>
+      <details>
+        <summary>${T.rawData}</summary>
+        <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
+      </details>
+      <div class="pop-actions">
+        <a href="${escapeHtml(issueUrl(T.issueFeature(countryLabel(COUNTRIES[currentCountry]), p.name), T.issueBody(p.id || p.name)))}" target="_blank" rel="noopener">${T.reportError}</a>
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${T.primarySource}</a>` : ""}
+        ${selected ? `<button type="button" class="pop-share">${T.copyLink}</button>` : ""}
+      </div>`;
+    wirePopupShare();
+    popup.classList.add("open");
+    sheetForPopup();
+    popup.setAttribute("aria-hidden","false");
+    syncUrl();
+  }
+
   function closePopup(){
     clearSite();
     const wasOpen = popup.classList.contains("open");
@@ -1827,7 +2091,7 @@
     const q = new URLSearchParams(location.hash.replace(/^#/, ""));
     const link = { country: q.get("country"), status: q.get("status"), fuel: q.get("fuel"),
                    measure: q.get("measure"), layers: null, view: null, feature: null,
-                   overview: q.get("view") === "overview", metric: q.get("metric") };
+                   overview: q.get("view") === "overview", metric: q.get("metric"), lens: q.get("lens") };
     const v = (q.get("map") || "").split("/").map(Number);
     if(v.length === 3 && v.every(Number.isFinite) && Math.abs(v[1]) <= 90 && Math.abs(v[2]) <= 180)
       link.view = { zoom: Math.min(Math.max(v[0], 1), 18), center: [v[2], v[1]] };
@@ -1845,6 +2109,8 @@
   function applyLinkState(link){
     statusView = STATUS_VIEWS[link.status] ? link.status : "all";
     mixMeasure = link.measure === "capacity" ? "capacity" : "generation";
+    lens = link.lens && lensDef(link.lens) ? link.lens : "energy";
+    applyLens();
     fuelFilter = link.fuel && mixFuel(link.fuel) ? link.fuel : null;
     if(link.layers) COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = link.layers.includes(L.id); });
   }
@@ -1861,10 +2127,11 @@
     }
     const parts = [["country", currentCountry]];
     if(map) parts.push(mapPart());
+    if(lens !== "energy") parts.push(["lens", lens]);
     if(statusView !== "all") parts.push(["status", statusView]);
     if(fuelFilter) parts.push(["fuel", fuelFilter]);
     if(mixMeasure !== "generation") parts.push(["measure", mixMeasure]);
-    if(c.layers.some(L=>(visibility[L.id] !== false) !== (L.visible !== false)))
+    if(c.layers.some(L=>(visibility[L.id] !== false) !== lensVisible(L)))
       parts.push(["layers", c.layers.filter(L=>visibility[L.id] !== false).map(L=>L.id).join(",")]);
     if(selected) parts.push(["feature", `${selected.layer}:${selected.id}`]);
     else if(site) parts.push(["site", `${site.lat.toFixed(4)},${site.lng.toFixed(4)}`]);
@@ -1896,7 +2163,7 @@
     const hit = linkedFeature(ref);
     if(!hit) return false;
     const { L, f } = hit;
-    if(L.kind === "grid"){
+    if(f.geometry.type !== "Point"){
       openLinePopup(L.id, f);
       if(fly){
         const pts = (f.geometry.type === "LineString" ? f.geometry.coordinates : f.geometry.coordinates.flat());
@@ -2556,14 +2823,16 @@
       const what = L.kind === "power" ? [T.powerPlant, word(FUEL_WORD, p.fuel_type)]
         : L.kind === "industrial" ? [word(SECTOR_WORD, p.sector) || T.industry]
         : L.kind === "digital" ? [p.category === "cable_landing" ? T.cableShort : T.dataCentre, p.operator]
+        : L.kind === "water" ? [waterMetric(p, true)]
         : [num(p.voltage_kv) != null ? `${T.line} · ${p.voltage_kv} kV` : T.line];
       // Industry carries an estimated demand, not a capacity.
-      const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
+      const size = mw == null || L.kind === "grid" || L.kind === "water" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
       const meta = [...what, size, STATUS_WORD[p.status], countryLabel(c)].filter(Boolean).join(" · ");
       // What the swatch needs, not its colour: the index outlives a theme switch.
       const mark = { kind: L.kind, category: p.category, fuel: p.fuel_type };
-      return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, mark, mw: mw || 0,
-               nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
+      const shown = L.kind === "water" ? featName(p) : p.name;
+      return { country: countryKey, layer: L.id, id: String(p.id), name: String(shown), meta, mark, mw: mw || 0,
+               nameN: norm(shown), hay: norm([p.name, p.name_fr, T.waterCat && T.waterCat[p.category], p.river, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
                                                p.fuel_type, word(FUEL_WORD, p.fuel_type)].filter(Boolean).join(" ")) };
     })).filter(Boolean);
   }
@@ -3084,6 +3353,7 @@
     hideTooltip();
     hoveredLayer = null;
     fuelFilter = null;
+    lens = "energy";
     if(!(await loadAllData(key))) return; // superseded by a later switch
     if(overview) return;                  // the overview was picked meanwhile
     if(link) applyLinkState(link);
