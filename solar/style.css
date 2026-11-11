@@ -1065,3 +1065,55 @@ html:lang(ar) { --w-font-mono: var(--w-font-ui); }
 .roof-actions .linkbtn:hover { border-color: var(--orange); color: var(--orange); }
 .roof-actions #roof-done-btn { background: var(--orange); border-color: var(--orange); color: #fff; }
 .roof-actions #roof-done-btn:disabled { opacity: .45; cursor: default; }
+
+/* ── « Immeuble » mode (copro.js) ───────────────────────────── */
+.mode-switch { margin-top: 16px; }
+.mode-switch .seg-btn { padding: 7px 14px; font-size: 13.5px; cursor: pointer; }
+.mode-switch-hero { margin: 0 0 16px; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.22); }
+.mode-switch-hero .seg-btn { color: rgba(255,255,255,0.8); }
+.mode-switch-hero .seg-btn + .seg-btn { border-color: rgba(255,255,255,0.22); }
+.mode-switch-hero .seg-btn.active { background: #fff; color: var(--navy); }
+.copro-hero-note { margin: 14px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--amber); }
+
+.copro-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; font-size: 13.5px; }
+.copro-step { display: flex; align-items: center; gap: 8px; }
+.copro-step-k { font-weight: 600; }
+.copro-units { font-weight: 600; color: var(--orange-2); }
+.copro-noroof { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+.copro-warn { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--r); background: #FFF4E5; color: #8A4B00; font-size: 13.5px; line-height: 1.5; }
+.copro-cap { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.copro-h4 { margin: 22px 0 10px; font-size: 15px; font-weight: 600; }
+
+/* Share by building height: one column per storey count, this building lit */
+.copro-strip { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; align-items: end; }
+.copro-col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.copro-track { position: relative; width: 100%; max-width: 34px; height: 90px; border-radius: 6px 6px 2px 2px; background: var(--bg); overflow: hidden; }
+.copro-track i { position: absolute; left: 0; right: 0; bottom: 0; background: #C9D3E0; border-radius: 4px 4px 0 0; }
+.copro-col.current .copro-track i { background: var(--orange); }
+.copro-pct { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.copro-lvl { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.copro-col.current .copro-pct, .copro-col.current .copro-lvl { color: var(--text); font-weight: 600; }
+
+.copro-routes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.copro-route { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--border); border-radius: var(--r); }
+.copro-route b { font-size: 15px; font-weight: 600; }
+.copro-route p { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.copro-law { padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+.copro-law-k { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--orange-2); }
+.copro-route-note { color: var(--muted); }
+.copro-legal { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .copro-routes { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .copro-stats .stat.accent { order: -1; }   /* your share first, the other two side by side */
+  .copro-strip { gap: 3px; }
+  .copro-pct { font-size: 9.5px; }
+  .copro-lvl { font-size: 9.5px; }
+  .copro-track { height: 70px; }
+}
+@media print {
+  .mode-switch { display: none !important; }
+  .copro-card { break-inside: auto; }
+}

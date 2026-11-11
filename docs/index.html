@@ -98,6 +98,9 @@
       <ul id="searchResults" class="search-results" role="listbox" aria-label="Search results" hidden></ul>
     </section>
 
+    <!-- Perspective: Energy / Water / Nexus, from countries.config.js lenses (app.js "Lens"). -->
+    <section class="panel-section lens-section" id="lensSection" hidden></section>
+
     <!-- Overview: every country by one figure of its mix (app.js "Overview"). -->
     <section class="panel-section overview-section" id="overviewSection" aria-labelledby="overviewTitle" hidden>
       <h2 class="panel-title" id="overviewTitle">All countries</h2>
@@ -184,6 +187,13 @@
       </div>
     </div>
 
+    <!-- Site check: click-to-screen mode for a data-centre site -->
+    <button id="siteBtn" class="site-fab" type="button" aria-pressed="false" title="Site check — click the map to screen a data-centre site">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      <span>Site check</span>
+    </button>
+    <div id="siteHint" class="site-hint" role="status" hidden>Click anywhere to screen a site · <kbd>Esc</kbd> to exit</div>
+
     <!-- "Link copied" -->
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
@@ -235,6 +245,7 @@
         <li><strong>OpenFreeMap</strong> (<code>tiles.openfreemap.org</code>) — serves the basemap style, vector tiles and label fonts, requested continuously as you pan and zoom.</li>
         <li><strong>OpenInfraMap</strong> (<code>openinframap.org</code>) — serves the vector tiles behind the transmission-grid layer.</li>
         <li><strong>Wattu's Worker</strong> (<code>solar-pvgis.redatahiri.workers.dev</code>) — for Morocco, the live Spain–Morocco flow. The Worker asks Spain's grid operator REE (<code>demanda.ree.es</code>); your browser never contacts REE.</li>
+        <li><strong>PVGIS</strong>, through the same Worker — only when you run a <em>Site check</em>: the clicked coordinates are sent to get the solar yield.</li>
       </ul>
       <p class="micro">The map library (MapLibre GL JS, BSD-3-Clause) and the typefaces (Inter, Newsreader, IBM Plex Mono, SIL Open Font License) are served from this site, not from a CDN.</p>
       <h3>Limits</h3>
@@ -244,6 +255,7 @@
         <li>Industrial demand is estimated from public disclosures, not audited.</li>
         <li>Announced DC capacity is the headline, not energised capacity.</li>
         <li>Live data: the OpenInfraMap grid and, for Morocco, the flow on the Spain–Morocco interconnector (REE, 5-minute steps). Morocco publishes no live national consumption; the peak-demand tile is a dated figure. Everything else is static GeoJSON.</li>
+        <li><em>Site check</em> is a screening indicator: straight-line distances to the grid, generation and loads within 50 km, connectivity and PVGIS solar yield, scored 1–5. It does not know spare substation capacity, land, water or permitting.</li>
       </ul>
       <p class="micro">See <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/DATA_SOURCES.md" target="_blank" rel="noopener">DATA_SOURCES.md</a> and <a href="https://github.com/redatahiri37/morocco-energy-digital-map/blob/main/ASSUMPTIONS.md" target="_blank" rel="noopener">ASSUMPTIONS.md</a> for the full write-up.</p>
     </div>

@@ -103,6 +103,9 @@
           <button type="submit" id="estimate-btn">Estimer</button>
         </form>
 
+        <!-- Maison / Appartement: labels written by copro.js in the page's language -->
+        <div class="mode-switch mode-switch-landing"></div>
+
         <div class="hero-alt">
           <button type="button" id="geo-btn" class="geo-btn">
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -193,6 +196,7 @@
           <div class="hero-loading-msg" id="hero-loading-msg">Analyse du gisement solaire…</div>
         </div>
         <div id="hero-content" hidden>
+          <div class="mode-switch mode-switch-hero"></div>
           <div class="hero-kicker">Économies estimées</div>
           <div class="hero-headline">
             <span id="hero-savings" class="hero-number">0</span>
@@ -342,6 +346,9 @@
           </div>
         </div>
 
+        <!-- « Immeuble » mode: built by copro.js, shown when the visitor picks a flat -->
+        <div id="copro-card" class="chart-card copro-card" hidden></div>
+
         <div class="finance-card" data-depth="financing">
           <div class="chart-header">
             <h3>Modes de financement</h3>
@@ -465,6 +472,7 @@
 
 <script src="analytics.js" defer></script>
 <script src="engine.js" defer></script>
+<script src="copro.js" defer></script>
 <script src="app.js" defer></script>
 </body>
 </html>

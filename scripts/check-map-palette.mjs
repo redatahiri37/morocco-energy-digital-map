@@ -25,6 +25,11 @@
  *     industry slate a neutral (C < 0.06: the hues belong to the fuels);
  *   - the two apart (Delta E >= 15, colour-blind >= 8);
  *   - and they are still drawn as shapes, or the fuels would collide.
+ * Water (water): one teal for transfers, dams and desalination, drawn as
+ * lines, triangles and hexagons: inside the band with chroma >= 0.10, 3:1
+ * with the map, and apart from the data-centre violet (Delta E >= 15,
+ * colour-blind >= 8) and from hydro plants, which sit on the same rivers
+ * (Delta E >= 15).
  * Plant clusters (cluster, clusterInk): a neutral too, 3:1 with the map, its
  * label ink 4.5:1 on it, and apart from the industry slate (Delta E >= 15).
  *
@@ -140,10 +145,20 @@ else for (const [, mode, body] of layerBlock[1].matchAll(/(light|dark):\s*\{([^}
   const n = deltaE(c.digital, c.industrial), k = cvd(c.digital, c.industrial);
   if (n < 15) fail(`${mode} digital/industrial: Delta E ${n.toFixed(1)}, below 15`);
   if (k < 8) fail(`${mode} digital/industrial: colour-blind Delta E ${k.toFixed(1)}, below 8`);
-  console.log(`${errors > before ? "    " : "ok  "}  ${mode}: data centres ${c.digital}, industry ${c.industrial}; apart by ${n.toFixed(1)}, colour-blind ${k.toFixed(1)}; ` +
+  if (!c.water) fail(`LAYER_COLORS.${mode} needs water`);
+  else {
+    for (const bg of MAP_BG[mode]) if (contrast(c.water, bg) < 3) fail(`${mode} water ${c.water}: contrast ${contrast(c.water, bg).toFixed(2)}:1 with ${bg}, below 3:1`);
+    const [wL, wC] = lc(c.water);
+    if (wL < BAND[mode][0] || wL > BAND[mode][1]) fail(`${mode} water ${c.water}: lightness ${wL.toFixed(3)} outside ${BAND[mode].join("–")}`);
+    if (wC < 0.10) fail(`${mode} water ${c.water}: chroma ${wC.toFixed(3)} below 0.10`);
+    if (deltaE(c.water, c.digital) < 15 || cvd(c.water, c.digital) < 8) fail(`${mode} water/digital too close`);
+    if (palette[mode] && deltaE(c.water, palette[mode].hydro) < 15) fail(`${mode} water/hydro: Delta E ${deltaE(c.water, palette[mode].hydro).toFixed(1)}, below 15`);
+  }
+  console.log(`${errors > before ? "    " : "ok  "}  ${mode}: water ${c.water}; data centres ${c.digital}, industry ${c.industrial}; apart by ${n.toFixed(1)}, colour-blind ${k.toFixed(1)}; ` +
     `clusters ${c.cluster} (label ${contrast(c.cluster, c.clusterInk).toFixed(1)}:1), ${ci.toFixed(1)} from industry`);
 }
-for (const shape of ["square", "diamond"])
+for (const shape of ["square", "diamond", "triangle", "hexagon"])
   if (!app.includes(`"icon-image": "shape-${shape}"`))
-    fail(`docs/app.js: no layer drawn with "shape-${shape}": industry and data centres must stay squares and diamonds, their colours are not checked against the fuels`);
+    if (!app.includes(`"shape-${shape}"`))
+      fail(`docs/app.js: no layer drawn with "shape-${shape}": industry, data centres and water points keep their shapes, their colours are not checked against the fuels`);
 process.exit(errors ? 1 : 0);

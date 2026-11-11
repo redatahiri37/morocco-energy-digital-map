@@ -31,6 +31,9 @@
   const countryLabel = (c)=>(FR && c.labelFr) || c.label;
   const layerTitle = (L)=>(FR && L.titleFr) || L.title;
   const partnerLabel = (lf)=>(FR && lf.partnerFr) || lf.partner;
+  // A config source (or boundary note) in the page's language: countries.config.js
+  // keeps the French next to it as sourceFr / noteFr, mix files as source_fr.
+  const srcText = (o, k = "source")=>(FR && (o[k + "Fr"] || o[k + "_fr"])) || o[k];
   const T = FR ? {
     soon: "bientôt", live: "direct", updated: "mis à jour",
     docTitle: (c)=>`Wattu Energy — carte des infrastructures (${c})`,
@@ -74,6 +77,7 @@
     badgeGen: "Production", badgeOsm: "Production · OpenStreetMap", badgeIndustry: "Consommateur industriel",
     badgeCable: "Câble sous-marin", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Ligne de transport",
     capacity: "Puissance", fuel: "Filière", technology: "Technologie", commissioned: "Mise en service", targetYear: "Année visée",
+    annualOutput: "Production annuelle", annualOutputNote: (y)=>`estimation WRI, ${y}`,
     sector: "Secteur", estDemandK: "Demande estimée", gridConnection: "Raccordement", precision: "Précision",
     operator: "Opérateur", investment: "Investissement", energised: "Mise sous tension",
     voltage: "Tension", status: "Statut", kind: "Type", hvdcPlanned: "HVDC (prévu)", ac: "Alternatif",
@@ -90,7 +94,22 @@
     legendRenew: "Renouvelables, part de la production", legendCo2: "CO₂ du secteur électrique par kWh produit",
     overviewNote: (years)=>`Ember, dernière année par pays (${years}). Cliquer sur un pays pour l'ouvrir.`,
     clickToOpen: "Cliquer pour ouvrir", noData: "Pas de données de mix", openCountry: (c)=>`Ouvrir : ${c}`,
-    sheetMore: "Afficher plus", sheetLess: "Afficher moins"
+    sheetMore: "Afficher plus", sheetLess: "Afficher moins",
+    waterCat: { transfer:"Transfert d'eau", dam:"Barrage", desalination:"Dessalement" },
+    badgeWater: { transfer:"Autoroute de l'eau", dam:"Barrage", desalination:"Station de dessalement" },
+    flow: "Débit", length: "Longueur", pumping: "Pompage", pumpingStations: (n)=>`${n} station${n > 1 ? "s" : ""} de pompage`,
+    route: "Trajet", storage: "Retenue", height: "Hauteur", river: "Cours d'eau", purpose: "Usage",
+    waterCapacity: "Capacité", plantPower: "Puissance", estLoad: "Charge moyenne estimée",
+    estLoadNote: (k)=>`hypothèse ${k} kWh/m³`, energySupply: "Énergie", hm3: "Mm³", hm3yr: "Mm³/an",
+    noPlantFigure: "non publiée par site", waterSearch: "Eau",
+    lensLabel: "Perspective",
+    wTransferOn: "Transferts en service", wTransferPipe: "Transferts prévus",
+    wStorageOn: "Nouveaux barrages · en service", wStoragePipe: "Nouveaux barrages · en chantier",
+    wDesalOn: "Dessalement · en service", wDesalPipe: "Dessalement · en chantier",
+    wLoad: "Charge du dessalement (est.)", wLoadNow: "en service", wLoadAll: "avec les chantiers",
+    wOfPeak: (pct)=>`${pct} de la pointe record`,
+    wNoFigure: (n)=>`+ ${n} sans chiffre publié`,
+    wNote: (k)=>`Sommes des couches eau. Charge moyenne : production des usines de dessalement à ${k} kWh/m³ ; pompage des transferts non compté.`
   } : {
     soon: "soon", live: "live", updated: "updated",
     docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
@@ -134,6 +153,7 @@
     badgeGen: "Generation", badgeOsm: "Generation · OpenStreetMap", badgeIndustry: "Industrial consumer",
     badgeCable: "Submarine cable", badgeDC: "Data center", badgeInfra: "Infrastructure", badgeLine: "Transmission line",
     capacity: "Capacity", fuel: "Fuel", technology: "Technology", commissioned: "Commissioned", targetYear: "Target year",
+    annualOutput: "Annual output", annualOutputNote: (y)=>`WRI estimate, ${y}`,
     sector: "Sector", estDemandK: "Est. demand", gridConnection: "Grid connection", precision: "Precision",
     operator: "Operator", investment: "Investment", energised: "Energised",
     voltage: "Voltage", status: "Status", kind: "Kind", hvdcPlanned: "HVDC (planned)", ac: "AC",
@@ -150,7 +170,22 @@
     legendRenew: "Renewables, share of generation", legendCo2: "Power-sector CO₂ per kWh generated",
     overviewNote: (years)=>`Ember, latest year per country (${years}). Click a country to open it.`,
     clickToOpen: "Click to open", noData: "No mix data", openCountry: (c)=>`Open ${c}`,
-    sheetMore: "Show more", sheetLess: "Show less"
+    sheetMore: "Show more", sheetLess: "Show less",
+    waterCat: { transfer:"Water transfer", dam:"Dam", desalination:"Desalination" },
+    badgeWater: { transfer:"Water highway", dam:"Dam", desalination:"Desalination plant" },
+    flow: "Flow", length: "Length", pumping: "Pumping", pumpingStations: (n)=>`${n} pumping station${n > 1 ? "s" : ""}`,
+    route: "Route", storage: "Storage", height: "Height", river: "River", purpose: "Use",
+    waterCapacity: "Capacity", plantPower: "Power", estLoad: "Est. average load",
+    estLoadNote: (k)=>`assuming ${k} kWh/m³`, energySupply: "Energy", hm3: "million m³", hm3yr: "million m³/yr",
+    noPlantFigure: "not published per plant", waterSearch: "Water",
+    lensLabel: "Perspective",
+    wTransferOn: "Transfers in service", wTransferPipe: "Transfers planned",
+    wStorageOn: "New dams · in service", wStoragePipe: "New dams · being built",
+    wDesalOn: "Desalination · in service", wDesalPipe: "Desalination · being built",
+    wLoad: "Desalination load (est.)", wLoadNow: "in service", wLoadAll: "with the pipeline",
+    wOfPeak: (pct)=>`${pct} of the record peak`,
+    wNoFigure: (n)=>`+ ${n} with no published figure`,
+    wNote: (k)=>`Summed from the water layers. Average load: desalination output at ${k} kWh/m³; transfer pumping not counted.`
   };
   // Data values shown as words: fuel, status, precision, Moroccan sectors.
   const FUEL_WORD = FR
@@ -234,6 +269,8 @@
     dark:  { coal:"#895700", gas:"#EF630A", oil:"#C6335B", nuclear:"#A23DB9", hydro:"#4D7FFF",
              wind:"#00A7BB", solar:"#B98D00", biomass:"#328541", geothermal:"#DE62A3" }
   };
+  // Water (transfers, dams, desalination) is one teal, its categories told
+  // apart by mark: lines with flow arrows, triangles, hexagons.
   // The other point layers are told apart from the plants by shape, not by
   // more hues (the fuels hold the colour wheel): data centres are violet
   // diamonds, cable landings violet rings, industrial sites slate squares
@@ -242,8 +279,8 @@
   // (cluster, with its label ink), apart from the industry slate; so is the
   // halo of plants in the pipeline. Checked by the same script as the fuels.
   const LAYER_COLORS = {
-    light: { digital:"#7C3AED", industrial:"#64748B", cluster:"#334155", clusterInk:"#FFFFFF" },
-    dark:  { digital:"#8B5CF6", industrial:"#94A3B8", cluster:"#CBD5E1", clusterInk:"#0B1426" }
+    light: { digital:"#7C3AED", industrial:"#64748B", water:"#00897B", cluster:"#334155", clusterInk:"#FFFFFF" },
+    dark:  { digital:"#8B5CF6", industrial:"#94A3B8", water:"#16A085", cluster:"#CBD5E1", clusterInk:"#0B1426" }
   };
   const FUEL_COLOR = {}, LAYER_COLOR = {};   // the current theme's, set by setMapPalette()
   function setMapPalette(){
@@ -299,10 +336,12 @@
   function markerOf(kind, p){
     if(kind === "industrial") return { shape:"square", color: LAYER_COLOR.industrial };
     if(kind === "digital") return { shape: p && p.category === "cable_landing" ? "ring" : "diamond", color: LAYER_COLOR.digital };
+    if(kind === "water") return { shape: p && p.category === "desalination" ? "hexagon" : p && p.category === "transfer" ? "line" : "triangle", color: LAYER_COLOR.water };
     return null;
   }
   // A swatch span with that shape; a ring takes its colour as a border.
   function markHtml(cls, m){
+    if(m.shape === "line") return `<span class="${cls} shape-line" data-bg="${escapeHtml(m.color)}"></span>`;
     return m.shape === "ring"
       ? `<span class="${cls} shape-ring" data-border="${escapeHtml(m.color)}"></span>`
       : `<span class="${cls} shape-${m.shape}" data-bg="${escapeHtml(m.color)}"></span>`;
@@ -313,7 +352,7 @@
   // stroke. A new style drops its images, so each build adds them again.
   const SHAPE_PX = 40, SHAPE_HALF = 12;   // image size; the shape's half-size at icon-size 1
   function addShapeImages(){
-    for(const shape of ["square", "diamond"]){
+    for(const shape of ["square", "diamond", "triangle", "hexagon", "arrow"]){
       const id = "shape-" + shape;
       if(map.hasImage(id)) continue;
       const n = SHAPE_PX, c = n / 2, data = new Uint8Array(n * n * 4);
@@ -321,18 +360,43 @@
         const dx = Math.abs(x + 0.5 - c), dy = Math.abs(y + 0.5 - c);
         // Distance to the edge in pixels, negative inside. MapLibre's SDF
         // puts the edge at 0.75 and reads 8 px per unit: halos need room.
-        const d = shape === "square" ? Math.max(dx, dy) - SHAPE_HALF : (dx + dy - SHAPE_HALF) / Math.SQRT2;
+        const d = shapeDistance(shape, x + 0.5 - c, y + 0.5 - c, dx, dy);
         data[(y * n + x) * 4 + 3] = Math.max(0, Math.min(255, Math.round(255 * (0.75 - d / 8))));
       }
       map.addImage(id, { width: n, height: n, data }, { sdf: true });
     }
   }
 
+  // Signed distance (px, negative inside) to the edge of each SDF shape.
+  // `x`, `y` from the centre (y down); `dx`, `dy` their absolute values.
+  // Triangle and arrow are the max of their edges' half-planes: exact
+  // inside, slightly round outside the corners, which a halo hides.
+  function shapeDistance(shape, x, y, dx, dy){
+    const H = SHAPE_HALF, R3 = Math.sqrt(3) / 2;
+    if(shape === "square") return Math.max(dx, dy) - H;
+    if(shape === "diamond") return (dx + dy - H) / Math.SQRT2;
+    if(shape === "hexagon") return Math.max(dx * R3 + dy / 2, dy) - H * R3 * 1.1;
+    if(shape === "triangle"){
+      // Point down, like a dam's cross-section seen on the map.
+      const yy = y + H * 0.2;
+      return Math.max(-yy - H * 0.75, (yy * 0.5 + dx * R3) - H * 0.55);
+    }
+    // arrow: a chevron ">" pointing right (+x), for symbol-placement "line":
+    // distance to its two strokes, minus their half-width.
+    const seg = (ax, ay, bx, by)=>{
+      const vx = bx - ax, vy = by - ay;
+      const t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy)));
+      return Math.hypot(x - ax - t * vx, y - ay - t * vy);
+    };
+    const tip = H * 0.45, back = -H * 0.45, arm = H * 0.75;
+    return Math.min(seg(back, -arm, tip, 0), seg(back, arm, tip, 0)) - H * 0.22;
+  }
+
   // A layer's `kind` in countries.config.js picks its renderer. Every map
   // layer and source id is derived from the config layer id, so any number
   // of layers of any kind can coexist and nothing here names a Moroccan file.
   // The order is the draw order, bottom to top.
-  const KINDS = ["oim", "oim-plants", "grid", "power", "industrial", "digital"];
+  const KINDS = ["oim", "oim-plants", "grid", "water", "power", "industrial", "digital"];
   const LIVE_KINDS = ["oim", "oim-plants"]; // drawn from OpenInfraMap tiles, no file
 
   // Rebuilt by buildMapLayers(): map layer id → { dataLayerId, kind, src, role }.
@@ -348,6 +412,7 @@
   let boundaryData   = null;
   let mixData        = null;   // national mix (mix.json) of the current country
   let fuelFilter     = null;   // mix fuel key the plant layers are narrowed to, or null
+  let lens           = "energy"; // countries.config.js lenses: energy / water / nexus
   let statusView     = "all";  // key of STATUS_VIEWS; kept across country switches
   let selected       = null;   // { layer, id } of the feature whose popup is open, if linkable
 
@@ -487,6 +552,7 @@
     buildMapLayers(currentCountry);
     if(pendingOverview){ const link = pendingOverview; pendingOverview = null; enterOverview(link); }
     else if(pendingFeature){ openLinkedFeature(pendingFeature, !initialView); pendingFeature = null; }
+    if(pendingSite){ const p = pendingSite; pendingSite = null; runSiteDiagnostic(p.lng, p.lat); }
     urlReady = true;
     syncLangLink();
   }
@@ -498,6 +564,7 @@
     countrySelect.value = initialCountry;
     currentCountry = initialCountry;
     initialView = link.country === initialCountry ? link.view : null;
+    if(link.site && !link.feature && link.country === initialCountry) pendingSite = link.site;
     if(link.overview){
       // The panel shows the overview from the start, not the country first.
       pendingOverview = link;
@@ -540,6 +607,7 @@
         sizeKeyFrame = requestAnimationFrame(()=>{ sizeKeyFrame = 0; if(currentCountry) renderSizeKey(); });
       });
       map.on("click", (e)=>{
+        if(siteMode){ runSiteDiagnostic(e.lngLat.lng, e.lngLat.lat); return; }
         const features = map.queryRenderedFeatures(e.point, { layers: queryableLayers() });
         if(features.length === 0) closePopup();
       });
@@ -561,6 +629,7 @@
 
   // Panel, KPIs and methodology for a country whose data is loaded.
   function renderPanel(countryKey){
+    renderLens();
     renderMix();
     renderStatusNote();
     renderLayerList(countryKey);
@@ -633,13 +702,18 @@
         kind==="oim-plants" ? OSM_PLANT_SWATCH :
         markerOf(kind) ? markerOf(kind).color : "#999"
       );
-      const swatch = kind==="grid" || kind==="oim"
+      const waterLine = kind==="water" && fc.features.length > 0 && fc.features.every(f=>f.properties.category === "transfer");
+      const swatch = waterLine
+        ? `<span class="layer-line" data-border="${escapeHtml(LAYER_COLOR.water)}"></span>`
+        : kind==="water"
+        ? markHtml("layer-dot", markerOf(kind, fc.features[0] && fc.features[0].properties))
+        : kind==="grid" || kind==="oim"
         ? `<span class="layer-line${planned ? " dashed" : ""}" data-border="${escapeHtml(dotColor)}"></span>`
         : markHtml("layer-dot", { shape: markerOf(kind) ? markerOf(kind).shape : "disc", color: dotColor });
       const row = document.createElement("label");
       row.className = "layer-row";
       row.dataset.layer = L.id;
-      row.title = `${L.source} · ${T.updated} ${L.updated === "live" ? T.live : L.updated}`;
+      row.title = `${srcText(L)} · ${T.updated} ${L.updated === "live" ? T.live : L.updated}`;
       row.innerHTML = `
         <input type="checkbox" ${visibility[L.id]!==false?"checked":""}>
         <span class="check"></span>
@@ -725,6 +799,12 @@
     const d = c.demand, lf = c.liveFlow;
     const fuel = fuelFilter && mixFuel(fuelFilter);
     const prefix = fuel ? escapeHtml(fuelLabel(fuel)) + " · " : "";
+    const water = lens !== "energy" ? waterKpis(c) : "";
+    if(lens === "water" && water){
+      if(snap) snap.textContent = "";
+      host.innerHTML = water;
+      return;
+    }
     host.innerHTML = `
       <div class="kpi" title="${escapeHtml(T.kpiServiceTip)}"><div class="k">${prefix}${T.inService}</div>
         <div class="v">${hasPower ? fmtPower(inService) : NA}</div></div>
@@ -739,12 +819,46 @@
         <div class="v">${num(x.value) != null ? `${nfmt(x.value, 1)}<small> ${escapeHtml(x.unit)}</small>` : NA}</div></div>`).join("") : ""}
       ${lf ? `<div class="kpi wide" data-live-flow>${liveFlowMarkup(c)}</div>` : ""}
       ${d || lf ? `<p class="kpi-note micro">
-        ${d ? `${T.demandNote}${COLON} <a href="${escapeHtml(safeUrl(d.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(d.source)}</a>` : ""}
+        ${d ? `${T.demandNote}${COLON} <a href="${escapeHtml(safeUrl(d.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(d))}</a>` : ""}
         ${d && lf ? "<br>" : ""}
-        ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(lf.source)}</a>, ${T.liveSteps}` : ""}
+        ${lf ? `${T.liveNote}${COLON} <a href="${escapeHtml(safeUrl(lf.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(lf))}</a>, ${T.liveSteps}` : ""}
       </p>` : ""}
+      ${water}
     `;
     if(lf) refreshLiveFlow(c);
+  }
+
+  // Water figures, summed from the `water` layers: transfers (m³/s), new
+  // dams (million m³ of storage), desalination (million m³ a year), each in
+  // service and in the pipeline, and the desalination load against the
+  // national record peak. "" when the country has no water layer.
+  function waterKpis(c){
+    const W = featuresOfKind(currentCountry, "water").map(f=>f.properties);
+    if(!W.length) return "";
+    const pick = (cat, on)=>W.filter(p=>p.category === cat && (on ? p.status === "operational" : PIPELINE_STATUS.includes(p.status)));
+    const sum = (ps, k)=>ps.reduce((t, p)=>t + (num(p[k]) || 0), 0);
+    const tile = (label, ps, k, unit)=>{
+      const missing = ps.filter(p=>num(p[k]) == null).length;
+      const v = ps.length - missing ? `${nfmt(sum(ps, k))}<small> ${escapeHtml(unit)}</small>` : "—";
+      return `<div class="kpi water"><div class="k">${escapeHtml(label)}</div><div class="v">${v}</div>${missing ? `<div class="when micro">${escapeHtml(T.wNoFigure(missing))}</div>` : ""}</div>`;
+    };
+    // Average MW from yearly output at DESAL_KWH_PER_M3, for every plant:
+    // a published installed power overstates the average draw.
+    const load = (ps)=>ps.reduce((t, p)=>t + (num(p.capacity_hm3_yr) != null ? p.capacity_hm3_yr * DESAL_KWH_PER_M3 / 8.76 : 0), 0);
+    const now = load(pick("desalination", true)), all = now + load(pick("desalination", false));
+    const peak = c.demand && c.demand.figures.find(x=>x.unit === "GW" && num(x.value) != null);
+    const share = peak ? fmtShare(100 * all / (peak.value * 1000)) : "";
+    return `
+      ${tile(T.wTransferOn, pick("transfer", true), "flow_m3s", "m³/s")}
+      ${tile(T.wTransferPipe, pick("transfer", false), "flow_m3s", "m³/s")}
+      ${tile(T.wStorageOn, pick("dam", true), "storage_hm3", T.hm3)}
+      ${tile(T.wStoragePipe, pick("dam", false), "storage_hm3", T.hm3)}
+      ${tile(T.wDesalOn, pick("desalination", true), "capacity_hm3_yr", T.hm3yr)}
+      ${tile(T.wDesalPipe, pick("desalination", false), "capacity_hm3_yr", T.hm3yr)}
+      <div class="kpi wide water"><div class="k">${escapeHtml(T.wLoad)}</div>
+        <div class="v">≈ ${nfmt(Math.round(now))}<small> MW ${escapeHtml(T.wLoadNow)}</small> · ${nfmt(Math.round(all))}<small> MW ${escapeHtml(T.wLoadAll)}</small></div>
+        ${share ? `<div class="when micro">${escapeHtml(T.wOfPeak(share))}</div>` : ""}</div>
+      <p class="kpi-note micro">${escapeHtml(T.wNote(nfmt(DESAL_KWH_PER_M3, 1)))}</p>`;
   }
 
   // ---------- Live cross-border flow ----------
@@ -796,7 +910,7 @@
     const c = COUNTRIES[countryKey];
     document.title = T.docTitle(countryLabel(c));
     document.querySelectorAll("[data-country-label]").forEach(el=>{ el.textContent = countryLabel(c); });
-    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? T.credits(c.credits) : ""; });
+    document.querySelectorAll("[data-country-credits]").forEach(el=>{ el.textContent = c.credits ? T.credits(srcText(c, "credits")) : ""; });
     document.querySelectorAll("[data-country-path]").forEach(el=>{ el.textContent = "/docs/" + c.dataPath.replace(/^\.\//, ""); });
     if(reportErrorFooter) reportErrorFooter.href = issueUrl(T.issueData(countryLabel(c)));
   }
@@ -807,11 +921,11 @@
     const host = $("#methodologySources");
     if(!host) return;
     host.innerHTML = c.layers.map(L=>
-      `<li><strong>${escapeHtml(layerTitle(L))}${COLON}</strong> ${escapeHtml(L.source)} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(${T.updated} ${escapeHtml(L.updated === "live" ? T.live : L.updated)})</span></li>`
-    ).join("") + (mixData ? `<li><strong>${T.mixSrc}${COLON}</strong> ${escapeHtml(mixData.source)} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(T.mixSrcNote(mixData.year))})</span></li>` : "") +
-    (c.demand ? `<li><strong>${T.demandSrc}${COLON}</strong> ${escapeHtml(c.demand.source)} — <a href="${escapeHtml(safeUrl(c.demand.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.demand.sourceUrl)}</a></li>` : "") +
-    (c.liveFlow ? `<li><strong>${escapeHtml(T.liveSrc(partnerLabel(c.liveFlow)))}${COLON}</strong> ${escapeHtml(c.liveFlow.source)}, ${T.liveSrcNote} — <a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.sourceUrl)}</a> <span class="micro">(${T.liveSrcNet})</span></li>` : "") +
-    (c.boundary ? `<li><strong>${T.boundary}${COLON}</strong> ${escapeHtml(c.boundary.source)} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(c.boundary.note)})</span>` : ""}</li>` : "") +
+      `<li><strong>${escapeHtml(layerTitle(L))}${COLON}</strong> ${escapeHtml(srcText(L))} — <a href="${escapeHtml(L.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(L.sourceUrl)}</a> <span class="micro">(${T.updated} ${escapeHtml(L.updated === "live" ? T.live : L.updated)})</span></li>`
+    ).join("") + (mixData ? `<li><strong>${T.mixSrc}${COLON}</strong> ${escapeHtml(srcText(mixData))} — <a href="${escapeHtml(safeUrl(mixData.source_url))}" target="_blank" rel="noopener">${escapeHtml(mixData.source_url)}</a> <span class="micro">(${escapeHtml(T.mixSrcNote(mixData.year))})</span></li>` : "") +
+    (c.demand ? `<li><strong>${T.demandSrc}${COLON}</strong> ${escapeHtml(srcText(c.demand))} — <a href="${escapeHtml(safeUrl(c.demand.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.demand.sourceUrl)}</a></li>` : "") +
+    (c.liveFlow ? `<li><strong>${escapeHtml(T.liveSrc(partnerLabel(c.liveFlow)))}${COLON}</strong> ${escapeHtml(srcText(c.liveFlow))}, ${T.liveSrcNote} — <a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.sourceUrl)}</a> <span class="micro">(${T.liveSrcNet})</span></li>` : "") +
+    (c.boundary ? `<li><strong>${T.boundary}${COLON}</strong> ${escapeHtml(srcText(c.boundary))} — <a href="${escapeHtml(c.boundary.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(c.boundary.sourceUrl)}</a>${c.boundary.note ? ` <span class="micro">(${escapeHtml(srcText(c.boundary, "note"))})</span>` : ""}</li>` : "") +
     `<li><strong>${T.basemap}${COLON}</strong> ${T.basemapLi}</li>`;
   }
 
@@ -872,6 +986,46 @@
     syncUrl();
   }
   $("#statusRow").querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setStatusView(b.dataset.status)));
+
+  // ---------- Lens: Energy / Water / Nexus ----------
+  // countries.config.js → lenses: each one a set of layers switched on (none:
+  // the layers' own defaults) and, optionally, a fuel the plants narrow to
+  // (Water: hydro, next to the dams). Water hides the mix and shows water
+  // figures in place of the plant ones; Nexus shows both.
+  const lensesOf = (c)=>(c && c.lenses) || [];
+  const lensDef = (id)=>lensesOf(COUNTRIES[currentCountry]).find(x=>x.id === id);
+  // Whether a layer is on by default in the current lens.
+  function lensVisible(L){
+    const d = lensDef(lens);
+    return d && d.layers ? d.layers.includes(L.id) : L.visible !== false;
+  }
+  function applyLens(){
+    COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = lensVisible(L); });
+    const d = lensDef(lens);
+    fuelFilter = d && d.fuel && mixFuel(d.fuel) ? d.fuel : null;
+  }
+  function renderLens(){
+    const host = $("#lensSection");
+    const ls = lensesOf(COUNTRIES[currentCountry]);
+    layout.classList.toggle("lens-water", lens === "water");
+    host.hidden = !ls.length || overview;
+    if(host.hidden){ host.replaceChildren(); return; }
+    const d = lensDef(lens);
+    host.innerHTML = `
+      <div class="seg lens-seg" role="group" aria-label="${escapeHtml(T.lensLabel)}">
+        ${ls.map(l=>`<button type="button" class="seg-btn" data-lens="${escapeHtml(l.id)}" aria-pressed="${l.id === lens}">${escapeHtml((FR && l.labelFr) || l.label)}</button>`).join("")}
+      </div>
+      ${d && (d.note || d.noteFr) ? `<p class="lens-note micro">${escapeHtml((FR && d.noteFr) || d.note)}</p>` : ""}`;
+    host.querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click", ()=>setLens(b.dataset.lens)));
+  }
+  function setLens(id){
+    if(id === lens || !lensDef(id)) return;
+    lens = id;
+    applyLens();
+    renderPanel(currentCountry);
+    if(map && mapReady && dataReady){ hoveredLayer = null; buildMapLayers(currentCountry); }
+    syncUrl();
+  }
 
   // Shares under 1 % keep a decimal, so a small fuel doesn't read as zero.
   const fmtShare = (v)=>v >= 0.95 ? nfmt(v) + PCT : v >= 0.1 ? nfmt(v, 1, 1) + PCT : v > 0 ? "<" + nfmt(0.1, 1, 1) + PCT : "—";
@@ -1095,7 +1249,8 @@
       grid:       (L)=>buildLineLayer(L, layerView(L)),
       power:      (L)=>buildPowerLayer(L, layerView(L)),
       industrial: (L)=>buildIndustrialLayer(L, layerView(L)),
-      digital:    (L)=>buildDigitalLayer(L, layerView(L))
+      digital:    (L)=>buildDigitalLayer(L, layerView(L)),
+      water:      (L)=>buildWaterLayer(L, layerView(L))
     };
     c.layers.filter(L=>!KINDS.includes(L.kind)).forEach(L=>
       console.error("[MoroccoMap] unknown layer kind:", L.id, L.kind));
@@ -1108,6 +1263,7 @@
 
     // Apply visibility from state
     Object.keys(visibility).forEach(id=>applyLayerVisibility(id, visibility[id]));
+    if(site) safe("site", drawSiteOverlay);  // style reloads (theme) drop it
   }
 
   // OpenInfraMap vector overlay — full OSM-sourced transmission grid,
@@ -1126,32 +1282,48 @@
     });
   }
 
+  // The status view on OpenInfraMap features: lines, substations and plants
+  // carry `construction` (being built) and `disused` (closed) from OSM. An
+  // empty list under "All".
+  function oimStatusFilters(){
+    const tagged = (k)=>["to-boolean", ["coalesce", ["get", k], false]];
+    if(statusView === "service") return [["!", tagged("construction")], ["!", tagged("disused")]];
+    if(statusView === "pipeline") return [tagged("construction")];
+    return [];
+  }
+
   function buildOimLayer(L){
     const src = OIM_SRC, p = "lyr-" + L.id;
     ensureOimSource();
+    // Every grid sublayer follows the status view, like the plants.
+    const status = oimStatusFilters();
+    const addOim = (spec)=>{
+      if(status.length) spec.filter = spec.filter ? ["all", spec.filter, ...status] : ["all", ...status];
+      addLayer(L, spec);
+    };
 
     // Lines — styled by voltage. OIM exposes a numeric `voltage` (volts).
     // Non-numeric / multi-voltage tags coerce to 0 and fall into LV.
     const voltExpr = ["coalesce", ["to-number", ["get","voltage"]], 0];
-    addLayer(L, {
+    addOim({
       id: p + "-line-lv", type:"line", source:src, "source-layer":"power_line",
       filter:["<", voltExpr, 100000],
       minzoom: 8,
       paint:{ "line-color": isDark() ? "rgba(229,228,224,0.22)" : "rgba(50,50,50,0.25)", "line-width":0.6 }
     });
-    addLayer(L, {
+    addOim({
       id: p + "-line-mv", type:"line", source:src, "source-layer":"power_line",
       filter:["all",[">=",voltExpr,100000],["<",voltExpr,300000]],
       paint:{ "line-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.65)", "line-width":1.0 }
     });
-    addLayer(L, {
+    addOim({
       id: p + "-line-hv", type:"line", source:src, "source-layer":"power_line",
       filter:[">=", voltExpr, 300000],
       paint:{ "line-color": isDark() ? GRID_COLOR : "#3b3b3f", "line-width":1.8, "line-opacity":0.9 }
     });
 
     // Substations — polygon at high zoom, points at low zoom
-    addLayer(L, {
+    addOim({
       id: p + "-substation-poly", type:"fill", source:src, "source-layer":"power_substation",
       minzoom: 10,
       paint:{
@@ -1159,7 +1331,7 @@
         "fill-outline-color": isDark() ? "rgba(229,228,224,0.55)" : "rgba(50,50,50,0.5)"
       }
     });
-    addLayer(L, {
+    addOim({
       id: p + "-substation-pt", type:"circle", source:src, "source-layer":"power_substation_point",
       minzoom: 5,
       paint:{
@@ -1205,10 +1377,7 @@
       const keep = plantFuels(fuelFilter);
       filters.push(["in", ["get","source"], ["literal", Object.keys(OSM_FUEL).filter(k=>keep.includes(OSM_FUEL[k]))]]);
     }
-    // OSM tags a plant being built with `construction`, a closed one `disused`.
-    const tagged = (k)=>["to-boolean", ["coalesce", ["get", k], false]];
-    if(statusView === "service") filters.push(["!", tagged("construction")], ["!", tagged("disused")]);
-    if(statusView === "pipeline") filters.push(tagged("construction"));
+    filters.push(...oimStatusFilters());
     if(filters.length) spec.filter = ["all", ...filters];
     addLayer(L, spec, "point");
   }
@@ -1444,6 +1613,52 @@
     addLayer(L, spec);
   }
 
+  // Water: transfers as teal lines (width by flow, dashed unless in
+  // service) with arrows in the direction of flow (first vertex → last);
+  // dams as triangles sized by storage, desalination plants as hexagons
+  // sized by capacity. Pipeline points get a halo, as elsewhere.
+  // French names (`name_fr`) label the French page.
+  const featName = (p)=>(FR && p.name_fr) || p.name;
+  function buildWaterLayer(L, fc){
+    const srcId = "src-" + L.id, p = "lyr-" + L.id, color = LAYER_COLOR.water;
+    addOrReplace(srcId, { type:"geojson", data: fc });
+    const isLine = ["==", ["get","category"], "transfer"];
+    const inService = ["==", ["get","status"], "operational"];
+    const width = ["interpolate", ["linear"], ["coalesce", ["get","flow_m3s"], 10], 5, 2.2, 15, 3.2, 45, 5];
+    const dim = ["case", ["boolean", ["feature-state","dim"], false], 0.3, 1];
+    addLayer(L, { id:p+"-lines", type:"line", source:srcId, filter:["all", isLine, inService],
+      layout:{ "line-cap":"round", "line-join":"round" },
+      paint:{ "line-color": color, "line-width": width, "line-opacity": 0.95 }}, "line");
+    addLayer(L, { id:p+"-lines-pipe", type:"line", source:srcId, filter:["all", isLine, ["!", inService]],
+      layout:{ "line-join":"round" },
+      paint:{ "line-color": color, "line-width": width, "line-opacity": 0.85, "line-dasharray":[2, 1.5] }}, "line");
+    addLayer(L, { id:p+"-arrows", type:"symbol", source:srcId, filter:isLine,
+      layout:{ "symbol-placement":"line", "symbol-spacing": 70, "icon-image":"shape-arrow",
+               "icon-size":["interpolate",["linear"],["zoom"], 4, 0.3, 8, 0.45], "icon-rotation-alignment":"map",
+               "icon-allow-overlap": true, "icon-ignore-placement": true },
+      paint:{ "icon-color": color, "icon-halo-color": POINT_STROKE(), "icon-halo-width": 1 }});
+
+    const pts = ["!=", ["get","category"], "transfer"];
+    // Size: storage (dams, 10–1,100 million m³) or yearly output (plants).
+    const size = ["interpolate", ["linear"], ["sqrt", ["coalesce", ["get","storage_hm3"], ["get","capacity_hm3_yr"], 30]],
+      3, 0.35, 10, 0.55, 33, 0.85];
+    addLayer(L, { id:p+"-halo", type:"circle", source:srcId,
+      filter:["all", pts, ["in", ["get","status"], ["literal", PIPELINE_STATUS]]],
+      paint:{ "circle-color": withAlpha(color, 0.22), "circle-radius":14, "circle-blur":0.35 }});
+    addLayer(L, { id:p+"-points", type:"symbol", source:srcId, filter:pts,
+      layout:{ "icon-image":["case", ["==", ["get","category"], "desalination"], "shape-hexagon", "shape-triangle"],
+               // Zoom must be the outer interpolation; storage scales inside it.
+               "icon-size":["interpolate",["linear"],["zoom"], 4, ["*", 0.75, size], 7, size, 10, ["*", 1.2, size]],
+               "icon-allow-overlap": true, "icon-ignore-placement": true },
+      paint:{ "icon-color": color, "icon-halo-color": POINT_STROKE(), "icon-halo-width": 1.5, "icon-opacity": dim }}, "point");
+    addOrReplace(srcId + "-text", { type:"geojson", data: fc });
+    const labelField = FR ? "label_fr" : "name";
+    if(FR) fc.features.forEach(f=>{ f.properties.label_fr = featName(f.properties); });
+    addLabelLayer(L, p+"-labels", srcId + "-text", labelField, 6.5, 1.3, pts);
+    addLabelLayer(L, p+"-line-labels", srcId + "-text", labelField, 7, 0, isLine,
+      { "symbol-placement":"line", "text-anchor":"center", "text-offset":[0, -1], "text-size":10 });
+  }
+
   function buildDigitalLayer(L, fc){
     const srcId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(srcId, { type:"geojson", data: fc, promoteId: "id" });
@@ -1539,7 +1754,7 @@
         setHoverDim(m.src, m.dataLayerId, f.id);
         showPointTooltip(m.dataLayerId, f, e.point);
       } else if(m.role === "line"){
-        showLineTooltip(f, e.point);
+        showLineTooltip(f, e.point, m.dataLayerId);
       } else if(m.role === "cluster"){
         showClusterTooltip(f, e.point);
       }
@@ -1552,7 +1767,7 @@
     });
     map.on("click", id, (e)=>{
       const m = current(); const f = e.features[0];
-      if(!m || !f) return;
+      if(!m || !f || siteMode) return;  // Site check: the map-level handler takes the click
       if(m.role === "cluster"){
         // Cluster click → zoom in (MapLibre 4: getClusterExpansionZoom returns a promise)
         map.getSource(m.src).getClusterExpansionZoom(f.properties.cluster_id)
@@ -1618,9 +1833,10 @@
                   word(STATUS_WORD_ALL, p.status)].filter(Boolean).join(" · ");
       }
     }
+    else if(kind === "water") metric = waterMetric(p);
     const mark = markerOf(kind, p);
     tooltip.innerHTML = `
-      <div class="tt-name">${mark ? markHtml("tt-dot", mark) : ""}${escapeHtml(p.name)}</div>
+      <div class="tt-name">${mark ? markHtml("tt-dot", mark) : ""}${escapeHtml(kind === "water" ? featName(p) : p.name)}</div>
       <div class="tt-metric">${escapeHtml(metric)}</div>
       <div class="tt-meta">
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${escapeHtml(p.source || "—")}</a>` : escapeHtml(p.source || "—")}
@@ -1629,8 +1845,16 @@
     paint(tooltip);
     positionTooltip(point);
   }
-  function showLineTooltip(f, point){
+  // "Dam · 1,070 million m³ · construction": the tooltip line of a water feature.
+  function waterMetric(p, noStatus){
+    const size = p.category === "transfer" ? (num(p.flow_m3s) != null ? `${nfmt(p.flow_m3s)} m³/s` : "")
+      : p.category === "dam" ? (num(p.storage_hm3) != null ? `${nfmt(p.storage_hm3)} ${T.hm3}` : "")
+      : num(p.capacity_hm3_yr) != null ? `${nfmt(p.capacity_hm3_yr)} ${T.hm3yr}` : "";
+    return [T.waterCat[p.category], size, noStatus ? "" : word(STATUS_WORD_ALL, p.status)].filter(Boolean).join(" · ");
+  }
+  function showLineTooltip(f, point, dataLayerId){
     const p = f.properties || {};
+    if(layerKind(dataLayerId) === "water"){ showPointTooltip(dataLayerId, f, point); return; }
     tooltip.innerHTML = `
       <div class="tt-name">${escapeHtml(p.name)}</div>
       <div class="tt-metric">${escapeHtml(p.voltage_kv)} kV · ${escapeHtml(word(STATUS_WORD_ALL, p.status) || "")}</div>
@@ -1665,6 +1889,8 @@
 
   // ---------- Popup ----------
   function openPointPopup(dataLayerId, f){
+    if(layerKind(dataLayerId) === "water") return openWaterPopup(dataLayerId, f);
+    clearSite();
     let p = f.properties || {};
     // OSM plants have no stable id of ours: the link keeps the view only.
     selected = layerKind(dataLayerId) !== "oim-plants" && p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
@@ -1683,6 +1909,9 @@
         <div class="cell"><div class="k">${T.fuel}</div><div class="v cap">${escapeHtml(word(FUEL_WORD, p.fuel_type))}</div></div>
         <div class="cell"><div class="k">${T.technology}</div><div class="v sm">${escapeHtml(p.tech || "—")}</div></div>
         <div class="cell"><div class="k">${p.status==="operational" ? T.commissioned : T.targetYear}</div><div class="v">${escapeHtml(p.commissioning_year || "—")}</div></div>`;
+      // Dams: a typical year's output (WRI's estimate), next to the capacity.
+      if(num(p.annual_generation_gwh) != null) stats += `
+        <div class="cell"><div class="k">${T.annualOutput}</div><div class="v">≈ ${escapeHtml(nfmt(p.annual_generation_gwh))} GWh</div>${num(p.annual_generation_year) != null ? `<div class="micro">${escapeHtml(T.annualOutputNote(p.annual_generation_year))}</div>` : ""}</div>`;
     } else if(kind === "industrial"){
       stats = `
         <div class="cell"><div class="k">${T.sector}</div><div class="v sm">${escapeHtml(word(SECTOR_WORD, p.sector))}</div></div>
@@ -1736,6 +1965,8 @@
   }
 
   function openLinePopup(dataLayerId, f){
+    if(layerKind(dataLayerId) === "water") return openWaterPopup(dataLayerId, f);
+    clearSite();
     const p = f.properties || {};
     selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
     $("#popupBadge").innerHTML = `<span class="badge grid"><span class="dot" data-bg="${escapeHtml(GRID_COLOR)}"></span>${T.badgeLine}</span>`;
@@ -1747,7 +1978,7 @@
       <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
       <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
       ${live ? `<div class="live-flow" data-live-flow>${liveFlowMarkup(c)}
-        <div class="micro">${T.source}<a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(c.liveFlow.source)}</a></div></div>` : ""}
+        <div class="micro">${T.source}<a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(c.liveFlow))}</a></div></div>` : ""}
       <div class="stat-grid">
         <div class="cell"><div class="k">${T.voltage}</div><div class="v">${escapeHtml(p.voltage_kv)} kV</div></div>
         <div class="cell"><div class="k">${T.status}</div><div class="v cap">${escapeHtml(word(STATUS_WORD_ALL, p.status))}</div></div>
@@ -1774,7 +2005,68 @@
     if(live) refreshLiveFlow(c);
   }
 
+  // Desalination with no stated power: average load from its yearly output
+  // at a typical seawater reverse-osmosis figure (intake to storage).
+  const DESAL_KWH_PER_M3 = 3.5;
+  function openWaterPopup(dataLayerId, f){
+    clearSite();
+    const p = f.properties || {};
+    selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
+    const mark = markerOf("water", p);
+    const cell = (k, v, note)=>`<div class="cell"><div class="k">${k}</div><div class="v sm">${v}</div>${note ? `<div class="micro">${escapeHtml(note)}</div>` : ""}</div>`;
+    const n = (v, unit)=>num(v) != null ? `${escapeHtml(nfmt(v))} ${unit}` : "—";
+    const when = cell(p.status === "operational" ? T.commissioned : T.targetYear, escapeHtml(p.year || "—"));
+    let stats = "";
+    if(p.category === "transfer"){
+      stats = cell(T.flow, n(p.flow_m3s, "m³/s")) + cell(T.length, n(p.length_km, "km")) +
+        cell(T.pumping, num(p.pumping_mva) != null ? n(p.pumping_mva, "MVA") : num(p.pumping_stations) != null ? escapeHtml(T.pumpingStations(p.pumping_stations)) : "—",
+             num(p.pumping_mva) != null && num(p.pumping_stations) != null ? T.pumpingStations(p.pumping_stations) : "") + when;
+      if(p.from_basin || p.to_basin) stats += cell(T.route, `${escapeHtml(p.from_basin || "—")} → ${escapeHtml(p.to_basin || "—")}`);
+    } else if(p.category === "dam"){
+      stats = cell(T.storage, n(p.storage_hm3, T.hm3)) + cell(T.height, n(p.height_m, "m")) +
+        cell(T.river, escapeHtml(p.river || "—")) + when;
+      if(p.purpose) stats += cell(T.purpose, escapeHtml((FR && p.purpose_fr) || p.purpose));
+    } else {
+      const cap = num(p.capacity_hm3_yr);
+      // million m³/yr × kWh/m³ = GWh/yr; / 8.76 = average MW.
+      const est = cap != null ? cap * DESAL_KWH_PER_M3 / 8.76 : null;
+      stats = cell(T.waterCapacity, cap != null ? n(cap, T.hm3yr) : escapeHtml(T.noPlantFigure)) +
+        (num(p.power_mw) != null ? cell(T.plantPower, n(p.power_mw, "MW"))
+          : cell(T.estLoad, est != null ? `≈ ${escapeHtml(nfmt(Math.round(est)))} MW` : "—", est != null ? T.estLoadNote(nfmt(DESAL_KWH_PER_M3, 1)) : "")) +
+        cell(T.operator, escapeHtml(p.operator || "—")) + when;
+      if(p.energy_supply) stats += cell(T.energySupply, escapeHtml((FR && p.energy_supply_fr) || p.energy_supply));
+    }
+    stats += cell(T.precision, escapeHtml(word(PRECISION_WORD, p.precision || "approximate")));
+    $("#popupBadge").innerHTML = `<span class="badge water">${markHtml("dot", mark)}${escapeHtml(T.badgeWater[p.category] || "")}</span>`;
+    paint($("#popupBadge"));
+    $("#popupBody").innerHTML = `
+      <h1 class="pop-title">${escapeHtml(featName(p))}</h1>
+      <div class="pop-sub">${escapeHtml(p.region || "")}</div>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
+      <div class="stat-grid">${stats}</div>
+      ${p.note ? `<p class="pop-note">${escapeHtml((FR && p.note_fr) || p.note)}</p>` : ""}
+      <div class="source-row">
+        <span class="src">${escapeHtml(p.source || "—")}</span>
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
+      </div>
+      <details>
+        <summary>${T.rawData}</summary>
+        <pre class="raw-json">${escapeHtml(JSON.stringify(p, null, 2))}</pre>
+      </details>
+      <div class="pop-actions">
+        <a href="${escapeHtml(issueUrl(T.issueFeature(countryLabel(COUNTRIES[currentCountry]), p.name), T.issueBody(p.id || p.name)))}" target="_blank" rel="noopener">${T.reportError}</a>
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">${T.primarySource}</a>` : ""}
+        ${selected ? `<button type="button" class="pop-share">${T.copyLink}</button>` : ""}
+      </div>`;
+    wirePopupShare();
+    popup.classList.add("open");
+    sheetForPopup();
+    popup.setAttribute("aria-hidden","false");
+    syncUrl();
+  }
+
   function closePopup(){
+    clearSite();
     const wasOpen = popup.classList.contains("open");
     popup.classList.remove("open");
     popup.setAttribute("aria-hidden","true");
@@ -1799,13 +2091,16 @@
     const q = new URLSearchParams(location.hash.replace(/^#/, ""));
     const link = { country: q.get("country"), status: q.get("status"), fuel: q.get("fuel"),
                    measure: q.get("measure"), layers: null, view: null, feature: null,
-                   overview: q.get("view") === "overview", metric: q.get("metric") };
+                   overview: q.get("view") === "overview", metric: q.get("metric"), lens: q.get("lens") };
     const v = (q.get("map") || "").split("/").map(Number);
     if(v.length === 3 && v.every(Number.isFinite) && Math.abs(v[1]) <= 90 && Math.abs(v[2]) <= 180)
       link.view = { zoom: Math.min(Math.max(v[0], 1), 18), center: [v[2], v[1]] };
     if(q.has("layers")) link.layers = q.get("layers").split(",").filter(Boolean);
     const f = q.get("feature");
     if(f && f.includes(":")){ const i = f.indexOf(":"); link.feature = { layer: f.slice(0, i), id: f.slice(i + 1) }; }
+    const sv = (q.get("site") || "").split(",").map(Number);
+    if(sv.length === 2 && sv.every(Number.isFinite) && Math.abs(sv[0]) <= 90 && Math.abs(sv[1]) <= 180)
+      link.site = { lat: sv[0], lng: sv[1] };
     return link;
   }
 
@@ -1814,6 +2109,8 @@
   function applyLinkState(link){
     statusView = STATUS_VIEWS[link.status] ? link.status : "all";
     mixMeasure = link.measure === "capacity" ? "capacity" : "generation";
+    lens = link.lens && lensDef(link.lens) ? link.lens : "energy";
+    applyLens();
     fuelFilter = link.fuel && mixFuel(link.fuel) ? link.fuel : null;
     if(link.layers) COUNTRIES[currentCountry].layers.forEach(L=>{ visibility[L.id] = link.layers.includes(L.id); });
   }
@@ -1830,12 +2127,14 @@
     }
     const parts = [["country", currentCountry]];
     if(map) parts.push(mapPart());
+    if(lens !== "energy") parts.push(["lens", lens]);
     if(statusView !== "all") parts.push(["status", statusView]);
     if(fuelFilter) parts.push(["fuel", fuelFilter]);
     if(mixMeasure !== "generation") parts.push(["measure", mixMeasure]);
-    if(c.layers.some(L=>(visibility[L.id] !== false) !== (L.visible !== false)))
+    if(c.layers.some(L=>(visibility[L.id] !== false) !== lensVisible(L)))
       parts.push(["layers", c.layers.filter(L=>visibility[L.id] !== false).map(L=>L.id).join(",")]);
     if(selected) parts.push(["feature", `${selected.layer}:${selected.id}`]);
+    else if(site) parts.push(["site", `${site.lat.toFixed(4)},${site.lng.toFixed(4)}`]);
     return "#" + parts.map(([k, v])=>`${k}=${LINK_SAFE(v)}`).join("&");
   }
   function syncUrl(force){
@@ -1864,7 +2163,7 @@
     const hit = linkedFeature(ref);
     if(!hit) return false;
     const { L, f } = hit;
-    if(L.kind === "grid"){
+    if(f.geometry.type !== "Point"){
       openLinePopup(L.id, f);
       if(fly){
         const pts = (f.geometry.type === "LineString" ? f.geometry.coordinates : f.geometry.coordinates.flat());
@@ -1936,6 +2235,7 @@
       buildMapLayers(currentCountry);
       if(link.view) map.jumpTo(link.view);
       if(link.feature) openLinkedFeature(link.feature, !link.view);
+      else if(link.site) runSiteDiagnostic(link.site.lng, link.site.lat);
     }
   });
   $("#popupClose").addEventListener("click", closePopup);
@@ -1949,8 +2249,557 @@
     }
     if(e.key !== "Escape") return;
     if(!methModal.classList.contains("hidden")) methModal.classList.add("hidden");
+    else if(siteMode) setSiteMode(false);
     else closePopup();
   });
+
+  // ---------- Site check ----------
+  // Click anywhere in "Site check" mode → a screening read-out for a
+  // data-centre site: distance to the HV grid, generation and large loads
+  // within 50 km, connectivity, solar resource, and a 1–5 score. Built from
+  // the map's own data plus PVGIS: a first filter, not a grid-connection
+  // study. Weights and thresholds live here and in ASSUMPTIONS.md §11.
+  // The open diagnostic is in the link: #country=…&site=<lat>,<lng>.
+  const SITE_RADIUS_KM = 50;
+  const SITE_ZOOM      = 8.5;   // OIM tiles carry HV lines and substations here
+  const PVGIS_URL      = LIVE_API + "/pvcalc";
+  const SITE_RENEW     = ["solar", "wind", "hydro", "geothermal", "biomass"];
+  const SITE_CRITERIA = [
+    // steps: the value at or past which the score is 5, 4, 3, 2 (else 1)
+    { key:"grid",         weight:0.35, steps:[5, 15, 30, 60],          dir:"below" },
+    { key:"generation",   weight:0.20, steps:[1000, 500, 200, 50],      dir:"above" },
+    { key:"connectivity", weight:0.25, steps:null,                      dir:null },
+    { key:"solar",        weight:0.20, steps:[1900, 1700, 1500, 1300], dir:"above" }
+  ];
+  const CABLE_STEPS = [25, 75, 150, 300], DC_STEPS = [10, 30, 75, 150];
+  const SITE_COLOR = () => isDark() ? "#22D3EE" : "#0E7490";
+  const ST = FR ? {
+    badge: "Diagnostic de site", title: "Pré-étude de site", hint: "Cliquez sur la carte pour évaluer un site",
+    crit: { grid:"Accès réseau", generation:"Production proche", connectivity:"Connectivité", solar:"Gisement solaire" },
+    unit: { grid:"km jusqu'à une ligne ≥225 kV", generation:"MW en service à moins de 50 km",
+            connectivity:"atterrissement de câble ≤25/75/150/300 km · DC ≤10/30/75/150 km", solar:"kWh/kWp/an (PVGIS)" },
+    verdict: ["Non noté", "Faible", "Contraint", "Correct", "Favorable"],
+    analysing: "analyse…", analysingAll: "Analyse en cours…",
+    scored: (p)=>`Indicateur de pré-étude · ${p} des poids notés`,
+    outside: (c)=>`Hors du contour ${c} : les données de la carte s'arrêtent à la frontière, ce résultat est incomplet.`,
+    toLine: "jusqu'à ≥225 kV", noneWithin: (d)=>`aucune à moins de ${d}`, noGrid: "pas de donnée réseau",
+    refLine: (a, b, s)=>`≥225 kV : <b>${a}</b> · 400 kV : <b>${b}</b> <span class="micro">(${s})</span>`,
+    oimOff: "Activez la couche Réseau de transport pour ajouter les lignes et postes OSM en direct.",
+    oimDown: (ref)=>"Les tuiles du réseau OSM ne se sont pas chargées" + (ref ? " ; note fondée sur le réseau de référence seul." : " et ce pays n'a pas de réseau de référence : l'accès réseau n'est pas noté."),
+    oimLine: (v)=>`Ligne OSM ≥200 kV : <b>${v}</b>`,
+    oimSub: (hv, n, kv, d)=>`Poste${hv ? " ≥200 kV" : ""} le plus proche : <b>${n}</b>${kv ? ` (${kv} kV)` : ""} · <b>${d}</b>`,
+    oimNoSub: (d)=>`Aucun poste HT à moins de ${d} <span class="micro">(tuiles chargées)</span>`,
+    planned: (n, d)=>`Ligne planifiée : ${n} · <b>${d}</b>`,
+    noPlants: "pas de données de centrales", noPlantNear: "Aucune centrale suivie en service à moins de 50 km",
+    renew: (p)=>`${p} renouvelable · `, pipeline: (mw)=>`+ ${mw} MW en construction ou planifiés`,
+    cable: (n, d)=>`Atterrissement de câble : <b>${n}</b> · <b>${d}</b>`, noCable: "Aucun atterrissement de câble dans les données",
+    dc: (n, d)=>`Data center en service le plus proche : <b>${n}</b> · <b>${d}</b>`, noDc: "Aucun data center en service dans les données",
+    connShort: (c, d)=>[c && "câble " + c, d && "DC " + d].filter(Boolean).join(" · ") || "isolé", noDigital: "pas de données numériques",
+    solarSetup: (t)=>`Fixe, plein sud, inclinaison ${t}°, pertes 14 %`, irr: (v)=>` · irradiation dans le plan ${v} kWh/m²/an`,
+    unavailable: "indisponible", pvgisDown: (e)=>`PVGIS n'a pas répondu (${e}) ; noté sans.`,
+    context: "Contexte", loads: (mw, l)=>`<b>Gros consommateurs à moins de 50 km :</b> ~${mw} MW — ${l}`,
+    dcs: (n, mw)=>`<b>Data centers à moins de 50 km :</b> ${n}${mw ? ` · ${mw} MW, projets annoncés inclus` : ""}`,
+    how: "Comment la note est calculée",
+    howIntro: "Chaque critère est noté de 1 à 5 selon des seuils fixes ; la note est leur moyenne pondérée sur les critères notés. L'accès réseau est obligatoire.",
+    howSteps: (dir, s)=>`5 / 4 / 3 / 2 à ${dir === "below" ? "≤" : "≥"} ${s} `,
+    howLimits: "Distances à vol d'oiseau. Les tracés de lignes sont indicatifs ; lignes et postes OSM proviennent des tuiles chargées autour du site. La capacité disponible des postes n'est pas publique et <b>n'est pas</b> évaluée : à confirmer avec le gestionnaire du réseau.",
+    copySummary: "Copier le résumé", copied: "Résumé copié", summaryHead: (c, k)=>`Pré-étude de site Wattu — ${c} (${k})`,
+    summaryScore: (v, w)=>`Note : ${v}/5 (${w}) — indicateur de pré-étude, pas une étude de raccordement`
+  } : {
+    badge: "Site diagnostic", title: "Site screening", hint: "Click the map to screen a site",
+    crit: { grid:"Grid access", generation:"Generation nearby", connectivity:"Connectivity", solar:"Solar resource" },
+    unit: { grid:"km to ≥225 kV line", generation:"MW operating within 50 km",
+            connectivity:"cable landing ≤25/75/150/300 km · DC ≤10/30/75/150 km", solar:"kWh/kWp/yr (PVGIS)" },
+    verdict: ["Not scored", "Weak", "Constrained", "Workable", "Strong"],
+    analysing: "analysing…", analysingAll: "Analysing…",
+    scored: (p)=>`Screening indicator · ${p} of weights scored`,
+    outside: (c)=>`Outside ${c}'s outline: the map's data stops at the border, so this read-out is incomplete.`,
+    toLine: "to ≥225 kV", noneWithin: (d)=>`none within ${d}`, noGrid: "no grid data",
+    refLine: (a, b, s)=>`≥225 kV: <b>${a}</b> · 400 kV: <b>${b}</b> <span class="micro">(${s})</span>`,
+    oimOff: "Turn on the Transmission grid layer to add live OSM lines and substations.",
+    oimDown: (ref)=>"Live OSM grid tiles did not load" + (ref ? "; scored on the reference grid only." : " and this country has no reference grid file, so grid access can't be scored."),
+    oimLine: (v)=>`OSM ≥200 kV line: <b>${v}</b>`,
+    oimSub: (hv, n, kv, d)=>`Nearest${hv ? " ≥200 kV" : ""} substation: <b>${n}</b>${kv ? ` (${kv} kV)` : ""} · <b>${d}</b>`,
+    oimNoSub: (d)=>`No HV substation within ${d} <span class="micro">(loaded tiles)</span>`,
+    planned: (n, d)=>`Planned line: ${n} · <b>${d}</b>`,
+    noPlants: "no plant data", noPlantNear: "No tracked operating plant within 50 km",
+    renew: (p)=>`${p} renewable · `, pipeline: (mw)=>`+ ${mw} MW under construction / planned`,
+    cable: (n, d)=>`Cable landing: <b>${n}</b> · <b>${d}</b>`, noCable: "No cable landing in the data",
+    dc: (n, d)=>`Nearest operating DC: <b>${n}</b> · <b>${d}</b>`, noDc: "No operating data centre in the data",
+    connShort: (c, d)=>[c && "cable " + c, d && "DC " + d].filter(Boolean).join(" · ") || "remote", noDigital: "no digital data",
+    solarSetup: (t)=>`Fixed, south-facing, ${t}° tilt, 14 % losses`, irr: (v)=>` · in-plane irradiation ${v} kWh/m²/yr`,
+    unavailable: "unavailable", pvgisDown: (e)=>`PVGIS did not answer (${e}); scored without it.`,
+    context: "Context", loads: (mw, l)=>`<b>Large loads within 50 km:</b> ~${mw} MW — ${l}`,
+    dcs: (n, mw)=>`<b>Data centres within 50 km:</b> ${n}${mw ? ` · ${mw} MW incl. announced` : ""}`,
+    how: "How the score works",
+    howIntro: "Each criterion scores 1–5 against fixed thresholds; the score is their weighted mean over the criteria that could be scored. Grid access is required.",
+    howSteps: (dir, s)=>`5 / 4 / 3 / 2 at ${dir === "below" ? "≤" : "≥"} ${s} `,
+    howLimits: "Distances are straight-line. Line data is indicative, not survey-grade; OSM lines and substations come from the tiles loaded around the site. Spare capacity at a substation is not public and is <b>not</b> assessed — confirm with the TSO.",
+    copySummary: "Copy summary", copied: "Summary copied", summaryHead: (c, k)=>`Wattu site screening — ${c} (${k})`,
+    summaryScore: (v, w)=>`Score: ${v}/5 (${w}) — screening indicator, not a grid-connection study`
+  };
+
+  let siteMode  = false;
+  let site      = null;   // { lng, lat, seq, stat, oim, solar, … } for the open diagnostic
+  let siteSeq   = 0;
+  let pendingSite = null; // a link's site, opened once the map and data are in
+  const siteGridCache = {};  // country → Promise<FeatureCollection|null>
+  const solarCache    = {};  // "lat,lng" (2 dp) → Promise<{ yield, irr }>
+
+  function stepScore(v, steps, dir){
+    if(v == null) return null;
+    for(let i = 0; i < steps.length; i++){
+      if(dir === "below" ? v <= steps[i] : v >= steps[i]) return 5 - i;
+    }
+    return 1;
+  }
+  function fmtKm(km){
+    if(km == null) return "—";
+    if(km < 1) return "<1 km";
+    return nfmt(km, km < 10 ? 1 : 0, km < 10 ? 1 : 0) + " km";
+  }
+  function fmtScore(v){ return v == null ? "—" : nfmt(v, v % 1 ? 1 : 0, v % 1 ? 1 : 0); }
+  function fmtCoord(lat, lng){
+    return `${nfmt(Math.abs(lat), 4, 4)}°${lat>=0?"N":"S"}, ${nfmt(Math.abs(lng), 4, 4)}°${lng>=0?"E":(FR?"O":"W")}`;
+  }
+  // Voltage from any of: 225, "225", "225000", "400000;225000" → kV.
+  function toKv(v){
+    const n = parseFloat(String(v == null ? "" : v).split(/[;,]/)[0]);
+    if(!Number.isFinite(n) || n <= 0) return null;
+    return n > 2000 ? n / 1000 : n;
+  }
+
+  // Local flat projection around the site, in km. Good to well under 1 %
+  // over the few hundred km this works at.
+  function projector(lng0, lat0){
+    const kx = 111.320 * Math.cos(lat0 * Math.PI / 180), ky = 110.574;
+    return {
+      to:   ([lng, lat]) => [(lng - lng0) * kx, (lat - lat0) * ky],
+      from: ([x, y])     => [lng0 + x / kx, lat0 + y / ky]
+    };
+  }
+  function lineParts(g){
+    if(!g) return [];
+    if(g.type === "LineString") return [g.coordinates];
+    if(g.type === "MultiLineString") return g.coordinates;
+    return [];
+  }
+  // Representative point: the point itself, or a polygon's vertex mean.
+  function pointOf(g){
+    if(!g) return null;
+    if(g.type === "Point") return g.coordinates;
+    const ring = g.type === "Polygon" ? g.coordinates[0]
+               : g.type === "MultiPolygon" ? g.coordinates[0][0] : null;
+    if(!ring || !ring.length) return null;
+    const s = ring.reduce((a, c)=>[a[0] + c[0], a[1] + c[1]], [0, 0]);
+    return [s[0] / ring.length, s[1] / ring.length];
+  }
+  // Nearest point on any line: { km, at:[lng,lat], f }.
+  function nearestOnLines(features, s, keep){
+    const P = projector(s.lng, s.lat);
+    let best = null;
+    features.forEach(f=>{
+      if(keep && !keep(f)) return;
+      lineParts(f.geometry).forEach(part=>{
+        for(let i = 1; i < part.length; i++){
+          const a = P.to(part[i-1]), b = P.to(part[i]);
+          const dx = b[0] - a[0], dy = b[1] - a[1], len2 = dx*dx + dy*dy;
+          const t = len2 ? Math.max(0, Math.min(1, -(a[0]*dx + a[1]*dy) / len2)) : 0;
+          const q = [a[0] + t*dx, a[1] + t*dy], km = Math.hypot(q[0], q[1]);
+          if(!best || km < best.km) best = { km, at: P.from(q), f };
+        }
+      });
+    });
+    return best;
+  }
+  // Every point feature with its distance, nearest first.
+  function byDistance(features, s, keep){
+    const P = projector(s.lng, s.lat);
+    return features.filter(f=>!keep || keep(f)).map(f=>{
+      const c = pointOf(f.geometry);
+      if(!c) return null;
+      const q = P.to(c);
+      return { f, km: Math.hypot(q[0], q[1]), at: c };
+    }).filter(Boolean).sort((a, b)=>a.km - b.km);
+  }
+  function inRing([x, y], ring){
+    let inside = false;
+    for(let i = 0, j = ring.length - 1; i < ring.length; j = i++){
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  // True when the country has no outline file: nothing to test against.
+  function inCountry(lng, lat){
+    if(!boundaryData) return true;
+    return boundaryData.features.some(f=>{
+      const g = f.geometry || {};
+      const polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+      return polys.some(p=>inRing([lng, lat], p[0]) && !p.slice(1).some(h=>inRing([lng, lat], h)));
+    });
+  }
+  function circle(lng, lat, km, n){
+    const P = projector(lng, lat), ring = [];
+    for(let i = 0; i <= n; i++){
+      const a = 2 * Math.PI * i / n;
+      ring.push(P.from([km * Math.cos(a), km * Math.sin(a)]));
+    }
+    return ring;
+  }
+
+  // Optional per-country reference grid (countries.config.js → siteGrid):
+  // a national line file read only by Site check, fetched on first use.
+  function loadSiteGrid(countryKey){
+    const c = COUNTRIES[countryKey];
+    if(!c.siteGrid) return Promise.resolve(null);
+    if(!siteGridCache[countryKey]){
+      siteGridCache[countryKey] = fetch(dataUrl(c, c.siteGrid.file))
+        .then(r=>r.ok ? r.json() : null)
+        .catch(()=>null)
+        .then(fc=>{ if(!fc) delete siteGridCache[countryKey]; return fc; });
+    }
+    return siteGridCache[countryKey];
+  }
+
+  // Specific yield of 1 kWp fixed, south-facing, tilt ≈ latitude, 14 % losses.
+  function siteTilt(lat){ return Math.min(45, Math.round(Math.abs(lat))); }
+  function fetchSolar(lat, lng){
+    const key = lat.toFixed(2) + "," + lng.toFixed(2);
+    if(!solarCache[key]){
+      const q = new URLSearchParams({
+        lat: lat.toFixed(4), lon: lng.toFixed(4), peakpower: "1", loss: "14",
+        angle: String(siteTilt(lat)), aspect: lat >= 0 ? "0" : "180",
+        mountingplace: "free", outputformat: "json"
+      });
+      solarCache[key] = fetch(PVGIS_URL + "?" + q)
+        .then(r=>r.json().catch(()=>({})).then(j=>{
+          if(!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+          const t = j.outputs && j.outputs.totals && j.outputs.totals.fixed;
+          if(!t || num(t.E_y) == null) throw new Error("unexpected PVGIS response");
+          return { yield: t.E_y, irr: num(t["H(i)_y"]) };
+        }))
+        .catch(e=>{ delete solarCache[key]; throw e; });
+    }
+    return solarCache[key];
+  }
+
+  // Everything computed from the curated layers and the reference grid.
+  function analyseStatic(s, refGrid){
+    const r = {};
+    if(refGrid){
+      const existing = refGrid.features.filter(f=>f.properties.status !== "planned");
+      r.ref225 = nearestOnLines(existing, s, f=>(toKv(f.properties.voltage_kv) || 0) >= 220);
+      r.ref400 = nearestOnLines(existing, s, f=>(toKv(f.properties.voltage_kv) || 0) >= 380);
+    }
+    const planned = (refGrid ? refGrid.features : []).concat(featuresOfKind(currentCountry, "grid"))
+      .filter(f=>f.properties.status === "planned");
+    r.planned = nearestOnLines(planned, s);
+
+    const near = (kind)=>byDistance(featuresOfKind(currentCountry, kind), s)
+      .filter(x=>x.km <= SITE_RADIUS_KM);
+    const plants = near("power");
+    const op = plants.filter(x=>x.f.properties.status === "operational");
+    const sumMw = (xs, field)=>xs.reduce((t, x)=>t + (num(x.f.properties[field]) || 0), 0);
+    r.gen = {
+      mw: sumMw(op, "capacity_mw"),
+      renewMw: sumMw(op.filter(x=>SITE_RENEW.includes(x.f.properties.fuel_type)), "capacity_mw"),
+      pipelineMw: sumMw(plants.filter(x=>x.f.properties.status !== "operational" && x.f.properties.status !== "idle"), "capacity_mw"),
+      top: op.slice().sort((a, b)=>(num(b.f.properties.capacity_mw) || 0) - (num(a.f.properties.capacity_mw) || 0)).slice(0, 3),
+      hasLayer: featuresOfKind(currentCountry, "power").length > 0
+    };
+    const loads = near("industrial");
+    r.loads = { mw: sumMw(loads, "estimated_demand_mw"), list: loads.slice(0, 3) };
+
+    const digital = featuresOfKind(currentCountry, "digital");
+    const isCable = (f)=>f.properties.category === "cable_landing";
+    r.cable = byDistance(digital, s, isCable)[0] || null;
+    r.hasCables = digital.some(isCable);
+    const dcs = byDistance(digital, s, f=>!isCable(f));
+    r.dc = dcs.find(x=>x.f.properties.status === "operational") || null;
+    const dcNear = dcs.filter(x=>x.km <= SITE_RADIUS_KM);
+    r.dcNear = { count: dcNear.length, mw: sumMw(dcNear, "capacity_estimate_mw") };
+    r.hasDCs = dcs.length > 0;
+    return r;
+  }
+
+  // Live OSM grid from the OpenInfraMap tiles currently loaded. Only covers
+  // what the viewport has fetched, so the search radius is reported.
+  function analyseOim(s){
+    if(!map || !map.getSource(OIM_SRC)) return { off: true };
+    const gridLayer = ((COUNTRIES[currentCountry] || {}).layers || []).find(L=>L.kind === "oim");
+    if(gridLayer && visibility[gridLayer.id] === false) return { off: true };
+    const lines = map.querySourceFeatures(OIM_SRC, { sourceLayer: "power_line" });
+    const subs  = map.querySourceFeatures(OIM_SRC, { sourceLayer: "power_substation_point" })
+      .concat(map.querySourceFeatures(OIM_SRC, { sourceLayer: "power_substation" }));
+    // Nothing at all came back: the tiles failed, not an empty grid.
+    if(!lines.length && !subs.length) return { unavailable: true };
+    const b = map.getBounds(), P = projector(s.lng, s.lat);
+    const reach = Math.min(
+      Math.abs(P.to([b.getWest(), s.lat])[0]), Math.abs(P.to([b.getEast(), s.lat])[0]),
+      Math.abs(P.to([s.lng, b.getSouth()])[1]), Math.abs(P.to([s.lng, b.getNorth()])[1]));
+    const within = (x)=>x && x.km <= reach ? x : null;
+    return {
+      reach,
+      hv: within(nearestOnLines(lines, s, f=>(toKv(f.properties.voltage) || 0) >= 200)),
+      sub: within(byDistance(subs, s, f=>(toKv(f.properties.voltage) || 0) >= 60)[0] || null),
+      sub225: within(byDistance(subs, s, f=>(toKv(f.properties.voltage) || 0) >= 200)[0] || null)
+    };
+  }
+
+  function siteScores(s){
+    const sc = {}, st = s.stat || {};
+    const gridKm = [st.ref225, s.oim && s.oim.hv].filter(Boolean).map(x=>x.km);
+    sc.grid = gridKm.length ? stepScore(Math.min(...gridKm), SITE_CRITERIA[0].steps, "below") : null;
+    sc.generation = st.gen && st.gen.hasLayer ? stepScore(st.gen.mw, SITE_CRITERIA[1].steps, "above") : null;
+    const conn = [
+      st.hasCables ? stepScore(st.cable ? st.cable.km : null, CABLE_STEPS, "below") : null,
+      st.hasDCs    ? (st.dc ? stepScore(st.dc.km, DC_STEPS, "below") : 1) : null
+    ].filter(v=>v != null);
+    sc.connectivity = conn.length ? conn.reduce((a, b)=>a + b, 0) / conn.length : null;
+    sc.solar = s.solar && s.solar.ok ? stepScore(s.solar.yield, SITE_CRITERIA[3].steps, "above") : null;
+    // Weighted mean over the criteria that could be scored; no grid, no verdict.
+    let w = 0, t = 0;
+    SITE_CRITERIA.forEach(c=>{ if(sc[c.key] != null){ w += c.weight; t += c.weight * sc[c.key]; } });
+    sc.overall = sc.grid != null && w ? t / w : null;
+    sc.coverage = w;
+    return sc;
+  }
+  function verdict(v){
+    return ST.verdict[v == null ? 0 : v >= 4 ? 4 : v >= 3 ? 3 : v >= 2 ? 2 : 1];
+  }
+
+  // ---- overlay: 50 km ring, site pin, dashed links to the nearest grid ----
+  function drawSiteOverlay(){
+    if(!map || !site || !map.isStyleLoaded()) return;
+    const feats = [{ type:"Feature", properties:{ role:"ring" },
+      geometry:{ type:"Polygon", coordinates:[circle(site.lng, site.lat, SITE_RADIUS_KM, 72)] } }];
+    const link = (x, role)=>{
+      if(!x) return;
+      feats.push({ type:"Feature", properties:{ role },
+        geometry:{ type:"LineString", coordinates:[[site.lng, site.lat], x.at] } });
+      feats.push({ type:"Feature", properties:{ role: role + "-end" }, geometry:{ type:"Point", coordinates:x.at } });
+    };
+    const st = site.stat || {}, oim = site.oim || {};
+    link([st.ref225, oim.hv].filter(Boolean).sort((a, b)=>a.km - b.km)[0], "grid");
+    link(oim.sub225 || oim.sub, "sub");
+    feats.push({ type:"Feature", properties:{ role:"site" }, geometry:{ type:"Point", coordinates:[site.lng, site.lat] } });
+    const data = { type:"FeatureCollection", features: feats };
+    if(map.getSource("src-site")){ map.getSource("src-site").setData(data); return; }
+    map.addSource("src-site", { type:"geojson", data });
+    const col = SITE_COLOR();
+    const role = (r)=>["==", ["get","role"], r];
+    map.addLayer({ id:"lyr-site-ring-fill", type:"fill", source:"src-site", filter: role("ring"),
+      paint:{ "fill-color": col, "fill-opacity": 0.06 } });
+    map.addLayer({ id:"lyr-site-ring", type:"line", source:"src-site", filter: role("ring"),
+      paint:{ "line-color": col, "line-width": 1.2, "line-opacity": 0.8, "line-dasharray":[2, 2] } });
+    map.addLayer({ id:"lyr-site-links", type:"line", source:"src-site",
+      filter:["any", role("grid"), role("sub")],
+      paint:{ "line-color": col, "line-width": 1.6, "line-dasharray":[1.5, 1.5] } });
+    map.addLayer({ id:"lyr-site-ends", type:"circle", source:"src-site",
+      filter:["any", role("grid-end"), role("sub-end")],
+      paint:{ "circle-radius": 4, "circle-color": isDark() ? "#070D1A" : "#FFFFFF",
+              "circle-stroke-color": col, "circle-stroke-width": 2 } });
+    map.addLayer({ id:"lyr-site-pin", type:"circle", source:"src-site", filter: role("site"),
+      paint:{ "circle-radius": 7, "circle-color": col,
+              "circle-stroke-color": isDark() ? "#070D1A" : "#FFFFFF", "circle-stroke-width": 2.5 } });
+  }
+  function removeSiteOverlay(){
+    if(!map || !map.getStyle()) return;
+    ["lyr-site-pin","lyr-site-ends","lyr-site-links","lyr-site-ring","lyr-site-ring-fill"]
+      .forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    if(map.getSource("src-site")) map.removeSource("src-site");
+  }
+  // Called whenever another popup replaces the diagnostic, or it closes.
+  function clearSite(){
+    if(!site) return;
+    site = null;
+    removeSiteOverlay();
+  }
+
+  // ---- mode toggle ----
+  const siteBtn = $("#siteBtn"), siteHint = $("#siteHint"), mapWrap = $(".map-wrap");
+  function setSiteMode(on){
+    siteMode = on && !overview;
+    if(siteBtn) siteBtn.setAttribute("aria-pressed", String(siteMode));
+    if(siteHint) siteHint.hidden = !siteMode;
+    if(mapWrap) mapWrap.classList.toggle("site-mode", siteMode);
+    if(siteMode) hideTooltip();
+  }
+  if(siteBtn) siteBtn.addEventListener("click", ()=>setSiteMode(!siteMode));
+
+  // ---- run ----
+  function runSiteDiagnostic(lng, lat){
+    if(!map || overview) return;
+    const seq = ++siteSeq;
+    selected = null;
+    removeSiteOverlay();
+    site = { lng, lat, seq, inside: inCountry(lng, lat), stat: null, oim: null, solar: { pending: true } };
+    hideTooltip();
+    drawSiteOverlay();
+    renderSite();
+    syncUrl();
+    const live = ()=>site && site.seq === seq;
+
+    loadSiteGrid(currentCountry).then(ref=>{
+      if(!live()) return;
+      site.refAvailable = !!ref;
+      site.stat = analyseStatic(site, ref);
+      drawSiteOverlay(); renderSite();
+    });
+
+    fetchSolar(lat, lng)
+      .then(v=>{ if(live()){ site.solar = Object.assign({ ok: true }, v); renderSite(); } })
+      .catch(e=>{ if(live()){ site.solar = { ok: false, error: String(e && e.message || e) }; renderSite(); } });
+
+    // Bring the tiles around the site in, then read the live OSM grid. On a
+    // phone the map is already padded above the popup (syncMapPad); on a
+    // desktop the popup covers the right 384 px, so the site goes left of it.
+    let done = false;
+    const readOim = ()=>{
+      if(done || !live()) return;
+      done = true;
+      site.oim = analyseOim(site);
+      drawSiteOverlay(); renderSite();
+    };
+    map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), SITE_ZOOM),
+                 offset: sheetOn() ? [0, 0] : [-192, 0], duration: 700 });
+    map.once("idle", readOim);
+    setTimeout(readOim, 6000);  // slow tiles: score with what has arrived
+  }
+
+  // ---- render ----
+  function siteRows(s){
+    const st = s.stat, oim = s.oim, pend = `<span class="site-pending">${ST.analysing}</span>`;
+    const name = (x)=>escapeHtml(x && x.f && x.f.properties && x.f.properties.name || "—");
+    const mw = (v)=>nfmt(Math.round(v));
+    const rows = {};
+
+    if(!st && !oim) rows.grid = { value: pend, detail: "" };
+    else {
+      const best = [st && st.ref225, oim && oim.hv].filter(Boolean).sort((a, b)=>a.km - b.km)[0];
+      const d = [];
+      if(st && s.refAvailable)
+        d.push(ST.refLine(fmtKm(st.ref225 && st.ref225.km), fmtKm(st.ref400 && st.ref400.km),
+                          escapeHtml(srcText(COUNTRIES[currentCountry].siteGrid))));
+      if(!oim) d.push(pend);
+      else if(oim.off) d.push(`<span class="micro">${ST.oimOff}</span>`);
+      else if(oim.unavailable) d.push(`<span class="micro">${ST.oimDown(s.refAvailable)}</span>`);
+      else {
+        d.push(ST.oimLine(oim.hv ? fmtKm(oim.hv.km) : ST.noneWithin(fmtKm(oim.reach))));
+        const sub = oim.sub225 || oim.sub, kv = sub && toKv(sub.f.properties.voltage);
+        d.push(sub ? ST.oimSub(!!oim.sub225, name(sub), kv ? Math.round(kv) : null, fmtKm(sub.km))
+                   : ST.oimNoSub(fmtKm(oim.reach)));
+      }
+      if(st && st.planned) d.push(ST.planned(name(st.planned), fmtKm(st.planned.km)));
+      rows.grid = { value: best ? fmtKm(best.km) + " " + ST.toLine
+                         : oim && oim.reach ? ST.noneWithin(fmtKm(oim.reach)) : ST.noGrid,
+                    detail: d.join("<br>") };
+    }
+
+    if(!st) rows.generation = { value: pend, detail: "" };
+    else if(!st.gen.hasLayer) rows.generation = { value: ST.noPlants, detail: "" };
+    else {
+      const g = st.gen;
+      rows.generation = {
+        value: `${mw(g.mw)} MW`,
+        detail: (g.mw ? ST.renew(nfmt(Math.round(100 * g.renewMw / g.mw)) + PCT) : "") +
+          (g.top.length ? g.top.map(x=>`${name(x)} (${fmtCap(x.f.properties.capacity_mw)}, ${escapeHtml(word(FUEL_WORD, x.f.properties.fuel_type))})`).join(", ")
+                        : ST.noPlantNear) +
+          (g.pipelineMw ? "<br>" + ST.pipeline(mw(g.pipelineMw)) : "")
+      };
+    }
+
+    if(!st) rows.connectivity = { value: pend, detail: "" };
+    else {
+      const d = [];
+      if(st.hasCables) d.push(st.cable ? ST.cable(name(st.cable), fmtKm(st.cable.km)) : ST.noCable);
+      if(st.hasDCs) d.push(st.dc ? ST.dc(name(st.dc), fmtKm(st.dc.km)) : ST.noDc);
+      rows.connectivity = { value: d.length ? ST.connShort(st.cable && fmtKm(st.cable.km), st.dc && fmtKm(st.dc.km)) : ST.noDigital,
+                            detail: d.join("<br>") };
+    }
+
+    const so = s.solar || {};
+    rows.solar = so.pending ? { value: pend, detail: "" }
+      : so.ok ? { value: `${nfmt(Math.round(so.yield))} kWh/kWp`,
+                  detail: ST.solarSetup(siteTilt(s.lat)) + (so.irr ? ST.irr(nfmt(Math.round(so.irr))) : "") + " · PVGIS (EU JRC)" }
+      : { value: ST.unavailable, detail: `<span class="micro">${ST.pvgisDown(escapeHtml(so.error || "error"))}</span>` };
+    return rows;
+  }
+
+  function renderSite(){
+    if(!site) return;
+    const s = site, sc = siteScores(s), rows = siteRows(s), st = s.stat;
+    const allIn = st && s.oim && !s.solar.pending;
+    const bar = (v)=>`<span class="site-bar"><span class="site-bar-fill" data-w="${v == null ? 0 : Math.round(v / 5 * 100)}"></span></span>`;
+    const pct = (w)=>nfmt(Math.round(w * 100)) + PCT;
+
+    const crit = SITE_CRITERIA.map(c=>`
+      <div class="site-crit">
+        <div class="site-crit-head">
+          <span class="site-crit-name">${ST.crit[c.key]} <span class="micro">${pct(c.weight)}</span></span>
+          <span class="site-crit-score">${sc[c.key] == null ? "—" : fmtScore(sc[c.key]) + "<small>/5</small>"}</span>
+        </div>
+        ${bar(sc[c.key])}
+        <div class="site-crit-value">${rows[c.key].value}</div>
+        ${rows[c.key].detail ? `<div class="site-crit-detail">${rows[c.key].detail}</div>` : ""}
+      </div>`).join("");
+
+    const ctx = [];
+    if(st){
+      if(st.loads.list.length) ctx.push(`<li>${ST.loads(nfmt(Math.round(st.loads.mw)), st.loads.list.map(x=>escapeHtml(x.f.properties.name)).join(", "))}</li>`);
+      if(st.dcNear.count) ctx.push(`<li>${ST.dcs(st.dcNear.count, st.dcNear.mw ? nfmt(Math.round(st.dcNear.mw)) : "")}</li>`);
+    }
+
+    $("#popupBadge").innerHTML = `<span class="badge site"><span class="dot" data-bg="${escapeHtml(SITE_COLOR())}"></span>${ST.badge}</span>`;
+    paint($("#popupBadge"));
+    $("#popupBody").innerHTML = `
+      <h1 class="pop-title">${ST.title}</h1>
+      <div class="pop-sub">${fmtCoord(s.lat, s.lng)}</div>
+      ${s.inside ? "" : `<div class="site-warn">${ST.outside(escapeHtml(countryLabel(COUNTRIES[currentCountry])))}</div>`}
+      <div class="site-score">
+        <div class="site-score-v">${sc.overall == null ? "—" : nfmt(sc.overall, 1, 1)}<small>/5</small></div>
+        <div>
+          <div class="site-score-label">${verdict(sc.overall)}${allIn || sc.overall == null ? "" : "…"}</div>
+          <div class="micro">${allIn ? ST.scored(pct(sc.coverage)) : ST.analysingAll}</div>
+        </div>
+      </div>
+      ${crit}
+      ${ctx.length ? `<h3 class="site-h">${ST.context}</h3><ul class="site-ctx">${ctx.join("")}</ul>` : ""}
+      <details>
+        <summary>${ST.how}</summary>
+        <div class="site-method">
+          <p>${ST.howIntro}</p>
+          <ul>${SITE_CRITERIA.map(c=>`<li><b>${ST.crit[c.key]}</b> (${pct(c.weight)})${COLON} ${c.steps ? ST.howSteps(c.dir, c.steps.map(v=>nfmt(v)).join(" / ")) : ""}${ST.unit[c.key]}</li>`).join("")}</ul>
+          <p>${ST.howLimits}</p>
+        </div>
+      </details>
+      <div class="pop-actions">
+        <button type="button" class="site-copy">${ST.copySummary}</button>
+        <button type="button" class="pop-share">${T.copyLink}</button>
+      </div>`;
+    $("#popupBody").querySelectorAll("[data-w]").forEach(el=>{ el.style.width = el.dataset.w + "%"; });
+    popup.querySelector(".site-copy").addEventListener("click", async ()=>{
+      try{ await navigator.clipboard.writeText(siteSummary(s, sc, rows)); showToast(ST.copied); }
+      catch(e){ showToast(T.copyFromBar); }
+    });
+    wirePopupShare();
+    const wasOpen = popup.classList.contains("open");
+    popup.classList.add("open");
+    popup.setAttribute("aria-hidden","false");
+    if(!wasOpen) sheetForPopup();
+  }
+
+  function siteSummary(s, sc, rows){
+    const strip = (h)=>{ const d = document.createElement("div"); d.innerHTML = h.replace(/<br>/g, "\n   "); return d.textContent; };
+    syncUrl(true);
+    return [
+      ST.summaryHead(fmtCoord(s.lat, s.lng), countryLabel(COUNTRIES[currentCountry])),
+      ST.summaryScore(sc.overall == null ? "—" : nfmt(sc.overall, 1, 1), verdict(sc.overall)),
+      ...SITE_CRITERIA.map(c=>`- ${ST.crit[c.key]} [${fmtScore(sc[c.key])}/5]${COLON} ${strip(rows[c.key].value)}${rows[c.key].detail ? "\n   " + strip(rows[c.key].detail) : ""}`),
+      location.href
+    ].join("\n");
+  }
 
   // ---------- Country switch ----------
   // ---------- Search ----------
@@ -1974,14 +2823,16 @@
       const what = L.kind === "power" ? [T.powerPlant, word(FUEL_WORD, p.fuel_type)]
         : L.kind === "industrial" ? [word(SECTOR_WORD, p.sector) || T.industry]
         : L.kind === "digital" ? [p.category === "cable_landing" ? T.cableShort : T.dataCentre, p.operator]
+        : L.kind === "water" ? [waterMetric(p, true)]
         : [num(p.voltage_kv) != null ? `${T.line} · ${p.voltage_kv} kV` : T.line];
       // Industry carries an estimated demand, not a capacity.
-      const size = mw == null || L.kind === "grid" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
+      const size = mw == null || L.kind === "grid" || L.kind === "water" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
       const meta = [...what, size, STATUS_WORD[p.status], countryLabel(c)].filter(Boolean).join(" · ");
-      const mark = markerOf(L.kind, p)
-        || { shape:"disc", color: L.kind === "power" ? FUEL_COLOR[p.fuel_type] || "#888" : INTERCONNECTOR_COLOR() };
-      return { country: countryKey, layer: L.id, id: String(p.id), name: String(p.name), meta, mark, mw: mw || 0,
-               nameN: norm(p.name), hay: norm([p.name, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
+      // What the swatch needs, not its colour: the index outlives a theme switch.
+      const mark = { kind: L.kind, category: p.category, fuel: p.fuel_type };
+      const shown = L.kind === "water" ? featName(p) : p.name;
+      return { country: countryKey, layer: L.id, id: String(p.id), name: String(shown), meta, mark, mw: mw || 0,
+               nameN: norm(shown), hay: norm([p.name, p.name_fr, T.waterCat && T.waterCat[p.category], p.river, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
                                                p.fuel_type, word(FUEL_WORD, p.fuel_type)].filter(Boolean).join(" ")) };
     })).filter(Boolean);
   }
@@ -2029,6 +2880,12 @@
     renderResults(q, !allEntries);
   }
 
+  // A result's swatch in the current theme's colours.
+  function entryMark(m){
+    return markerOf(m.kind, { category: m.category })
+      || { shape:"disc", color: m.kind === "power" ? FUEL_COLOR[m.fuel] || "#888" : INTERCONNECTOR_COLOR() };
+  }
+
   // Name with the match marked, as DOM nodes.
   function markedName(name, q){
     const span = el("span", "so-name");
@@ -2048,9 +2905,10 @@
       li.setAttribute("role", "option");
       li.setAttribute("aria-selected", String(i === activeOption));
       const dot = el("span", "so-dot");
+      const m = o.isCountry ? null : entryMark(o.mark);
       if(o.isCountry) dot.textContent = "→";
-      else if(o.mark.shape === "ring"){ dot.classList.add("shape-ring"); dot.style.borderColor = o.mark.color; }
-      else { dot.classList.add("shape-" + o.mark.shape); dot.style.background = o.mark.color; }
+      else if(m.shape === "ring"){ dot.classList.add("shape-ring"); dot.style.borderColor = m.color; }
+      else { dot.classList.add("shape-" + m.shape); dot.style.background = m.color; }
       const text = el("span", "so-text");
       text.append(markedName(o.name, q), el("span", "so-meta", o.meta));
       li.append(dot, text);
@@ -2320,6 +3178,7 @@
 
   // `link`: a shared link to the overview (its metric and view), if any.
   async function enterOverview(link){
+    setSiteMode(false);
     overview = true;
     if(link && OVERVIEW_METRICS[link.metric]) overviewMetric = link.metric;
     countrySelect.value = OVERVIEW_KEY;
@@ -2494,6 +3353,7 @@
     hideTooltip();
     hoveredLayer = null;
     fuelFilter = null;
+    lens = "energy";
     if(!(await loadAllData(key))) return; // superseded by a later switch
     if(overview) return;                  // the overview was picked meanwhile
     if(link) applyLinkState(link);
@@ -2504,7 +3364,8 @@
       if(link && link.view) map.jumpTo(link.view);
       buildMapLayers(key);
       const opened = !!(link && link.feature) && openLinkedFeature(link.feature, !link.view, link.smooth);
-      if(!opened && !(link && link.view)) map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
+      if(!opened && link && link.site) runSiteDiagnostic(link.site.lng, link.site.lat);
+      else if(!opened && !(link && link.view)) map.flyTo({ center: c.center, zoom: c.zoom, speed: 0.8, curve: 1.4 });
     } else if(link){
       pendingFeature = link.feature;
     }

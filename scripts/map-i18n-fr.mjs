@@ -3,6 +3,16 @@
  * stops if an English string is no longer in the page or if English is
  * left in the French one. Texts that app.js writes are in its T table. */
 export const PAIRS = [
+  // Site check (map overlay and methodology)
+  ['title="Site check — click the map to screen a data-centre site"',
+   'title="Diagnostic de site — cliquez sur la carte pour évaluer un site de data center"'],
+  ['<span>Site check</span>', '<span>Diagnostic de site</span>'],
+  ['>Click anywhere to screen a site · <kbd>Esc</kbd> to exit</div>',
+   '>Cliquez n\'importe où pour évaluer un site · <kbd>Échap</kbd> pour quitter</div>'],
+  ['<li><strong>PVGIS</strong>, through the same Worker — only when you run a <em>Site check</em>: the clicked coordinates are sent to get the solar yield.</li>',
+   '<li><strong>PVGIS</strong>, par le même Worker — uniquement lors d\'un <em>diagnostic de site</em> : les coordonnées cliquées sont envoyées pour obtenir le productible solaire.</li>'],
+  ['<li><em>Site check</em> is a screening indicator: straight-line distances to the grid, generation and loads within 50 km, connectivity and PVGIS solar yield, scored 1–5. It does not know spare substation capacity, land, water or permitting.</li>',
+   '<li>Le <em>diagnostic de site</em> est un indicateur de pré-étude : distances à vol d\'oiseau au réseau, production et consommateurs à moins de 50 km, connectivité et productible solaire PVGIS, notés de 1 à 5. Il ignore la capacité disponible des postes, le foncier, l\'eau et les autorisations.</li>'],
   // Head
   ['<title>Wattu Energy — Morocco infrastructure map</title>',
    '<title>Wattu Energy — carte des infrastructures (Maroc)</title>'],

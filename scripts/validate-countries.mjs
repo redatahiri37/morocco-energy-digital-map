@@ -20,21 +20,30 @@ const DOCS = join(ROOT, "docs");
 // The schema. DATA_SCHEMA.md documents exactly this; the drift check at the
 // bottom fails if a required field below is missing from that document.
 // ---------------------------------------------------------------------------
-const KINDS = ["power", "grid", "industrial", "digital", "oim", "oim-plants"];
+const KINDS = ["power", "grid", "industrial", "digital", "water", "oim", "oim-plants"];
 const LIVE_KINDS = ["oim", "oim-plants"];  // OpenInfraMap tiles, no file
 
 const POINT_STATUS = ["operational", "construction", "announced", "planned", "idle"];
 // The grid renderer only draws these three; any other status is invisible.
 const GRID_STATUS = ["operational", "planned", "idle"];
+// Water infrastructure (`water`): a transfer is a line, a dam or a
+// desalination plant a point.
+const WATER_GEOMETRY = { transfer: ["LineString", "MultiLineString"], dam: ["Point"], desalination: ["Point"] };
 const FUELS = ["solar", "wind", "hydro", "coal", "gas", "oil", "nuclear", "geothermal", "biomass", "waste"];
 
 const num = (v) => typeof v === "number" && Number.isFinite(v);
 const numOrNull = (v) => v === null || num(v);
 const str = (v) => typeof v === "string" && v.trim() !== "";
+// A source or note has words to translate when it holds a lowercase word of
+// three letters or more, domains and versions aside ("Datacentermap.com",
+// "v0.9.0", "1:50m"): names of datasets and organisations are capitalised.
+const LOWERCASE_NAMES = ["powerplantmatching"];
+const hasWords = (s) => s.split(/[\s,;:()·/]+/).some((w) => !/[.\d]/.test(w) && /^\p{Ll}{3,}/u.test(w) && !LOWERCASE_NAMES.includes(w));
 
 // Optional fields that must be numbers whenever present, in every kind.
 const NUMERIC_OPTIONAL = ["investment_usd", "commissioning_year", "year", "units",
-  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw"];
+  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw", "annual_generation_gwh", "annual_generation_year",
+  "flow_m3s", "length_km", "pumping_stations", "pumping_mva", "storage_hm3", "height_m", "capacity_hm3_yr", "power_mw"];
 
 // Per kind: geometry types, required fields (with a test), recommended fields.
 export const SCHEMA = {
@@ -70,10 +79,22 @@ export const SCHEMA = {
     },
     recommended: ["id", "source_url", "precision", "year", "investment_usd"],
   },
+  water: {
+    geometry: ["Point", "LineString", "MultiLineString"],
+    required: {
+      name: str, status: (v) => POINT_STATUS.includes(v), source: str,
+      category: (v) => Object.hasOwn(WATER_GEOMETRY, v),
+    },
+    recommended: ["id", "source_url", "precision", "year", "region"],
+  },
 };
 
 const errors = [], warnings = [];
 const fail = (where, msg) => errors.push(`${where}: ${msg}`);
+// The French page shows `<field>Fr` (`source_fr` in mix files) for such a text.
+const needFr = (where, o, k, kFr = k + "Fr") => {
+  if (o && str(o[k]) && hasWords(o[k]) && !str(o[kFr])) fail(where, `${kFr} missing: "${o[k]}" has words to translate for the French page`);
+};
 const warn = (where, msg) => warnings.push(`${where}: ${msg}`);
 
 // ---------------------------------------------------------------------------
@@ -128,6 +149,10 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (!str(o.key) || !str(o.short)) fail(`${at}.operators`, `bad entry ${JSON.stringify(o)}`);
   if (c.boundary && (!str(c.boundary.source) || !/^https:\/\//.test(c.boundary.sourceUrl || "")))
     fail(`${at}.boundary`, "needs source and an https sourceUrl");
+  needFr(at, c, "credits"); needFr(at, c, "snapshotSource");
+  needFr(`${at}.boundary`, c.boundary, "source"); needFr(`${at}.boundary`, c.boundary, "note");
+  needFr(`${at}.demand`, c.demand, "source"); needFr(`${at}.liveFlow`, c.liveFlow, "source");
+  needFr(`${at}.siteGrid`, c.siteGrid, "source");
 
   if (c.demand) {
     const d = c.demand;
@@ -152,6 +177,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (!KINDS.includes(L.kind)) { fail(lat, `unknown kind "${L.kind}" (expected ${KINDS.join(" / ")})`); continue; }
     for (const f of ["title", "titleFr", "source", "updated"]) if (!str(L[f])) fail(lat, `${f} missing`);
     if (!/^https:\/\//.test(L.sourceUrl || "")) fail(lat, "sourceUrl must be an https URL");
+    needFr(lat, L, "source");
 
     if (L.visible !== undefined && typeof L.visible !== "boolean") fail(lat, "visible must be true or false");
     if (LIVE_KINDS.includes(L.kind)) { if (L.file) fail(lat, `${L.kind} layers take file: null`); continue; }
@@ -177,6 +203,10 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       if (!g || !schema.geometry.includes(g.type)) { fail(fat, `geometry must be ${schema.geometry.join(" or ")}, got ${g && g.type}`); return; }
       const vs = vertices(g);
       if (!vs.every(isLngLat)) { fail(fat, "coordinates must be [lng, lat] in range"); return; }
+      // A water feature's category fixes its geometry: the renderer draws
+      // transfers as lines and the rest as points.
+      if (L.kind === "water" && Object.hasOwn(WATER_GEOMETRY, p.category) && !WATER_GEOMETRY[p.category].includes(g.type))
+        fail(fat, `a ${p.category} must be ${WATER_GEOMETRY[p.category].join(" or ")}, got ${g.type}`);
       for (const [field, test] of Object.entries(schema.required))
         if (!test(p[field])) fail(fat, `${field} ${field in p ? `invalid: ${JSON.stringify(p[field])}` : "missing"}`);
       for (const field of schema.recommended) if (p[field] == null) missingRec[field] = (missingRec[field] || 0) + 1;
@@ -198,6 +228,27 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
   }
 
+  // Lenses (Energy / Water / Nexus): a layer id that no longer exists would
+  // silently leave the lens without that layer.
+  if (c.lenses !== undefined) {
+    const lat = `${at}.lenses`;
+    if (!Array.isArray(c.lenses) || !c.lenses.length) fail(lat, "must be a non-empty list");
+    else {
+      const ids = new Set();
+      for (const l of c.lenses) {
+        const where = `${lat}.${l && l.id}`;
+        if (!l || !/^[a-z][a-z0-9-]*$/.test(l.id || "")) { fail(lat, `bad lens id ${JSON.stringify(l && l.id)}`); continue; }
+        if (ids.has(l.id)) fail(where, "duplicate lens id"); ids.add(l.id);
+        if (!str(l.label) || !str(l.labelFr)) fail(where, "needs label and labelFr");
+        if (l.layers !== undefined && (!Array.isArray(l.layers) || !l.layers.length)) fail(where, "layers must be a non-empty list of layer ids");
+        for (const id of l.layers || []) if (!seenIds.has(id)) fail(where, `"${id}" is not a layer of ${key}`);
+        if (l.fuel !== undefined && !FUELS.includes(l.fuel)) fail(where, `fuel must be one of the schema's fuel types, got ${JSON.stringify(l.fuel)}`);
+        if ((l.note !== undefined && !str(l.note)) || (l.noteFr !== undefined && !str(l.noteFr))) fail(where, "note and noteFr must be text");
+      }
+      if (!ids.has("energy")) fail(lat, `needs an "energy" lens, the default view`);
+    }
+  }
+
   // A renamed interconnector would silently lose its live figure.
   if (lf && Array.isArray(lf.features))
     for (const id of lf.features)
@@ -215,6 +266,7 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     if (m) {
       if (!Number.isInteger(m.year)) fail(mat, "year must be an integer");
       if (!str(m.source) || !/^https:\/\//.test(m.source_url || "")) fail(mat, "needs source and an https source_url");
+      needFr(mat, m, "source", "source_fr");
       for (const f of ["generation_twh", "capacity_gw", "renewables_pct_generation"])
         if (!num(m[f])) fail(mat, `${f} must be a number, got ${JSON.stringify(m[f])}`);
       for (const f of ["demand_twh", "net_imports_twh", "co2_intensity_g_per_kwh", "renewables_pct_capacity"])
@@ -235,6 +287,26 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
         const total = m.fuels.reduce((s, f) => s + (num(f.generation_pct) ? f.generation_pct : 0), 0);
         if (Math.abs(total - 100) > 1) fail(mat, `generation shares add up to ${total.toFixed(1)}%, not 100%`);
       }
+    }
+  }
+
+  // Optional reference grid read by Site check (not drawn): lines with a
+  // numeric voltage_kv, or the diagnostic silently finds no grid.
+  if (c.siteGrid) {
+    const sat = `${at}.siteGrid`;
+    for (const f of ["file", "source", "updated"]) if (!str(c.siteGrid[f])) fail(sat, `${f} missing`);
+    if (!/^https:\/\//.test(c.siteGrid.sourceUrl || "")) fail(sat, "sourceUrl must be an https URL");
+    const gpath = str(c.siteGrid.file) ? join(dir, c.siteGrid.file) : null;
+    if (gpath && !existsSync(gpath)) fail(sat, `${c.dataPath}${c.siteGrid.file} does not exist`);
+    else if (gpath) {
+      referenced.add(c.siteGrid.file);
+      try {
+        const gfc = JSON.parse(readFileSync(gpath, "utf8"));
+        const bad = (gfc.features || []).findIndex((f) =>
+          !f.geometry || !["LineString", "MultiLineString"].includes(f.geometry.type) || !num((f.properties || {}).voltage_kv));
+        if (!Array.isArray(gfc.features) || !gfc.features.length) fail(sat, `${c.siteGrid.file} has no features`);
+        else if (bad >= 0) fail(sat, `${c.siteGrid.file} #${bad}: siteGrid features must be lines with a numeric voltage_kv`);
+      } catch (e) { fail(sat, `${c.siteGrid.file} is not valid JSON: ${e.message}`); }
     }
   }
 

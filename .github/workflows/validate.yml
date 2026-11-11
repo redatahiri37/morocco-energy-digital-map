@@ -3,10 +3,10 @@ name: docs-validate
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-map-palette.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-map-palette.mjs', 'scripts/check-gppd.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   pull_request:
     branches: [main]
-    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-map-palette.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
+    paths: ['docs/**', 'solar/brand.css', 'solar/fonts/**', 'solar/*.svg', 'scripts/*-countries.mjs', 'scripts/check-sri.mjs', 'scripts/check-map-palette.mjs', 'scripts/check-gppd.mjs', 'scripts/*map-i18n*.mjs', 'DATA_SCHEMA.md', '.github/workflows/validate.yml']
   workflow_dispatch:   # "Run workflow" button: redeploy main without a code change
 
 # Read-only token for every job: deploys use the Cloudflare secrets, not
@@ -73,6 +73,12 @@ jobs:
       # and the data-centre and industry colours, which differ by shape.
       - name: Map palette
         run: node scripts/check-map-palette.mjs
+
+      # Plants that name their WRI record (gppd_id, or a WRI id) keep WRI's
+      # capacity (±10 %), position (15 km) and fuel: hand-typed capacities
+      # went wrong before with nothing to catch it. Downloads the pinned file.
+      - name: Plants against the WRI database
+        run: node scripts/check-gppd.mjs --self-test
 
   # Publishes docs/ to the Cloudflare Pages project behind energy.wattu.org
   # (atlas-nexus). Runs only on main, and only after validate passes.

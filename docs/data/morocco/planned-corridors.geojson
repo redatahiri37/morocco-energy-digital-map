@@ -81,15 +81,19 @@
         "kind": "hvdc_planned_submarine",
         "capacity_mw": 3600,
         "commissioning_year": 2031,
-        "source": "Xlinks press",
+        "source": "Xlinks; UK Planning Inspectorate EN010164 (landfall and Alverdiscott)",
         "source_url": "https://xlinks.co/morocco-uk-power-project/"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [
-            -13.2,
-            28.5
+            -11.1,
+            28.44
+          ],
+          [
+            -11.36,
+            28.52
           ],
           [
             -12.0,
@@ -116,8 +120,16 @@
             50.2
           ],
           [
-            -5.0,
-            51.0
+            -4.6,
+            51.08
+          ],
+          [
+            -4.26,
+            51.033
+          ],
+          [
+            -4.111,
+            51.007
           ]
         ]
       }

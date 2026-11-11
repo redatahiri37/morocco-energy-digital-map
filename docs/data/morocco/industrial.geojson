@@ -54,8 +54,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -9.24,
-          32.3
+          -9.2572,
+          32.2374
         ]
       },
       "properties": {
@@ -66,7 +66,7 @@
         "grid_connection": "225 kV Safi",
         "status": "operational",
         "precision": "approximate",
-        "source": "OCP",
+        "source": "OCP · OpenStreetMap (position: OCP site south of Safi)",
         "source_url": "https://www.ocpgroup.ma/en"
       }
     },
@@ -264,8 +264,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -8.022,
-          31.394
+          -8.0558,
+          31.3644
         ]
       },
       "properties": {
@@ -276,7 +276,7 @@
         "grid_connection": "60 kV Marrakech region",
         "status": "operational",
         "precision": "approximate",
-        "source": "Managem",
+        "source": "Managem · position: Hajar mine, Guemassa massif (Mindat)",
         "source_url": "https://www.managemgroup.com/"
       }
     }
