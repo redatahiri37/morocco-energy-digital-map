@@ -89,6 +89,11 @@
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
 
+    <!-- The country on screen; app.js fills every [data-country-label]. -->
+    <header class="panel-head">
+      <h1 class="country-title" data-country-label></h1>
+    </header>
+
     <!-- Search across every country's mapped assets (app.js "Search"). -->
     <section class="panel-section search-section" role="search">
       <label class="sr-only" for="searchInput">Search plants, sites and countries</label>
@@ -167,6 +172,10 @@
         <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 .5C5.73.5.67 5.56.67 11.83c0 5.02 3.25 9.27 7.76 10.77.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.16.69-3.83-1.35-3.83-1.35-.52-1.31-1.27-1.66-1.27-1.66-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.74 2.67 1.24 3.32.95.1-.74.4-1.24.73-1.53-2.52-.29-5.17-1.26-5.17-5.6 0-1.24.45-2.25 1.18-3.04-.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.14 1.16.91-.25 1.89-.38 2.86-.39.97 0 1.95.13 2.86.39 2.18-1.47 3.13-1.16 3.13-1.16.63 1.57.23 2.73.12 3.02.73.79 1.18 1.8 1.18 3.04 0 4.35-2.66 5.31-5.19 5.59.41.35.77 1.03.77 2.08 0 1.5-.01 2.71-.01 3.08 0 .3.2.65.79.54 4.51-1.5 7.75-5.75 7.75-10.76C23.33 5.56 18.27.5 12 .5z"/></svg>
         Contribute on GitHub
       </a>
+      <p class="credits"><span><span data-country-credits>Data: GEM · ONEE · Datacentermap · </span>Grid: <a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> · Basemap: <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span></p>
+      <p class="credits">
+    Built by <a href="https://redatahiri.substack.com/" target="_blank" rel="noopener">Reda Tahiri</a> · independent, not affiliated
+      </p>
     </section>
   </aside>
 
@@ -213,19 +222,6 @@
   </div>
 
 </main>
-
-<!-- ───── BOTTOM BAR ───── -->
-<footer class="bottombar">
-  <div class="bb-left">
-    <span><span data-country-credits>Data: GEM · ONEE · Datacentermap · </span>Grid: <a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> · Basemap: <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
-  </div>
-  <div class="bb-center">
-    Built by <a href="https://redatahiri.substack.com/" target="_blank" rel="noopener">Reda Tahiri</a> · independent, not affiliated
-  </div>
-  <div class="bb-right">
-    <a id="githubFooter" href="#" target="_blank" rel="noopener">Contribute data ↗</a>
-  </div>
-</footer>
 
 <!-- Methodology modal -->
 <div id="methodologyModal" class="modal hidden" role="dialog" aria-modal="true">
