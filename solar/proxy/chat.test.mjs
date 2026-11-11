@@ -118,10 +118,7 @@ ok("French page told to the model", /French page/.test(input.messages[0].content
 const f = figuresOf(aiCalls[0]);
 const perKw = { yieldPerKw: pvgisJson.outputs.totals.fixed.E_y, monthlyPerKw: MONTHLY, radiationAnnual: 2150 };
 const cons = Tariff.kwhFromBill(500);
-const kwc = Sizing.autoKw(cons, perKw.yieldPerKw);
-const pv = PV.scale(perKw, kwc);
-const capex = kwc * 1000 * CONFIG.DEFAULT_COST_MAD_PER_WC;
-const roi = ROI.compute({ pv, monthlyConsumption: cons, capexMAD: capex, exportAllowed: false });
+const { kw: kwc, capex, roi } = Sizing.options({ perKw, monthlyKwh: cons }).best;
 ok("figures block in the prompt", !!f, input.messages[0].content.slice(-300));
 ok("place in the page language", f.place === "Fès", f.place);
 ok("size = the simulator's", f.system_kwc === kwc && f.panels === Sizing.panels(kwc), `${f.system_kwc} kWc, ${f.panels} panels`);
@@ -222,7 +219,9 @@ ok("replyText: { response }", replyText({ response: " a " }) === "a");
 ok("replyText: string, empty, unknown", replyText("b") === "b" && replyText(null) === "" && replyText({ x: 1 }) === "");
 const o = oneeBill({ bill: 500 });
 ok("ONEE: 500 MAD ↔ kWh like the simulator", o.monthly_kwh === Math.round(Tariff.kwhFromBill(500)) && o.price_of_last_kwh_mad === 1.3817, JSON.stringify(o));
-ok("billFromKwh inverts kwhFromBill", [100, 250, 500, 900, 2400].every((b) => Math.abs(Tariff.billFromKwh(Tariff.kwhFromBill(b)) - b) < 1e-6));
+// A bill that falls in a step (a month changing tranche) reads as the kWh just below it.
+ok("billFromKwh inverts kwhFromBill", [100, 250, 500, 900, 2400].every((b) => { const d = b - Tariff.billFromKwh(Tariff.kwhFromBill(b)); return d > -1e-6 && d < 30; }));
+ok("selective billing: the whole month at the tranche reached", Math.abs(Tariff.monthBill(250) - 250 * 1.1676) < 1e-9 && Math.abs(Tariff.monthBill(120) - (100 * 0.9010 + 20 * 1.0732)) < 1e-9);
 ok("sameKey", sameKey(KEY, KEY) && !sameKey(KEY + "x", KEY) && !sameKey("", "") && !sameKey(undefined, KEY));
 ok("parseConversation keeps the page language, defaults to fr", parseConversation({ lang: "en", messages: [{ role: "user", content: " hi " }] }).lang === "en" && parseConversation({ lang: "xx", messages: [{ role: "user", content: "hi" }] }).lang === "fr");
 ok("system prompt has the tariff and the law from CONFIG", SYSTEM.includes(String(CONFIG.ONEE_TRANCHES[0][1])) && SYSTEM.includes(`${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}%`));

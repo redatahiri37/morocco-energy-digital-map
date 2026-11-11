@@ -98,14 +98,11 @@ async function fetchPerKw(lat, lon) {
   throw new Error(`PVGIS failed for ${lat},${lon}: ${lastErr.message}`);
 }
 
-// Same sizing rule as UI.recalc(): cover AUTOSIZE_COVER of the yearly
-// consumption, rounded to 0.5 kWc, between 1 and 10 kWc, no export.
+// Same sizing rule as UI.recalc(): the size that earns the most over the
+// system's life (Sizing.options().best), default daytime profile, no export.
 function profile(perKw, bill) {
   const consumption = Tariff.kwhFromBill(bill);
-  const kwp = Sizing.autoKw(consumption, perKw.yieldPerKw);
-  const pv = PVGIS.scale(perKw, kwp);
-  const capex = kwp * 1000 * COST;
-  const roi = ROI.compute({ pv, monthlyConsumption: consumption, capexMAD: capex, exportAllowed: false });
+  const { kw: kwp, pv, capex, roi } = Sizing.options({ perKw, monthlyKwh: consumption, costPerWc: COST }).best;
   return {
     bill, consumption, kwp, panels: Sizing.panels(kwp),
     capex, annualKwh: pv.annualKwh, savings: roi.annualSavingsMAD,
@@ -232,8 +229,8 @@ const methodHtml = () => `
   <h2>Méthode et sources</h2>
   <ul class="cp-method">
     <li><strong>Production&nbsp;:</strong> PVGIS v5.2 (Centre commun de recherche de la Commission européenne), au centre-ville, panneaux en toiture inclinés à ${ANGLE}° plein sud, ${CONFIG.PVGIS_LOSS}&nbsp;% de pertes système.</li>
-    <li><strong>Économies&nbsp;:</strong> tarifs résidentiels basse tension de l'ONEE par tranche (TTC). Le solaire remplace d'abord les kWh des tranches les plus chères. Part autoconsommée estimée selon la taille du système, sans revente du surplus.</li>
-    <li><strong>Dimensionnement&nbsp;:</strong> système couvrant environ ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}&nbsp;% de la consommation annuelle, arrondi au demi-kWc, panneaux de ${CONFIG.PANEL_KWP * 1000}&nbsp;Wc.</li>
+    <li><strong>Économies&nbsp;:</strong> tarifs résidentiels basse tension de l'ONEE (TTC), mois par mois. Jusqu'à ${CONFIG.SELECTIVE_ABOVE_KWH}&nbsp;kWh chaque tranche a son prix&nbsp;; au-delà, tout le mois est facturé au prix de la tranche atteinte, si bien que descendre d'une tranche rapporte plus que les kWh remplacés. Consommation un peu plus forte en hiver et en plein été. Part autoconsommée estimée selon la taille du système, pour un foyer parfois présent en journée, sans revente du surplus. Frais fixes et taxes de la facture non comptés.</li>
+    <li><strong>Dimensionnement&nbsp;:</strong> la taille qui rapporte le plus sur ${CONFIG.LIFETIME_YR}&nbsp;ans, au demi-kWc, de ${CONFIG.SIZE_MIN_KW} à ${CONFIG.SIZE_MAX_KW}&nbsp;kWc, panneaux de ${CONFIG.PANEL_KWP * 1000}&nbsp;Wc. Une installation plus petite se rembourse plus vite&nbsp;: le simulateur propose les deux.</li>
     <li><strong>Coût&nbsp;:</strong> ${num(COST)}&nbsp;MAD par Wc installé (hypothèse, à remplacer par le devis de votre installateur). Maintenance ${Math.round(CONFIG.OPEX_PCT_CAPEX_YR * 100)}&nbsp;% par an, dégradation ${dec(CONFIG.DEGRADATION_PCT_YR * 100)}&nbsp;% par an, hausse du tarif ${Math.round(CONFIG.TARIFF_INFLATION_YR * 100)}&nbsp;% par an, durée ${CONFIG.LIFETIME_YR}&nbsp;ans.</li>
     <li><strong>CO₂&nbsp;:</strong> ${dec(CONFIG.CO2_KG_PER_KWH)}&nbsp;kg évités par kWh (mix électrique marocain).</li>
   </ul>
@@ -259,7 +256,7 @@ function cityPage(c, all) {
     [`Combien coûte une installation solaire à ${c.name} ?`,
       `Pour une maison dont la facture est de ${REFERENCE_BILL} MAD par mois, il faut environ ${kw(ref.kwp)} kWc, soit ${ref.panels} panneaux, pour un budget de l'ordre de ${num(ref.capex)} MAD à ${num(COST)} MAD par Wc. Le prix réel dépend de l'installateur, du matériel et du toit.`],
     [`Le solaire est-il rentable à ${c.name} ?`,
-      `Oui pour la plupart des foyers : avec une facture de ${REFERENCE_BILL} MAD par mois, l'installation s'amortit en ${years(ref.payback)} et rapporte environ ${num(ref.lifetime)} MAD nets sur ${CONFIG.LIFETIME_YR} ans. Plus la facture est élevée, plus l'amortissement est rapide, car le solaire remplace d'abord les tranches ONEE les plus chères.`],
+      `Oui pour la plupart des foyers : avec une facture de ${REFERENCE_BILL} MAD par mois, l'installation s'amortit en ${years(ref.payback)} et rapporte environ ${num(ref.lifetime)} MAD nets sur ${CONFIG.LIFETIME_YR} ans. Une facture élevée s'amortit en général plus vite, car le kWh y est plus cher et le solaire peut faire descendre d'une tranche du tarif ONEE.`],
     [`Peut-on revendre le surplus à l'ONEE à ${c.name} ?`,
       `La loi 82-21 sur l'autoproduction autorise l'injection du surplus sur le réseau, plafonnée à ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)} % de la production annuelle. Le tarif de rachat résidentiel n'étant pas encore publié, les chiffres de cette page n'en tiennent pas compte : ce sont des estimations prudentes.`],
   ];
@@ -469,8 +466,8 @@ const methodHtmlAr = (where) => `
   <h2>كيفاش حسبنا</h2>
   <ul class="cp-method">
     <li><strong>الإنتاج:</strong> PVGIS v5.2 ديال المفوضية الأوروبية، ${where}، بلاكات فوق السطح مايلين ب${ANGLE}° لجهة الجنوب، مع ${CONFIG.PVGIS_LOSS}% ديال الضياع.</li>
-    <li><strong>التوفير:</strong> تعريفة الضو ديال الديور (الجهد المنخفض) ديال المكتب الوطني للكهرباء والماء الصالح للشرب، حسب الأشطر ومع الضرائب. البلاكات كتعوض الأول الكيلوواط الغالي. الجزء اللي كتستهلك من الإنتاج ديالك محسوب حسب الحجم ديال التركيب، بلا ما تبيع الفائض.</li>
-    <li><strong>الحجم:</strong> تركيب كيغطي تقريبا ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}% من الاستهلاك ديال العام، مقرّب لنص ${KWC}، ببلاكات ديال ${CONFIG.PANEL_KWP * 1000} واط.</li>
+    <li><strong>التوفير:</strong> تعريفة الضو ديال الديور (الجهد المنخفض) ديال المكتب الوطني للكهرباء والماء الصالح للشرب، مع الضرائب، شهر بشهر. حتى ل${CONFIG.SELECTIVE_ABOVE_KWH} ${KWH} كل شطر بالثمن ديالو؛ ومن بعد الشهر كامل كيتحسب بثمن الشطر اللي وصلتي ليه، وداكشي علاش الهبوط بشطر كيربح كثر من الكيلوواطات اللي تعوضو. الاستهلاك كيطلع شوية فالشتا وفوسط الصيف. الجزء اللي كتستهلك من الإنتاج ديالك محسوب حسب الحجم ديال التركيب، لدار فيها شي حد مرة مرة فالنهار، بلا ما تبيع الفائض. الرسوم الثابتة والضرائب ديال الفاتورة ما محسوبينش.</li>
+    <li><strong>الحجم:</strong> الحجم اللي كيربح كثر ف${CONFIG.LIFETIME_YR} عام، مقرّب لنص ${KWC}، من ${CONFIG.SIZE_MIN_KW} حتى ل${CONFIG.SIZE_MAX_KW} ${KWC}، ببلاكات ديال ${CONFIG.PANEL_KWP * 1000} واط. تركيب صغر كيرجع فلوسو بالزربة: المحاكي كيعطيك بجوج.</li>
     <li><strong>الثمن:</strong> ${num(COST)} ${MAD_AR} للواط مركّب (فرضية، بدّلها بالدوفي ديال المركّب ديالك). الصيانة ${Math.round(CONFIG.OPEX_PCT_CAPEX_YR * 100)}% فالعام، المردود كينقص ${dec(CONFIG.DEGRADATION_PCT_YR * 100)}% فالعام، التعريفة كتزيد ${Math.round(CONFIG.TARIFF_INFLATION_YR * 100)}% فالعام، على ${CONFIG.LIFETIME_YR} عام.</li>
   </ul>
   <p class="cp-meta">تحدّث نهار <time datetime="${today}">${todayAr}</time> من طرف <span lang="fr">${AUTHOR}</span>، خبير فالبنيات التحتية ديال الطاقة والرقمي فالمغرب. الحسابات كتعاود مع كل تحديث ديال المحاكي. <span lang="fr">Wattu</span> ما كتبيعش التركيبات وما كتاخد حتى عمولة.</p>
@@ -496,7 +493,7 @@ function cityPageAr(c, all) {
     [`شحال كيكلف تركيب الطاقة الشمسية ${fi(name)}؟`,
       `لدار فيها فاتورة ديال ${REFERENCE_BILL} ${MAD_AR} فالشهر، خاصك تقريبا ${kw(ref.kwp)} ${KWC}، يعني ${panelsAr(ref.panels)}، والميزانية قريبة ل${num(ref.capex)} ${MAD_AR} على حساب ${num(COST)} ${MAD_AR} للواط. الثمن الحقيقي كيتبدل حسب المركّب، السلعة والسطح.`],
     [`واش الطاقة الشمسية كتربح ${fi(name)}؟`,
-      `إيه، لأغلب الديور: بفاتورة ديال ${REFERENCE_BILL} ${MAD_AR} فالشهر، كترجع فلوسك ف${yearsAr(ref.payback)} وكتربح تقريبا ${num(ref.lifetime)} ${MAD_AR} صافية ف${CONFIG.LIFETIME_YR} عام. وكلما كانت الفاتورة كبيرة، كترجع فلوسك بالزربة، حيت البلاكات كتعوض الأول الأشطر الغالية فالفاتورة.`],
+      `إيه، لأغلب الديور: بفاتورة ديال ${REFERENCE_BILL} ${MAD_AR} فالشهر، كترجع فلوسك ف${yearsAr(ref.payback)} وكتربح تقريبا ${num(ref.lifetime)} ${MAD_AR} صافية ف${CONFIG.LIFETIME_YR} عام. والفاتورة الكبيرة كترجع فلوسها عادة بالزربة، حيت الكيلوواط فيها غالي والبلاكات يقدرو يهبطوك بشطر فتعريفة ONEE.`],
     [`واش نقدر نبيع الضو الزايد للشبكة ${fi(name)}؟`,
       `القانون 82-21 ديال الإنتاج الذاتي كيسمح تدخّل الفائض للشبكة، ولكن ماشي كثر من ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}% من الإنتاج ديال العام. والثمن اللي غادي يشريو بيه الفائض من الديور مازال ما تنشرش، داكشي علاش الأرقام ديال هاد الصفحة ما حاسباهش: هادي تقديرات محتاطة.`],
   ];
@@ -675,8 +672,8 @@ const methodHtmlEn = (where) => `
   <h2>Method and sources</h2>
   <ul class="cp-method">
     <li><strong>Output:</strong> PVGIS v5.2 (European Commission Joint Research Centre), ${where}, rooftop panels tilted ${ANGLE}° due south, ${CONFIG.PVGIS_LOSS}% system losses.</li>
-    <li><strong>Savings:</strong> ONEE low-voltage residential tariff by tranche (tax included). Solar replaces the most expensive kWh of the bill first. The share used on site depends on system size; no surplus sales.</li>
-    <li><strong>Sizing:</strong> a system covering about ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}% of yearly consumption, rounded to half a kWp, with ${CONFIG.PANEL_KWP * 1000} Wp panels.</li>
+    <li><strong>Savings:</strong> ONEE low-voltage residential tariff (tax included), month by month. Up to ${CONFIG.SELECTIVE_ABOVE_KWH} kWh each tranche has its own price; above that the whole month is billed at the price of the tranche reached, so dropping a tranche saves more than the kWh replaced. Consumption runs a little higher in winter and midsummer. The share used on site depends on system size, for a home sometimes occupied in daytime; no surplus sales. The bill's fixed charges and taxes are not counted.</li>
+    <li><strong>Sizing:</strong> the size that earns the most over ${CONFIG.LIFETIME_YR} years, to half a kWp, from ${CONFIG.SIZE_MIN_KW} to ${CONFIG.SIZE_MAX_KW} kWp, with ${CONFIG.PANEL_KWP * 1000} Wp panels. A smaller system pays back faster: the simulator offers both.</li>
     <li><strong>Cost:</strong> ${numEn(COST)} MAD per installed watt-peak (an assumption: use your installer's quote). Maintenance ${Math.round(CONFIG.OPEX_PCT_CAPEX_YR * 100)}% a year, ${decEn(CONFIG.DEGRADATION_PCT_YR * 100)}% yearly output loss, ${Math.round(CONFIG.TARIFF_INFLATION_YR * 100)}% yearly tariff rise, ${CONFIG.LIFETIME_YR}-year life.</li>
   </ul>
   <p class="cp-meta">Updated <time datetime="${today}">${todayEn}</time> by ${AUTHOR}, an energy and digital infrastructure expert focused on Morocco. Figures are recalculated with every update of the simulator. Wattu does not sell installations and takes no commission.</p>
@@ -702,7 +699,7 @@ function cityPageEn(c, all) {
     [`How much does a home solar system cost in ${name}?`,
       `For a home with a ${REFERENCE_BILL} MAD monthly bill, you need about ${kwEn(ref.kwp)} kWp, or ${ref.panels} panels, for a budget of around ${numEn(ref.capex)} MAD at ${numEn(COST)} MAD per watt-peak. The actual price depends on the installer, the equipment and the roof.`],
     [`Is solar worth it in ${name}?`,
-      `For most households, yes: with a ${REFERENCE_BILL} MAD monthly bill, the system pays for itself in ${yearsEn(ref.payback)} and returns about ${numEn(ref.lifetime)} MAD net over ${CONFIG.LIFETIME_YR} years. The higher the bill, the faster the payback, because solar replaces the most expensive tranches of the ONEE tariff first.`],
+      `For most households, yes: with a ${REFERENCE_BILL} MAD monthly bill, the system pays for itself in ${yearsEn(ref.payback)} and returns about ${numEn(ref.lifetime)} MAD net over ${CONFIG.LIFETIME_YR} years. A high bill usually pays back faster, because its kWh cost more and solar can bring the home down a tranche of the ONEE tariff.`],
     [`Can you sell surplus solar power to the grid in ${name}?`,
       `Morocco's self-generation law 82-21 allows surplus power to be fed into the grid, capped at ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}% of yearly output. The residential buy-back tariff has not been published yet, so the figures on this page leave it out: they are conservative estimates.`],
   ];
@@ -931,6 +928,16 @@ ${rows.map(r => `        <tr><th scope="row">${r[0]}</th>${r.slice(1).map(x => `
     </div>`;
 const sourcesHtml = (keys) => `<p class="cp-meta">Sources&nbsp;: ${keys.map(k => SOURCES[k][1] ? `<a href="${SOURCES[k][1]}" rel="nofollow noopener">${esc(SOURCES[k][0])}</a>` : esc(SOURCES[k][0])).join(" · ")}. Mis à jour le <time datetime="${today}">${todayFr}</time> par ${AUTHOR}.</p>`;
 
+// The tariff as it is billed: each tranche's real bounds (tolerance
+// included), and what DROP_KWH solar kWh used on site save in a month at
+// several consumptions, some of which cross a threshold.
+const TRANCHE_BOUNDS = CONFIG.ONEE_TRANCHES.map((_, i) => ({ ...Tariff.trancheBounds(i), selective: Tariff.trancheBounds(i).to > CONFIG.SELECTIVE_ABOVE_KWH }));
+const DROP_KWH = 60;
+const TRANCHE_DROPS = [180, 250, 330, 400, 530, 650].map(kwh => {
+  const before = Tariff.monthBill(kwh), after = Tariff.monthBill(kwh - DROP_KWH);
+  return { kwh, before, after, saved: before - after, perKwh: (before - after) / DROP_KWH };
+});
+
 function guides(all) {
   const byYield = [...all].sort((a, b) => a.result.yieldPerKw - b.result.yieldPerKw);
   const med = byYield[Math.floor(byYield.length / 2)];
@@ -943,33 +950,31 @@ function guides(all) {
 
   // ── 1. ONEE tariff
   const T = CONFIG.ONEE_TRANCHES;
-  const trancheRows = T.map(([upper, price], i) => {
-    const low = i === 0 ? 0 : T[i - 1][0] + 1;
-    return [upper === Infinity ? `Plus de ${T[i - 1][0]} kWh` : `${low} à ${upper} kWh`, `${price4(price)} MAD`];
-  });
-  const marginal = (kwh) => T.find(([upper]) => kwh <= upper)[1];
-  const consRows = [80, 140, 180, 250, 400, 600].map(k => [`${k} kWh/mois`, `${price4(marginal(k))} MAD`, `${num(marginal(k) * 100)} MAD`]);
+  const trancheRows = TRANCHE_BOUNDS.map(({ from, to, price, selective }) =>
+    [to === Infinity ? `Plus de ${from} kWh` : `${from ? from + 1 : 0} à ${to} kWh`, `${price4(price)} MAD`, selective ? "Tout le mois à ce prix" : "Chaque tranche à son prix"]);
+  const dropRows = TRANCHE_DROPS.map(d => [`${d.kwh} kWh`, `${num(d.before)} MAD`, `${num(d.after)} MAD`, `${num(d.saved)} MAD`, `${price2(d.perKwh)} MAD`]);
   const tarif = {
     slug: "tarif-electricite-onee",
     kicker: "Tarifs",
     h1: "Tarif de l'électricité ONEE par tranche : le prix du kWh",
     title: "Tarif électricité ONEE par tranche : prix du kWh TTC | Wattu",
-    answer: `Le prix du kWh résidentiel de l'ONEE va de ${price4(T[0][1])} MAD (jusqu'à ${T[0][0]} kWh par mois) à ${price4(T[T.length - 1][1])} MAD (au-delà de ${T[T.length - 2][0]} kWh), TTC. Plus votre consommation est élevée, plus votre dernier kWh coûte cher, et c'est ce kWh que des panneaux solaires remplacent en premier.`,
+    answer: `Le prix du kWh résidentiel de l'ONEE va de ${price4(T[0][1])} MAD (jusqu'à ${T[0][0]} kWh par mois) à ${price4(T[T.length - 1][1])} MAD (au-delà de ${TRANCHE_BOUNDS[TRANCHE_BOUNDS.length - 1].from} kWh), TTC. Au-delà de ${CONFIG.SELECTIVE_ABOVE_KWH} kWh par mois, la facturation est sélective : toute la consommation du mois est facturée au prix de la tranche atteinte. Quelques kWh de trop renchérissent donc tout le mois, et des panneaux solaires qui vous font descendre d'une tranche rapportent plus que les kWh qu'ils remplacent.`,
     body: `
   <section class="cp-section">
     <h2>Les tranches du tarif résidentiel basse tension</h2>
-${tableHtml("Prix TTC par kWh, consommation mensuelle", ["Consommation mensuelle", "Prix du kWh (TTC)"], trancheRows)}
-    <p class="cp-note">Au-delà de 150 kWh par mois, la facturation de l'ONEE devient sélective.</p>
+${tableHtml("Prix TTC par kWh, consommation mensuelle", ["Consommation du mois", "Prix du kWh (TTC)", "Facturation"], trancheRows)}
+    <p class="cp-note">Jusqu'à ${CONFIG.SELECTIVE_ABOVE_KWH} kWh, la facturation est progressive&nbsp;: les 100 premiers kWh à ${price4(T[0][1])} MAD, les suivants à ${price4(T[1][1])} MAD. Au-delà, elle est sélective&nbsp;: 250 kWh coûtent 250 × ${price4(T[3][1])} = ${num(Tariff.monthBill(250))} MAD. Les seuils affichés comprennent la tolérance de ${CONFIG.SELECTIVE_TOLERANCE_KWH} kWh appliquée à chaque tranche. Les sociétés régionales de distribution (ex Lydec, Redal, Amendis) appliquent des grilles voisines. Redevances fixes et taxes s'ajoutent sur la facture.</p>
   </section>
   <section class="cp-section">
-    <h2>Ce que vaut un kWh solaire selon votre consommation</h2>
-    <p>Un kWh produit par vos panneaux et consommé sur place vous évite d'acheter le kWh le plus cher de votre facture. Plus vous consommez, plus le solaire est rentable.</p>
-${tableHtml("Prix du kWh évité par l'autoconsommation solaire", ["Votre consommation", "Prix du kWh évité", "Valeur de 100 kWh solaires"], consRows)}
-    <p>Pour voir ce que cela donne chez vous, <a href="../../">le simulateur</a> part de votre facture en dirhams et en déduit votre consommation.</p>
+    <h2>Descendre d'une tranche&nbsp;: ce que rapportent ${DROP_KWH} kWh solaires</h2>
+    <p>Avec la facturation sélective, le kWh solaire consommé sur place ne vaut pas partout pareil. S'il vous fait repasser sous un seuil, c'est tout le mois qui est facturé moins cher.</p>
+${tableHtml(`Facture d'un mois, avant et après ${DROP_KWH} kWh produits et consommés sur place`, ["Consommation du mois", "Facture sans solaire", "Facture avec solaire", "Économie", "Par kWh solaire"], dropRows)}
+    <p>Le même kWh solaire vaut ${price2(Math.min(...TRANCHE_DROPS.map(d => d.perKwh)))} MAD quand il reste dans la tranche, et jusqu'à ${price2(Math.max(...TRANCHE_DROPS.map(d => d.perKwh)))} MAD quand il en fait changer. <a href="../../">Le simulateur</a> part de votre facture en dirhams, fait ce calcul mois par mois et vous dit combien de mois changent de tranche.</p>
   </section>`,
     faq: [
-      ["Combien coûte le kWh d'électricité au Maroc ?", `Pour un foyer raccordé à l'ONEE, de ${price4(T[0][1])} MAD TTC le kWh pour une petite consommation à ${price4(T[T.length - 1][1])} MAD au-delà de ${T[T.length - 2][0]} kWh par mois.`],
-      ["Quelle tranche le solaire fait-il économiser ?", "Les kWh solaires consommés sur place remplacent d'abord les kWh des tranches les plus chères de votre facture. C'est pourquoi le solaire s'amortit plus vite quand la facture est élevée."],
+      ["Combien coûte le kWh d'électricité au Maroc ?", `Pour un foyer raccordé à l'ONEE, de ${price4(T[0][1])} MAD TTC le kWh pour une petite consommation à ${price4(T[T.length - 1][1])} MAD au-delà de ${TRANCHE_BOUNDS[TRANCHE_BOUNDS.length - 1].from} kWh par mois.`],
+      ["Pourquoi ma facture bondit-elle quand je dépasse un seuil ?", `Parce qu'au-delà de ${CONFIG.SELECTIVE_ABOVE_KWH} kWh par mois, tout le mois est facturé au prix de la tranche atteinte : à ${TRANCHE_BOUNDS[4].from} kWh la facture est de ${num(Tariff.monthBill(TRANCHE_BOUNDS[4].from))} MAD, à ${TRANCHE_BOUNDS[4].from + 1} kWh de ${num(Tariff.monthBill(TRANCHE_BOUNDS[4].from + 1))} MAD.`],
+      ["Quelle tranche le solaire fait-il économiser ?", "Les kWh solaires consommés sur place réduisent ce que vous achetez au réseau. Quand cela vous fait descendre d'une tranche, tout le mois est facturé moins cher : c'est là que le solaire rapporte le plus."],
     ],
     sources: ["onee"],
   };
@@ -1018,12 +1023,12 @@ ${tableHtml(`Prix posé, panneaux de ${CONFIG.PANEL_KWP * 1000} Wc ; production 
     body: `
   <section class="cp-section">
     <h2>Nombre de panneaux selon votre facture</h2>
-${tableHtml(`Système couvrant environ ${Math.round(CONFIG.AUTOSIZE_COVER * 100)} % de la consommation annuelle, ${COST} MAD/Wc, sans revente ; ${medNote}`, ["Facture ONEE", "Consommation", "Puissance", "Panneaux", "Surface de toit", "Investissement", "Économie an 1", "Amortissement"], nbRows)}
+${tableHtml(`Taille qui rapporte le plus sur ${CONFIG.LIFETIME_YR} ans, ${COST} MAD/Wc, sans revente ; ${medNote}`, ["Facture ONEE", "Consommation", "Puissance", "Panneaux", "Surface de toit", "Investissement", "Économie an 1", "Amortissement"], nbRows)}
     <p class="cp-note">La puissance est plafonnée à 10 kWc, ce qui reste sous le seuil de 11 kW de la <a href="../loi-82-21-autoproduction/">simple déclaration prévue par la loi 82-21</a>. Les surfaces comptent les panneaux seuls&nbsp;: prévoyez une marge autour, et de l'espace entre les rangées sur un toit plat.</p>
   </section>
   <section class="cp-section">
     <h2>Pourquoi ne pas couvrir 100&nbsp;% de la consommation&nbsp;?</h2>
-    <p>Les panneaux produisent le jour, alors qu'une partie de la consommation a lieu le soir. Au-delà d'environ ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}&nbsp;% de couverture, une part croissante de la production part sur le réseau, où elle est peu rémunérée. Un système plus petit, consommé presque entièrement sur place, s'amortit plus vite.</p>
+    <p>Les panneaux produisent le jour, alors qu'une partie de la consommation a lieu le soir. Plus l'installation est grande, plus sa production part sur le réseau, où elle est peu rémunérée. Les premiers panneaux, consommés presque entièrement sur place, sont ceux qui rapportent le plus&nbsp;: la taille indiquée est celle qui laisse le plus de dirhams au bout de ${CONFIG.LIFETIME_YR}&nbsp;ans, et une installation plus petite se rembourse plus vite.</p>
     <p>Pour votre toit précis, <a href="../../">le simulateur</a> repère le contour du bâtiment et indique combien de panneaux y tiennent.</p>
   </section>`,
     faq: [
@@ -1146,13 +1151,14 @@ function guideFacts(all) {
     med, Y: med.result.yieldPerKw,
     pbMin: Math.min(...refs.map(p => p.payback)), pbMax: Math.max(...refs.map(p => p.payback)),
     surface: (panels) => panels * CONFIG.PANEL_W_M * CONFIG.PANEL_L_M,
-    T, p0: T[0][1], pL: T[T.length - 1][1], first: T[0][0], last: T[T.length - 2][0],
-    marginal: (kwh) => T.find(([upper]) => kwh <= upper)[1],
-    consKwh: [80, 140, 180, 250, 400, 600],
+    T, p0: T[0][1], pL: T[T.length - 1][1], first: T[0][0], last: TRANCHE_BOUNDS[TRANCHE_BOUNDS.length - 1].from,
+    bounds: TRANCHE_BOUNDS, drops: TRANCHE_DROPS, dropKwh: DROP_KWH, selAbove: CONFIG.SELECTIVE_ABOVE_KWH, tol: CONFIG.SELECTIVE_TOLERANCE_KWH,
+    lastFrom: TRANCHE_BOUNDS[TRANCHE_BOUNDS.length - 1].from, bill250: Tariff.monthBill(250), life: CONFIG.LIFETIME_YR,
+    dropMin: Math.min(...TRANCHE_DROPS.map(d => d.perKwh)), dropMax: Math.max(...TRANCHE_DROPS.map(d => d.perKwh)),
     sizes: [1, 2, 3, 5, 8, 10],
     nb, nb500, nbOf: (bill) => nb.find(p => p.bill === bill),
     extra: withX.annualSavingsMAD - nb500.savings,
-    cap: Math.round(CONFIG.EXPORT_CAP_PCT * 100), cover: Math.round(CONFIG.AUTOSIZE_COVER * 100),
+    cap: Math.round(CONFIG.EXPORT_CAP_PCT * 100),
     panelW: CONFIG.PANEL_KWP * 1000, exportPrice: CONFIG.EXPORT_PRICE_MAD_PER_KWH,
     year: new Date().getUTCFullYear(), n: all.length,
   };
@@ -1178,24 +1184,25 @@ function guidesAr(all) {
     key: "tarif-electricite-onee", slug: "tarif-electricite-onee", kicker: "التعريفة",
     h1: "تعريفة الضو ديال ONEE حسب الأشطر: شحال كيسوا الكيلوواط ساعة",
     title: "تعريفة الكهرباء ONEE حسب الأشطر: ثمن الكيلوواط ساعة | Wattu",
-    answer: `الثمن ديال الكيلوواط ساعة فالديور عند المكتب الوطني للكهرباء (ONEE) كيبدا من ${price4(f.p0)} ${MAD_AR} (حتى ل${f.first} ${KWH} فالشهر) ويوصل ل${price4(f.pL)} ${MAD_AR} (فوق ${f.last} ${KWH})، مع الضرائب. كلما كتستهلك كثر، كيغلا عليك الكيلوواط الأخير، وهو هذا اللي كتعوضو البلاكات الشمسية الأول.`,
+    answer: `الثمن ديال الكيلوواط ساعة فالديور عند المكتب الوطني للكهرباء (ONEE) كيبدا من ${price4(f.p0)} ${MAD_AR} (حتى ل${f.first} ${KWH} فالشهر) ويوصل ل${price4(f.pL)} ${MAD_AR} (فوق ${f.lastFrom} ${KWH})، مع الضرائب. فوق ${f.selAbove} ${KWH} فالشهر الفوترة كتولي انتقائية: الاستهلاك ديال الشهر كامل كيتحسب بثمن الشطر اللي وصلتي ليه. يعني شوية ديال الكيلوواطات زايدة كتغلي الشهر كامل، والبلاكات الشمسية اللي كتهبطك بشطر كتربحك كثر من الكيلوواطات اللي كتعوض.`,
     body: `
   <section class="cp-section">
     <h2>الأشطر ديال تعريفة الديور (الجهد المنخفض)</h2>
-${tableHtml("الثمن مع الضرائب لكل كيلوواط ساعة، حسب الاستهلاك ديال الشهر", ["الاستهلاك فالشهر", "ثمن الكيلوواط ساعة (مع الضرائب)"],
-  f.T.map(([upper, price], i) => [upper === Infinity ? `كثر من ${f.T[i - 1][0]} ${KWH}` : `من ${i === 0 ? 0 : f.T[i - 1][0] + 1} حتى ل${upper} ${KWH}`, `${price4(price)} ${MAD_AR}`]))}
-    <p class="cp-note">فوق 150 ${KWH} فالشهر، الفوترة ديال ONEE كتولي انتقائية.</p>
+${tableHtml("الثمن مع الضرائب لكل كيلوواط ساعة، حسب الاستهلاك ديال الشهر", ["الاستهلاك ديال الشهر", "ثمن الكيلوواط ساعة (مع الضرائب)", "الفوترة"],
+  f.bounds.map(({ from, to, price, selective }) => [to === Infinity ? `كثر من ${from} ${KWH}` : `من ${from ? from + 1 : 0} حتى ل${to} ${KWH}`, `${price4(price)} ${MAD_AR}`, selective ? "الشهر كامل بهاد الثمن" : "كل شطر بالثمن ديالو"]))}
+    <p class="cp-note">حتى ل${f.selAbove} ${KWH} الفوترة تصاعدية: 100 ${KWH} الأولى ب${price4(f.T[0][1])} ${MAD_AR} والباقي ب${price4(f.T[1][1])} ${MAD_AR}. ومن بعد كتولي انتقائية: 250 ${KWH} كتسوا 250 × ${price4(f.T[3][1])} = ${num(f.bill250)} ${MAD_AR}. الحدود اللي فالجدول فيها التسامح ديال ${f.tol} ${KWH} اللي كيتطبق على كل شطر. الشركات الجهوية ديال التوزيع (اللي كانو Lydec و Redal و Amendis) كيطبقو تعريفات قريبة. الرسوم الثابتة والضرائب كيتزادو فالفاتورة.</p>
   </section>
   <section class="cp-section">
-    <h2>شحال كيسوا كيلوواط ساعة شمسي حسب الاستهلاك ديالك</h2>
-    <p>كل كيلوواط ساعة كتنتجو البلاكات وكتستهلكو فالدار كيوفر عليك تشري الكيلوواط الغالي فالفاتورة. كلما كتستهلك كثر، كلما الطاقة الشمسية كتربح كثر.</p>
-${tableHtml("ثمن الكيلوواط اللي كتوفر بالاستهلاك الذاتي", ["الاستهلاك ديالك", "ثمن الكيلوواط اللي كتوفر", "شحال كتسوا 100 كيلوواط ساعة شمسية"],
-  f.consKwh.map(k => [`${k} ${KWH}/الشهر`, `${price4(f.marginal(k))} ${MAD_AR}`, `${num(f.marginal(k) * 100)} ${MAD_AR}`]))}
-    <p>باش تشوف شنو كيعطي عندك، <a href="../../">المحاكي</a> كيبدا من الفاتورة ديالك بالدرهم وكيحسب منها الاستهلاك.</p>
+    <h2>الهبوط بشطر: شحال كتربحك ${f.dropKwh} ${KWH} شمسية</h2>
+    <p>بالفوترة الانتقائية، الكيلوواط الشمسي اللي كتستهلك فالدار ما كيسواش بحال بحال فكل بلاصة. إلا رجعك تحت الحد، الشهر كامل كيتحسب بثمن رخص.</p>
+${tableHtml(`فاتورة ديال شهر، قبل وبعد ${f.dropKwh} ${KWH} اللي كتنتجهم وكتستهلكهم فالدار`, ["الاستهلاك ديال الشهر", "الفاتورة بلا بلاكات", "الفاتورة بالبلاكات", "التوفير", "لكل كيلوواط شمسي"],
+  f.drops.map(d => [`${d.kwh} ${KWH}`, `${num(d.before)} ${MAD_AR}`, `${num(d.after)} ${MAD_AR}`, `${num(d.saved)} ${MAD_AR}`, `${price2(d.perKwh)} ${MAD_AR}`]))}
+    <p>نفس الكيلوواط الشمسي كيسوا ${price2(f.dropMin)} ${MAD_AR} ملي كتبقى فنفس الشطر، وحتى ل${price2(f.dropMax)} ${MAD_AR} ملي كيهبطك بشطر. <a href="../../">المحاكي</a> كيبدا من الفاتورة ديالك بالدرهم، كيدير هاد الحساب شهر بشهر وكيقول ليك شحال من شهر كيبدل الشطر.</p>
   </section>`,
     faq: [
       ["شحال كيسوا الكيلوواط ساعة ديال الضو فالمغرب؟", `لدار مربوطة مع ONEE، من ${price4(f.p0)} ${MAD_AR} للكيلوواط ساعة مع الضرائب للاستهلاك الصغير حتى ل${price4(f.pL)} ${MAD_AR} فوق ${f.last} ${KWH} فالشهر.`],
-      ["أشمن شطر كتوفر عليك الطاقة الشمسية؟", "الكيلوواط الشمسي اللي كتستهلك فالدار كيعوض الأول الكيلوواطات ديال الأشطر الغالية فالفاتورة. داكشي علاش الطاقة الشمسية كترجع فلوسها بالزربة ملي الفاتورة كتكون كبيرة."],
+      ["علاش الفاتورة كتطلع بزاف ملي كنفوت الحد؟", `حيت فوق ${f.selAbove} ${KWH} فالشهر، الشهر كامل كيتحسب بثمن الشطر اللي وصلتي ليه: ب${f.bounds[4].from} ${KWH} الفاتورة هي ${num(Tariff.monthBill(f.bounds[4].from))} ${MAD_AR}، وب${f.bounds[4].from + 1} ${KWH} كتولي ${num(Tariff.monthBill(f.bounds[4].from + 1))} ${MAD_AR}.`],
+      ["أشمن شطر كتوفر عليك الطاقة الشمسية؟", "الكيلوواط الشمسي اللي كتستهلك فالدار كينقص اللي كتشري من الشبكة. وملي كيهبطك بشطر، الشهر كامل كيتحسب بثمن رخص: تما فين الطاقة الشمسية كتربح كثر."],
     ],
     sources: ["onee"],
   };
@@ -1232,13 +1239,13 @@ ${tableHtml(`ثمن التركيب، بلاكات ديال ${f.panelW} واط؛ 
     body: `
   <section class="cp-section">
     <h2>شحال ديال البلاكات حسب الفاتورة ديالك</h2>
-${tableHtml(`تركيب كيغطي تقريبا ${f.cover}% من الاستهلاك ديال العام، ${COST} ${MAD_AR} للواط، بلا بيع؛ ${medNote}`, ["فاتورة الضو", "الاستهلاك", "القوة", "البلاكات", "مساحة السطح", "ثمن التركيب", "التوفير فالعام الأول", "فوقاش كترجع فلوسك"],
+${tableHtml(`الحجم اللي كيربح كثر ف${f.life} عام، ${COST} ${MAD_AR} للواط، بلا بيع؛ ${medNote}`, ["فاتورة الضو", "الاستهلاك", "القوة", "البلاكات", "مساحة السطح", "ثمن التركيب", "التوفير فالعام الأول", "فوقاش كترجع فلوسك"],
   f.nb.map(p => [`${num(p.bill)} ${MAD_AR}/الشهر`, `${num(p.consumption)} ${KWH}/الشهر`, `${kw(p.kwp)} ${KWC}`, `${p.panels}`, `${num(f.surface(p.panels))} م²`, `${num(p.capex)} ${MAD_AR}`, `${num(p.savings)} ${MAD_AR}`, yearsAr(p.payback)]))}
     <p class="cp-note">القوة محدودة ف10 ${KWC}، يعني تحت الحد ديال 11 كيلوواط ديال <a href="../loi-82-21-autoproduction/">التصريح البسيط اللي جا بيه القانون 82-21</a>. المساحات محسوبة غير للبلاكات: خلي شوية ديال البلاصة دايرة بيهم، والمسافة بين الصفوف إلا كان السطح مستوي.</p>
   </section>
   <section class="cp-section">
     <h2>علاش ما نغطيوش 100% من الاستهلاك؟</h2>
-    <p>البلاكات كتنتج فالنهار، والدار كتستهلك جزء فالليل. فوق تقريبا ${f.cover}% ديال التغطية، جزء كبير من الإنتاج كيمشي للشبكة، وتما ما كيتخلصش مزيان. تركيب صغير اللي كتستهلكو تقريبا كامل فالدار كيرجع فلوسو بالزربة.</p>
+    <p>البلاكات كتنتج فالنهار، والدار كتستهلك جزء فالليل. كلما كبر التركيب، كلما الإنتاج ديالو كيمشي للشبكة، وتما ما كيتخلصش مزيان. البلاكات الأولى، اللي كتستهلكهم تقريبا كاملين فالدار، هوما اللي كيربحو كثر: الحجم اللي فالجدول هو اللي كيخلي ليك أكبر عدد ديال الدراهم من بعد ${f.life} عام، وتركيب صغر كيرجع فلوسو بالزربة.</p>
     <p>للسطح ديالك بالضبط، <a href="../../">المحاكي</a> كيلقى الحدود ديال الدار وكيقول ليك شحال ديال البلاكات كيدخلو.</p>
   </section>`,
     faq: [
@@ -1313,24 +1320,25 @@ function guidesEn(all) {
     key: "tarif-electricite-onee", slug: S["tarif-electricite-onee"], kicker: "Tariffs",
     h1: "ONEE electricity tariff by tranche: the price per kWh",
     title: "ONEE electricity tariff in Morocco: price per kWh by tranche | Wattu",
-    answer: `ONEE's residential electricity price runs from ${price4En(f.p0)} MAD per kWh (up to ${f.first} kWh a month) to ${price4En(f.pL)} MAD (above ${f.last} kWh), tax included. The more you use, the more your last kWh costs, and that is the kWh solar panels replace first.`,
+    answer: `ONEE's residential electricity price runs from ${price4En(f.p0)} MAD per kWh (up to ${f.first} kWh a month) to ${price4En(f.pL)} MAD (above ${f.lastFrom} kWh), tax included. Above ${f.selAbove} kWh a month billing becomes selective: the whole month's consumption is billed at the price of the tranche reached. A few kWh too many therefore raise the price of the whole month, and solar panels that bring you down a tranche save more than the kWh they replace.`,
     body: `
   <section class="cp-section">
     <h2>Residential low-voltage tariff tranches</h2>
-${tableHtml("Price per kWh including tax, by monthly consumption", ["Monthly consumption", "Price per kWh (incl. tax)"],
-  f.T.map(([upper, price], i) => [upper === Infinity ? `Over ${f.T[i - 1][0]} kWh` : `${i === 0 ? 0 : f.T[i - 1][0] + 1}–${upper} kWh`, `${price4En(price)} MAD`]))}
-    <p class="cp-note">Above 150 kWh a month, ONEE switches to selective billing.</p>
+${tableHtml("Price per kWh including tax, by monthly consumption", ["Consumption in the month", "Price per kWh (incl. tax)", "Billing"],
+  f.bounds.map(({ from, to, price, selective }) => [to === Infinity ? `Over ${from} kWh` : `${from ? from + 1 : 0}–${to} kWh`, `${price4En(price)} MAD`, selective ? "Whole month at this price" : "Each tranche at its price"]))}
+    <p class="cp-note">Up to ${f.selAbove} kWh, billing is progressive: the first 100 kWh at ${price4En(f.T[0][1])} MAD, the next at ${price4En(f.T[1][1])} MAD. Above that it is selective: 250 kWh cost 250 × ${price4En(f.T[3][1])} = ${numEn(f.bill250)} MAD. The bounds shown include the ${f.tol} kWh tolerance applied to each tranche. The regional distribution companies (formerly Lydec, Redal, Amendis) apply close grids. Fixed charges and taxes come on top.</p>
   </section>
   <section class="cp-section">
-    <h2>What a solar kWh is worth, by consumption</h2>
-    <p>Each kWh your panels produce and you use at home saves you buying the most expensive kWh on your bill. The more you use, the more solar pays.</p>
-${tableHtml("Price of the kWh avoided by using your own solar power", ["Your consumption", "Price of the kWh avoided", "Value of 100 solar kWh"],
-  f.consKwh.map(k => [`${k} kWh/month`, `${price4En(f.marginal(k))} MAD`, `${numEn(f.marginal(k) * 100)} MAD`]))}
-    <p>To see what it means for you, <a href="../../">the simulator</a> starts from your bill in dirhams and works out your consumption.</p>
+    <h2>Dropping a tranche: what ${f.dropKwh} solar kWh save</h2>
+    <p>With selective billing, a solar kWh used at home is not worth the same everywhere. If it brings you back under a threshold, the whole month is billed at a lower price.</p>
+${tableHtml(`One month's bill, before and after ${f.dropKwh} kWh produced and used at home`, ["Consumption in the month", "Bill without solar", "Bill with solar", "Saving", "Per solar kWh"],
+  f.drops.map(d => [`${d.kwh} kWh`, `${numEn(d.before)} MAD`, `${numEn(d.after)} MAD`, `${numEn(d.saved)} MAD`, `${d.perKwh.toFixed(2)} MAD`]))}
+    <p>The same solar kWh is worth ${f.dropMin.toFixed(2)} MAD when you stay in the tranche, and up to ${f.dropMax.toFixed(2)} MAD when it brings you down one. <a href="../../">The simulator</a> starts from your bill in dirhams, does this calculation month by month and tells you how many months change tranche.</p>
   </section>`,
     faq: [
       ["How much does electricity cost per kWh in Morocco?", `For a household on the ONEE grid, from ${price4En(f.p0)} MAD per kWh including tax for small consumption to ${price4En(f.pL)} MAD above ${f.last} kWh a month.`],
-      ["Which tranche does solar save you?", "The solar kWh you use at home replace the kWh of the most expensive tranches on your bill first. That is why solar pays back faster when the bill is high."],
+      ["Why does my bill jump when I cross a threshold?", `Because above ${f.selAbove} kWh a month the whole month is billed at the price of the tranche reached: at ${f.bounds[4].from} kWh the bill is ${numEn(Tariff.monthBill(f.bounds[4].from))} MAD, at ${f.bounds[4].from + 1} kWh it is ${numEn(Tariff.monthBill(f.bounds[4].from + 1))} MAD.`],
+      ["Which tranche does solar save you?", "The solar kWh you use at home reduce what you buy from the grid. When that brings you down a tranche, the whole month is billed at a lower price: that is where solar pays most."],
     ],
     sources: ["onee"],
   };
@@ -1367,13 +1375,13 @@ ${tableHtml(`Installed price, ${f.panelW} Wp panels; output: ${medNote}`, ["Syst
     body: `
   <section class="cp-section">
     <h2>Number of panels by electricity bill</h2>
-${tableHtml(`System covering about ${f.cover}% of yearly consumption, ${COST} MAD/Wp, no surplus sales; ${medNote}`, ["ONEE bill", "Consumption", "System size", "Panels", "Roof area", "Investment", "Year-1 savings", "Payback"],
+${tableHtml(`The size that earns the most over ${f.life} years, ${COST} MAD/Wp, no surplus sales; ${medNote}`, ["ONEE bill", "Consumption", "System size", "Panels", "Roof area", "Investment", "Year-1 savings", "Payback"],
   f.nb.map(p => [`${numEn(p.bill)} MAD/month`, `${numEn(p.consumption)} kWh/month`, `${kwEn(p.kwp)} kWp`, `${p.panels}`, `${numEn(f.surface(p.panels))} m²`, `${numEn(p.capex)} MAD`, `${numEn(p.savings)} MAD`, yearsEn(p.payback)]))}
     <p class="cp-note">System size is capped at 10 kWp, below the 11 kW threshold for the <a href="../${S["loi-82-21-autoproduction"]}/">simple declaration under Law 82-21</a>. Areas count the panels only: allow a margin around them, and spacing between rows on a flat roof.</p>
   </section>
   <section class="cp-section">
     <h2>Why not cover 100% of consumption?</h2>
-    <p>Panels produce in the daytime, while part of a home's consumption is in the evening. Beyond about ${f.cover}% coverage, a growing share of the output goes to the grid, where it earns little. A smaller system whose output is used almost entirely at home pays back faster.</p>
+    <p>Panels produce in the daytime, while part of a home's consumption is in the evening. The bigger the system, the more of its output goes to the grid, where it earns little. The first panels, used almost entirely at home, are the ones that pay most: the size shown is the one that leaves the most dirhams after ${f.life} years, and a smaller system pays back faster.</p>
     <p>For your own roof, <a href="../../">the simulator</a> finds the building outline and tells you how many panels fit.</p>
   </section>`,
     faq: [

@@ -33,7 +33,8 @@ The map links to this tool and vice versa, but only by absolute URL. The old
 solar/          (repo root — its own Cloudflare Pages project)
 ├── index.html       Page shell — two <section class="step"> views
 ├── style.css        Wattu brand (navy #001F4D / orange #FF6B35)
-├── engine.js        The figures: CONFIG, PV, Tariff, ROI, Finance, Sizing (shared with the city pages and the chat)
+├── engine.js        The figures: CONFIG, PV, Tariff, ROI, Finance, Sizing, Quote (shared with the city pages and the chat)
+├── engine.test.mjs  Its tests: `node solar/engine.test.mjs`
 ├── app.js           The simulator: Geocoder, PVGIS, Chart_, Roof, MapView, UI
 ├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
 ├── chat/            Chat assistant page (prototype, private link)
@@ -122,7 +123,8 @@ browsing does not.
 - **PVGIS v5.2** (EU JRC) — annual + monthly kWh per (lat, lon, kWp, tilt, azimuth), via our Cloudflare Worker proxy
 
 ### Data sources
-- **ONEE stepped tariff** (2025, TTC) — hardcoded in `CONFIG.ONEE_TRANCHES`. Source: [kherba.com/tarifs](https://kherba.com/tarifs).
+- **ONEE tariff** (TTC) — prices in `CONFIG.ONEE_TRANCHES`. Source: [kherba.com/tarifs](https://kherba.com/tarifs).
+  Billing rule (`Tariff.monthBill`): progressive up to 150 kWh a month; above, « facturation sélective », the **whole month at the price of the tranche reached**, with 10 kWh of tolerance on each bound (151–210, 211–310, 311–510, > 510 kWh, as the Redal grids of 2017 and 2023 print them; ONEE's own example bills 170 kWh entirely in tranche 3). Until November 2026 the engine billed every tranche at its own price, which undervalued solar wherever it brings a home down a tranche. **To confirm on a real bill above 150 kWh.** Not modelled: fixed charges, the TPPAN tax, the regional distributors' (SRM) own grids.
 - **Grid CO₂ factor** — 0.71 kg/kWh, ONEE 2024 mix.
 - **Installed cost** — 8–15 MAD/Wc range, 11 MAD/Wc central. Source: [lechantier.ma](https://lechantier.ma/en/prix/solaire), May 2026.
 - **Law 82-21** — décret n° 2.25.100 (5 mars 2026). Surplus injection capped at 20% of annual production; feed-in ~0.18 MAD/kWh (MV off-peak, upper bound for LV pending official publication).
@@ -243,12 +245,17 @@ If any tool grows beyond ~500 LOC, split `app.js` into ES modules and add a ligh
   shadows are unknown, and the page says so. It changes no figure.
 
 - **PVGIS** uses PVGIS-SARAH3 radiation DB (satellite-derived, 5×5 km, 1990–2020 climatology). Systematic bias typically ±5% for MA.
-- **Self-consumption ratio** is heuristic: `0.30 + 0.55·exp(-0.9·(prod/cons))`. At sizing ratio 1.0 → ~55%; at 2.0 → ~33%. Real values depend on load profile — should be a per-user input in a future version.
+- **Self-consumption**: self-consumed kWh = `D · consumption · (1 − exp(−r / D))`, `r` = production / consumption, `D` = the share of the home's consumption that falls in sunny hours. The visitor picks `D` with « En journée, quelqu'un est à la maison ? »: 0.30 (nobody), 0.40 (sometimes, the default), 0.50 (yes, or cooling runs). With `D` = 0.33 the curve gives the figures measured on European homes without a battery; the Moroccan values are assumptions, no public load curves exist. The hint under the question shows the savings at both ends.
+- **Consumption by month**: `CONFIG.CONSUMPTION_SEASON` (±15 %, more in winter and July–August). An assumption; it matters because selective billing makes a flat month and a seasonal one cost differently, and without it a bill a few dirhams either side of a threshold got opposite answers.
+- **Two sizes** (`Sizing.options`): `best`, the highest net present value over 25 years (the default, also on the city pages and in the chat), and `quick`, the largest size within half a year of the shortest payback. At a flat price per Wc the smallest system always has the shortest payback: real quotes, where small systems cost more per Wc, will move this.
+- **Verdict** (`Sizing.verdict`): payback ≤ 8 years « ça vaut le coup », ≤ 12 « à étudier », beyond « pas encore », with the price per Wc and the bill at which the payback reaches 10 years.
+- **Quote check** (`Quote.check`): a quote's MAD/Wc against 8 / 12 / 15 MAD/Wc (low, fair, high, over), and its payback for this home. Nothing typed there leaves the browser.
 - **Cashflow** uses 0.5%/yr degradation, 2%/yr tariff inflation, 1% opex, 5% discount, 25-yr life. All in `CONFIG` — swap freely.
 
 ## Known limitations
 
 - Nominatim rate limit (1 req/s) can bite on aggressive typing. Debounced 300 ms; consider Photon or a Cloudflare-cached geocoder if traffic grows.
-- Self-consumption ratio is a rough model; not validated against measured MA household load curves.
+- Self-consumption and the month-by-month consumption shape are assumptions; not validated against measured MA household load curves.
+- The selective-billing rule comes from distributors' published grids and press, not from a bill we hold. The installed price is flat per Wc whatever the size.
 - Export revenue is a rough upper bound — LV residential feed-in tariff not yet officially published.
 - No sensitivity view yet (single-point estimates only). Add tornado chart when needed.
