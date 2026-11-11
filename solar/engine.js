@@ -6,7 +6,8 @@
  *
  *   CONFIG   constants that are easy to update (tariffs, cost, CO2, etc.)
  *   PV       PVGIS 1 kWc response → any size; offline nearest-city fallback
- *   Tariff   ONEE stepped tariff: bill ↔ kWh, avoided cost per kWh
+ *   Tariff   ONEE tariff (progressive ≤150 kWh, selective above): bill ↔ kWh,
+ *            avoided cost per kWh
  *   ROI      payback, cashflow, NPV
  *   Finance  loan payment
  *   Sizing   the recommended system size for a consumption
@@ -21,7 +22,19 @@
 const CONFIG = {
   // ONEE residential LV monthly tranches (2025, TTC incl. 18% VAT)
   // Format: [upper_bound_kWh (Infinity for last), price_MAD_per_kWh_TTC]
-  // Source: ONEE / kherba.com/tarifs. Selective billing above 150 kWh/mo.
+  // Source: ONEE (one.org.ma, « Tarifs ») / kherba.com/tarifs.
+  // Two billing modes (ONEE, reform of 2014):
+  //   - up to ONEE_PROGRESSIVE_MAX_KWH a month: progressive, each tranche
+  //     at its own price (100 × 0.9010 + the rest × 1.0732);
+  //   - above it: « sélective », the WHOLE month at the price of the tranche
+  //     reached, with a tolerance of ONEE_SELECTIVE_TOLERANCE_KWH over each
+  //     tranche's upper bound (so 151–210 kWh at 1.0732, 211–310 at 1.1676,
+  //     311–510 at 1.3817, above 510 at 1.5958).
+  // The bill therefore jumps at 150, 210, 310 and 510 kWh, and a solar kWh
+  // that brings the month back under a threshold is worth far more than
+  // its tranche price: Tariff.avoidedCostPerKwh takes the bill difference.
+  ONEE_PROGRESSIVE_MAX_KWH: 150,
+  ONEE_SELECTIVE_TOLERANCE_KWH: 10,
   ONEE_TRANCHES: [
     [100, 0.9010],
     [150, 1.0732],
@@ -96,6 +109,11 @@ const CONFIG = {
   // Auto-sizing: recommend a system covering this share of annual consumption
   AUTOSIZE_COVER: 0.80,
 
+  // How far the self-consumption share may be off, in points, either way.
+  // No measured Moroccan household load data exists yet, so the payback is
+  // shown as the range this spread gives (ROI.paybackRange), not one figure.
+  SELF_RATIO_UNCERTAINTY: 0.10,
+
   // Self-consumption ratio heuristic — fraction of PV production consumed on-site
   // Function of (annual_production / annual_consumption). Empirical residential curve.
   selfConsumptionRatio(sizingRatio) {
@@ -157,71 +175,92 @@ const PV = {
 
 // ── Tariff (ONEE stepped) ──────────────────────────
 const Tariff = {
-  // Average avoided cost given a monthly consumption profile
-  // We compute the marginal blend: the PV displaces the TOP tranches first.
-  avoidedCostPerKwh(monthlyConsumptionKwh, monthlyPvKwh) {
-    // How much of the consumption sits in each tranche
-    const tranches = CONFIG.ONEE_TRANCHES;
-    let remaining = monthlyConsumptionKwh;
-    let low = 0;
-    const consumedByTranche = []; // {price, kwh}
-    for (const [upper, price] of tranches) {
-      const span = Math.max(0, Math.min(upper, monthlyConsumptionKwh) - low);
-      consumedByTranche.push({ price, kwh: span });
-      low = upper;
-      if (upper >= monthlyConsumptionKwh) break;
+  // The tariff as segments of a month's consumption, lowest first. Within
+  // a segment the bill is base + rate × kWh; between two segments it jumps.
+  //   progressive part: one segment per tranche up to 150 kWh;
+  //   selective part:   one segment per tranche reached, whole month at
+  //                     its price, upper bound + tolerance.
+  segments() {
+    const T = CONFIG.ONEE_TRANCHES, max = CONFIG.ONEE_PROGRESSIVE_MAX_KWH;
+    const tol = CONFIG.ONEE_SELECTIVE_TOLERANCE_KWH;
+    const out = [];
+    let low = 0, base = 0;
+    for (const [upper, price] of T) {
+      if (low >= max) break;
+      const hi = Math.min(upper, max);
+      out.push({ from: low, to: hi, base: base - low * price, rate: price, mode: "progressive" });
+      base += (hi - low) * price;
+      low = hi;
     }
-    // PV displaces from the TOP tranche down
-    let pvRemaining = Math.min(monthlyPvKwh, monthlyConsumptionKwh);
-    let totalAvoidedMAD = 0;
-    for (let i = consumedByTranche.length - 1; i >= 0 && pvRemaining > 0; i--) {
-      const take = Math.min(consumedByTranche[i].kwh, pvRemaining);
-      totalAvoidedMAD += take * consumedByTranche[i].price;
-      pvRemaining -= take;
+    for (const [upper, price] of T) {
+      if (upper !== Infinity && upper + tol <= max) continue;
+      const to = upper === Infinity ? Infinity : upper + tol;
+      out.push({ from: low, to, base: 0, rate: price, mode: "selective" });
+      low = to;
     }
-    const displaced = Math.min(monthlyPvKwh, monthlyConsumptionKwh);
-    return displaced > 0 ? totalAvoidedMAD / displaced : 0;
+    return out;
   },
 
-  // Monthly consumption (kWh) from a monthly bill (MAD TTC): the progressive
-  // tranches make the bill piecewise-linear, solved segment by segment
-  // (block-rate quirk below 150 kWh ignored, so the inverse stays monotonic).
-  kwhFromBill(billMAD) {
-    let low = 0, costAtLow = 0;
-    for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
-      const costAtUpper = upper === Infinity
-        ? Infinity
-        : costAtLow + (upper - low) * price;
-      if (billMAD <= costAtUpper) {
-        return low + (billMAD - costAtLow) / price;
-      }
-      low = upper;
-      costAtLow = costAtUpper;
-    }
-    return low;
+  // The segment a month's consumption falls in (kWh ≤ its upper bound).
+  segmentOf(kwh) {
+    const segs = Tariff.segments();
+    return segs.find(s => kwh <= s.to) || segs[segs.length - 1];
   },
 
-  // Monthly bill (MAD TTC) for a monthly consumption, with the same
-  // tranches and the same simplification: kwhFromBill(billFromKwh(k)) === k.
+  // Monthly bill (MAD TTC) for a monthly consumption.
   billFromKwh(kwh) {
-    let low = 0, bill = 0;
-    for (const [upper, price] of CONFIG.ONEE_TRANCHES) {
-      bill += (Math.min(kwh, upper) - low) * price;
-      if (kwh <= upper) break;
-      low = upper;
+    if (!(kwh > 0)) return 0;
+    const s = Tariff.segmentOf(kwh);
+    return s.base + s.rate * kwh;
+  },
+
+  // Price of one more kWh this month, ignoring jumps (MAD/kWh): the
+  // tranche price in the progressive part, the price the whole month is
+  // billed at in the selective part.
+  priceAt(kwh) {
+    return Tariff.segmentOf(Math.max(kwh, 0)).rate;
+  },
+
+  // Monthly consumption (kWh) from a monthly bill (MAD TTC). The bill only
+  // rises with consumption, but it jumps at each threshold: a bill that
+  // falls inside a jump (no consumption gives exactly that amount) maps to
+  // the threshold below it. kwhFromBill(billFromKwh(k)) === k.
+  kwhFromBill(billMAD) {
+    if (!(billMAD > 0)) return 0;
+    for (const s of Tariff.segments()) {
+      const lo = s.base + s.rate * s.from;
+      if (billMAD < lo) return s.from;            // inside the jump below s
+      if (s.to === Infinity || billMAD <= s.base + s.rate * s.to) {
+        return (billMAD - s.base) / s.rate;
+      }
     }
-    return bill;
+    return 0;
+  },
+
+  // Average value of the kWh that solar removes from a month's grid
+  // purchases (MAD/kWh): the bill difference over the kWh removed. Under
+  // selective billing it exceeds the tranche price whenever the month
+  // drops under a threshold (the remaining kWh get the lower price too).
+  avoidedCostPerKwh(monthlyConsumptionKwh, monthlyPvKwh) {
+    const displaced = Math.min(Math.max(monthlyPvKwh, 0), monthlyConsumptionKwh);
+    if (!(displaced > 0)) return 0;
+    const saved = Tariff.billFromKwh(monthlyConsumptionKwh) -
+      Tariff.billFromKwh(monthlyConsumptionKwh - displaced);
+    return saved / displaced;
   },
 };
 
 // ── ROI ────────────────────────────────────────────
 const ROI = {
-  compute({ pv, monthlyConsumption, capexMAD, exportAllowed }) {
+  // selfRatioShift moves the self-consumption share by that many points
+  // (0.1 = +10 points), clamped to 0–1: how paybackRange tests the curve.
+  compute({ pv, monthlyConsumption, capexMAD, exportAllowed, selfRatioShift = 0 }) {
     // pv.monthlyKwh: production per month, kWh
     const annualPv = pv.annualKwh;
     const annualCons = monthlyConsumption * 12;
     const sizingRatio = annualPv / Math.max(annualCons, 1);
-    const selfRatio = CONFIG.selfConsumptionRatio(sizingRatio);
+    const selfRatio = Math.min(1, Math.max(0,
+      CONFIG.selfConsumptionRatio(sizingRatio) + selfRatioShift));
 
     // Monthly split — assume same self-consumption ratio across months (simplification)
     let annualSavingsMAD = 0;
@@ -234,7 +273,7 @@ const ROI = {
       annualSelfKwh += selfKwh;
       annualExportableKwh += surplusKwh;
 
-      // Avoided grid cost = displaced top tranches
+      // Avoided grid cost = the bill difference (selective billing included)
       const avoided = Tariff.avoidedCostPerKwh(monthlyConsumption, selfKwh);
       annualSavingsMAD += selfKwh * avoided;
     }
@@ -280,6 +319,15 @@ const ROI = {
       npv,
       lifetimeSavingsMAD: cashflow[cashflow.length - 1].cumulative + capexMAD,
     };
+  },
+
+  // Payback with the self-consumption share SELF_RATIO_UNCERTAINTY lower
+  // and higher: { low, high } in years (Infinity when it never pays back).
+  paybackRange(args) {
+    const d = CONFIG.SELF_RATIO_UNCERTAINTY;
+    const a = ROI.compute({ ...args, selfRatioShift: +d }).paybackYr;
+    const b = ROI.compute({ ...args, selfRatioShift: -d }).paybackYr;
+    return { low: Math.min(a, b), high: Math.max(a, b) };
   },
 };
 

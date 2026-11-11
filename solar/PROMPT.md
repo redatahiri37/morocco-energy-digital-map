@@ -80,7 +80,7 @@ The user should be able to say all of these after using the tool:
 | 301–500 | 1.3817 |
 | > 500 | 1.5958 |
 
-Selective billing above 150 kWh/mo (each tranche at its own price). PV displaces from the **top** tranche downward — that is where the money is.
+Up to 150 kWh/mo the billing is progressive (each tranche at its own price). Above 150 kWh/mo it is **selective**: the whole month is billed at the price of the tranche reached, with a 10 kWh tolerance per tranche (so the price changes above 210, 310 and 510 kWh). The bill jumps at each threshold, so a solar kWh that brings the month back under one is worth far more than its tranche price. The saving is always the bill difference — that is where the money is. (Until November 2026 the engine billed every tranche at its own price above 150 kWh too, which understated both the bill and the saving.)
 
 ### Installed cost (residential grid-tied, 2025)
 - Range 8.5–14 MAD/Wc turnkey. Central 11 MAD/Wc.
