@@ -297,6 +297,8 @@ export const ZGH = new Map([
    "<a href=\"villes/\">ⴰⵔⴱⴰⵃ ⴳ ⴽⵓ ⵜⴰⵎⴷⵉⵏⵜ</a>"],
   ["<a href=\"guide/\">Guides</a>",
    "<a href=\"guide/\">ⵉⵙⴼⵔⴰⵙⵏ</a>"],
+  ["<a href=\"/pompage/\">Pompage solaire agricole</a>",
+   "<a href=\"/pompage/\">ⴰⵎⴰⵏ ⵙ ⵜⴰⴼⵓⴽⵜ ⵉ ⵜⴽⵔⵣⴰ</a>"],
   ["Carte énergie × digital",
    "ⵜⴰⴽⴰⵕⴹⴰ ⵏ ⵜⵣⵎⵔⵜ ⴷ ⵓⵎⴹⴰⵏ"],
 ]);
