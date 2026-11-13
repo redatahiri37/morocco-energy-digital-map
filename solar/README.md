@@ -37,7 +37,9 @@ solar/          (repo root — its own Cloudflare Pages project)
 ├── app.js           The simulator: Geocoder, PVGIS, Chart_, Roof, MapView, UI
 ├── analytics.js     Cookieless usage beacon (see ANALYTICS.md)
 ├── chat/            Chat assistant page (prototype, private link)
-├── proxy/           Cloudflare Worker: PVGIS proxy, /e, /csp, /chat
+├── pumping.js       Solar pumping engine: water need, array and pump size, fuel baseline, FDA aid
+├── pompage/         Solar pumping simulator for farmers (/pompage/, French + Darija)
+├── proxy/           Cloudflare Worker: PVGIS proxy, /e, /csp, /chat, /et0
 ├── pages.css        Style of the generated city pages
 ├── data/cities.json Cities that get a page under /ville/<slug>/, and the list
 │                    offered when an address is not found (deployed as is)

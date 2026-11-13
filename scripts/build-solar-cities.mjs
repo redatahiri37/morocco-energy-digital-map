@@ -867,7 +867,7 @@ ${sorted.map(c => { const p = refOf(c); return `        <tr><th scope="row"><a h
 }
 
 function sitemap(all, guideList, guideListAr = [], guideListEn = []) {
-  const urls = [`${SITE}/`, `${SITE}/villes/`, `${SITE}/guide/`,
+  const urls = [`${SITE}/`, `${SITE}/villes/`, `${SITE}/guide/`, `${SITE}/pompage/`,
     ...guideList.map(g => `${SITE}/guide/${g.slug}/`), ...all.map(c => `${SITE}/ville/${c.slug}/`),
     `${SITE}/ar/`, `${SITE}/en/`, `${SITE}/zgh/`,
     `${SITE}/ar/villes/`, ...all.map(c => `${SITE}/ar/ville/${c.slug}/`),
@@ -889,6 +889,7 @@ function llmsTxt(all, guideList) {
 
 - [Simulateur](${SITE}/): production, économies en MAD et amortissement pour une adresse précise (aussi en [arabe](${SITE}/ar/), en [anglais](${SITE}/en/) et en [amazigh, tifinagh](${SITE}/zgh/))
 - [Rentabilité par ville](${SITE}/villes/): tableau comparatif de ${all.length} villes marocaines
+- [Pompage solaire agricole](${SITE}/pompage/): pour un puits et une culture, nombre de panneaux, puissance de la pompe, prix, aide FDA et économies face au butane ou au gasoil (besoin en eau FAO-56 calculé sur l'année météo type PVGIS), en français et en darija
 - [Données en CSV](${CSV_URL}): production, économies et amortissement des ${all.length} villes, licence CC BY 4.0
 - [الطاقة الشمسية فالمغرب: شحال كتربح فكل مدينة](${SITE}/ar/villes/): les mêmes pages villes en arabe marocain (darija)
 - [Solar panel payback in Morocco, city by city](${SITE}/en/cities/): the same city pages in English

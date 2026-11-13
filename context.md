@@ -151,6 +151,37 @@ handoff below). No open correction issue left.
   with a real OSM building (Overpass did not answer locally): tested with a
   drawn 18 × 14 m roof, fr and ar, desktop and 375 px.
 
+## Session handoff — 2026-11-11 (solar: pumping simulator for farmers)
+- New page solar.wattu.org/pompage/ (owner's pick from the brainstorm; target
+  user: the farmer). French + Darija in the page (#l=ar), mobile first.
+  Four questions: field (geolocation or nearest city), crop × area ×
+  irrigation method × months (or « je connais mon volume »), water depth +
+  outlet (basin / direct drip) + optional well yield, today's energy
+  (butane / gasoil / ONEE / none) with the farmer's own weekly bottles,
+  litres or bill. Answer: panels + pump CV, price, FDA aid, savings in
+  bottles, payback, unsubsidised-butane scenario, fuel vs loan per month,
+  monthly need vs PV chart, « L'eau d'abord » (yearly m³, drip saving,
+  well-yield check, ABH law 36-15, meter), installer sheet, WhatsApp share
+  (state in the URL hash).
+- Engine solar/pumping.js (+ pumping.test.mjs): FAO-56 Kc, FAO efficiencies,
+  hydraulic sizing on the most demanding month, Nebraska pumping-plant
+  criteria × 76 % (UGA B837) for butane/diesel/electric, kit price fitted to
+  3 catalogue prices (oasismaroc.com, one seller), FDA 30 % capped 30 000 DH,
+  butane 50 DH (subsidy 78 DH, Apr 2026), gasoil 16.90 DH/L (Nov 2026).
+  Unsourced assumptions are named in the code and the page's « Méthode ».
+  The fuel estimate is likely LOW (ministry DH/m³ figures are ~2× ours):
+  the farmer's own bottle count overrides it. No ONEE agricultural tariff
+  found: the grid case needs the farmer's bill.
+- Worker GET /et0?lat&lon (proxy/et0.js + et0.test.mjs): FAO-56
+  Penman-Monteith from PVGIS TMY, coords rounded 0.01°, TMY edge-cached 30
+  days. Checked against FAO-56 example 18 (3.88 vs 3.9 mm/day). Deployed by
+  worker.yml on merge. A slow TMY (> 20 s, seen once) makes the page ask for
+  the farmer's volume instead.
+- Footer link « Pompage solaire agricole » on the simulator (ar/en/zgh
+  translated), sitemap and llms.txt entries, solar.yml checks and deploy.
+- To review: the Darija text and the zgh link label (drafts); kit prices
+  against real quotes; no analytics on the page yet.
+
 ## Session handoff — 2026-11-03 (map: industry and data-centre markers)
 - Industry and data centres are told apart from the plants by
   shape, not by more hues. Data centres = violet diamonds (sized by MW,
