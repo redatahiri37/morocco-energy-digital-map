@@ -77,12 +77,11 @@ export const PAIRS = [
    '<p class="micro">Ni compte ni jeton : cette carte utilise les tuiles ouvertes d\'<a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>) via MapLibre.</p>'],
   ['aria-label="Close"', 'aria-label="Fermer"'],
 
-  // Bottom bar
+  // Panel footer credits
   ['<span data-country-credits>Data: GEM · ONEE · Datacentermap · </span>Grid: <a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> · Basemap: <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>',
    '<span data-country-credits>Données : GEM · ONEE · Datacentermap · </span>Réseau : <a href="https://openinframap.org" target="_blank" rel="noopener">OpenInfraMap</a> · Fond de carte : <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> © contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></span>'],
   ['    Built by <a href="https://redatahiri.substack.com/" target="_blank" rel="noopener">Reda Tahiri</a> · independent, not affiliated\n',
    '    Conçu par <a href="https://redatahiri.substack.com/" target="_blank" rel="noopener">Reda Tahiri</a> · indépendant, sans affiliation\n'],
-  ['rel="noopener">Contribute data ↗</a>', 'rel="noopener">Contribuer aux données ↗</a>'],
 
   // Methodology
   ['      <h2>Methodology</h2>', '      <h2>Méthodologie</h2>'],

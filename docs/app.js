@@ -36,6 +36,7 @@
   const srcText = (o, k = "source")=>(FR && (o[k + "Fr"] || o[k + "_fr"])) || o[k];
   const T = FR ? {
     soon: "bientôt", live: "direct", updated: "mis à jour",
+    groupPower: "Électricité", groupWater: "Eau", groupDemand: "Demande",
     docTitle: (c)=>`Wattu Energy — carte des infrastructures (${c})`,
     credits: (x)=>`Données : ${x} · `,
     issueData: (c)=>`Carte ${c} — correction de données`,
@@ -112,6 +113,7 @@
     wNote: (k)=>`Sommes des couches eau. Charge moyenne : production des usines de dessalement à ${k} kWh/m³ ; pompage des transferts non compté.`
   } : {
     soon: "soon", live: "live", updated: "updated",
+    groupPower: "Electricity", groupWater: "Water", groupDemand: "Demand",
     docTitle: (c)=>`Wattu Energy — ${c} infrastructure map`,
     credits: (x)=>`Data: ${x} · `,
     issueData: (c)=>`${c} map — data correction`,
@@ -689,7 +691,25 @@
     const c = COUNTRIES[countryKey];
     const host = $("#layerList");
     host.innerHTML = "";
-    c.layers.forEach(L=>{
+    // Layers in three groups, in config order within each: what makes and
+    // moves electricity, water, and what consumes it.
+    const groupOf = (L)=>{
+      const k = layerKind(L.id);
+      return k === "water" ? "water" : k === "industrial" || k === "digital" ? "demand" : "power";
+    };
+    const GROUP_TITLE = { power: T.groupPower, water: T.groupWater, demand: T.groupDemand };
+    const order = ["power", "water", "demand"].filter(g=>c.layers.some(L=>groupOf(L) === g));
+    const sorted = order.flatMap(g=>c.layers.filter(L=>groupOf(L) === g));
+    let lastGroup = null;
+    sorted.forEach(L=>{
+      const g = groupOf(L);
+      if(order.length > 1 && g !== lastGroup){
+        const h = document.createElement("h3");
+        h.className = "layer-group";
+        h.textContent = GROUP_TITLE[g];
+        host.appendChild(h);
+      }
+      lastGroup = g;
       const fc = layerData[L.id] || { features:[] };
       const kind = layerKind(L.id);
       const shown = layerView(L).features.length;
@@ -1032,6 +1052,14 @@
   const fmtAmount = (v, unit)=>(v >= 100 ? nfmt(v) : v >= 0.1 ? nfmt(v, 1, 1) : "<" + nfmt(0.1, 1, 1)) + " " + unit;
   // A mix fuel's label in the page's language.
   const fuelLabel = (f)=>MIX_LABEL[f.fuel] || f.label;
+  // Dark or light text over a fill, by the fill's relative luminance.
+  function inkOn(hex){
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+    if(!m) return "#fff";
+    const lin = (i)=>{ const v = parseInt(m[1].slice(i, i + 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const L = 0.2126 * lin(0) + 0.7152 * lin(2) + 0.0722 * lin(4);
+    return L > 0.22 ? "#06101F" : "#FFFFFF";
+  }
   // Plant capacity in text: MW under 1 GW, as the tiles show it.
   const fmtGW = (gw)=>gw >= 1 ? fmtAmount(gw, "GW") : nfmt(gw * 1000) + " MW";
   function el(tag, cls, text){
@@ -1053,7 +1081,7 @@
     const share = (f)=>cap ? (total ? 100 * f.capacity_gw / total : 0) : f.generation_pct;
     const amount = (f)=>fmtAmount(value(f), cap ? "GW" : "TWh");
 
-    $("#mixYear").textContent = "· " + m.year;
+    $("#mixYear").textContent = m.year;
     const totalNum = fmtAmount(total, "").trim();
     $("#mixTotal").textContent = cap ? T.totalCap(totalNum) : T.totalGen(totalNum);
     section.querySelectorAll(".seg-btn").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.measure === mixMeasure)));
@@ -1072,6 +1100,14 @@
         seg.title = tip;
         seg.style.flexGrow = String(value(f));
         seg.style.background = color;
+        // Fuels with a wide enough share are named on the bar itself, in
+        // dark or light ink depending on the fuel colour.
+        // Wide shares carry the fuel's name, narrower ones the share alone.
+        if(share(f) >= 9){
+          const lab = el("span", "mix-seg-label", share(f) >= 25 ? `${fuelLabel(f)} ${fmtShare(share(f))}` : fmtShare(share(f)));
+          lab.style.color = inkOn(color);
+          seg.appendChild(lab);
+        }
         seg.addEventListener("click", ()=>setFuelFilter(f.fuel));
         bar.appendChild(seg);
       }
@@ -1938,7 +1974,7 @@
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${p.region ? escapeHtml(p.region) + " · " : ""}${coords}</div>
-      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span><span class="sp-word">${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span></span>
       <div class="stat-grid">${stats}</div>
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
@@ -1976,7 +2012,7 @@
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(p.name)}</h1>
       <div class="pop-sub">${escapeHtml(p.voltage_kv)} kV</div>
-      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span><span class="sp-word">${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span></span>
       ${live ? `<div class="live-flow" data-live-flow>${liveFlowMarkup(c)}
         <div class="micro">${T.source}<a href="${escapeHtml(safeUrl(c.liveFlow.sourceUrl))}" target="_blank" rel="noopener">${escapeHtml(srcText(c.liveFlow))}</a></div></div>` : ""}
       <div class="stat-grid">
@@ -2042,7 +2078,7 @@
     $("#popupBody").innerHTML = `
       <h1 class="pop-title">${escapeHtml(featName(p))}</h1>
       <div class="pop-sub">${escapeHtml(p.region || "")}</div>
-      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span>${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span>
+      <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span><span class="sp-word">${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span></span>
       <div class="stat-grid">${stats}</div>
       ${p.note ? `<p class="pop-note">${escapeHtml((FR && p.note_fr) || p.note)}</p>` : ""}
       <div class="source-row">
