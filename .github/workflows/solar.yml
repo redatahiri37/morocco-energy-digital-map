@@ -29,6 +29,10 @@ jobs:
           node --check solar/analytics.js
           node --check solar/chat/chat.js
 
+      # The figures: tariff, savings, sizing, quote check.
+      - name: Engine tests
+        run: node solar/engine.test.mjs
+
       # The page builds its HTML from nodes (textContent, createElement): no
       # string, from OSM, a shared link or our own code, is parsed as HTML.
       - name: No HTML parsed from strings in the page scripts
@@ -117,10 +121,6 @@ jobs:
           fc-list :lang=ar | grep -qi noto || { sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-core; }
           node scripts/render-og.mjs _og _check/og
           test "$(find _check/og -name '*.png' | wc -l)" -eq "$(find _og -name '*.html' | wc -l)"
-
-      # The figures: tariff, savings, sizing, quote check.
-      - name: Engine tests
-        run: node solar/engine.test.mjs
 
       - name: Worker tests
         working-directory: solar/proxy
