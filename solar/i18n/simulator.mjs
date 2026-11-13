@@ -241,5 +241,6 @@ export const PAIRS = [
   // ── footer
   ['<a href="villes/">Rentabilité par ville</a>', '<a href="villes/">شحال كتربح فكل مدينة</a>', '<a href="cities/">Solar payback by city</a>'],
   ['<a href="guide/">Guides</a>', '<a href="guide/">شروحات</a>', '<a href="guide/">Guides</a>'],
+  ['<a href="/pompage/">Pompage solaire agricole</a>', '<a href="/pompage/#l=ar">الضخ بالشمس للفلاحة</a>', '<a href="/pompage/">Solar water pumping for farms</a>'],
   ["Carte énergie × digital", "خريطة الطاقة والرقمي", "Energy × digital map"],
 ];

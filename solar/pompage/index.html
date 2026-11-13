@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pompage solaire agricole au Maroc — combien de panneaux, quel prix | Wattu</title>
+<meta name="description" content="Pour votre puits et votre culture : nombre de panneaux, taille de la pompe, prix, aide FDA et économies face au butane ou au gasoil. Gratuit, sans inscription.">
+<link rel="canonical" href="https://solar.wattu.org/pompage/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Wattu">
+<meta property="og:title" content="Pompage solaire agricole — Wattu">
+<meta property="og:description" content="Combien de panneaux pour votre puits, à quel prix, et en combien d'années ils remplacent le butane.">
+<meta property="og:url" content="https://solar.wattu.org/pompage/">
+<meta property="og:locale" content="fr_MA">
+<meta name="theme-color" content="#050B18">
+<!-- Chart.js is the simulator's vendored copy (same hash, SECURITY.md). -->
+<script src="../vendor/chart.js-4.4.1/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" defer></script>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../brand.css">
+<link rel="stylesheet" href="pompage.css">
+</head>
+<body class="pump-page">
+
+<header class="topbar">
+  <a class="w-brand" href="../" aria-label="Wattu Solaire — simulateur">
+    <img class="w-mark" src="../mark.svg" alt="" width="26" height="26">
+    <span class="w-word">wattu</span>
+    <span class="w-product" data-i18n="product">Pompage</span>
+  </a>
+  <nav class="topnav pump-langs" aria-label="Langue">
+    <button type="button" class="pump-lang" data-lang="fr" lang="fr" aria-pressed="true">FR</button>
+    <button type="button" class="pump-lang" data-lang="ar" lang="ar" aria-pressed="false">الدارجة</button>
+  </nav>
+</header>
+
+<main class="pump-main">
+  <section class="pump-intro">
+    <span class="w-kicker pump-kicker" data-i18n="kicker">Pompage solaire agricole</span>
+    <h1 data-i18n="title">Le soleil peut-il pomper l'eau de votre puits ?</h1>
+    <p class="pump-lede" data-i18n="lede">Quatre questions sur votre champ et votre puits. Vous saurez combien de panneaux il faut, quelle pompe, le prix, et en combien d'années cela remplace le butane ou le gasoil.</p>
+  </section>
+
+  <form id="pump-form" class="pump-form" novalidate>
+
+    <!-- 1 · Where -->
+    <fieldset class="q">
+      <legend><span class="q-n">1</span><span data-i18n="q1">Où est votre champ ?</span></legend>
+      <div class="q-row">
+        <button type="button" class="btn-geo" id="geo-btn" data-i18n="geo">Utiliser ma position</button>
+        <span class="q-or" data-i18n="or">ou</span>
+        <label class="sr" for="city" data-i18n="city_label">Ville la plus proche</label>
+        <select id="city" class="select"></select>
+      </div>
+      <p class="q-hint" id="place-label" aria-live="polite"></p>
+    </fieldset>
+
+    <!-- 2 · Water need -->
+    <fieldset class="q">
+      <legend><span class="q-n">2</span><span data-i18n="q2">Qu'est-ce que vous arrosez ?</span></legend>
+
+      <div id="mode-crop">
+        <div class="chips" id="crop-chips" role="group" aria-label="Culture"></div>
+
+        <div class="field">
+          <label for="ha" data-i18n="ha_label">Surface arrosée</label>
+          <div class="stepper">
+            <button type="button" class="stp" data-for="ha" data-step="-0.5" aria-label="moins">−</button>
+            <input id="ha" type="number" inputmode="decimal" min="0.1" max="200" step="0.1" value="2">
+            <span class="unit" data-i18n="ha_unit">hectares</span>
+            <button type="button" class="stp" data-for="ha" data-step="0.5" aria-label="plus">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label" data-i18n="method_label">Comment vous arrosez</span>
+          <div class="chips" id="method-chips" role="group"></div>
+        </div>
+
+        <div class="field">
+          <span class="field-label" data-i18n="months_label">Les mois où vous arrosez</span>
+          <div class="months" id="months" role="group"></div>
+        </div>
+
+        <button type="button" class="linkbtn" id="to-volume" data-i18n="to_volume">Je connais déjà la quantité d'eau que je pompe</button>
+      </div>
+
+      <div id="mode-volume" hidden>
+        <div class="field">
+          <label for="m3" data-i18n="m3_label">Eau pompée par jour en plein été</label>
+          <div class="stepper">
+            <button type="button" class="stp" data-for="m3" data-step="-5" aria-label="moins">−</button>
+            <input id="m3" type="number" inputmode="decimal" min="1" max="5000" step="1" value="50">
+            <span class="unit" data-i18n="m3_unit">m³ / jour</span>
+            <button type="button" class="stp" data-for="m3" data-step="5" aria-label="plus">+</button>
+          </div>
+          <p class="q-hint" data-i18n="m3_hint">Un repère : votre pompe actuelle débite tant de m³ par heure, multiplié par les heures où elle tourne.</p>
+        </div>
+        <div class="field">
+          <span class="field-label" data-i18n="months_label">Les mois où vous arrosez</span>
+          <div class="months" id="months-volume" role="group"></div>
+        </div>
+        <button type="button" class="linkbtn" id="to-crop" data-i18n="to_crop">Calculer plutôt avec ma culture</button>
+      </div>
+    </fieldset>
+
+    <!-- 3 · Well -->
+    <fieldset class="q">
+      <legend><span class="q-n">3</span><span data-i18n="q3">Votre puits</span></legend>
+      <div class="field">
+        <label for="depth" data-i18n="depth_label">À quelle profondeur est l'eau quand la pompe tourne ?</label>
+        <div class="stepper">
+          <button type="button" class="stp" data-for="depth" data-step="-5" aria-label="moins">−</button>
+          <input id="depth" type="number" inputmode="decimal" min="1" max="400" step="1" value="40">
+          <span class="unit" data-i18n="m_unit">mètres</span>
+          <button type="button" class="stp" data-for="depth" data-step="5" aria-label="plus">+</button>
+        </div>
+        <p class="q-hint" data-i18n="depth_hint">Si vous pompez dans un oued ou un bassin, mettez 2 m.</p>
+      </div>
+      <div class="field">
+        <span class="field-label" data-i18n="outlet_label">Où va l'eau ?</span>
+        <div class="chips" id="outlet-chips" role="group"></div>
+      </div>
+      <details class="more">
+        <summary data-i18n="more">Je connais le débit de mon puits</summary>
+        <div class="field">
+          <label for="well" data-i18n="well_label">Débit maximum du puits (essai de pompage)</label>
+          <div class="stepper">
+            <input id="well" type="number" inputmode="decimal" min="0" max="500" step="0.5" placeholder="—">
+            <span class="unit" data-i18n="m3h_unit">m³ / heure</span>
+          </div>
+        </div>
+      </details>
+    </fieldset>
+
+    <!-- 4 · Today -->
+    <fieldset class="q">
+      <legend><span class="q-n">4</span><span data-i18n="q4">Aujourd'hui, vous pompez avec…</span></legend>
+      <div class="chips" id="source-chips" role="group"></div>
+      <div class="field" id="own-field">
+        <label for="own" id="own-label"></label>
+        <div class="stepper">
+          <input id="own" type="number" inputmode="decimal" min="0" max="100000" step="1" placeholder="—">
+          <span class="unit" id="own-unit"></span>
+        </div>
+        <p class="q-hint" id="own-hint"></p>
+      </div>
+    </fieldset>
+
+    <p class="error" id="form-error" role="alert" hidden></p>
+    <button type="submit" class="btn-go" id="go" data-i18n="go">Calculer</button>
+  </form>
+
+  <!-- Results -->
+  <section id="result" class="result" hidden aria-live="polite" tabindex="-1">
+    <p class="r-kicker" data-i18n="r_kicker">Ce qu'il vous faut</p>
+    <h2 class="r-head" id="r-head"></h2>
+    <p class="r-sub" id="r-sub"></p>
+    <p class="r-approx" id="r-approx" hidden></p>
+
+    <div class="r-stats">
+      <div class="r-stat">
+        <span class="k" data-i18n="s_price">Prix installé</span>
+        <span class="v" id="s-price"></span>
+        <span class="s" id="s-price-aid"></span>
+      </div>
+      <div class="r-stat accent">
+        <span class="k" data-i18n="s_save">Économie par an</span>
+        <span class="v" id="s-save"></span>
+        <span class="s" id="s-save-sub"></span>
+      </div>
+      <div class="r-stat">
+        <span class="k" data-i18n="s_payback">Remboursé en</span>
+        <span class="v" id="s-payback"></span>
+        <span class="s" id="s-payback-aid"></span>
+      </div>
+    </div>
+
+    <p class="r-note" id="r-unsub" hidden></p>
+
+    <div class="card pocket" id="pocket">
+      <h3 data-i18n="pocket_title">Dans la poche, chaque mois</h3>
+      <div class="pocket-row"><span id="pocket-fuel-k"></span><strong id="pocket-fuel"></strong></div>
+      <div class="pocket-row"><span data-i18n="pocket_loan">Crédit pour les panneaux (après l'aide)</span><strong id="pocket-loan"></strong></div>
+      <p class="q-hint" id="pocket-hint"></p>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="chart_title">L'eau, mois par mois</h3>
+      <p class="q-hint" data-i18n="chart_sub">Barres : l'eau dont votre champ a besoin. Ligne : ce que les panneaux peuvent pomper.</p>
+      <div class="chart-box"><canvas id="chart" aria-label="Besoin en eau et pompage solaire par mois" role="img"></canvas></div>
+    </div>
+
+    <div class="card water">
+      <h3 data-i18n="water_title">L'eau d'abord</h3>
+      <ul class="water-list" id="water-list"></ul>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="quote_title">Vous avez un devis ?</h3>
+      <div class="field">
+        <label for="quote" data-i18n="quote_label">Prix du devis, installation comprise</label>
+        <div class="stepper">
+          <input id="quote" type="number" inputmode="numeric" min="1000" max="5000000" step="500" placeholder="—">
+          <span class="unit">DH</span>
+        </div>
+        <p class="q-hint" data-i18n="quote_hint">Le calcul se refait avec votre prix.</p>
+      </div>
+    </div>
+
+    <div class="card sheet">
+      <h3 data-i18n="sheet_title">À montrer à l'installateur</h3>
+      <dl class="sheet-list" id="sheet"></dl>
+      <div class="share-row">
+        <a class="btn-share" id="share-wa" href="#" target="_blank" rel="noopener" data-i18n="share_wa">Envoyer par WhatsApp</a>
+        <button type="button" class="linkbtn" id="share-copy" data-i18n="share_copy">Copier le lien</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="next_title">Et maintenant ?</h3>
+      <ol class="next-list">
+        <li data-i18n="next_1">Faites un essai de pompage : il dit combien d'eau votre puits donne vraiment.</li>
+        <li data-i18n="next_2">Demandez deux ou trois devis avec la fiche ci-dessus. Comparez le nombre de panneaux et la pompe, pas seulement le prix.</li>
+        <li data-i18n="next_3">Pour l'aide du FDA, renseignez-vous à la Direction provinciale de l'agriculture avant d'acheter : un compteur d'eau est exigé.</li>
+      </ol>
+    </div>
+
+    <details class="card method">
+      <summary data-i18n="method_title">Méthode et sources</summary>
+      <ul class="method-list" id="method-list"></ul>
+    </details>
+
+    <p class="disclaimer" data-i18n="disclaimer">Estimation gratuite, pas un devis. Votre position n'est envoyée qu'arrondie (à environ 1 km) à notre serveur, qui interroge PVGIS (Commission européenne).</p>
+  </section>
+</main>
+
+<script src="../engine.js" defer></script>
+<script src="../pumping.js" defer></script>
+<script src="pompage.js" defer></script>
+</body>
+</html>
