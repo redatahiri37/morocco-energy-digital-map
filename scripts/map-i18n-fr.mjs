@@ -11,6 +11,8 @@ export const PAIRS = [
    '>Cliquez n\'importe où pour évaluer un site · <kbd>Échap</kbd> pour quitter</div>'],
   ['<li><strong>PVGIS</strong>, through the same Worker — only when you run a <em>Site check</em>: the clicked coordinates are sent to get the solar yield.</li>',
    '<li><strong>PVGIS</strong>, par le même Worker — uniquement lors d\'un <em>diagnostic de site</em> : les coordonnées cliquées sont envoyées pour obtenir le productible solaire.</li>'],
+  ['<li><strong>Cloudflare Web Analytics</strong> (<code>static.cloudflareinsights.com</code>, <code>cloudflareinsights.com</code>) — counts page views without cookies or personal data. Cloudflare, which hosts the site, adds this script.</li>',
+   '<li><strong>Cloudflare Web Analytics</strong> (<code>static.cloudflareinsights.com</code>, <code>cloudflareinsights.com</code>) — compte les pages vues, sans cookie ni donnée personnelle. Cloudflare, qui héberge le site, ajoute ce script.</li>'],
   ['<li><em>Site check</em> is a screening indicator: straight-line distances to the grid, generation and loads within 50 km, connectivity and PVGIS solar yield, scored 1–5. It does not know spare substation capacity, land, water or permitting.</li>',
    '<li>Le <em>diagnostic de site</em> est un indicateur de pré-étude : distances à vol d\'oiseau au réseau, production et consommateurs à moins de 50 km, connectivité et productible solaire PVGIS, notés de 1 à 5. Il ignore la capacité disponible des postes, le foncier, l\'eau et les autorisations.</li>'],
   // Head
