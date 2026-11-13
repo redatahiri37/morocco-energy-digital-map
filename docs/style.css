@@ -460,6 +460,17 @@ code{font-family:var(--font-mono);font-size:11px;background:var(--bg-2);padding:
 .layer-dot.shape-triangle,.so-dot.shape-triangle,.tt-dot.shape-triangle,.dot.shape-triangle{border-radius:0;clip-path:polygon(0 8%,100% 8%,50% 95%)}
 .layer-dot.shape-hexagon,.so-dot.shape-hexagon,.tt-dot.shape-hexagon,.dot.shape-hexagon{border-radius:0;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%)}
 .layer-dot.shape-line,.so-dot.shape-line,.tt-dot.shape-line,.dot.shape-line{border-radius:2px;height:3px!important;align-self:center}
+/* Basins: a dashed outline swatch, as on the map. */
+.layer-dot.shape-area,.so-dot.shape-area,.tt-dot.shape-area,.dot.shape-area{background:none;border:1.5px dashed;border-radius:2px}
+/* Dam chart in the popup (app.js damChart). */
+.dam-chart{margin:14px 0 6px;padding-top:10px;border-top:1px solid var(--border)}
+.dam-chart .ch-title{font-size:11.5px;color:var(--text-2);font-weight:500;margin-bottom:4px}
+.dam-chart svg{display:block;max-width:100%;height:auto;font-family:var(--font-ui)}
+.ch-legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;color:var(--text-2)}
+.ch-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.ch-note{margin:6px 0 0;line-height:1.45;color:var(--text-2)}
+.ch-sources summary{cursor:pointer;color:var(--text-2);margin-top:6px}
+.ch-sources ul{margin:4px 0 0;padding-left:16px;line-height:1.5}
 .pop-note{font-size:12px;line-height:1.5;color:var(--text-1);margin:12px 0 0}
 
 .pop-title{
