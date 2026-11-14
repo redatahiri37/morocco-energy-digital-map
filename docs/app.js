@@ -104,6 +104,16 @@
     estLoadNote: (k)=>`hypothèse ${k} kWh/m³`, energySupply: "Énergie", hm3: "Mm³", hm3yr: "Mm³/an",
     noPlantFigure: "non publiée par site", waterSearch: "Eau",
     lensLabel: "Perspective",
+    badgeBasin: "Bassin hydraulique", basinWord: "Bassin", area: "Superficie",
+    bDams: "Nouveaux barrages", bHydro: "Centrales hydrauliques", bDesal: "Dessalement",
+    bIn: "Reçoit", bOut: "Envoie", bNone: "aucun", bRain: "Pluie 2050 (CMIP6, médiane)",
+    bRainV: (a, b)=>`${a} (SSP2-4.5) · ${b} (SSP5-8.5)`, bInflow: "Apports 2050 (élasticité 2–3)",
+    bSplit: (a, b)=>`en service ${a} · en chantier ${b} Mm³`, bNote: "Contours approchés à partir de HydroBASINS, pas les limites officielles des agences de bassin. Pluie : moyenne nationale.",
+    chTitle: "Remplissage et projections", chTitleInflow: "Apports projetés", chHist: "relevés datés", chMean: "moyenne des relevés",
+    chToday: "aujourd'hui", chNoHist: "Pas de relevé historique sourcé pour ce barrage : variation des apports seulement.",
+    chNote: (k)=>`Projection indicative : moyenne des relevés × (1 + ε × variation de pluie), ε = 2 à 3 ; barres = fourchette p10–p90 des modèles CMIP6 (moyenne nationale, 2020-2039 et 2040-2059 vs 1995-2014), point = médiane, ε = 2,5. Ne modélise ni la gestion des lâchers ni la demande.`,
+    chNoteInflow: "Variation des apports = ε × variation de pluie, ε = 2 à 3 ; barres = fourchette p10–p90 des modèles CMIP6, point = médiane.",
+    chSources: "Sources des relevés",
     wTransferOn: "Transferts en service", wTransferPipe: "Transferts prévus",
     wStorageOn: "Nouveaux barrages · en service", wStoragePipe: "Nouveaux barrages · en chantier",
     wDesalOn: "Dessalement · en service", wDesalPipe: "Dessalement · en chantier",
@@ -181,6 +191,16 @@
     estLoadNote: (k)=>`assuming ${k} kWh/m³`, energySupply: "Energy", hm3: "million m³", hm3yr: "million m³/yr",
     noPlantFigure: "not published per plant", waterSearch: "Water",
     lensLabel: "Perspective",
+    badgeBasin: "Hydraulic basin", basinWord: "Basin", area: "Area",
+    bDams: "New dams", bHydro: "Hydro plants", bDesal: "Desalination",
+    bIn: "Receives", bOut: "Sends", bNone: "none", bRain: "Rainfall 2050 (CMIP6, median)",
+    bRainV: (a, b)=>`${a} (SSP2-4.5) · ${b} (SSP5-8.5)`, bInflow: "Inflow 2050 (elasticity 2–3)",
+    bSplit: (a, b)=>`in service ${a} · being built ${b} million m³`, bNote: "Outlines approximated from HydroBASINS, not the official basin-agency limits. Rainfall: national mean.",
+    chTitle: "Fill level and projections", chTitleInflow: "Projected inflow", chHist: "dated readings", chMean: "mean of readings",
+    chToday: "today", chNoHist: "No sourced fill history for this dam: inflow change only.",
+    chNote: (k)=>`Indicative projection: mean of readings × (1 + ε × rainfall change), ε = 2 to 3; bars = p10–p90 range of the CMIP6 models (national mean, 2020-2039 and 2040-2059 vs 1995-2014), dot = median with ε = 2.5. Release rules and demand are not modelled.`,
+    chNoteInflow: "Inflow change = ε × rainfall change, ε = 2 to 3; bars = p10–p90 range of the CMIP6 models, dot = median.",
+    chSources: "Reading sources",
     wTransferOn: "Transfers in service", wTransferPipe: "Transfers planned",
     wStorageOn: "New dams · in service", wStoragePipe: "New dams · being built",
     wDesalOn: "Desalination · in service", wDesalPipe: "Desalination · being built",
@@ -339,11 +359,13 @@
     if(kind === "industrial") return { shape:"square", color: LAYER_COLOR.industrial };
     if(kind === "digital") return { shape: p && p.category === "cable_landing" ? "ring" : "diamond", color: LAYER_COLOR.digital };
     if(kind === "water") return { shape: p && p.category === "desalination" ? "hexagon" : p && p.category === "transfer" ? "line" : "triangle", color: LAYER_COLOR.water };
+    if(kind === "basin") return { shape:"area", color: LAYER_COLOR.water };
     return null;
   }
   // A swatch span with that shape; a ring takes its colour as a border.
   function markHtml(cls, m){
     if(m.shape === "line") return `<span class="${cls} shape-line" data-bg="${escapeHtml(m.color)}"></span>`;
+    if(m.shape === "area") return `<span class="${cls} shape-area" data-border="${escapeHtml(m.color)}"></span>`;
     return m.shape === "ring"
       ? `<span class="${cls} shape-ring" data-border="${escapeHtml(m.color)}"></span>`
       : `<span class="${cls} shape-${m.shape}" data-bg="${escapeHtml(m.color)}"></span>`;
@@ -398,7 +420,7 @@
   // layer and source id is derived from the config layer id, so any number
   // of layers of any kind can coexist and nothing here names a Moroccan file.
   // The order is the draw order, bottom to top.
-  const KINDS = ["oim", "oim-plants", "grid", "water", "power", "industrial", "digital"];
+  const KINDS = ["oim", "basin", "oim-plants", "grid", "water", "power", "industrial", "digital"];
   const LIVE_KINDS = ["oim", "oim-plants"]; // drawn from OpenInfraMap tiles, no file
 
   // Rebuilt by buildMapLayers(): map layer id → { dataLayerId, kind, src, role }.
@@ -409,6 +431,8 @@
   let map = null;
   let currentCountry = null;
   let layerData      = {};   // id -> GeoJSON
+  let damLevels      = null; // countries.config.js damLevels: dated fill readings by feature id
+  let rainProj       = null; // countries.config.js rainProjections: CMIP6 rainfall change
   let visibility     = {};   // id -> bool
   let hoveredLayer   = null; // { sourceId, dataLayerId, keepId } while a point is hovered
   let boundaryData   = null;
@@ -650,7 +674,7 @@
     // locals and committed at the end, so a slower load for a country the
     // user has already switched away from can't overwrite the newer one.
     const data = {}, vis = {};
-    let boundary = null, mix = null;
+    let boundary = null, mix = null, levels = null, rain = null;
     try{
       const r = await fetch(dataUrl(c, "boundary.geojson"));
       if(r.ok) boundary = await r.json();
@@ -661,6 +685,13 @@
         if(r.ok) mix = await r.json();
       } catch(e){ console.warn("[MoroccoMap] failed to load", c.mix, e); }
     }
+    // Water extras, read by the dam chart and the basin popup.
+    const extra = async (file)=>{
+      if(!file) return null;
+      try{ const r = await fetch(dataUrl(c, file)); return r.ok ? await r.json() : null; }
+      catch(e){ console.warn("[MoroccoMap] failed to load", file, e); return null; }
+    };
+    [levels, rain] = await Promise.all([extra(c.damLevels), extra(c.rainProjections)]);
 
     const promises = c.layers.map(async (L, idx)=>{
       vis[L.id] = L.visible !== false;
@@ -683,6 +714,8 @@
     visibility = vis;
     boundaryData = boundary;
     mixData = mix;
+    damLevels = levels;
+    rainProj = rain;
     return true;
   }
 
@@ -695,7 +728,7 @@
     // moves electricity, water, and what consumes it.
     const groupOf = (L)=>{
       const k = layerKind(L.id);
-      return k === "water" ? "water" : k === "industrial" || k === "digital" ? "demand" : "power";
+      return k === "water" || k === "basin" ? "water" : k === "industrial" || k === "digital" ? "demand" : "power";
     };
     const GROUP_TITLE = { power: T.groupPower, water: T.groupWater, demand: T.groupDemand };
     const order = ["power", "water", "demand"].filter(g=>c.layers.some(L=>groupOf(L) === g));
@@ -967,7 +1000,8 @@
   function layerView(L){
     const fc = layerData[L.id] || { type:"FeatureCollection", features:[] };
     const fuels = fuelFilter && L.kind === "power" ? plantFuels(fuelFilter) : null;
-    const statuses = STATUS_VIEWS[statusView].statuses;
+    // Basins are areas, not assets: no status to narrow them by.
+    const statuses = L.kind === "basin" ? null : STATUS_VIEWS[statusView].statuses;
     if(!fuels && !statuses) return fc;
     return { type:"FeatureCollection", features: fc.features.filter(f=>
       (!fuels || fuels.includes(f.properties.fuel_type)) &&
@@ -1242,7 +1276,7 @@
   function queryableLayers(){
     // Only interactive (non-cluster, non-halo) layers
     return Object.keys(mapLayers).filter(id=>
-      ["point","line"].includes(mapLayers[id].role) && map && map.getLayer(id));
+      ["point","line","area"].includes(mapLayers[id].role) && map && map.getLayer(id));
   }
 
   // map.addLayer() plus registration. `src` is the source hover-dim works on
@@ -1286,7 +1320,8 @@
       power:      (L)=>buildPowerLayer(L, layerView(L)),
       industrial: (L)=>buildIndustrialLayer(L, layerView(L)),
       digital:    (L)=>buildDigitalLayer(L, layerView(L)),
-      water:      (L)=>buildWaterLayer(L, layerView(L))
+      water:      (L)=>buildWaterLayer(L, layerView(L)),
+      basin:      (L)=>buildBasinLayer(L, layerView(L))
     };
     c.layers.filter(L=>!KINDS.includes(L.kind)).forEach(L=>
       console.error("[MoroccoMap] unknown layer kind:", L.id, L.kind));
@@ -1695,6 +1730,23 @@
       { "symbol-placement":"line", "text-anchor":"center", "text-offset":[0, -1], "text-size":10 });
   }
 
+  // Hydraulic basins: a faint teal wash and a dashed outline under every
+  // other data layer, named at low zoom. Clicking open ground in a basin
+  // opens its popup; a point or line on top keeps its own click.
+  function buildBasinLayer(L, fc){
+    const srcId = "src-" + L.id, p = "lyr-" + L.id, color = LAYER_COLOR.water;
+    addOrReplace(srcId, { type:"geojson", data: fc });
+    addLayer(L, { id:p+"-fill", type:"fill", source:srcId,
+      paint:{ "fill-color": color, "fill-opacity":["case", ["boolean", ["feature-state","hover"], false], 0.14, 0.05] }}, "area");
+    addLayer(L, { id:p+"-outline", type:"line", source:srcId,
+      paint:{ "line-color": color, "line-width": 1.1, "line-opacity": 0.7, "line-dasharray":[3, 2] }});
+    const labelField = FR ? "label_fr" : "name";
+    if(FR) fc.features.forEach(f=>{ f.properties.label_fr = featName(f.properties); });
+    addOrReplace(srcId + "-text", { type:"geojson", data: fc });
+    addLabelLayer(L, p+"-labels", srcId + "-text", labelField, 4.5, 0, null,
+      { "text-size": 11, "text-anchor":"center", "symbol-placement":"point", "text-max-width": 8 });
+  }
+
   function buildDigitalLayer(L, fc){
     const srcId = "src-" + L.id, p = "lyr-" + L.id;
     addOrReplace(srcId, { type:"geojson", data: fc, promoteId: "id" });
@@ -1782,9 +1834,19 @@
     wiredLayers.add(id);
     const current = ()=>mapLayers[id];
 
+    // An area (basin) under a point or line yields to it: both layers' handlers fire.
+    const coveredByAsset = (e)=>map.queryRenderedFeatures(e.point, { layers: queryableLayers()
+      .filter(l=>mapLayers[l].role === "point" || mapLayers[l].role === "line") }).length > 0;
     map.on("mousemove", id, (e)=>{
       const m = current(); const f = e.features[0];
       if(!m || !f) return;
+      if(m.role === "area"){
+        if(coveredByAsset(e)){ setAreaHover(null); return; }
+        map.getCanvas().style.cursor = "pointer";
+        setAreaHover({ src: m.src, id: f.id });
+        showAreaTooltip(f, e.point);
+        return;
+      }
       map.getCanvas().style.cursor = "pointer";
       if(m.role === "point"){
         setHoverDim(m.src, m.dataLayerId, f.id);
@@ -1797,6 +1859,7 @@
     });
     map.on("mouseleave", id, ()=>{
       if(!current()) return;
+      if(current().role === "area") setAreaHover(null);
       map.getCanvas().style.cursor = "";
       clearHoverDim();
       hideTooltip();
@@ -1811,6 +1874,11 @@
           .catch(()=>{});
         return;
       }
+      if(m.role === "area"){
+        if(coveredByAsset(e)) return;
+        openBasinPopup(m.dataLayerId, f);
+        return;
+      }
       e.originalEvent.stopPropagation();
       if(m.role === "point"){
         openPointPopup(m.dataLayerId, f);
@@ -1820,6 +1888,15 @@
         if(sheetOn()) map.easeTo({ center: e.lngLat, duration: 400 });   // above the popup
       }
     });
+  }
+
+  // Highlight of the basin under the cursor (feature-state "hover").
+  let areaHover = null;
+  function setAreaHover(h){
+    if(areaHover && (!h || h.id !== areaHover.id) && map.getSource(areaHover.src))
+      map.setFeatureState({ source: areaHover.src, id: areaHover.id }, { hover: false });
+    if(h && map.getSource(h.src)) map.setFeatureState({ source: h.src, id: h.id }, { hover: true });
+    areaHover = h;
   }
 
   // ---------- Hover dim: set `dim=true` on all OTHER features in a layer ----------
@@ -1976,6 +2053,7 @@
       <div class="pop-sub">${p.region ? escapeHtml(p.region) + " · " : ""}${coords}</div>
       <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span><span class="sp-word">${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span></span>
       <div class="stat-grid">${stats}</div>
+      ${kind === "power" && !p.osm && p.fuel_type === "hydro" && !/pumped/i.test(p.tech || "") ? damChart(p.id) : ""}
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}${p.vintage ? " · " + escapeHtml(p.vintage) : ""}</span>
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
@@ -2002,6 +2080,7 @@
 
   function openLinePopup(dataLayerId, f){
     if(layerKind(dataLayerId) === "water") return openWaterPopup(dataLayerId, f);
+    if(layerKind(dataLayerId) === "basin") return openBasinPopup(dataLayerId, f);
     clearSite();
     const p = f.properties || {};
     selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
@@ -2081,6 +2160,7 @@
       <span class="status-pill ${escapeHtml(p.status || "operational")}"><span class="dot"></span><span class="sp-word">${escapeHtml(word(STATUS_WORD_ALL, p.status || "operational"))}</span></span>
       <div class="stat-grid">${stats}</div>
       ${p.note ? `<p class="pop-note">${escapeHtml((FR && p.note_fr) || p.note)}</p>` : ""}
+      ${p.category === "dam" ? damChart(p.id) : ""}
       <div class="source-row">
         <span class="src">${escapeHtml(p.source || "—")}</span>
         ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
@@ -2101,6 +2181,183 @@
     syncUrl();
   }
 
+
+  // ---------- Geometry helpers (basins) ----------
+  // Every [lng, lat] of a geometry, whatever its nesting.
+  function geomPoints(g){
+    const out = [];
+    const walk = (c)=>{ if(typeof c[0] === "number") out.push(c); else c.forEach(walk); };
+    walk(g.coordinates);
+    return out;
+  }
+  // Ray casting on each ring; holes count by parity.
+  function pointInGeom(pt, g){
+    const polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+    const [x, y] = pt;
+    return polys.some(rings=>{
+      let inside = false;
+      rings.forEach(ring=>{
+        for(let i = 0, j = ring.length - 1; i < ring.length; j = i++){
+          const [xi, yi] = ring[i], [xj, yj] = ring[j];
+          if((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+        }
+      });
+      return inside;
+    });
+  }
+  // The water and hydro assets of the current country that sit in a basin.
+  function basinAssets(g){
+    const inG = (f)=>f.geometry && f.geometry.type === "Point" && pointInGeom(f.geometry.coordinates, g);
+    const W = featuresOfKind(currentCountry, "water");
+    const transfers = W.filter(f=>f.properties.category === "transfer");
+    const ends = (f)=>{ const pts = geomPoints(f.geometry); return [pts[0], pts[pts.length - 1]]; };
+    return {
+      dams: W.filter(f=>f.properties.category === "dam" && inG(f)).map(f=>f.properties),
+      desal: W.filter(f=>f.properties.category === "desalination" && inG(f)).map(f=>f.properties),
+      hydro: featuresOfKind(currentCountry, "power").filter(f=>f.properties.fuel_type === "hydro" && inG(f)).map(f=>f.properties),
+      inflows: transfers.filter(f=>{ const [a, b] = ends(f); return pointInGeom(b, g) && !pointInGeom(a, g); }).map(f=>f.properties),
+      outflows: transfers.filter(f=>{ const [a, b] = ends(f); return pointInGeom(a, g) && !pointInGeom(b, g); }).map(f=>f.properties)
+    };
+  }
+
+  // ---------- Rainfall projections → inflow and fill ----------
+  // rain-projections.json: change_pct[year][ssp] = { p10, median, p90 }, in %
+  // of 1995-2014. Inflow responds ε times as much as rainfall (ε = 2–3,
+  // the range for semi-arid catchments), floored at −100 %.
+  const ELASTICITY = [2, 3], ELASTICITY_MID = 2.5;
+  const SSPS = ["ssp245", "ssp585"];
+  function inflowRange(year, ssp){
+    const c = rainProj && rainProj.change_pct && rainProj.change_pct[year] && rainProj.change_pct[year][ssp];
+    if(!c) return null;
+    const vals = [];
+    ["p10", "median", "p90"].forEach(k=>ELASTICITY.forEach(e=>{ if(num(c[k]) != null) vals.push(Math.max(-100, e * c[k])); }));
+    return vals.length ? { lo: Math.min(...vals), hi: Math.max(...vals), mid: Math.max(-100, ELASTICITY_MID * c.median) } : null;
+  }
+  const fmtSigned = (v)=>(v > 0 ? "+" : v < 0 ? "−" : "") + nfmt(Math.abs(v), 0) + PCT;
+
+  // ---------- Dam chart ----------
+  // Inline SVG: dated fill readings (dam-levels.json) and, at 2030 and 2050,
+  // the projected mean fill (mean of readings × (1 + inflow change)) for the
+  // two scenarios. Without readings: the projected inflow change alone.
+  const decimalYear = (d)=>{
+    const [y, m, day] = String(d).split("-").map(Number);
+    return y + ((m || 7) - 1) / 12 + ((day || 15) - 1) / 365;
+  };
+  function damChart(id){
+    if(!rainProj) return "";
+    const lv = damLevels && damLevels[id];
+    const series = lv && Array.isArray(lv.series) ? lv.series.filter(r=>num(r.fill_pct) != null).sort((a, b)=>decimalYear(a.date) - decimalYear(b.date)) : [];
+    const has = series.length >= 2;
+    const W = 320, H = 168, L = 34, R = 10, Tp = 12, B = 26;
+    const x0 = has ? Math.floor(Math.min(...series.map(r=>decimalYear(r.date)))) - 1 : 2024, x1 = 2053;
+    const ink = isDark() ? "#9AA6B8" : "#5B6576", grid = isDark() ? "rgba(255,255,255,0.08)" : "rgba(10,22,40,0.08)";
+    const cHist = LAYER_COLOR.water, cSsp = { ssp245: isDark() ? "#7FB8FF" : "#2F5FD0", ssp585: isDark() ? "#FF8A4C" : "#C2410C" };
+    const X = (v)=>L + (v - x0) / (x1 - x0) * (W - L - R);
+    let yMin, yMax, Y, body = "", ticks;
+    const proj = [];
+    if(has){
+      const mean = series.reduce((t, r)=>t + r.fill_pct, 0) / series.length;
+      ["2030", "2050"].forEach(yr=>SSPS.forEach(ssp=>{
+        const r = inflowRange(yr, ssp); if(!r) return;
+        const f = (v)=>Math.max(0, mean * (1 + v / 100));
+        proj.push({ yr: +yr, ssp, lo: f(r.lo), hi: f(r.hi), mid: f(r.mid) });
+      }));
+      yMin = 0; yMax = Math.max(100, ...series.map(r=>r.fill_pct), ...proj.map(p=>p.hi));
+      yMax = Math.ceil(yMax / 25) * 25;
+      Y = (v)=>Tp + (1 - (v - yMin) / (yMax - yMin)) * (H - Tp - B);
+      ticks = []; for(let v = 0; v <= yMax; v += yMax > 100 ? 50 : 25) ticks.push(v);
+      body += `<line x1="${L}" x2="${X(2026.9)}" y1="${Y(mean).toFixed(1)}" y2="${Y(mean).toFixed(1)}" stroke="${ink}" stroke-dasharray="3 3" stroke-width="1"/>`;
+      body += `<polyline fill="none" stroke="${cHist}" stroke-width="1.6" points="${series.map(r=>`${X(decimalYear(r.date)).toFixed(1)},${Y(r.fill_pct).toFixed(1)}`).join(" ")}"/>`;
+      body += series.map(r=>`<circle cx="${X(decimalYear(r.date)).toFixed(1)}" cy="${Y(r.fill_pct).toFixed(1)}" r="2.6" fill="${cHist}"><title>${escapeHtml(r.date)} · ${escapeHtml(nfmt(r.fill_pct, 1))}${PCT}</title></circle>`).join("");
+      body += `<text x="${L + 3}" y="${(Y(mean) - 4).toFixed(1)}" fill="${ink}" font-size="9">${escapeHtml(T.chMean)} ${escapeHtml(nfmt(mean, 0))}${PCT}</text>`;
+    } else {
+      ["2030", "2050"].forEach(yr=>SSPS.forEach(ssp=>{
+        const r = inflowRange(yr, ssp); if(r) proj.push({ yr: +yr, ssp, lo: r.lo, hi: r.hi, mid: r.mid });
+      }));
+      if(!proj.length) return "";
+      yMin = Math.min(-80, Math.floor(Math.min(...proj.map(p=>p.lo)) / 20) * 20);
+      yMax = Math.max(20, Math.ceil(Math.max(...proj.map(p=>p.hi)) / 20) * 20);
+      Y = (v)=>Tp + (1 - (v - yMin) / (yMax - yMin)) * (H - Tp - B);
+      ticks = []; for(let v = yMin; v <= yMax; v += 20) ticks.push(v);
+      body += `<line x1="${L}" x2="${W - R}" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}" stroke="${ink}" stroke-width="1"/>`;
+    }
+    const tickLabel = (v)=>has ? `${nfmt(v)}${PCT}` : fmtSigned(v);
+    const axis = ticks.map(v=>`<line x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${grid}"/><text x="${L - 4}" y="${(Y(v) + 3).toFixed(1)}" fill="${ink}" font-size="9" text-anchor="end">${escapeHtml(tickLabel(v))}</text>`).join("");
+    const years = (has ? [x0 + 1, 2026, 2030, 2050] : [2030, 2050]).filter((v, i, a)=>a.indexOf(v) === i);
+    const xAxis = years.map(v=>`<text x="${X(v).toFixed(1)}" y="${H - 8}" fill="${ink}" font-size="9" text-anchor="middle">${v}</text>`).join("");
+    const today = `<line x1="${X(2026.9).toFixed(1)}" x2="${X(2026.9).toFixed(1)}" y1="${Tp}" y2="${H - B}" stroke="${ink}" stroke-width="0.8" stroke-dasharray="1 2"/>`;
+    const bars = proj.map(pr=>{
+      const xc = X(pr.yr) + (pr.ssp === "ssp245" ? -5 : 5), c = cSsp[pr.ssp];
+      const tip = `${pr.yr} · ${pr.ssp === "ssp245" ? "SSP2-4.5" : "SSP5-8.5"} · ${has ? `${nfmt(pr.lo, 0)}–${nfmt(pr.hi, 0)}${PCT}` : `${fmtSigned(pr.lo)} à ${fmtSigned(pr.hi)}`}`;
+      return `<g><title>${escapeHtml(tip)}</title><line x1="${xc}" x2="${xc}" y1="${Y(pr.hi).toFixed(1)}" y2="${Y(pr.lo).toFixed(1)}" stroke="${c}" stroke-width="5" stroke-linecap="round" opacity="0.45"/><circle cx="${xc}" cy="${Y(pr.mid).toFixed(1)}" r="3.2" fill="${c}"/></g>`;
+    }).join("");
+    const legend = `<div class="ch-legend micro">${has ? `<span><i data-bg="${escapeHtml(cHist)}"></i>${escapeHtml(T.chHist)}</span>` : ""}<span><i data-bg="${escapeHtml(cSsp.ssp245)}"></i>SSP2-4.5</span><span><i data-bg="${escapeHtml(cSsp.ssp585)}"></i>SSP5-8.5</span></div>`;
+    const sources = has ? `<details class="ch-sources"><summary class="micro">${escapeHtml(T.chSources)} (${series.length})</summary><ul class="micro">${series.map(r=>`<li>${escapeHtml(r.date)} · ${escapeHtml(nfmt(r.fill_pct, 1))}${PCT} · ${safeUrl(r.source_url) ? `<a href="${escapeHtml(r.source_url)}" target="_blank" rel="noopener">${escapeHtml(r.source)}</a>` : escapeHtml(r.source)}</li>`).join("")}</ul></details>` : "";
+    return `<figure class="dam-chart">
+      <figcaption class="ch-title">${escapeHtml(has ? T.chTitle : T.chTitleInflow)}</figcaption>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${escapeHtml(has ? T.chTitle : T.chTitleInflow)}">${axis}${has ? today : ""}${body}${bars}${xAxis}</svg>
+      ${legend}
+      ${has ? "" : `<p class="micro ch-note">${escapeHtml(T.chNoHist)}</p>`}
+      <p class="micro ch-note">${escapeHtml(has ? T.chNote() : T.chNoteInflow)} <a href="${escapeHtml(safeUrl(rainProj.source_url))}" target="_blank" rel="noopener">CMIP6 ↗</a></p>
+      ${sources}
+    </figure>`;
+  }
+
+  // ---------- Basin tooltip and popup ----------
+  function showAreaTooltip(f, point){
+    const p = f.properties || {};
+    tooltip.innerHTML = `
+      <div class="tt-name">${markHtml("tt-dot", markerOf("basin"))}${escapeHtml(featName(p))}</div>
+      <div class="tt-metric">${escapeHtml(T.badgeBasin)}${num(p.area_km2) != null ? " · " + escapeHtml(nfmt(p.area_km2)) + " km²" : ""}</div>`;
+    paint(tooltip);
+    positionTooltip(point);
+  }
+  function openBasinPopup(dataLayerId, f){
+    clearSite();
+    const p = f.properties || {};
+    selected = p.id != null ? { layer: dataLayerId, id: String(p.id) } : null;
+    // The rendered feature's geometry is tiled; the loaded one is whole.
+    const full = (layerData[dataLayerId] || { features:[] }).features.find(x=>x.properties.id === p.id) || f;
+    const a = basinAssets(full.geometry);
+    const cell = (k, v, note)=>`<div class="cell"><div class="k">${k}</div><div class="v sm">${v}</div>${note ? `<div class="micro">${escapeHtml(note)}</div>` : ""}</div>`;
+    const sum = (ps, k)=>ps.reduce((t, x)=>t + (num(x[k]) || 0), 0);
+    const on = a.dams.filter(d=>d.status === "operational"), pipe = a.dams.filter(d=>PIPELINE_STATUS.includes(d.status));
+    const damsV = a.dams.length ? escapeHtml(`${nfmt(a.dams.length)} · ${nfmt(sum(a.dams, "storage_hm3"))} ${T.hm3}`) : escapeHtml(T.bNone);
+    const damsNote = a.dams.length ? T.bSplit(nfmt(sum(on, "storage_hm3")), nfmt(sum(pipe, "storage_hm3"))) : "";
+    const list = (ts)=>ts.length ? ts.map(t=>`${escapeHtml(featName(t))}${num(t.flow_m3s) != null ? ` (${escapeHtml(nfmt(t.flow_m3s))} m³/s)` : ""}`).join("<br>") : escapeHtml(T.bNone);
+    const r245 = rainProj && rainProj.change_pct && rainProj.change_pct["2050"];
+    const inf = inflowRange("2050", "ssp245"), inf585 = inflowRange("2050", "ssp585");
+    let stats = cell(T.area, num(p.area_km2) != null ? `${escapeHtml(nfmt(p.area_km2))} km²` : "—") +
+      cell(T.bDams, damsV, damsNote.trim()) +
+      cell(T.bHydro, a.hydro.length ? escapeHtml(`${nfmt(a.hydro.length)} · ${fmtMW(sum(a.hydro, "capacity_mw"))}`) : escapeHtml(T.bNone)) +
+      cell(T.bDesal, a.desal.length ? escapeHtml(`${nfmt(a.desal.length)} · ${a.desal.some(d=>num(d.capacity_hm3_yr) != null) ? `${nfmt(sum(a.desal, "capacity_hm3_yr"))} ${T.hm3yr}` : T.noPlantFigure}`) : escapeHtml(T.bNone),
+           a.desal.some(d=>num(d.capacity_hm3_yr) == null) && a.desal.some(d=>num(d.capacity_hm3_yr) != null) ? T.wNoFigure(a.desal.filter(d=>num(d.capacity_hm3_yr) == null).length) : "") +
+      cell(T.bIn, list(a.inflows)) + cell(T.bOut, list(a.outflows));
+    if(r245) stats += cell(T.bRain, escapeHtml(T.bRainV(fmtSigned(r245.ssp245.median), fmtSigned(r245.ssp585.median)))) +
+      cell(T.bInflow, inf && inf585 ? escapeHtml(T.bRainV(fmtSigned(inf.mid), fmtSigned(inf585.mid))) : "—");
+    $("#popupBadge").innerHTML = `<span class="badge water">${markHtml("dot", markerOf("basin"))}${escapeHtml(T.badgeBasin)}</span>`;
+    paint($("#popupBadge"));
+    $("#popupBody").innerHTML = `
+      <h1 class="pop-title">${escapeHtml(featName(p))}</h1>
+      <div class="pop-sub">${escapeHtml(T.badgeBasin)}</div>
+      <div class="stat-grid">${stats}</div>
+      <p class="pop-note">${escapeHtml(T.bNote)}</p>
+      <div class="source-row">
+        <span class="src">${escapeHtml(p.source || "—")}</span>
+        ${safeUrl(p.source_url) ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener">source ↗</a>` : ""}
+      </div>
+      <div class="pop-actions">
+        <a href="${escapeHtml(issueUrl(T.issueFeature(countryLabel(COUNTRIES[currentCountry]), p.name), T.issueBody(p.id || p.name)))}" target="_blank" rel="noopener">${T.reportError}</a>
+        ${selected ? `<button type="button" class="pop-share">${T.copyLink}</button>` : ""}
+      </div>`;
+    paint($("#popupBody"));
+    wirePopupShare();
+    popup.classList.add("open");
+    sheetForPopup();
+    popup.setAttribute("aria-hidden","false");
+    syncUrl();
+  }
+
   function closePopup(){
     clearSite();
     const wasOpen = popup.classList.contains("open");
@@ -2110,6 +2367,7 @@
     if(wasOpen){ syncMapPad(); syncUrl(); }
   }
   function wirePopupShare(){
+    paint($("#popupBody"));   // swatches drawn from data-bg / data-border (no inline style in the HTML)
     const b = popup.querySelector(".pop-share");
     if(b) b.addEventListener("click", shareView);
   }
@@ -2202,7 +2460,7 @@
     if(f.geometry.type !== "Point"){
       openLinePopup(L.id, f);
       if(fly){
-        const pts = (f.geometry.type === "LineString" ? f.geometry.coordinates : f.geometry.coordinates.flat());
+        const pts = geomPoints(f.geometry);
         const lng = pts.map(p=>p[0]), lat = pts.map(p=>p[1]);
         map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, duration: smooth ? 1200 : 0 });
       }
@@ -2860,13 +3118,14 @@
         : L.kind === "industrial" ? [word(SECTOR_WORD, p.sector) || T.industry]
         : L.kind === "digital" ? [p.category === "cable_landing" ? T.cableShort : T.dataCentre, p.operator]
         : L.kind === "water" ? [waterMetric(p, true)]
+        : L.kind === "basin" ? [T.basinWord]
         : [num(p.voltage_kv) != null ? `${T.line} · ${p.voltage_kv} kV` : T.line];
       // Industry carries an estimated demand, not a capacity.
       const size = mw == null || L.kind === "grid" || L.kind === "water" ? "" : L.kind === "industrial" ? T.demand(fmtMW(mw)) : fmtMW(mw);
       const meta = [...what, size, STATUS_WORD[p.status], countryLabel(c)].filter(Boolean).join(" · ");
       // What the swatch needs, not its colour: the index outlives a theme switch.
       const mark = { kind: L.kind, category: p.category, fuel: p.fuel_type };
-      const shown = L.kind === "water" ? featName(p) : p.name;
+      const shown = L.kind === "water" || L.kind === "basin" ? featName(p) : p.name;
       return { country: countryKey, layer: L.id, id: String(p.id), name: String(shown), meta, mark, mw: mw || 0,
                nameN: norm(shown), hay: norm([p.name, p.name_fr, T.waterCat && T.waterCat[p.category], p.river, p.operator, p.sector, word(SECTOR_WORD, p.sector), p.region,
                                                p.fuel_type, word(FUEL_WORD, p.fuel_type)].filter(Boolean).join(" ")) };

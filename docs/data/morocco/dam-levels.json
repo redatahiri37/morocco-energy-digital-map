@@ -1,0 +1,181 @@
+{
+ "_about": {
+  "what": "Dated fill rates (% of capacity) of large Moroccan reservoirs, as reported by the press from the Ministry of Equipment and Water bulletins. Readings are kept at their real date; years without a sourced reading are left empty.",
+  "what_fr": "Taux de remplissage datés (% de la capacité) de grandes retenues marocaines, tels que rapportés par la presse à partir des bulletins du ministère de l'Équipement et de l'Eau. Chaque relevé garde sa date réelle ; les années sans relevé sourcé restent vides.",
+  "retrieved": "2026-11-13"
+ },
+ "al-massira-dam": {
+  "capacity_hm3": 2657,
+  "series": [
+   {
+    "date": "2017",
+    "fill_pct": 75,
+    "source": "Le360 (Maa Dialna figures)",
+    "source_url": "https://fr.le360.ma/societe/barrage-al-massira-le-deuxieme-plus-grand-ouvrage-hydrique-du-maroc-a-un-niveau-inedit-de-secheresse_NOSIBNR5FBDYXNDDOW4UHYJOSM/",
+    "note": "year only"
+   },
+   {
+    "date": "2019-03-26",
+    "fill_pct": 26.6,
+    "source": "Médias24, 26 Mar 2020 (same date a year earlier)",
+    "source_url": "https://medias24.com/2020/03/26/barrages-malgre-les-dernieres-pluies-les-taux-de-remplissage-sont-inquietants/"
+   },
+   {
+    "date": "2020-01-08",
+    "fill_pct": 17.5,
+    "source": "CM Conjoncture",
+    "source_url": "https://www.cmconjoncture.com/conjoncture/actualites/la-situation-des-barrages-au-maroc"
+   },
+   {
+    "date": "2020-03-26",
+    "fill_pct": 16.1,
+    "source": "Médias24",
+    "source_url": "https://medias24.com/2020/03/26/barrages-malgre-les-dernieres-pluies-les-taux-de-remplissage-sont-inquietants/"
+   },
+   {
+    "date": "2020-12-01",
+    "fill_pct": 12.0,
+    "source": "Ministry of Equipment and Water",
+    "source_url": "https://www.equipement.gov.ma/Actualites/Pages/Actualites.aspx?IdNews=3368"
+   },
+   {
+    "date": "2022-07-01",
+    "fill_pct": 5.3,
+    "source": "Médias24",
+    "source_url": "https://medias24.com/2022/07/01/les-reserves-des-barrages-a-leur-plus-bas-niveau-historique-305/"
+   },
+   {
+    "date": "2024-10",
+    "fill_pct": 0.4,
+    "source": "Le360 (Maa Dialna figures)",
+    "source_url": "https://fr.le360.ma/societe/barrage-al-massira-le-deuxieme-plus-grand-ouvrage-hydrique-du-maroc-a-un-niveau-inedit-de-secheresse_NOSIBNR5FBDYXNDDOW4UHYJOSM/"
+   },
+   {
+    "date": "2025-03-25",
+    "fill_pct": 4.3,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/societe/al-massira-a-33-de-remplissage-le-bassin-de-loum-er-rbia-reprend-des-couleurs_F3QDQPN53NDU3PWOOXATN4MOQA/"
+   },
+   {
+    "date": "2025-07-24",
+    "fill_pct": 3.9,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/societe/de-39-a-413-en-chiffres-voici-comment-le-barrage-al-massira-a-decuple-son-stock-en-un-an_F6EUM2YPIVHKTGD2FFR3KOQSII/"
+   },
+   {
+    "date": "2026-03-25",
+    "fill_pct": 33.3,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/societe/al-massira-a-33-de-remplissage-le-bassin-de-loum-er-rbia-reprend-des-couleurs_F3QDQPN53NDU3PWOOXATN4MOQA/"
+   },
+   {
+    "date": "2026-07-24",
+    "fill_pct": 41.3,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/societe/de-39-a-413-en-chiffres-voici-comment-le-barrage-al-massira-a-decuple-son-stock-en-un-an_F6EUM2YPIVHKTGD2FFR3KOQSII/"
+   }
+  ]
+ },
+ "al-wahda-dam": {
+  "capacity_hm3": 3522,
+  "series": [
+   {
+    "date": "2024-04-03",
+    "fill_pct": 56.3,
+    "source": "TelQuel, 4 Apr 2024",
+    "source_url": "https://telquel.ma/instant-t/2024/04/04/le-taux-de-remplissage-des-barrages-seleve-a-3179_1865145/"
+   },
+   {
+    "date": "2026-01-05",
+    "fill_pct": 54.5,
+    "source": "Médias24",
+    "source_url": "https://medias24.com/2026/01/05/reserves-hydriques-un-niveau-inedit-depuis-juillet-2021-a-712-milliards-de-m%C2%B3-1606295/"
+   },
+   {
+    "date": "2026-02",
+    "fill_pct": 94,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/economie/immersion-au-barrage-al-wahda-donnees-et-images-exclusives-sur-le-pilotage-du-plus-grand-reservoir_C7VHOEKY6FB6RJIJKAPFRWUFXA/",
+    "note": "month only"
+   },
+   {
+    "date": "2026-11-09",
+    "fill_pct": 75.7,
+    "source": "Hibapress (ministry bulletin)",
+    "source_url": "https://fr.hibapress.com/news-284171.html"
+   }
+  ]
+ },
+ "bin-el-ouidane-dam": {
+  "capacity_hm3": 1215,
+  "series": [
+   {
+    "date": "2023-01",
+    "fill_pct": 12,
+    "source": "Le360 (same date a year earlier)",
+    "source_url": "https://fr.le360.ma/societe/quand-leau-se-fait-rare-le-barrage-bin-el-ouidane-rempli-a-seulement-77_YYLKPKFAQFBOTJUGBXKN24JMHM/",
+    "note": "approximate date"
+   },
+   {
+    "date": "2024-01",
+    "fill_pct": 7.7,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/societe/quand-leau-se-fait-rare-le-barrage-bin-el-ouidane-rempli-a-seulement-77_YYLKPKFAQFBOTJUGBXKN24JMHM/",
+    "note": "approximate date"
+   },
+   {
+    "date": "2025-02-14",
+    "fill_pct": 4,
+    "source": "Médias24, 14 Feb 2026 (a year earlier)",
+    "source_url": "https://medias24.com/2026/02/14/oum-er-rbia-reprise-nette-des-principaux-barrages-bin-el-ouidane-et-hansali-en-forte-hausse-images-satellites-1628131/"
+   },
+   {
+    "date": "2025-04-18",
+    "fill_pct": 13,
+    "source": "Le360, Apr 2026 (a year earlier)",
+    "source_url": "https://fr.le360.ma/economie/le-barrage-bin-el-ouidane-atteint-94-de-remplissage-et-reprend-sa-production-electrique_LETLBOFWSNE7TKTAIQBRGKTYJM/"
+   },
+   {
+    "date": "2026-02-14",
+    "fill_pct": 62,
+    "source": "Médias24",
+    "source_url": "https://medias24.com/2026/02/14/oum-er-rbia-reprise-nette-des-principaux-barrages-bin-el-ouidane-et-hansali-en-forte-hausse-images-satellites-1628131/"
+   },
+   {
+    "date": "2026-04-18",
+    "fill_pct": 94.6,
+    "source": "Le360",
+    "source_url": "https://fr.le360.ma/economie/le-barrage-bin-el-ouidane-atteint-94-de-remplissage-et-reprend-sa-production-electrique_LETLBOFWSNE7TKTAIQBRGKTYJM/"
+   },
+   {
+    "date": "2026-11-07",
+    "fill_pct": 78.9,
+    "source": "Aujourd'hui le Maroc",
+    "source_url": "https://aujourdhui.ma/societe/les-reserves-globales-ont-plus-que-double-en-une-annee-les-barrages-affichent-un-taux-de-remplissage-de-6584-au-7-novembre-2026"
+   }
+  ]
+ },
+ "oued-el-makhazine-dam": {
+  "capacity_hm3": 672,
+  "series": [
+   {
+    "date": "2024-03-11",
+    "fill_pct": 67.5,
+    "source": "FLM (same date a year earlier)",
+    "source_url": "https://flm.ma/news.php?id=54092"
+   },
+   {
+    "date": "2025-03-11",
+    "fill_pct": 72.8,
+    "source": "FLM",
+    "source_url": "https://flm.ma/news.php?id=54092"
+   },
+   {
+    "date": "2026-02-04",
+    "fill_pct": 146.9,
+    "source": "Médias24 (above normal level: capacity base 672 Mm³)",
+    "source_url": "https://medias24.com/2026/02/04/barrage-oued-el-makhazine-le-directeur-general-hydraulique-fait-le-point-1622467/"
+   }
+  ]
+ }
+}

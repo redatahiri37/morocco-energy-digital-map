@@ -20,7 +20,7 @@ const DOCS = join(ROOT, "docs");
 // The schema. DATA_SCHEMA.md documents exactly this; the drift check at the
 // bottom fails if a required field below is missing from that document.
 // ---------------------------------------------------------------------------
-const KINDS = ["power", "grid", "industrial", "digital", "water", "oim", "oim-plants"];
+const KINDS = ["power", "grid", "industrial", "digital", "water", "basin", "oim", "oim-plants"];
 const LIVE_KINDS = ["oim", "oim-plants"];  // OpenInfraMap tiles, no file
 
 const POINT_STATUS = ["operational", "construction", "announced", "planned", "idle"];
@@ -43,7 +43,7 @@ const hasWords = (s) => s.split(/[\s,;:()·/]+/).some((w) => !/[.\d]/.test(w) &&
 // Optional fields that must be numbers whenever present, in every kind.
 const NUMERIC_OPTIONAL = ["investment_usd", "commissioning_year", "year", "units",
   "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw", "annual_generation_gwh", "annual_generation_year",
-  "flow_m3s", "length_km", "pumping_stations", "pumping_mva", "storage_hm3", "height_m", "capacity_hm3_yr", "power_mw"];
+  "area_km2", "flow_m3s", "length_km", "pumping_stations", "pumping_mva", "storage_hm3", "height_m", "capacity_hm3_yr", "power_mw"];
 
 // Per kind: geometry types, required fields (with a test), recommended fields.
 export const SCHEMA = {
@@ -86,6 +86,11 @@ export const SCHEMA = {
       category: (v) => Object.hasOwn(WATER_GEOMETRY, v),
     },
     recommended: ["id", "source_url", "precision", "year", "region"],
+  },
+  basin: {
+    geometry: ["Polygon", "MultiPolygon"],
+    required: { name: str, source: str },
+    recommended: ["id", "source_url", "precision", "name_fr", "area_km2"],
   },
 };
 
@@ -226,6 +231,44 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     });
     for (const [field, n] of Object.entries(missingRec))
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
+  }
+
+  // Water extras read by the dam chart and the basin popup.
+  const allIds = new Set();
+  for (const L of c.layers || []) {
+    if (!L.file || !existsSync(join(dir, L.file))) continue;
+    try { for (const f of JSON.parse(readFileSync(join(dir, L.file), "utf8")).features || []) if (f.properties && f.properties.id != null) allIds.add(String(f.properties.id)); } catch (e) { /* reported above */ }
+  }
+  const readExtra = (key) => {
+    const at2 = `${at}.${key}`;
+    if (c[key] === undefined) return null;
+    if (!str(c[key]) || !existsSync(join(dir, c[key]))) { fail(at2, `${c.dataPath}${c[key]} does not exist`); return null; }
+    try { return JSON.parse(readFileSync(join(dir, c[key]), "utf8")); }
+    catch (e) { fail(at2, `not valid JSON: ${e.message}`); return null; }
+  };
+  const levels = readExtra("damLevels");
+  if (levels) {
+    for (const [id, v] of Object.entries(levels)) {
+      if (id.startsWith("_")) continue;
+      const lat2 = `${c.dataPath}${c.damLevels} "${id}"`;
+      if (!allIds.has(id)) fail(lat2, "is not the id of a feature in this country's layers");
+      if (v.capacity_hm3 !== undefined && !num(v.capacity_hm3)) fail(lat2, "capacity_hm3 must be a number");
+      if (!Array.isArray(v.series) || !v.series.length) { fail(lat2, "series must be a non-empty list"); continue; }
+      v.series.forEach((r, i) => {
+        if (!/^\d{4}(-\d{2}(-\d{2})?)?$/.test(String(r.date))) fail(`${lat2} #${i}`, `date must be YYYY, YYYY-MM or YYYY-MM-DD, got ${JSON.stringify(r.date)}`);
+        if (!num(r.fill_pct) || r.fill_pct < 0 || r.fill_pct > 200) fail(`${lat2} #${i}`, `fill_pct must be a number from 0 to 200, got ${JSON.stringify(r.fill_pct)}`);
+        if (!str(r.source) || !/^https?:\/\//.test(r.source_url || "")) fail(`${lat2} #${i}`, "needs source and an http(s) source_url");
+      });
+    }
+  }
+  const rain = readExtra("rainProjections");
+  if (rain) {
+    const rat = `${c.dataPath}${c.rainProjections}`;
+    if (!str(rain.source) || !/^https:\/\//.test(rain.source_url || "")) fail(rat, "needs source and an https source_url");
+    for (const yr of ["2030", "2050"]) for (const ssp of ["ssp245", "ssp585"]) {
+      const v = rain.change_pct && rain.change_pct[yr] && rain.change_pct[yr][ssp];
+      if (!v || !["p10", "median", "p90"].every((k) => num(v[k]))) fail(rat, `change_pct.${yr}.${ssp} must have numeric p10, median and p90`);
+    }
   }
 
   // Lenses (Energy / Water / Nexus): a layer id that no longer exists would

@@ -12,6 +12,7 @@
 //   grid        transmission lines — styled by status and voltage_kv
 //   industrial  industrial consumers — coloured by palette.sectors
 //   digital     data centres + cable landings — coloured by palette.providers
+//   basin       hydraulic basins (polygons), a wash under the other layers
 //   water       water transfers (lines), dams and desalination plants (points);
 //               `category` per feature: transfer / dam / desalination
 //   oim         OpenInfraMap live grid tiles (worldwide; file: null)
@@ -38,6 +39,10 @@
 //   creditsFr:      the same in French, when it has words to translate
 //   demand:         { source, sourceUrl, figures: [{ label, labelFr, value, unit }] } —
 //                   dated national figures, tiles under the KPIs
+//   damLevels:      file in dataPath, { <feature id>: { capacity_hm3, series: [{ date,
+//                   fill_pct, source, source_url }] } } — the dam chart's readings
+//   rainProjections: file in dataPath, CMIP6 rainfall change (change_pct[year][ssp])
+//                   — the dam chart's and basin popup's projections
 //   lenses:         [{ id, label, labelFr, layers?, fuel?, note?, noteFr? }] — the
 //                   Energy / Water / Nexus switch above the layers; `layers`
 //                   lists the ids switched on (none: each layer's default)
@@ -148,13 +153,17 @@ window.COUNTRIES = {
       { key:"Government of Morocco", short:"Government" },
       { key:"ADD (Agence de Développement du Digital)", short:"ADD" }
     ],
+    // Read by the dam chart and the basin popup (not drawn): dated fill
+    // readings by feature id, and CMIP6 rainfall change for 2030 / 2050.
+    damLevels: "dam-levels.json",
+    rainProjections: "rain-projections.json",
     // Perspectives above the layer list. Energy keeps each layer's default;
     // Water shows the water layers with the grid and the hydro plants;
     // Nexus shows both systems together.
     lenses: [
       { id: "energy", label: "Energy", labelFr: "Énergie" },
       { id: "water", label: "Water", labelFr: "Eau", fuel: "hydro",
-        layers: ["water-transfers", "dams", "desalination", "power-plants", "oim-grid"],
+        layers: ["basins", "water-transfers", "dams", "desalination", "power-plants", "oim-grid"],
         note: "Water highways, new dams and desalination, with the grid and the hydro plants. Transfers and desalination are electrical loads.",
         noteFr: "Autoroutes de l'eau, nouveaux barrages et dessalement, avec le réseau et les centrales hydrauliques. Transferts et dessalement sont des charges électriques." },
       { id: "nexus", label: "Nexus", labelFr: "Nexus",
@@ -194,6 +203,12 @@ window.COUNTRIES = {
         sourceUrl: "https://datacatalog.worldbank.org/",
         updated: "2026-04" },
       // Water–energy nexus: inter-basin transfers, new dams, desalination.
+      { id: "basins", file: "basins.geojson", kind: "basin", visible: false,
+        title: "Hydraulic basins", titleFr: "Bassins hydrauliques",
+        source: "HydroBASINS v1c level 6 (Lehner & Grill 2013), grouped into the ten basin agencies by river; approximate, not the official limits",
+        sourceFr: "HydroBASINS v1c niveau 6 (Lehner & Grill 2013), regroupés par fleuve dans les dix agences de bassin ; approximatif, pas les limites officielles",
+        sourceUrl: "https://www.hydrosheds.org/products/hydrobasins",
+        updated: "2026-11" },
       { id: "water-transfers", file: "water-transfers.geojson", kind: "water", visible: false,
         title: "Water highways", titleFr: "Autoroutes de l'eau",
         source: "Ministry of Equipment and Water and ONEE figures as reported by Le Matin, Médias24, TelQuel, L'Économiste; routes schematic",
