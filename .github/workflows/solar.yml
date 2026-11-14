@@ -28,6 +28,8 @@ jobs:
           node --check solar/copro.js
           node --check solar/analytics.js
           node --check solar/chat/chat.js
+          node --check solar/pumping.js
+          node --check solar/pompage/pompage.js
 
       # The figures: tariff, savings, sizing, quote check.
       - name: Engine tests
@@ -37,7 +39,7 @@ jobs:
       # string, from OSM, a shared link or our own code, is parsed as HTML.
       - name: No HTML parsed from strings in the page scripts
         run: |
-          if grep -nE '\.(inner|outer)HTML\b|insertAdjacentHTML|document\.write' solar/app.js solar/copro.js solar/analytics.js solar/chat/chat.js; then
+          if grep -nE '\.(inner|outer)HTML\b|insertAdjacentHTML|document\.write' solar/app.js solar/copro.js solar/analytics.js solar/chat/chat.js solar/pompage/pompage.js; then
             echo "Build these elements with textContent / createElement instead"
             exit 1
           fi
@@ -65,7 +67,7 @@ jobs:
 
       # No code from another site; vendored libraries match their hashes.
       - name: Page code is first-party and untampered
-        run: node scripts/check-sri.mjs solar/index.html solar/chat/index.html
+        run: node scripts/check-sri.mjs solar/index.html solar/chat/index.html solar/pompage/index.html
 
       # The 3D view loads MapLibre from app.js, not from a tag, so
       # check-sri does not see it: its hashes live in CONFIG (engine.js) and
@@ -128,6 +130,11 @@ jobs:
           set -e
           node worker.test.mjs
           node chat.test.mjs
+          node et0.test.mjs
+
+      # The pumping simulator's engine, against a field worked by hand.
+      - name: Pumping engine tests
+        run: node solar/pumping.test.mjs
 
   # Publishes the estimator to the Cloudflare Pages project behind
   # solar.wattu.org (atlas-solar). Runs only on main, after the checks.
@@ -156,7 +163,7 @@ jobs:
         run: |
           set -e
           mkdir _site
-          cp solar/index.html solar/engine.js solar/app.js solar/copro.js solar/analytics.js solar/style.css \
+          cp solar/index.html solar/engine.js solar/pumping.js solar/app.js solar/copro.js solar/analytics.js solar/style.css \
              solar/brand.css solar/mark.svg solar/favicon.svg \
              solar/pages.css solar/robots.txt solar/_headers _site/
           # Search engine ownership proofs (Google Search Console, Bing
@@ -168,6 +175,9 @@ jobs:
           cp -r solar/.well-known _site/.well-known
           # The chat assistant prototype, reached by a private link (noindex).
           cp -r solar/chat _site/chat
+          # The solar pumping simulator for farmers (its tests stay out).
+          mkdir _site/pompage
+          cp solar/pompage/index.html solar/pompage/pompage.js solar/pompage/pompage.css _site/pompage/
           # City list for « Choisissez votre ville » when an address is not found
           mkdir _site/data
           cp solar/data/cities.json _site/data/
@@ -178,6 +188,8 @@ jobs:
           test "$(grep -c "?v=$V" _site/index.html)" -eq 6
           sed -i -E 's#((href|src)="(\.\./style\.css|\.\./brand\.css|chat\.css|chat\.js))"#\1?v='"$V"'"#g' _site/chat/index.html
           test "$(grep -c "?v=$V" _site/chat/index.html)" -eq 4
+          sed -i -E 's#((href|src)="(\.\./style\.css|\.\./brand\.css|\.\./engine\.js|\.\./pumping\.js|pompage\.css|pompage\.js))"#\1?v='"$V"'"#g' _site/pompage/index.html
+          test "$(grep -c "?v=$V" _site/pompage/index.html)" -eq 6
 
       # One static page per city (ville/<slug>/), the comparison table
       # (villes/), sitemap.xml and llms.txt, with PVGIS figures fetched now
