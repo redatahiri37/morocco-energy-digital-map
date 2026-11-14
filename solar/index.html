@@ -202,12 +202,19 @@
             <span id="hero-savings" class="hero-number">0</span>
             <span class="hero-unit">dirhams économisés par an</span>
             <p class="hero-basis" id="hero-basis">pour une facture de <b id="hero-bill">500 MAD</b> par mois<span id="hero-bill-ask"> · <button type="button" class="hero-basis-btn" id="hero-bill-btn">c'est la vôtre&nbsp;?</button></span></p>
+            <p class="hero-verdict" id="hero-verdict" hidden></p>
           </div>
           <div class="hero-chips">
-            <div class="chip-stat"><span id="chip-size">—</span><small>taille conseillée<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Dimensionnée pour couvrir environ 80 % de votre consommation annuelle. Modifiable dans les paramètres.</span></button></small></div>
+            <div class="chip-stat"><span id="chip-size">—</span><small>taille conseillée<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">La taille qui rapporte le plus sur 25 ans. Une installation plus petite se rembourse plus vite. Modifiable dans les paramètres.</span></button></small></div>
             <div class="chip-stat"><span id="chip-production">—</span><small>production / an</small></div>
             <div class="chip-stat"><span id="chip-payback">—</span><small>amortissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Temps nécessaire pour que les économies remboursent l'investissement de départ.</span></button></small></div>
             <div class="chip-stat"><span id="chip-capex">—</span><small>investissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Prix posé estimé, matériel et pose compris, à <span id="capex-tip-cost">11 MAD/Wc</span>. Modifiable dans les paramètres.</span></button></small></div>
+          </div>
+
+          <!-- Two sizes worth proposing (engine.js › Sizing): shown when they differ -->
+          <div class="size-options" id="size-options" role="group" aria-label="Taille de l'installation" hidden>
+            <button type="button" class="size-opt active" data-size="best" aria-pressed="true"><b>Économie maximale</b><span id="size-opt-best"></span></button>
+            <button type="button" class="size-opt" data-size="quick" aria-pressed="false"><b>Rentable vite</b><span id="size-opt-quick"></span></button>
           </div>
 
           <div class="bill-block">
@@ -221,10 +228,21 @@
             </div>
             <input type="range" id="bill" min="100" max="3000" step="25" value="500">
             <div class="param-hint" id="bill-consumption-hint"></div>
+            <p class="hero-tranche" id="hero-tranche" hidden></p>
+          </div>
+
+          <div class="bill-block profile-block">
+            <span class="profile-label" id="profile-label">En journée, quelqu'un est à la maison&nbsp;?</span>
+            <div class="profile-presets" role="group" aria-labelledby="profile-label">
+              <button type="button" class="profile-chip" data-profile="away" aria-pressed="false">Personne</button>
+              <button type="button" class="profile-chip active" data-profile="mixed" aria-pressed="true">Parfois</button>
+              <button type="button" class="profile-chip" data-profile="home" aria-pressed="false">Oui, ou la clim tourne</button>
+            </div>
+            <div class="param-hint" id="profile-hint"></div>
           </div>
 
           <p class="hero-approx" id="hero-approx" hidden></p>
-          <div class="hero-source" id="hero-source">Données PVGIS (Commission européenne) et tarifs ONEE<button type="button" class="help light" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production estimée par PVGIS v5.2 à vos coordonnées exactes. Économies calculées sur la grille tarifaire résidentielle ONEE 2025.</span></button></div>
+          <div class="hero-source" id="hero-source">Données PVGIS (Commission européenne) et tarifs ONEE<button type="button" class="help light" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production estimée par PVGIS v5.2 à vos coordonnées exactes. Économies calculées sur la grille tarifaire résidentielle de l'ONEE, où tout le mois est facturé au prix de la tranche atteinte au-delà de 150 kWh.</span></button></div>
         </div>
       </div>
 
@@ -393,7 +411,7 @@
         </div>
 
         <div class="disclaimer">
-          <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs ONEE résidentiels 2025. La part d'électricité que vous consommez directement est estimée à partir d'un profil de foyer type. Surface du toit : contour du bâtiment OpenStreetMap (via Overpass) ou tracé par vous, avec 1 m de marge sur les bords et des rangées espacées pour éviter l'ombrage. L'ombrage d'arbres ou de bâtiments voisins, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
+          <strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Production issue de PVGIS v5.2 (Commission européenne, données 1990–2020). Tarifs résidentiels de l'ONEE&nbsp;: un distributeur régional peut appliquer une grille un peu différente, et les frais fixes et taxes de la facture ne sont pas comptés. La part d'électricité que vous consommez directement dépend de votre présence en journée&nbsp;: c'est une hypothèse, pas une mesure. Surface du toit : contour du bâtiment OpenStreetMap (via Overpass) ou tracé par vous, avec 1 m de marge sur les bords et des rangées espacées pour éviter l'ombrage. L'ombrage d'arbres ou de bâtiments voisins, l'état du toit et les prix locaux ne sont pas pris en compte.</span></button>
         </div>
 
         <div class="next-card">
@@ -403,6 +421,26 @@
             <li><b>Comparez au moins trois devis</b><span>Cette estimation retient <span id="next-cost">11 MAD/Wc</span> posé&nbsp;; un devis très au-dessus mérite une question.</span></li>
             <li><b>Déclarez l'installation</b><span>Loi 82-21&nbsp;: sous 11 kW, une simple déclaration suffit pour produire et consommer votre électricité.</span></li>
           </ol>
+        </div>
+
+        <!-- A quote in hand: its price per Wc against the market range, and
+             what it earns for this home (engine.js › Quote) -->
+        <div class="quote-card" data-depth="quote">
+          <p class="w-kicker">Vous avez déjà un devis&nbsp;?</p>
+          <p class="quote-intro">Entrez sa puissance et son prix total. Vous saurez s'il est dans les prix du marché et ce qu'il rapporte chez vous.</p>
+          <form class="quote-form" id="quote-form">
+            <label for="quote-kw">Puissance du devis (kWc)</label>
+            <input type="number" id="quote-kw" min="0.5" max="20" step="0.1" inputmode="decimal" required>
+            <label for="quote-price">Prix total du devis (MAD)</label>
+            <input type="number" id="quote-price" min="1000" max="500000" step="1" inputmode="numeric" required>
+            <button type="submit" class="pdf-btn">Vérifier ce devis</button>
+          </form>
+          <div class="quote-result" id="quote-result" aria-live="polite" hidden>
+            <p class="quote-verdict" id="quote-verdict"></p>
+            <p id="quote-roi"></p>
+            <p id="quote-size" hidden></p>
+            <button type="button" class="linkbtn small" id="quote-apply">Appliquer ce devis à mon estimation</button>
+          </div>
         </div>
 
         <!-- Selection method, scores and sources: solar/INSTALLERS.md -->
@@ -446,7 +484,7 @@
       </div>
       <div>
         <h3>Comment c'est calculé</h3>
-        <p>Production PVGIS v5.2 (Commission européenne) à vos coordonnées, pour l'inclinaison et l'orientation choisies. Économies sur la grille tarifaire résidentielle ONEE 2025, en retirant d'abord les tranches les plus chères. Toit&nbsp;: contour OpenStreetMap ou tracé par vous.</p>
+        <p>Production PVGIS v5.2 (Commission européenne) à vos coordonnées, pour l'inclinaison et l'orientation choisies. Économies sur la grille tarifaire résidentielle de l'ONEE, mois par mois&nbsp;: jusqu'à 150 kWh chaque tranche a son prix, au-delà tout le mois est facturé au prix de la tranche atteinte. Descendre d'une tranche est donc ce qui rapporte le plus. Toit&nbsp;: contour OpenStreetMap ou tracé par vous.</p>
       </div>
       <div>
         <h3>Ce qui n'est pas pris en compte</h3>
