@@ -45,6 +45,34 @@ grid economics, infrastructure finance.
 Map correction issues #59, #60, #61 and #70 handled on 2026-11-08 (see the
 handoff below). No open correction issue left.
 
+## Session handoff — 2026-11-08 (map: water perspective, phase 1)
+- New layer kind `water` (DATA_SCHEMA.md): `category` transfer (line, flow
+  arrows first → last vertex, dashed unless in service), dam (triangle,
+  sized by storage_hm3), desalination (hexagon, sized by capacity_hm3_yr).
+  One teal (LAYER_COLORS.water, checked by check-map-palette.mjs).
+- Morocco: water-transfers.geojson (Sebou–Bouregreg 2023, Al Massira–
+  Marrakech 2022, phase II Bouregreg–Al Massira planned, Laou–Loukkos–Sebou
+  study), dams.geojson (10 dams of the 2020–2027 programme), desalination.
+  geojson (Casablanca, Jorf Lasfar, Safi, Chtouka, Laâyoune, Dakhla).
+  Bilingual: name_fr, note_fr, purpose_fr, energy_supply_fr.
+- Positions: OSM where the dam or plant is mapped (Tiddas, Agdez,
+  Kaddoussa, Fask, Douira, Laâyoune); otherwise the commune or the distance
+  the press gives, `precision: approximate`, said in the note. Transfer
+  routes are schematic. coord-validator (Nominatim only; Overpass and
+  Wikidata blocked) on 2026-11-09: 3 FAILs fixed (Sidi Abbou → on the Oued
+  Leben, Safi desal → OCP site south of the city, Dakhla desal → on land in
+  Bir Anzarane); 5 PASS; Kheng Grou, Ratba, M'Dez, Ghiss, Taghzirt,
+  Casablanca desal and the Sebou guard-dam start remain UNVERIFIED
+  (commune or river proxies, not mapped in OSM).
+- Desalination popup: stated power if any, else average load at
+  3.5 kWh/m³ (DESAL_KWH_PER_M3 in app.js), labelled as an estimate.
+- Phase 2 (same PR): `lenses` in countries.config.js → Énergie / Eau /
+  Nexus switch above the layers (app.js "Lens"), shareable as #lens=water.
+  Water layers start unticked in Energy. Water lens: water layers + grid +
+  hydro plants (fuel filter), mix hidden, water KPI tiles (transfers m³/s,
+  new storage, desalination, est. desalination load vs the 8.4 GW record
+  peak). Nexus: everything with both KPI sets.
+
 ## Session handoff — 2026-11-08 (map: French sources)
 - /fr/ showed every source and boundary note in English (Methodology list,
   layer-row hover, demand / live-flow notes, footer credits, Site check).
@@ -56,6 +84,13 @@ handoff below). No open correction issue left.
 - validate-countries.mjs fails when a source, note or credit with a
   lowercase word (3+ letters, domains and versions aside) has no French;
   3 new self-test cases (34 in all).
+- Status view now narrows the OpenInfraMap grid too (lines, substations):
+  OIM tiles give lines and substations the same `construction` / `disused`
+  booleans as plants (tegola layers.yml, lifecycle field set);
+  oimStatusFilters() serves both layers.
+- Search swatches took their colour when the index was built, so they kept
+  the old theme's after a toggle; entries now keep kind / category / fuel
+  and entryMark() colours them at render.
 
 ## Session handoff — 2026-11-08 (map: data corrections #59–#61, #70)
 - Moroccan dams (#61): capacities were wrong (Al Massira 232 → 128 MW,
@@ -115,6 +150,37 @@ handoff below). No open correction issue left.
 - Not seen with live PVGIS (localhost is refused by the Worker's CORS) nor
   with a real OSM building (Overpass did not answer locally): tested with a
   drawn 18 × 14 m roof, fr and ar, desktop and 375 px.
+
+## Session handoff — 2026-11-11 (solar: pumping simulator for farmers)
+- New page solar.wattu.org/pompage/ (owner's pick from the brainstorm; target
+  user: the farmer). French + Darija in the page (#l=ar), mobile first.
+  Four questions: field (geolocation or nearest city), crop × area ×
+  irrigation method × months (or « je connais mon volume »), water depth +
+  outlet (basin / direct drip) + optional well yield, today's energy
+  (butane / gasoil / ONEE / none) with the farmer's own weekly bottles,
+  litres or bill. Answer: panels + pump CV, price, FDA aid, savings in
+  bottles, payback, unsubsidised-butane scenario, fuel vs loan per month,
+  monthly need vs PV chart, « L'eau d'abord » (yearly m³, drip saving,
+  well-yield check, ABH law 36-15, meter), installer sheet, WhatsApp share
+  (state in the URL hash).
+- Engine solar/pumping.js (+ pumping.test.mjs): FAO-56 Kc, FAO efficiencies,
+  hydraulic sizing on the most demanding month, Nebraska pumping-plant
+  criteria × 76 % (UGA B837) for butane/diesel/electric, kit price fitted to
+  3 catalogue prices (oasismaroc.com, one seller), FDA 30 % capped 30 000 DH,
+  butane 50 DH (subsidy 78 DH, Apr 2026), gasoil 16.90 DH/L (Nov 2026).
+  Unsourced assumptions are named in the code and the page's « Méthode ».
+  The fuel estimate is likely LOW (ministry DH/m³ figures are ~2× ours):
+  the farmer's own bottle count overrides it. No ONEE agricultural tariff
+  found: the grid case needs the farmer's bill.
+- Worker GET /et0?lat&lon (proxy/et0.js + et0.test.mjs): FAO-56
+  Penman-Monteith from PVGIS TMY, coords rounded 0.01°, TMY edge-cached 30
+  days. Checked against FAO-56 example 18 (3.88 vs 3.9 mm/day). Deployed by
+  worker.yml on merge. A slow TMY (> 20 s, seen once) makes the page ask for
+  the farmer's volume instead.
+- Footer link « Pompage solaire agricole » on the simulator (ar/en/zgh
+  translated), sitemap and llms.txt entries, solar.yml checks and deploy.
+- To review: the Darija text and the zgh link label (drafts); kit prices
+  against real quotes; no analytics on the page yet.
 
 ## Session handoff — 2026-11-03 (map: industry and data-centre markers)
 - Industry and data centres are told apart from the plants by

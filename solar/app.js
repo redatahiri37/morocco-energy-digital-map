@@ -1,6 +1,6 @@
 /* Wattu — Morocco residential PV estimator
  * ------------------------------------------------
- * The engine (CONFIG, PV, Tariff, ROI, Finance, Sizing, inMorocco) is in
+ * The engine (CONFIG, PV, Tariff, ROI, Finance, Sizing, Quote, inMorocco) is in
  * engine.js, loaded just before this file and shared with the city pages
  * and the chat assistant. Here:
  *   Geocoder      Nominatim (OSM) address → {lat, lon, label}
@@ -76,6 +76,21 @@ const I18N = {
     srSummary: (s, bill, capex, pay) => `Économies estimées : ${s} dirhams par an, pour une facture de ${bill} par mois. Investissement : ${capex}. ${pay}.`,
     sayBill: (v) => `${v} MAD par mois`, sayDegrees: (a) => `${a} degrés`, sayCost: (v) => `${v} MAD par Wc`,
     aspect: { south: "Sud", east: "Est", west: "Ouest", off: (a, dir) => `${a}° ${dir} du Sud` },
+    verdictGo: (y) => `Ça vaut le coup : l'installation est remboursée en ${y}.`,
+    verdictMaybe: (y) => `À étudier : il faut ${y} pour rembourser l'installation.`,
+    verdictWait: (y) => y ? `Pas encore rentable chez vous : il faut ${y} pour rembourser l'installation.` : "Pas rentable chez vous à ce prix : les économies ne remboursent pas l'installation.",
+    verdictCost: (c) => ` Cela le devient avec un devis sous ${c} MAD/Wc`,
+    verdictBill: (b) => `, ou une facture d'au moins ${b} par mois.`,
+    trancheLine: (m, v) => `${m} mois sur 12 passent dans une tranche moins chère : chaque kWh solaire consommé vous évite ${v} MAD.`,
+    profileHint: (lo, hi) => `Les panneaux produisent le jour. Selon la réponse : de ${lo} à ${hi} économisés par an.`,
+    quote: {
+      low: (c, lo) => `${c} MAD/Wc : sous les prix habituels (à partir de ${lo}). Vérifiez ce qui est compris : marque des panneaux, onduleur, compteur, garantie.`,
+      fair: (c, lo, hi) => `${c} MAD/Wc : dans les prix du marché (${lo} à ${hi}).`,
+      high: (c, lo, hi) => `${c} MAD/Wc : dans le haut du marché (${lo} à ${hi}). Demandez ce qui le justifie, et un autre devis.`,
+      over: (c, hi) => `${c} MAD/Wc : au-dessus des prix du marché (${hi} au plus). Demandez d'autres devis.`,
+      roi: (s, pay) => `Chez vous, ce devis économiserait environ ${s} par an. ${pay}.`,
+      size: (kw) => `Pour votre facture, la taille qui rapporte le plus est ${kw}.`,
+    },
   },
   ar: {
     acceptLanguage: "ar,fr",
@@ -128,6 +143,21 @@ const I18N = {
     srSummary: (s, bill, capex, pay) => `التوفير المتوقع: ${s} درهم فالعام، لفاتورة ديال ${bill} فالشهر. الثمن ديال التركيب: ${capex}. ${pay}.`,
     sayBill: (v) => `${v} درهم فالشهر`, sayDegrees: (a) => `${a} درجة`, sayCost: (v) => `${v} درهم للواط`,
     aspect: { south: "الجنوب", east: "الشرق", west: "الغرب", off: (a, dir) => `الجنوب، ${a}° لجهة ${dir}` },
+    verdictGo: (y) => `كتستاهل: التركيب كيرجع فلوسو ف${y}.`,
+    verdictMaybe: (y) => `خاصها تتدرس: التركيب كيرجع فلوسو ف${y}.`,
+    verdictWait: (y) => y ? `مازال ما كتربحش عندك: خاص ${y} باش ترجع فلوس التركيب.` : "ما كتربحش عندك بهاد الثمن: التوفير ما كيرجعش فلوس التركيب.",
+    verdictCost: (c) => ` كتولي مربحة بدوفي تحت ${bidi(c)} درهم للواط`,
+    verdictBill: (b) => `، ولا بفاتورة ديال ${b} فالشهر على الأقل.`,
+    trancheLine: (m, v) => `${m} شهور من 12 كيهبطو لشطر رخص: كل ${bidi("kWh")} شمسي كتستهلكو كيوفر عليك ${bidi(v)} درهم.`,
+    profileHint: (lo, hi) => `البلاكات كتنتج فالنهار. على حساب الجواب: من ${lo} حتى ل${hi} كتوفرهم فالعام.`,
+    quote: {
+      low: (c, lo) => `${bidi(c)} درهم للواط: تحت الأثمنة المعروفة (من ${bidi(lo)}). شوف شنو داخل فيه: ماركة البلاكات، الأوندولور، الكونتور، الضمانة.`,
+      fair: (c, lo, hi) => `${bidi(c)} درهم للواط: فالأثمنة ديال السوق (من ${bidi(lo)} حتى ل${bidi(hi)}).`,
+      high: (c, lo, hi) => `${bidi(c)} درهم للواط: فالفوق ديال السوق (من ${bidi(lo)} حتى ل${bidi(hi)}). سول علاش، وطلب دوفي آخر.`,
+      over: (c, hi) => `${bidi(c)} درهم للواط: فوق الأثمنة ديال السوق (${bidi(hi)} على الأكثر). طلب دوفيات خرين.`,
+      roi: (s, pay) => `فدارك، هاد الدوفي غادي يوفر تقريبا ${s} فالعام. ${pay}.`,
+      size: (kw) => `للفاتورة ديالك، الحجم اللي كيربح كثر هو ${kw}.`,
+    },
   },
   // Tamazight (Standard Moroccan Amazigh, Tifinagh): first draft, to be
   // reviewed by a native speaker. Numbers keep French formatting.
@@ -182,6 +212,21 @@ const I18N = {
     srSummary: (s, bill, capex, pay) => `ⴰⵔⴱⴰⵃ ⵍⵍⵉ ⵉⵜⵜⵓⵙⵙⵉⴹⵏⵏ: ${s} ⴷⴷⵔⵀⵎ ⴳ ⵓⵙⴳⴳⵯⴰⵙ, ⵉ ⵜⴼⴰⴽⵜⵓⵔⵜ ⵏ ${bill} ⴳ ⵡⴰⵢⵢⵓⵔ. ⴰⵜⵉⴳ ⵏ ⵓⵙⵔⵙ: ${capex}. ${pay}.`,
     sayBill: (v) => `${v} MAD ⴳ ⵡⴰⵢⵢⵓⵔ`, sayDegrees: (a) => `${a} ⵏ ⵜⴼⵔⴽⵉⵡⵉⵏ`, sayCost: (v) => `${v} MAD ⵉ Wc`,
     aspect: { south: "ⴰⵏⵥⵓⵍ", east: "ⴰⴳⵎⵎⵓⴹ", west: "ⴰⵜⵔⵉⵎ", off: (a, dir) => `ⴰⵏⵥⵓⵍ, ${a}° ⵙ ${dir}` },
+    verdictGo: (y) => `ⵉⵃⵍⴰ: ⵜⵓⵖⴰⵍⵉⵏ ⵏ ⵉⵇⵔⵉⴹⵏ ⴳ ${y}.`,
+    verdictMaybe: (y) => `ⵉⵅⵚⵚⴰ ⴰⴷ ⵉⵜⵜⵓⵙⵙⵉⴹⵏ: ⵜⵓⵖⴰⵍⵉⵏ ⵏ ⵉⵇⵔⵉⴹⵏ ⴳ ${y}.`,
+    verdictWait: (y) => y ? `ⵓⵔ ⵜⴰ ⵉⵃⵍⵉ ⵖⵓⵔⴽ: ⵜⵓⵖⴰⵍⵉⵏ ⵏ ⵉⵇⵔⵉⴹⵏ ⴳ ${y}.` : "ⵓⵔ ⵉⵃⵍⵉ ⵖⵓⵔⴽ ⵙ ⵡⴰⵜⵉⴳ ⴰ: ⴰⵔⴱⴰⵃ ⵓⵔ ⴷ ⵉⵔⵔⵉ ⴰⵜⵉⴳ ⵏ ⵓⵙⵔⵙ.",
+    verdictCost: (c) => ` ⴰⴷ ⵉⵃⵍⵓ ⵙ ⵡⴰⵜⵉⴳ ⴷⴷⴰⵡ ${c} MAD/Wc`,
+    verdictBill: (b) => `, ⵏⵖ ⵙ ⵜⴼⴰⴽⵜⵓⵔⵜ ⵏ ${b} ⴳ ⵡⴰⵢⵢⵓⵔ.`,
+    trancheLine: (m, v) => `${m} ⵏ ⵉⵢⵢⵉⵔⵏ ⴳ 12 ⴰⵔ ⵜⵜⴰⴷⵔⵏ ⵙ ⵡⴰⵜⵉⴳ ⵉⵔⵅⵙⵏ: ⴽⵓ kWh ⵏ ⵜⴼⵓⴽⵜ ⴰⵔ ⴰⴽ ⵉⵜⵜⴰⵊⵊⴰ ${v} MAD.`,
+    profileHint: (lo, hi) => `ⵜⵉⵍⵓⵃⵉⵏ ⴰⵔ ⵙⵙⵓⴼⵓⵖⵏⵜ ⴳ ⵡⴰⵙⵙ. ⵙ ⵜⵎⵔⴰⵔⵓⵜ: ⵙⴳ ${lo} ⴰⵔ ${hi} ⵏ ⵓⵔⴱⴰⵃ ⴳ ⵓⵙⴳⴳⵯⴰⵙ.`,
+    quote: {
+      low: (c, lo) => `${c} MAD/Wc: ⴷⴷⴰⵡ ⵉⵜⵉⴳⵏ ⵉⵜⵜⵡⴰⵙⵙⵏⵏ (ⵙⴳ ${lo}). ⵥⵕ ⵎⴰⴷ ⴳⵉⵙ ⵉⵍⵍⴰⵏ.`,
+      fair: (c, lo, hi) => `${c} MAD/Wc: ⴳ ⵉⵜⵉⴳⵏ ⵏ ⵓⴳⴰⴷⴰⵣ (${lo} ⴰⵔ ${hi}).`,
+      high: (c, lo, hi) => `${c} MAD/Wc: ⴳ ⵓⴼⵍⵍⴰ ⵏ ⵉⵜⵉⴳⵏ ⵏ ⵓⴳⴰⴷⴰⵣ (${lo} ⴰⵔ ${hi}). ⵙⵇⵙⴰ ⵎⴰⵅ, ⵜⵙⵙⵓⵜⵔⴷ ⴰⵜⵉⴳ ⵢⴰⴹⵏ.`,
+      over: (c, hi) => `${c} MAD/Wc: ⵏⵏⵉⴳ ⵉⵜⵉⴳⵏ ⵏ ⵓⴳⴰⴷⴰⵣ (${hi}). ⵙⵙⵓⵜⵔ ⵉⵜⵉⴳⵏ ⵢⴰⴹⵏ.`,
+      roi: (s, pay) => `ⵖⵓⵔⴽ, ⴰⵜⵉⴳ ⴰ ⴰⴷ ⴰⴽ ⵉⴼⴽ ⵎⴰⵙ ${s} ⵏ ⵓⵔⴱⴰⵃ ⴳ ⵓⵙⴳⴳⵯⴰⵙ. ${pay}.`,
+      size: (kw) => `ⵉ ⵜⴼⴰⴽⵜⵓⵔⵜ ⵏⵏⴽ, ⴰⵙⵔⵙ ⵍⵍⵉ ⵉⵜⵜⴰⵡⵉⵏ ⵓⴳⴳⴰⵔ ⵉⴳⴰ ${kw}.`,
+    },
   },
   en: {
     acceptLanguage: "en,fr",
@@ -234,6 +279,21 @@ const I18N = {
     srSummary: (s, bill, capex, pay) => `Estimated savings: ${s} dirhams a year, for a bill of ${bill} a month. Investment: ${capex}. ${pay}.`,
     sayBill: (v) => `${v} MAD a month`, sayDegrees: (a) => `${a} degrees`, sayCost: (v) => `${v} MAD per Wp`,
     aspect: { south: "South", east: "East", west: "West", off: (a, dir) => `${a}° ${dir} of South` },
+    verdictGo: (y) => `Worth it: the system pays for itself in ${y}.`,
+    verdictMaybe: (y) => `Worth a closer look: the system takes ${y} to pay for itself.`,
+    verdictWait: (y) => y ? `Not worth it yet for you: the system takes ${y} to pay for itself.` : "Not worth it for you at this price: the savings do not repay the system.",
+    verdictCost: (c) => ` It becomes worth it with a quote under ${c} MAD/Wp`,
+    verdictBill: (b) => `, or a bill of at least ${b} a month.`,
+    trancheLine: (m, v) => `${m} months out of 12 drop into a cheaper tranche: each solar kWh you use saves you ${v} MAD.`,
+    profileHint: (lo, hi) => `Panels produce in daytime. Depending on the answer: ${lo} to ${hi} saved a year.`,
+    quote: {
+      low: (c, lo) => `${c} MAD/Wp: below usual prices (from ${lo}). Check what is included: panel brand, inverter, meter, warranty.`,
+      fair: (c, lo, hi) => `${c} MAD/Wp: within market prices (${lo} to ${hi}).`,
+      high: (c, lo, hi) => `${c} MAD/Wp: at the top of the market (${lo} to ${hi}). Ask what justifies it, and get another quote.`,
+      over: (c, hi) => `${c} MAD/Wp: above market prices (${hi} at most). Get other quotes.`,
+      roi: (s, pay) => `For your home, this quote would save about ${s} a year. ${pay}.`,
+      size: (kw) => `For your bill, the size that earns the most is ${kw}.`,
+    },
   },
 };
 const STR = I18N[LANG];
@@ -958,8 +1018,11 @@ const State = {
     aspect: CONFIG.DEFAULT_ASPECT,
     cost: CONFIG.DEFAULT_COST_MAD_PER_WC,
     exportAllowed: false,
+    profile: CONFIG.DEFAULT_PROFILE,   // who is home in daytime (engine.js › SELF_USE_PROFILES)
   },
   sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
+  sizeMode: "best", // which of the two proposed sizes: "best" (most value) or "quick" (shortest payback)
+  options: null,    // { quick, best } for the current bill, roof and price
   billTouched: false, // until the visitor sets their bill, the headline says which bill it assumes
   candidates: [],   // every geocoder match for the last typed address
   roof: null,       // { latlngs, src: "osm" | "drawn" } — building footprint, if known
@@ -1002,11 +1065,7 @@ const UI = {
         // know is whether anyone touches it at all, not how many pixels.
         Analytics.once("param_change:" + id, "param_change", { field: id });
         State.params[id] = parseFloat(input.value);
-        if (id === "peakpower") {
-          State.sizeAuto = false;
-          $("size-auto-badge").hidden = true;
-          $("size-auto-reset").hidden = false;
-        }
+        if (id === "peakpower") this.setSizeAuto(false);
         this.renderParamLabels();
         if (id === "angle" || id === "aspect") recalcSoon();
         else this.recalc();
@@ -1046,9 +1105,7 @@ const UI = {
 
     $("size-auto-reset").addEventListener("click", () => {
       Analytics.once("param_change:size_reset", "param_change", { field: "size_reset" });
-      State.sizeAuto = true;
-      $("size-auto-badge").hidden = false;
-      $("size-auto-reset").hidden = true;
+      this.setSizeAuto(true);
       this.recalc();
     });
     $("export-toggle").addEventListener("change", (e) => {
@@ -1076,6 +1133,46 @@ const UI = {
         this.renderParamLabels();
         this.recalc();
       });
+    });
+
+    // « En journée, quelqu'un est à la maison ? »
+    document.querySelectorAll(".profile-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        Analytics.once("param_change:profile", "param_change", { field: "profile" });
+        State.params.profile = chip.dataset.profile;
+        this.syncChoices();
+        this.recalc();
+      });
+    });
+    // The two proposed sizes: picking one returns to automatic sizing.
+    document.querySelectorAll(".size-opt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        Analytics.once("param_change:size_mode", "param_change", { field: "size_mode" });
+        State.sizeMode = btn.dataset.size;
+        this.setSizeAuto(true);
+        this.syncChoices();
+        this.recalc();
+      });
+    });
+    // A quote in hand
+    $("quote-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      Analytics.once("param_change:quote_check", "param_change", { field: "quote_check" });
+      this.renderQuote();
+    });
+    $("quote-apply").addEventListener("click", () => {
+      Analytics.once("param_change:quote_apply", "param_change", { field: "quote_apply" });
+      const q = this.readQuote();
+      if (!q) return;
+      // Through the sliders, so the values are clamped to their ranges.
+      $("peakpower").value = q.kw;
+      $("cost").value = q.perWc;
+      State.params.peakpower = parseFloat($("peakpower").value);
+      State.params.cost = parseFloat($("cost").value);
+      this.setSizeAuto(false);
+      this.renderParamLabels();
+      this.recalc();
+      $("location-label").focus({ preventScroll: false });
     });
 
     // « c'est la vôtre ? » under the headline: take the visitor to the bill.
@@ -1123,6 +1220,56 @@ const UI = {
     this.restoreFromUrl();
   },
 
+  setSizeAuto(on) {
+    State.sizeAuto = on;
+    $("size-auto-badge").hidden = !on;
+    $("size-auto-reset").hidden = on;
+  },
+
+  // Pressed state of the daytime chips and of the two sizes.
+  syncChoices() {
+    document.querySelectorAll(".profile-chip").forEach(c => {
+      const on = c.dataset.profile === State.params.profile;
+      c.classList.toggle("active", on);
+      c.setAttribute("aria-pressed", String(on));
+    });
+    document.querySelectorAll(".size-opt").forEach(b => {
+      const on = State.sizeAuto && b.dataset.size === State.sizeMode;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  },
+
+  // The quote typed in the form, or null: { kw, priceMAD, perWc, level }.
+  readQuote() {
+    const kw = parseFloat($("quote-kw").value), priceMAD = parseFloat($("quote-price").value);
+    const q = Quote.check({ kw, priceMAD });
+    return q ? { kw, priceMAD, ...q } : null;
+  },
+  renderQuote() {
+    const q = this.readQuote();
+    if (!q || !State.lastPerKw) { $("quote-result").hidden = true; return; }
+    const c = fmtDec(q.perWc), lo = fmtDec(CONFIG.COST_LOW_MAD_PER_WC, { trim: true });
+    const fair = fmtDec(CONFIG.COST_FAIR_MAD_PER_WC, { trim: true }), hi = fmtDec(CONFIG.COST_HIGH_MAD_PER_WC, { trim: true });
+    const Q = STR.quote;
+    const verdict = $("quote-verdict");
+    verdict.textContent = q.level === "low" ? Q.low(c, lo) : q.level === "fair" ? Q.fair(c, lo, fair)
+      : q.level === "high" ? Q.high(c, fair, hi) : Q.over(c, hi);
+    verdict.className = "quote-verdict " + q.level;
+    const p = State.params;
+    const roi = ROI.compute({
+      pv: PVGIS.scale(State.lastPerKw, q.kw), monthlyConsumption: Tariff.kwhFromBill(p.bill),
+      capexMAD: q.priceMAD, exportAllowed: p.exportAllowed, profile: p.profile,
+    });
+    // A payback past the panels' lifetime is no payback at all (as in the results).
+    $("quote-roi").textContent = Q.roi(fmtMAD(roi.annualSavingsMAD), isFinite(roi.paybackYr) && roi.paybackYr <= CONFIG.LIFETIME_YR
+      ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr) : STR.notAmortized(CONFIG.LIFETIME_YR));
+    const best = State.options && State.options.best.kw;
+    $("quote-size").hidden = !(best && Math.abs(best - q.kw) >= 1);
+    if (best) $("quote-size").textContent = Q.size(bidi(fmtDec(best, { trim: true }) + " " + STR.kwc));
+    $("quote-result").hidden = false;
+  },
+
   // "Utiliser ma position": on a phone, standing at home, this is the most
   // precise address there is — and the roof lookup then lands on the house.
   useMyPosition() {
@@ -1164,6 +1311,8 @@ const UI = {
       f: p.bill, a: p.angle, o: p.aspect, c: p.cost,
     });
     if (!State.sizeAuto) q.set("p", p.peakpower);
+    else if (State.sizeMode === "quick") q.set("m", "q");
+    if (p.profile !== CONFIG.DEFAULT_PROFILE) q.set("h", p.profile);
     if (p.exportAllowed) q.set("x", "1");
     Copro.toUrl(q);
     if (withLabel && l.label) q.set("n", l.label.slice(0, 120));
@@ -1192,10 +1341,11 @@ const UI = {
     take("c", "cost", "cost");
     if (q.has("p")) {
       take("p", "peakpower", "peakpower");
-      State.sizeAuto = false;
-      $("size-auto-badge").hidden = true;
-      $("size-auto-reset").hidden = false;
+      this.setSizeAuto(false);
     }
+    State.sizeMode = q.get("m") === "q" ? "quick" : "best";
+    State.params.profile = Object.hasOwn(CONFIG.SELF_USE_PROFILES, q.get("h")) ? q.get("h") : CONFIG.DEFAULT_PROFILE;
+    this.syncChoices();
     State.params.exportAllowed = q.get("x") === "1";
     $("export-toggle").checked = State.params.exportAllowed;
     Copro.fromUrl(q);
@@ -1581,15 +1731,28 @@ const UI = {
     // Derive consumption from the bill; auto-size the system if not overridden
     const consumption = Tariff.kwhFromBill(p.bill);
     const roofInfo = this.roofLayout();
-    const targetKw = Sizing.targetKw(consumption, State.lastPerKw.yieldPerKw);
+    // The two sizes worth proposing. Never more than the roof holds (when
+    // the roof is known), nor, in a building, more than this flat's share.
+    const sizing = { perKw: State.lastPerKw, monthlyKwh: consumption, costPerWc: p.cost, profile: p.profile, exportAllowed: p.exportAllowed };
+    const roofMax = Math.min(roofInfo ? roofInfo.capacityKw : Infinity, Copro.capKw(roofInfo));
+    const options = State.options = Sizing.options({ ...sizing, roofMaxKw: roofMax });
+    // What the home would take with no roof limit: the roof note's yardstick.
+    const targetKw = isFinite(roofMax) ? Sizing.options(sizing).best.kw : options.best.kw;
     if (State.sizeAuto) {
-      // Never recommend more than the roof holds (when the roof is known),
-      // nor, in a building, more than this flat's share of it.
-      const roofMax = Math.min(roofInfo ? Math.floor(roofInfo.capacityKw * 2) / 2 : Infinity, Copro.capKw(roofInfo));
-      p.peakpower = Sizing.autoKw(consumption, State.lastPerKw.yieldPerKw, roofMax);
+      p.peakpower = options[State.sizeMode].kw;
       $("peakpower").value = p.peakpower;
       this.renderParamLabels();
     }
+    const two = options.quick.kw !== options.best.kw;
+    $("size-options").hidden = !two;
+    if (two) {
+      for (const mode of ["best", "quick"]) {
+        const o = options[mode];
+        $("size-opt-" + mode).textContent = bidi(fmtDec(o.kw, { trim: true }) + " " + STR.kwc) + " · " +
+          (isFinite(o.roi.paybackYr) ? STR.years(fmtDec(o.roi.paybackYr), o.roi.paybackYr) : "—");
+      }
+    }
+    this.syncChoices();
 
     const pv = PVGIS.scale(State.lastPerKw, p.peakpower);
     const capexMAD = p.peakpower * 1000 * p.cost;
@@ -1598,6 +1761,7 @@ const UI = {
       monthlyConsumption: consumption,
       capexMAD,
       exportAllowed: p.exportAllowed,
+      profile: p.profile,
     });
     const fit = fitRoof || State.pvFitRoof;
     State.pvFitRoof = false;
@@ -1615,6 +1779,27 @@ const UI = {
     const paysBack = isFinite(roi.paybackYr) && roi.paybackYr <= CONFIG.LIFETIME_YR;
     $("chip-payback").textContent = paysBack ? STR.years(fmtDec(roi.paybackYr), roi.paybackYr) : "—";
     $("chip-capex").textContent = fmtMAD(capexMAD);
+    // Verdict: worth it, worth a look, or not yet, and then under which
+    // price or from which bill it would be.
+    const paybackText = isFinite(roi.paybackYr) ? STR.years(fmtDec(roi.paybackYr), roi.paybackYr) : "";
+    const verdict = Sizing.verdict(roi.paybackYr);
+    let verdictText = verdict === "go" ? STR.verdictGo(paybackText) : verdict === "maybe" ? STR.verdictMaybe(paybackText) : STR.verdictWait(paybackText);
+    if (verdict === "wait") {
+      const cost = Sizing.breakEvenCostPerWc({ kw: p.peakpower, roi });
+      const bill = Sizing.breakEvenBill({ perKw: State.lastPerKw, costPerWc: p.cost, profile: p.profile });
+      verdictText += STR.verdictCost(fmtDec(Math.floor(cost * 10) / 10)) + (bill && bill > p.bill ? STR.verdictBill(fmtMAD(bill)) : ".");
+    }
+    $("hero-verdict").textContent = verdictText;
+    $("hero-verdict").className = "hero-verdict " + verdict;
+    $("hero-verdict").hidden = false;
+    // The tranche effect, when the solar brings some months down a tranche.
+    $("hero-tranche").hidden = roi.monthsDownATranche === 0;
+    $("hero-tranche").textContent = STR.trancheLine(roi.monthsDownATranche, fmtDec(Math.round(roi.selfKwhValueMAD * 100) / 100, { digits: 2 }));
+    // What the daytime answer changes, at this size.
+    const savingsFor = (profile) => ROI.compute({ pv, monthlyConsumption: consumption, capexMAD, exportAllowed: p.exportAllowed, profile }).annualSavingsMAD;
+    $("profile-hint").textContent = STR.profileHint(fmtNum(savingsFor("away")), fmtMAD(savingsFor("home")));
+    if (!$("quote-result").hidden) this.renderQuote();
+
     const co2Tons = (pv.annualKwh * CONFIG.CO2_KG_PER_KWH) / 1000;
     $("co2-line").textContent = STR.co2Line(fmtDec(co2Tons), CONFIG.CO2_KG_PER_KWH.toLocaleString(NUM_LOCALE));
 
@@ -1758,8 +1943,8 @@ function fmtNum(n) {
 }
 // One decimal with a French decimal comma: 2,5 · 10,2. Whole values drop
 // the ",0" when `trim` is set (3 kWc, not 3,0 kWc).
-function fmtDec(n, { trim = false } = {}) {
-  return n.toLocaleString(NUM_LOCALE, { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : 1, maximumFractionDigits: 1 });
+function fmtDec(n, { trim = false, digits = 1 } = {}) {
+  return n.toLocaleString(NUM_LOCALE, { minimumFractionDigits: trim && Number.isInteger(n) ? 0 : digits, maximumFractionDigits: digits });
 }
 function fmtMAD(n) {
   return fmtNum(n) + " " + STR.mad;

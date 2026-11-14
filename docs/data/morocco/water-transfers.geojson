@@ -1,0 +1,181 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -6.4274,
+      34.516
+     ],
+     [
+      -6.4276,
+      34.4125
+     ],
+     [
+      -6.4181,
+      34.2953
+     ],
+     [
+      -6.626,
+      34.2677
+     ],
+     [
+      -6.6845,
+      34.1917
+     ],
+     [
+      -6.7504,
+      33.9379
+     ]
+    ]
+   },
+   "properties": {
+    "id": "ma-transfer-sebou-bouregreg",
+    "name": "Sebou – Bouregreg water highway",
+    "name_fr": "Autoroute de l'eau Sebou – Bouregreg",
+    "category": "transfer",
+    "status": "operational",
+    "year": 2023,
+    "flow_m3s": 15,
+    "length_km": 67,
+    "pumping_stations": 2,
+    "from_basin": "Sebou",
+    "to_basin": "Bouregreg (Sidi Mohammed Ben Abdellah dam)",
+    "region": "Kénitra · Rabat-Salé",
+    "note": "Intake at the Sebou guard dam; first water on 28 Aug 2023. 350–400 million m³ a year expected. Route drawn through the communes the pipe crosses (Ben Mansour, Mograne, Ameur Seflia, Haddada, Sidi Taïbi).",
+    "note_fr": "Prise au barrage de garde du Sebou ; premiers mètres cubes le 28 août 2023. 350 à 400 millions de m³ par an attendus. Tracé dessiné par les communes que traverse la conduite (Ben Mansour, Mograne, Ameur Seflia, Haddada, Sidi Taïbi).",
+    "precision": "approximate",
+    "source": "Le Matin · Médias24 · L'Économiste, 2023",
+    "source_url": "https://weekly.leconomiste.com/in-the-pipes-of-the-water-highway/"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -7.6374,
+      32.4756
+     ],
+     [
+      -7.8,
+      32.05
+     ],
+     [
+      -7.9892,
+      31.6258
+     ]
+    ]
+   },
+   "properties": {
+    "id": "ma-transfer-massira-marrakech",
+    "name": "Al Massira – Marrakech drinking-water main",
+    "name_fr": "Adduction Al Massira – Marrakech",
+    "category": "transfer",
+    "status": "operational",
+    "year": 2022,
+    "flow_m3s": 7,
+    "length_km": 125,
+    "pumping_stations": 3,
+    "pumping_mva": 27,
+    "from_basin": "Oum Er-Rbia (Al Massira dam)",
+    "to_basin": "Tensift (Marrakech)",
+    "region": "Settat · Marrakech",
+    "note": "ONEE, in service since 27 Mar 2022: pipe of 1,300–2,000 mm, three pumping stations totalling 27 MVA, seven tanks (93,000 m³).",
+    "note_fr": "ONEE, en service depuis le 27 mars 2022 : conduite de 1 300 à 2 000 mm, trois stations de pompage totalisant 27 MVA, sept réservoirs (93 000 m³).",
+    "precision": "approximate",
+    "source": "ONEE via Le Matin, 2022",
+    "source_url": "https://smartwatermagazine.com/news/smart-water-magazine/morocco-commissions-drinking-water-project-marrakech"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -6.7504,
+      33.9379
+     ],
+     [
+      -7.1267,
+      33.6229
+     ],
+     [
+      -7.5811,
+      33.2677
+     ],
+     [
+      -7.6199,
+      33.0024
+     ],
+     [
+      -7.6374,
+      32.4756
+     ]
+    ]
+   },
+   "properties": {
+    "id": "ma-transfer-bouregreg-massira",
+    "name": "Bouregreg – Al Massira water highway, phase II (planned)",
+    "name_fr": "Autoroute de l'eau phase II Bouregreg – Al Massira (prévue)",
+    "category": "transfer",
+    "status": "planned",
+    "flow_m3s": 30,
+    "length_km": 210,
+    "pumping_stations": 3,
+    "from_basin": "Bouregreg (Sidi Mohammed Ben Abdellah dam)",
+    "to_basin": "Oum Er-Rbia (Al Massira dam)",
+    "region": "Rabat · Casablanca-Settat",
+    "note": "Tender documents sent to contractors in March 2026: 209.6 km, three pumping stations, a 68 km tunnel, eleven irrigation outlets. Line drawn schematically between the two dams; the route is not published.",
+    "note_fr": "Cahier des charges envoyé aux entreprises en mars 2026 : 209,6 km, trois stations de pompage, un tunnel de 68 km, onze sorties pour l'irrigation. Ligne schématique entre les deux barrages ; le tracé n'est pas publié.",
+    "precision": "approximate",
+    "source": "TelQuel, 31 Mar 2026",
+    "source_url": "https://telquel.ma/2026/03/31/autoroute-de-leau-ce-que-le-cahier-des-charges-revele-de-la-phase-ii-du-projet_1981667"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.2907,
+      35.246
+     ],
+     [
+      -5.8398,
+      34.9416
+     ],
+     [
+      -5.7,
+      34.48
+     ],
+     [
+      -6.4274,
+      34.516
+     ]
+    ]
+   },
+   "properties": {
+    "id": "ma-transfer-laou-loukkos-sebou",
+    "name": "Laou – Loukkos – Sebou interconnection (study)",
+    "name_fr": "Interconnexion Laou – Loukkos – Sebou (à l'étude)",
+    "category": "transfer",
+    "status": "planned",
+    "from_basin": "Laou · Loukkos",
+    "to_basin": "Sebou, then Bouregreg and Al Massira",
+    "region": "Tanger-Tétouan · Kénitra",
+    "note": "Design study launched in 2025 for the northern end of the water highway: nearly 1 billion m³ a year could be moved from the Laou and Loukkos south to Al Massira, up to 45 m³/s. Schematic line through the Oued Laou, Oued El Makhazine and the Ouergha below Al Wahda.",
+    "note_fr": "Étude de conception lancée en 2025 pour le maillon nord de l'autoroute de l'eau : près d'un milliard de m³ par an mobilisables du Laou et du Loukkos vers Al Massira, jusqu'à 45 m³/s. Ligne schématique par l'oued Laou, le barrage Oued El Makhazine et l'Ouergha à l'aval d'Al Wahda.",
+    "precision": "approximate",
+    "source": "Médias24, 9 May 2025",
+    "source_url": "https://medias24.com/2025/05/09/un-projet-dinterconnexion-des-bassins-du-laou-du-loukkos-et-du-sebou-et-de-transfert-vers-le-barrage-al-massira-a-letude/"
+   }
+  }
+ ]
+}

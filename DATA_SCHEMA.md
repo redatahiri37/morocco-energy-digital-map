@@ -45,6 +45,9 @@ All files are GeoJSON `FeatureCollection`s in WGS84, with coordinates as
 | `credits` | no | Data credits in the footer. |
 | `creditsFr` | no | The same credits in French, when they have words to translate. |
 | `demand` | no | `{ source, sourceUrl, figures: [{ label, labelFr, value, unit }] }`. Dated national figures (peak, annual demand), shown as tiles under the KPIs with their source. `value` is a number. |
+| `damLevels` | no | File in `dataPath`: `{ <feature id>: { capacity_hm3, series: [{ date, fill_pct, source, source_url, note? }] } }`. Dated fill rates (% of capacity, 0–200: some dams exceed their normal level) for the dam chart in the popup. Every key is the `id` of a feature in the country's layers (a `water` dam or a hydro plant). `date` is `YYYY`, `YYYY-MM` or `YYYY-MM-DD`, kept as the source dates the reading. Keys starting with `_` are notes. |
+| `rainProjections` | no | File in `dataPath`: CMIP6 rainfall change, `{ source, source_url, baseline, change_pct: { "2030" \| "2050": { ssp245 \| ssp585: { p10, median, p90 } } } }` in % of the baseline. The dam chart and the basin popup turn it into inflow change with an elasticity of 2–3. |
+| `lenses` | no | `[{ id, label, labelFr, layers?, fuel?, note?, noteFr? }]`. The Energy / Water / Nexus switch above the layers. One must be `energy` (the default view). `layers` lists the layer ids a lens switches on (none: each layer's own default); `fuel` narrows the plants to one fuel type (Water: `hydro`). The `water` lens shows water figures in place of the plant tiles and hides the electricity mix; any other non-energy lens shows both. Shareable as `#lens=<id>`. |
 | `liveFlow` | no | `{ path, features, partner, partnerFr, source, sourceUrl }`. Live net flow on an interconnector, read from the Wattu Worker at `path` (`/flow/<route>`, see `solar/proxy/flow.js`). Shown as a KPI tile and in the popup of each line whose `id` is in `features`; every id must belong to a `grid` feature. |
 | `siteGrid` | no | `{ file, source, sourceUrl, updated }`. A national line file in `dataPath` that only **Site check** reads (not drawn), so distance-to-grid works anywhere in the country. LineString / MultiLineString features with a numeric `voltage_kv`; `status: "planned"` marks planned lines. |
 | `placeholder` | no | `true` means listed as "(soon)" and not validated. |
@@ -130,6 +133,47 @@ Data centres and submarine-cable landings. Points.
 | `status` | yes | As for `power`. `announced`, `planned` and `construction` render faded. |
 | `year` | recommended | Year energised, or target year. |
 | `investment_usd` | recommended | Number. Feeds "DC investment". |
+
+## `water`
+
+Water infrastructure: inter-basin transfers ("water highways"), dams and
+desalination plants. One kind, three categories; each category has its
+own geometry and its own mark (teal lines, triangles, hexagons). The point
+of the layer is the water–energy nexus: transfers and desalination are
+electrical loads, so the popup gives their pumping or plant power where a
+source states it, and for desalination an average load estimated at
+3.5 kWh/m³ when it doesn't.
+
+| Field | Required | Notes |
+|---|---|---|
+| `category` | yes | `transfer` (LineString or MultiLineString, drawn with flow arrows from the first vertex to the last), `dam` or `desalination` (Point). The validator rejects a geometry that doesn't match. |
+| `status` | yes | As for `power`. `operational` transfers are solid, the others dashed; `construction`, `announced` and `planned` points get a halo. |
+| `year` | recommended | Year commissioned, or target year. |
+| `region` | recommended | Shown under the title. |
+| `name_fr` | no | French name, shown on the French page. |
+| `note`, `note_fr` | no | One or two sentences of context, shown in the popup (`note_fr` on the French page). Say there when a position is approximate and why. |
+| `flow_m3s`, `length_km`, `pumping_stations`, `pumping_mva` | no | Transfers. Numbers. `flow_m3s` sets the line width. |
+| `from_basin`, `to_basin` | no | Transfers. Text. |
+| `storage_hm3`, `height_m` | no | Dams. Numbers; `storage_hm3` (million m³) sets the triangle's size. |
+| `river`, `purpose`, `purpose_fr` | no | Dams. Text; `purpose_fr` on the French page. |
+| `capacity_hm3_yr` | no | Desalination: million m³ a year, number or `null` when the operator publishes no per-plant figure. Sets the hexagon's size. |
+| `power_mw` | no | Desalination: installed or dedicated power, as the source states it (the `note` says which). |
+| `operator`, `energy_supply`, `energy_supply_fr` | no | Desalination. Text; `energy_supply_fr` on the French page. |
+
+## `basin`
+
+Hydraulic basins. Polygon or MultiPolygon, drawn as a faint wash and a
+dashed outline under every other data layer; no status (the status view
+leaves them alone). The popup sums the water and hydro assets inside the
+basin and lists the transfers that start or end in it.
+
+| Field | Required | Notes |
+|---|---|---|
+| `name` | yes | Popup title and label. |
+| `source` | yes | Where the outline comes from. |
+| `name_fr` | recommended | French name, shown on the French page. |
+| `area_km2` | recommended | Number. |
+| `precision` | recommended | `approximate` when the outline is not the official one. |
 
 ## `oim`
 
