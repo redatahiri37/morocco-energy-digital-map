@@ -162,6 +162,75 @@ Last reshuffle: **2026-04-19**.
   entry in `countries.config.js`. Same schema. Primary sources: EETC,
   NREA, GEM, Datacentermap EG.
 
+## 🔵 Later — from the IEA reports (added 2026-11-14)
+
+Source: `editorial-system/Energy_Policies_beyond_IEA_Countries_Morocco.pdf`
+(IEA, *Morocco 2019 Review*) and `editorial-system/EnergyandAI.pdf` (IEA,
+*Energy and AI*). The Morocco review is from 2019: use it for how the
+system works, and check every figure against a current source before it
+ships (tariffs have changed, the Algeria gas pipeline closed in 2021, and
+the low-voltage decree it calls pending passed as Law 82-21).
+
+### solar.wattu.org (estimator)
+
+- **Electricity-price rise option** — let the user add a yearly rise in
+  ONEE prices (0 / 2 / 4 %) to the payback and NPV figures. Why: the
+  review says household tariffs are still below what the power costs to
+  produce, and power still subsidises water inside ONEE (ch. 2; ch. 4, "Energy
+  prices and subsidies"), so today's prices are the low case. Keep 0 % as the default
+  so the headline figure isn't inflated. Owner: calc-engine-engineer.
+- **Solar water heater tip** — when most of a home's hot water comes from
+  an electric heater or butane, say that a solar water heater may pay
+  back sooner than extra panels. Why: PROMASOL targets 3 million m² of
+  solar water heaters by 2030 (ch. 5); the butane price has been frozen
+  for 20+ years under a subsidy due to be phased out. Needs a current
+  solar water heater price and the butane bottle price before shipping.
+- **Farmer mode (solar pumping)** — a third profile for irrigation: pump
+  kW, hours a day, irrigation months, butane/diesel replaced. Why: the
+  review cites subsidised solar pumping for plots under 5 ha and an AMEE
+  2018–2030 pumping strategy (ch. 5). Check that the subsidy still exists
+  and its current terms first.
+- **"Use more at midday" advice** — next to the 20 % export cap, suggest
+  moving the water heater, pool pump and washing machine to midday, and
+  show how much that raises self-consumption. The cap is already in the
+  engine (`solar/engine.js`, `EXPORT_CAP_PCT`); this is copy plus a
+  load-shift slider.
+- **Summer cooling message** — demand peaks in summer with air
+  conditioning, when panels produce the most (review ch. 1 and
+  ch. 7). Use it in the hero copy or the monthly chart caption.
+- **Green credit lines in the financing comparison** — add MorSEFF-type
+  green loans (the review names Banque Populaire and BMCE, ch. 4, Box 4.2)
+  if a current retail product and rate can be found.
+- **"Cut waste first" step** — an optional checklist (LED, AC setpoint,
+  water heater timer) before sizing, so the system isn't sized for
+  consumption the user is about to cut. Why: the review calls energy
+  efficiency the policy area facing the biggest implementation problems
+  (ch. 1).
+
+### energy.wattu.org (map + editorial)
+
+- **Industrial "super-peak" demand response** — tag the industrial sites
+  on the map that take ONEE's super-peak tariff (they drop off the
+  high-voltage grid during evening peaks in exchange for cheaper off-peak
+  power; review ch. 4, "Industry"). Direct evidence for thesis
+  sub-claim 3. Needs a current list of sites; the review gives none.
+- **Flexibility layer** — group pumped storage, solar-thermal plants with
+  storage and the Spain/Portugal links under one "flexibility" toggle,
+  with the review's 15 %-variable-renewables-by-2030 figure updated to a
+  current source.
+- **Data-centre grid-delay context in Site check** — add a line to the
+  on-click Site check: the IEA estimates ~20 % of planned data-centre
+  projects worldwide risk grid delays, and new transmission takes 4–8
+  years (*Energy and AI*, executive summary). Supports "build where the
+  grid already is", which is what Site check answers.
+- **Counter-argument post** — *Energy and AI*: in emerging economies data
+  centres are only ~5 % of electricity demand growth to 2030; air
+  conditioning, motors and EVs grow more. Write the piece that faces this
+  head-on against the thesis ("compute load is the new industrial load").
+- **Energy–water notes** — add dry cooling (solar-thermal plants) and
+  renewable-powered desalination to the water layer's notes, from the
+  review's energy–water section.
+
 ## ⚪ Icebox — ideas to revisit
 
 - Live grid-frequency readout from ENTSO-E (ES adjacent zone as proxy).
