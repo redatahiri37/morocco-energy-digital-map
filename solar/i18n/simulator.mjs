@@ -188,9 +188,15 @@ export const PAIRS = [
   ["kWh / mois — moyenne long terme", "kWh / الشهر — معدل على سنين طويلة", "kWh / month — long-term average"],
   ["<h3>Gains cumulés sur 25 ans</h3>", "<h3>الربح المجموع على 25 عام</h3>", "<h3>Cumulative gains over 25 years</h3>"],
   ["après remboursement de l'investissement", "من بعد ما ترجع فلوس التركيب", "after repaying the investment"],
-  ["La courbe part du coût de l'installation et remonte avec les économies annuelles. Elle tient compte d'une baisse de rendement des panneaux de 0,5 % par an et d'une hausse des tarifs de 2 % par an.",
-   "المنحنى كيبدا من الثمن ديال التركيب وكيطلع مع التوفير ديال كل عام. حاسب نقص المردود ديال البلاكات ب0,5% فالعام وزيادة التعريفة ب2% فالعام.",
-   "The curve starts from the system's cost and climbs with yearly savings. It allows for a 0.5% yearly drop in panel output and a 2% yearly tariff rise."],
+  ["La courbe part du coût de l'installation et remonte avec les économies annuelles. Elle tient compte d'une baisse de rendement des panneaux de 0,5 % par an et de la hausse des tarifs choisie ci-dessous.",
+   "المنحنى كيبدا من الثمن ديال التركيب وكيطلع مع التوفير ديال كل عام. حاسب نقص المردود ديال البلاكات ب0,5% فالعام وزيادة التعريفة اللي ختاريتي لتحت.",
+   "The curve starts from the system's cost and climbs with yearly savings. It allows for a 0.5% yearly drop in panel output and the tariff rise picked below."],
+  ["<span class=\"rise-label\" id=\"rise-label\">Hausse du prix de l'électricité, par an&nbsp;:</span>",
+   "<span class=\"rise-label\" id=\"rise-label\">زيادة ثمن الضو فالعام:</span>",
+   "<span class=\"rise-label\" id=\"rise-label\">Electricity price rise, per year:</span>"],
+  ["Les tarifs résidentiels de l'ONEE restent sous le coût de production (AIE, revue du Maroc 2019)&nbsp;: une hausse est plus probable qu'une baisse, mais son rythme est inconnu. Ce choix change la courbe et la taille conseillée, celle qui rapporte le plus sur 25 ans. À taille égale, l'amortissement ne bouge pas&nbsp;: il est calculé aux prix d'aujourd'hui.",
+   "تعريفة ONEE ديال الديور باقا تحت الثمن اللي كتكلف بيه الكهرباء (الوكالة الدولية للطاقة، تقرير المغرب 2019): الزيادة أقرب من النقص، ولكن حتى واحد ما عارف بشحال. هاد الاختيار كيبدل المنحنى والحجم المقترح، اللي كيربح كثر على 25 عام. بنفس الحجم، المدة باش ترجع فلوسك ما كتبدلش: محسوبة بثمن اليوم.",
+   "ONEE's household tariffs are still below what the power costs to produce (IEA, Morocco 2019 review): a rise is likelier than a fall, but nobody knows how fast. This choice changes the curve and the suggested size, the one that earns most over 25 years. At a given size the payback does not move: it uses today's prices."],
 
   // ── disclaimer, next steps, installers
   ["<strong>Ceci est une estimation, pas un devis.</strong> Elle vous dit si le solaire vaut le coup chez vous. Pour un chiffre définitif, consultez un installateur.",

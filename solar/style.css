@@ -598,6 +598,22 @@ html:lang(zgh) * { letter-spacing: 0 !important; }
   position: relative;
   height: 240px;
 }
+
+/* « Hausse du prix de l'électricité » on the 25-year card */
+.rise-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: -4px 0 14px; font-size: 13px; color: var(--muted);
+}
+.rise-chips { display: inline-flex; gap: 6px; }
+.rise-chip {
+  min-width: 52px; min-height: 36px; padding: 6px 12px; border-radius: var(--w-radius-pill);
+  background: transparent; border: 1px solid var(--muted);
+  color: var(--text); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;
+  cursor: pointer; transition: background .15s, border-color .15s;
+}
+.rise-chip:hover { border-color: var(--orange); }
+.rise-chip:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.rise-chip.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
 .chart-foot {
   margin: 12px 0 0;
   font-size: 13px; color: var(--muted);

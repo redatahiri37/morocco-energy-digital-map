@@ -1019,6 +1019,7 @@ const State = {
     cost: CONFIG.DEFAULT_COST_MAD_PER_WC,
     exportAllowed: false,
     profile: CONFIG.DEFAULT_PROFILE,   // who is home in daytime (engine.js › SELF_USE_PROFILES)
+    tariffRise: CONFIG.TARIFF_INFLATION_YR, // yearly ONEE price rise, one of CONFIG.TARIFF_RISE_OPTIONS
   },
   sizeAuto: true,   // auto-recommend peakpower from the bill until user overrides
   sizeMode: "best", // which of the two proposed sizes: "best" (most value) or "quick" (shortest payback)
@@ -1105,6 +1106,14 @@ const UI = {
       Analytics.once("param_change:size_reset", "param_change", { field: "size_reset" });
       this.setSizeAuto(true);
       this.recalc();
+    });
+    document.querySelectorAll(".rise-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        Analytics.once("param_change:rise", "param_change", { field: "rise" });
+        State.params.tariffRise = parseFloat(chip.dataset.rise) / 100;
+        this.syncChoices();
+        this.recalc();
+      });
     });
     $("export-toggle").addEventListener("change", (e) => {
       Analytics.once("param_change:export", "param_change", { field: "export" });
@@ -1231,6 +1240,11 @@ const UI = {
       c.classList.toggle("active", on);
       c.setAttribute("aria-pressed", String(on));
     });
+    document.querySelectorAll(".rise-chip").forEach(c => {
+      const on = Math.abs(parseFloat(c.dataset.rise) / 100 - State.params.tariffRise) < 1e-9;
+      c.classList.toggle("active", on);
+      c.setAttribute("aria-pressed", String(on));
+    });
     document.querySelectorAll(".size-opt").forEach(b => {
       const on = State.sizeAuto && b.dataset.size === State.sizeMode;
       b.classList.toggle("active", on);
@@ -1257,7 +1271,7 @@ const UI = {
     const p = State.params;
     const roi = ROI.compute({
       pv: PVGIS.scale(State.lastPerKw, q.kw), monthlyConsumption: Tariff.kwhFromBill(p.bill),
-      capexMAD: q.priceMAD, exportAllowed: p.exportAllowed, profile: p.profile,
+      capexMAD: q.priceMAD, exportAllowed: p.exportAllowed, profile: p.profile, tariffRise: p.tariffRise,
     });
     $("quote-roi").textContent = Q.roi(fmtMAD(roi.annualSavingsMAD), isFinite(roi.paybackYr)
       ? STR.amortized(fmtDec(roi.paybackYr), roi.paybackYr) : STR.notAmortized(CONFIG.LIFETIME_YR));
@@ -1311,6 +1325,7 @@ const UI = {
     else if (State.sizeMode === "quick") q.set("m", "q");
     if (p.profile !== CONFIG.DEFAULT_PROFILE) q.set("h", p.profile);
     if (p.exportAllowed) q.set("x", "1");
+    if (p.tariffRise !== CONFIG.TARIFF_INFLATION_YR) q.set("t", Math.round(p.tariffRise * 100));
     Copro.toUrl(q);
     if (withLabel && l.label) q.set("n", l.label.slice(0, 120));
     // Safari throws past ~100 calls in 30 s; a lost update is harmless.
@@ -1342,6 +1357,9 @@ const UI = {
     }
     State.sizeMode = q.get("m") === "q" ? "quick" : "best";
     State.params.profile = Object.hasOwn(CONFIG.SELF_USE_PROFILES, q.get("h")) ? q.get("h") : CONFIG.DEFAULT_PROFILE;
+    // Only a rise the page offers: a link cannot make up its own.
+    const rise = parseFloat(q.get("t")) / 100;
+    State.params.tariffRise = CONFIG.TARIFF_RISE_OPTIONS.find(r => Math.abs(r - rise) < 1e-9) ?? CONFIG.TARIFF_INFLATION_YR;
     this.syncChoices();
     State.params.exportAllowed = q.get("x") === "1";
     $("export-toggle").checked = State.params.exportAllowed;
@@ -1720,7 +1738,7 @@ const UI = {
     const roofInfo = this.roofLayout();
     // The two sizes worth proposing. Never more than the roof holds (when
     // the roof is known), nor, in a building, more than this flat's share.
-    const sizing = { perKw: State.lastPerKw, monthlyKwh: consumption, costPerWc: p.cost, profile: p.profile, exportAllowed: p.exportAllowed };
+    const sizing = { perKw: State.lastPerKw, monthlyKwh: consumption, costPerWc: p.cost, profile: p.profile, exportAllowed: p.exportAllowed, tariffRise: p.tariffRise };
     const roofMax = Math.min(roofInfo ? roofInfo.capacityKw : Infinity, Copro.capKw(roofInfo));
     const options = State.options = Sizing.options({ ...sizing, roofMaxKw: roofMax });
     // What the home would take with no roof limit: the roof note's yardstick.
@@ -1749,6 +1767,7 @@ const UI = {
       capexMAD,
       exportAllowed: p.exportAllowed,
       profile: p.profile,
+      tariffRise: p.tariffRise,
     });
     this.renderRoof(roofInfo, { targetKw, yieldPerKw: State.lastPerKw.yieldPerKw, paybackYr: roi.paybackYr }, { fit: fitRoof });
     Copro.render({ roofInfo, yieldPerKw: State.lastPerKw.yieldPerKw, monthlyKwh: consumption, peakpower: p.peakpower });
