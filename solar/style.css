@@ -413,6 +413,46 @@ html:lang(zgh) * { letter-spacing: 0 !important; }
   font-weight: 600;
 }
 .bill-block input[type=range] { width: 100%; accent-color: var(--orange); }
+
+/* Verdict under the headline, and the tranche effect under the bill */
+.hero-verdict {
+  margin: 12px 0 0; padding: 9px 12px;
+  border-radius: 10px; border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  font-size: 14px; line-height: 1.45; color: #fff;
+}
+.hero-verdict.go { border-color: rgba(120,220,160,0.55); background: rgba(120,220,160,0.12); }
+.hero-verdict.wait { border-color: rgba(255,179,71,0.6); background: rgba(255,179,71,0.10); }
+.hero-tranche { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: var(--amber); }
+
+/* The two proposed sizes */
+.size-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -10px 0 22px; }
+.size-opt {
+  display: grid; gap: 2px; text-align: start;
+  padding: 9px 12px; border-radius: 10px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16);
+  color: #fff; font-size: 13px;
+  transition: background .15s, border-color .15s;
+}
+.size-opt b { font-weight: 600; }
+.size-opt span { color: rgba(255,255,255,0.72); font-variant-numeric: tabular-nums; }
+.size-opt:hover { background: rgba(255,255,255,0.12); }
+.size-opt.active { background: var(--orange); border-color: var(--orange); }
+.size-opt.active span { color: #fff; }
+
+/* « En journée, quelqu'un est à la maison ? » */
+.profile-block { margin-top: 18px; }
+.profile-label { display: block; font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+.profile-presets { display: grid; grid-template-columns: repeat(3, auto); gap: 6px; margin-bottom: 10px; }
+.profile-chip {
+  padding: 8px 6px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 10px;
+  color: #fff; font-size: 13px; font-weight: 500;
+  transition: background .15s, border-color .15s;
+}
+.profile-chip:hover { background: rgba(255,255,255,0.12); }
+.profile-chip.active { background: var(--orange); border-color: var(--orange); font-weight: 600; }
 .bill-block .param-hint { color: rgba(255,255,255,0.6); }
 
 .hero-source {
@@ -802,6 +842,33 @@ html[dir="rtl"] .seg-btn + .seg-btn { border-left: 0; border-right: 1px solid va
 .next-steps b { font-weight: 600; color: var(--text); font-size: 15px; }
 .next-steps li > span { color: var(--muted); font-size: 14px; line-height: 1.5; }
 
+/* Quote check */
+.quote-card {
+  margin-top: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.quote-card > .w-kicker { color: var(--orange-2); margin: 0 0 8px; }
+.quote-intro { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.quote-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; align-items: end; }
+.quote-form label { font-size: 13px; font-weight: 600; color: var(--text); grid-row: 1; }
+.quote-form input {
+  grid-row: 2; width: 100%; min-width: 0;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); color: var(--text); font: inherit; font-variant-numeric: tabular-nums;
+}
+.quote-form input:focus-visible { outline: 2px solid var(--orange); outline-offset: 1px; }
+.quote-form .pdf-btn { grid-column: 1 / -1; justify-self: start; margin: 10px 0 0; }
+.quote-result { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.quote-result p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: var(--text); }
+.quote-verdict { font-weight: 600; padding-inline-start: 10px; border-inline-start: 3px solid var(--border); }
+.quote-verdict.fair { border-color: #2E9E6B; }
+.quote-verdict.low, .quote-verdict.high { border-color: var(--orange); }
+.quote-verdict.over { border-color: #C0392B; }
+
 /* Installers */
 .installers-card {
   margin-top: 16px;
@@ -924,7 +991,8 @@ html:lang(ar) { --w-font-mono: var(--w-font-ui); }
   .summary-hint { display: none; }
 
   .finance-grid { grid-template-columns: 1fr; }
-  .chart-card, .finance-card, .next-card { padding: 16px; }
+  .chart-card, .finance-card, .next-card, .quote-card { padding: 16px; }
+  .profile-presets { grid-template-columns: 1fr; }
   .chart-header { flex-direction: column; gap: 2px; }
   .chart-sub { text-align: left; }
   #map, #map3d { height: 300px; }
@@ -941,7 +1009,7 @@ html:lang(ar) { --w-font-mono: var(--w-font-ui); }
 @media print {
   .topbar, .results-actions, .back-btn, #alt-addresses, .advanced, .roof-actions, #hero-bill-ask,
   .map-3d-btn, #map3d, .sun-bar,
-  #step1, .about, .installers-card, .site-footer nav, .help, .leaflet-control-container { display: none !important; }
+  #step1, .about, .installers-card, .quote-card, .site-footer nav, .help, .leaflet-control-container { display: none !important; }
   html, body { background: #fff; }
   .results-wrap { max-width: none; padding: 0; margin: 0; }
   .results-layout { display: block; }

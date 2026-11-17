@@ -31,6 +31,10 @@ jobs:
           node --check solar/pumping.js
           node --check solar/pompage/pompage.js
 
+      # The figures: tariff, savings, sizing, quote check.
+      - name: Engine tests
+        run: node solar/engine.test.mjs
+
       # The page builds its HTML from nodes (textContent, createElement): no
       # string, from OSM, a shared link or our own code, is parsed as HTML.
       - name: No HTML parsed from strings in the page scripts

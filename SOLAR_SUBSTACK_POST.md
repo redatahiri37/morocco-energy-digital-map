@@ -17,13 +17,14 @@ sales call.
 
 So I built a tool that just answers the question.
 
-**Why the numbers work.** ONEE's tariff is progressive: 0,90 MAD/kWh at
-the bottom, 1,60 MAD above 500 kWh a month. Solar doesn't displace your
-average kilowatt-hour — it displaces your most expensive one, from the
-top down. So the bigger your bill, the faster it pays:
+**Why the numbers work.** ONEE's tariff runs from 0,90 MAD/kWh at the
+bottom to 1,60 MAD above 510 kWh a month, and above 150 kWh the whole
+month is billed at the price of the tranche you reach. One kilowatt-hour
+too many reprices everything. So solar that brings you down a tranche
+saves more than the kilowatt-hours it replaces (Casablanca, 11 MAD/Wc):
 
-- 400 MAD/month → 2 kWc, ~2 375 MAD saved a year, ~10-year payback
-- 1 200 MAD/month → 5 kWc, ~7 458 MAD saved a year, ~8-year payback
+- 400 MAD/month → 1 kWc, ~1 700 MAD saved a year, ~7-year payback
+- 1 200 MAD/month → 4 kWc, ~5 600 MAD saved a year, ~8.5-year payback
 
 **How it works.** Type an address, get one number. The only control is
 your monthly bill — not kilowatt-hours, because that's what people

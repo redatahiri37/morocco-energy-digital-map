@@ -145,7 +145,7 @@ const r2 = (n) => Math.round(n * 100) / 100;
 
 export function oneeBill({ bill, kwh }) {
   if (bill) kwh = Tariff.kwhFromBill(bill); else bill = Tariff.billFromKwh(kwh);
-  const tranche = CONFIG.ONEE_TRANCHES.find(([upper]) => kwh <= upper);
+  const tranche = CONFIG.ONEE_TRANCHES[Tariff.trancheIndex(kwh)];
   return {
     monthly_kwh: r0(kwh),
     monthly_bill_mad: r0(bill),
@@ -193,10 +193,7 @@ export async function estimate({ city, bill, kwh }, { lang, fetchJrc }) {
   const consumption = bill ? Tariff.kwhFromBill(bill) : kwh;
   const monthlyBill = bill || Tariff.billFromKwh(kwh);
   const perKw = await perKwAt(city.lat, city.lon, fetchJrc);
-  const kwc = Sizing.autoKw(consumption, perKw.yieldPerKw);
-  const pv = PV.scale(perKw, kwc);
-  const capex = kwc * 1000 * CONFIG.DEFAULT_COST_MAD_PER_WC;
-  const roi = ROI.compute({ pv, monthlyConsumption: consumption, capexMAD: capex, exportAllowed: false });
+  const { kw: kwc, pv, capex, roi } = Sizing.options({ perKw, monthlyKwh: consumption }).best;
   const panels = Sizing.panels(kwc);
   const place = cityName(city, lang);
   const payback = Number.isFinite(roi.paybackYr) ? r1(roi.paybackYr) : null;
@@ -255,9 +252,9 @@ WHEN WATTU FIGURES CONTAIN AN ESTIMATE: in 4 to 6 short lines give the recommend
 WHEN THE CITY OR THE BILL IS MISSING: ask for it in one short question (a city is enough, never ask for an address). The estimate needs a city from the list below and the monthly electricity bill in dirhams (or kWh).
 
 FACTS
-- Production comes from PVGIS (European Commission). The system covers about ${Math.round(CONFIG.AUTOSIZE_COVER * 100)}% of the yearly consumption, 1 to 10 kWc, ${CONFIG.PANEL_KWP * 1000} Wc panels; a bigger system pays back more slowly because the surplus earns little.
+- Production comes from PVGIS (European Commission). The recommended size is the one that earns the most over ${CONFIG.LIFETIME_YR} years, ${CONFIG.SIZE_MIN_KW} to ${CONFIG.SIZE_MAX_KW} kWc, ${CONFIG.PANEL_KWP * 1000} Wc panels; a smaller system pays back faster, a bigger one more slowly because the surplus earns little. The simulator shows both.
 - Installed price assumed: ${CONFIG.DEFAULT_COST_MAD_PER_WC} MAD/Wc; quotes usually run 8 to 15 MAD/Wc.
-- ONEE residential tariff per month, VAT included: ${TRANCHES}. Solar first removes the most expensive kWh. Regional distributors (Lydec, Redal, Amendis, régies) use close tariffs.
+- ONEE residential tariff per month, VAT included: ${TRANCHES}. Up to ${CONFIG.SELECTIVE_ABOVE_KWH} kWh a month each tranche is billed at its own price; above, the whole month is billed at the price of the tranche reached (with ${CONFIG.SELECTIVE_TOLERANCE_KWH} kWh of tolerance on each bound), so solar that brings a home down a tranche lowers the price of every kWh still bought. Regional distributors (SRM, formerly Lydec, Redal, Amendis, régies) use close tariffs.
 - Law 82-21 (decree 2.25.100, 5 March 2026): under 11 kW a simple declaration is enough. The surplus may go to the grid up to ${Math.round(CONFIG.EXPORT_CAP_PCT * 100)}% of the year's production; the residential buy-back price is not published yet (reference about ${CONFIG.EXPORT_PRICE_MAD_PER_KWH} MAD/kWh at most), so using the power at home pays better than selling it.
 - Installers: Taqa Pro is the quality label of solar installers in Morocco (list on taqapro.ma). Advise at least three quotes for the same power, compared in MAD per Wc.
 - Batteries, off-grid homes, farms, pumping and businesses are outside what Wattu calculates: answer in general terms and say so.
