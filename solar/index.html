@@ -403,7 +403,18 @@
         <div class="chart-card">
           <div class="chart-header">
             <h3>Gains cumulés sur 25 ans</h3>
-            <span class="chart-sub">après remboursement de l'investissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">La courbe part du coût de l'installation et remonte avec les économies annuelles. Elle tient compte d'une baisse de rendement des panneaux de 0,5 % par an et d'une hausse des tarifs de 2 % par an.</span></button></span>
+            <span class="chart-sub">après remboursement de l'investissement<button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">La courbe part du coût de l'installation et remonte avec les économies annuelles. Elle tient compte d'une baisse de rendement des panneaux de 0,5 % par an et de la hausse des tarifs choisie ci-dessous.</span></button></span>
+          </div>
+          <!-- The yearly rise in ONEE prices: moves this curve and the
+               suggested size (most value over 25 years), not the payback. -->
+          <div class="rise-row" role="group" aria-labelledby="rise-label">
+            <span class="rise-label" id="rise-label">Hausse du prix de l'électricité, par an&nbsp;:</span>
+            <span class="rise-chips">
+              <button type="button" class="rise-chip" data-rise="0" aria-pressed="false">0&nbsp;%</button>
+              <button type="button" class="rise-chip active" data-rise="2" aria-pressed="true">2&nbsp;%</button>
+              <button type="button" class="rise-chip" data-rise="4" aria-pressed="false">4&nbsp;%</button>
+            </span>
+            <button type="button" class="help" aria-label="En savoir plus">?<span class="tip" role="tooltip">Les tarifs résidentiels de l'ONEE restent sous le coût de production (AIE, revue du Maroc 2019)&nbsp;: une hausse est plus probable qu'une baisse, mais son rythme est inconnu. Ce choix change la courbe et la taille conseillée, celle qui rapporte le plus sur 25 ans. À taille égale, l'amortissement ne bouge pas&nbsp;: il est calculé aux prix d'aujourd'hui.</span></button>
           </div>
           <div class="chart-wrap">
             <canvas id="cashflow-chart"></canvas>

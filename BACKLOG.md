@@ -173,12 +173,12 @@ the low-voltage decree it calls pending passed as Law 82-21).
 
 ### solar.wattu.org (estimator)
 
-- **Electricity-price rise option** — let the user add a yearly rise in
-  ONEE prices (0 / 2 / 4 %) to the payback and NPV figures. Why: the
-  review says household tariffs are still below what the power costs to
-  produce, and power still subsidises water inside ONEE (ch. 2; ch. 4, "Energy
-  prices and subsidies"), so today's prices are the low case. Keep 0 % as the default
-  so the headline figure isn't inflated. Owner: calc-engine-engineer.
+- ~~**Electricity-price rise option**~~ — *done 2026-11-17:* 0 / 2 / 4 %
+  a year chips on the 25-year gains card (`.rise-chip`, URL `t=`),
+  `tariffRise` in `ROI.compute` and `Sizing`. 2 % stays the default (it
+  was already `CONFIG.TARIFF_INFLATION_YR`), so the city pages and the
+  chat are unchanged. It moves the curve and the suggested size; at a
+  given size the payback (year one, today's prices) does not move.
 - **Solar water heater tip** — when most of a home's hot water comes from
   an electric heater or butane, say that a solar water heater may pay
   back sooner than extra panels. Why: PROMASOL targets 3 million m² of
