@@ -123,6 +123,10 @@ export const ZGH = new Map([
    "<small>ⴰⵜⵉⴳ ⵏ ⵓⵙⵔⵙ<button"],
   ["Prix posé estimé, matériel et pose compris, à <span id=\"capex-tip-cost\">11 MAD/Wc</span>. Modifiable dans les paramètres.",
    "ⴰⵜⵉⴳ ⵏ ⵓⵙⵔⵙ, ⵙ ⵉⵎⴰⵙⵙⵏ ⴷ ⵜⵡⵓⵔⵉ, ⵙ <span id=\"capex-tip-cost\">11 MAD/Wc</span>. ⵜⵣⵎⵔⴷ ⴰⴷ ⵜ ⵜⵙⵏⴼⵍⴷ ⴳ ⵉⵙⵖⵔⴰⵙ."],
+  // Built only from words this file already uses (ⵜⴰⴼⴰⵡⵜ, ⵖⴰⵙ, ⴱⵍⴰ, ⴰⵎⴰⵏ):
+  // « electricity only, without water ». Awaiting a native speaker.
+  ['<div class="param-hint bill-scope">Le montant de l\'électricité seule&nbsp;: sur une facture Lydec, Redal ou Amendis, sans l\'eau ni l\'assainissement.</div>',
+   '<div class="param-hint bill-scope">ⵜⴰⴼⴰⵡⵜ ⵖⴰⵙ, ⴱⵍⴰ ⴰⵎⴰⵏ (Lydec, Redal, Amendis).</div>'],
   ["Votre facture d'électricité mensuelle",
    "ⵜⴰⴼⴰⴽⵜⵓⵔⵜ ⵏ ⵜⴼⴰⵡⵜ ⵏⵏⴽ ⴳ ⵡⴰⵢⵢⵓⵔ"],
   ["<span class=\"pval\" id=\"bill-val\">500 MAD</span>",

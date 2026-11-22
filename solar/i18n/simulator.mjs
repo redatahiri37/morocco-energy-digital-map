@@ -105,6 +105,7 @@ export const PAIRS = [
    'الثمن التقريبي ديال التركيب، بالمعدات واليد العاملة، على حساب <span id="capex-tip-cost">11 درهم/واط</span>. تقدر تبدلو فالإعدادات.',
    'Estimated installed price, equipment and labour included, at <span id="capex-tip-cost">11 MAD/Wp</span>. You can change it in the settings.'],
   ["Votre facture d'électricité mensuelle", "فاتورة الضو ديالك فالشهر", "Your monthly electricity bill"],
+  ['<div class="param-hint bill-scope">Le montant de l\'électricité seule&nbsp;: sur une facture Lydec, Redal ou Amendis, sans l\'eau ni l\'assainissement.</div>', '<div class="param-hint bill-scope">غير ثمن الضو بوحدو: فالفاتورة ديال ليديك، ريضال ولا أمانديس، حيد الما والتطهير.</div>', '<div class="param-hint bill-scope">The electricity amount only: on a Lydec, Redal or Amendis bill, leave out water and sanitation.</div>'],
   ['<span class="pval" id="bill-val">500 MAD</span>', '<span class="pval" id="bill-val">500 درهم</span>', '<span class="pval" id="bill-val">500 MAD</span>'],
   ['data-bill="300" aria-pressed="false">300 MAD</button>', 'data-bill="300" aria-pressed="false">300 درهم</button>', 'data-bill="300" aria-pressed="false">300 MAD</button>'],
   ['data-bill="500" aria-pressed="true">500 MAD</button>', 'data-bill="500" aria-pressed="true">500 درهم</button>', 'data-bill="500" aria-pressed="true">500 MAD</button>'],
