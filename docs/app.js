@@ -3521,10 +3521,14 @@
   const sheetOn = ()=>SHEET_MQ.matches;
   function sheetHeights(){
     const H = layout.clientHeight;
-    const anchor = overview ? $("#overviewLegend") : !$("#mixSection").hidden ? $("#mixBar") : $(".search-section");
+    // Shown, not just un-`hidden`: the water lens hides the mix through CSS
+    // (style.css .lens-water), and a hidden anchor measures 0, which made
+    // the peek negative and left the sheet stuck over the whole map.
+    const shown = (sel)=>{ const el = $(sel); return el && el.getClientRects().length ? el : null; };
+    const anchor = overview ? $("#overviewLegend") : shown("#mixBar") || shown("#lensSection") || $(".search-section");
     // The anchor's bottom, measured from the top of the sheet's content.
     const below = anchor.getBoundingClientRect().bottom - panelEl.getBoundingClientRect().top + panelEl.scrollTop;
-    const peek = Math.round(Math.min(H * 0.45, below + 12));
+    const peek = Math.round(Math.max(64, Math.min(H * 0.45, below + 12)));
     return { peek, half: Math.max(peek, Math.round(H * 0.55)), full: H - 12 };
   }
   function setSheet(stop){
@@ -3581,7 +3585,7 @@
   window.addEventListener("resize", ()=>{ if(sheetOn()) setSheet(sheetStop); });
   // The peek follows what it shows: mix rendered, overview on or off, language.
   const sheetObserver = new ResizeObserver(()=>{ if(sheetOn()) setSheet(sheetStop); });
-  [".search-section", "#mixSection", "#overviewSection"].forEach(s=>sheetObserver.observe($(s)));
+  [".search-section", "#lensSection", "#mixSection", "#overviewSection"].forEach(s=>sheetObserver.observe($(s)));
   sheetHandle.addEventListener("click", ()=>{
     setSheet(SHEET_STOPS[(SHEET_STOPS.indexOf(sheetStop) + 1) % SHEET_STOPS.length]);
   });
