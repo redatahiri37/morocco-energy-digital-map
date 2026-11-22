@@ -59,7 +59,15 @@ const CONFIG = {
 
   // Financial
   DEGRADATION_PCT_YR: 0.005,   // 0.5%/yr module degradation
-  TARIFF_INFLATION_YR: 0.02,   // assume 2%/yr tariff drift
+  // Yearly rise in ONEE prices, in the 25-year cashflow and NPV only (the
+  // payback is year one, at today's prices). The visitor can pick one of
+  // TARIFF_RISE_OPTIONS; TARIFF_INFLATION_YR is the default. Household
+  // tariffs are still below what the power costs to produce, and power
+  // cross-subsidises water inside ONEE (IEA, Energy Policies Beyond IEA
+  // Countries: Morocco 2019, ch. 2 and 4): a rise is likelier than a fall,
+  // but its size is a guess, hence a choice rather than a figure.
+  TARIFF_INFLATION_YR: 0.02,
+  TARIFF_RISE_OPTIONS: [0, 0.02, 0.04],
   DISCOUNT_RATE: 0.05,         // for NPV
   LIFETIME_YR: 25,
   OPEX_PCT_CAPEX_YR: 0.01,     // 1%/yr O&M as % of capex
@@ -279,7 +287,7 @@ const Tariff = {
 
 // ── ROI ────────────────────────────────────────────
 const ROI = {
-  compute({ pv, monthlyConsumption, capexMAD, exportAllowed, profile }) {
+  compute({ pv, monthlyConsumption, capexMAD, exportAllowed, profile, tariffRise = CONFIG.TARIFF_INFLATION_YR }) {
     // pv.monthlyKwh: production per month, kWh
     const annualPv = pv.annualKwh;
     const annualCons = monthlyConsumption * 12;
@@ -318,13 +326,13 @@ const ROI = {
     const netYear1 = annualSavingsMAD - opex;
     const paybackYr = netYear1 > 0 ? capexMAD / netYear1 : Infinity;
 
-    // 25-yr cashflow with degradation, tariff inflation, opex
+    // 25-yr cashflow with degradation, the yearly tariff rise, opex
     const cashflow = [];
     let cumulative = -capexMAD;
     cashflow.push({ year: 0, net: -capexMAD, cumulative });
     for (let y = 1; y <= CONFIG.LIFETIME_YR; y++) {
       const degrade = Math.pow(1 - CONFIG.DEGRADATION_PCT_YR, y - 1);
-      const inflate = Math.pow(1 + CONFIG.TARIFF_INFLATION_YR, y - 1);
+      const inflate = Math.pow(1 + tariffRise, y - 1);
       const revenue = annualSavingsMAD * degrade * inflate;
       const net = revenue - opex;
       cumulative += net;
@@ -374,14 +382,14 @@ const Finance = {
 // `best` is the simulator's, the city pages' and the chat's default.
 const Sizing = {
   // Every size with its figures: [{ kw, capex, pv, roi }], smallest first.
-  evaluate({ perKw, monthlyKwh, costPerWc = CONFIG.DEFAULT_COST_MAD_PER_WC, roofMaxKw = Infinity, profile, exportAllowed = false }) {
+  evaluate({ perKw, monthlyKwh, costPerWc = CONFIG.DEFAULT_COST_MAD_PER_WC, roofMaxKw = Infinity, profile, exportAllowed = false, tariffRise }) {
     const step = CONFIG.SIZE_STEP_KW;
     const max = Math.max(CONFIG.SIZE_MIN_KW, Math.min(CONFIG.SIZE_MAX_KW, Math.floor(roofMaxKw / step) * step));
     const out = [];
     for (let kw = CONFIG.SIZE_MIN_KW; kw <= max + 1e-9; kw += step) {
       const pv = PV.scale(perKw, kw);
       const capex = kw * 1000 * costPerWc;
-      out.push({ kw, capex, pv, roi: ROI.compute({ pv, monthlyConsumption: monthlyKwh, capexMAD: capex, exportAllowed, profile }) });
+      out.push({ kw, capex, pv, roi: ROI.compute({ pv, monthlyConsumption: monthlyKwh, capexMAD: capex, exportAllowed, profile, tariffRise }) });
     }
     return out;
   },

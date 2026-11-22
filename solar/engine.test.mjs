@@ -68,6 +68,19 @@ ok("break-even bill: pays back there, not 25 MAD below", bb !== null
   && Sizing.options({ perKw, monthlyKwh: Tariff.kwhFromBill(bb) }).quick.roi.paybackYr <= CONFIG.PAYBACK_BREAKEVEN_YR
   && Sizing.options({ perKw, monthlyKwh: Tariff.kwhFromBill(bb - 25) }).quick.roi.paybackYr > CONFIG.PAYBACK_BREAKEVEN_YR, String(bb));
 
+// ── Tariff rise: the 25-year figures move, the payback does not ───────
+const rise = (t) => roi(3, t === undefined ? {} : { tariffRise: t });
+ok("default tariff rise is the 2 % CONFIG value", near(rise().npv, rise(0.02).npv) && CONFIG.TARIFF_RISE_OPTIONS.includes(CONFIG.TARIFF_INFLATION_YR));
+ok("a steeper rise raises NPV and lifetime savings", rise(0).npv < rise(0.02).npv && rise(0.02).npv < rise(0.04).npv
+  && rise(0).lifetimeSavingsMAD < rise(0.04).lifetimeSavingsMAD);
+ok("payback and year-one savings ignore the rise", near(rise(0).paybackYr, rise(0.04).paybackYr) && near(rise(0).annualSavingsMAD, rise(0.04).annualSavingsMAD));
+ok("0 %: every year earns year one's savings less degradation", near(rise(0).cashflow[25].net + 3 * 11000 * CONFIG.OPEX_PCT_CAPEX_YR,
+  rise(0).annualSavingsMAD * Math.pow(1 - CONFIG.DEGRADATION_PCT_YR, 24)));
+ok("sizing passes the rise through", near(Sizing.options({ perKw, monthlyKwh: cons, tariffRise: 0.04 }).all[4].roi.npv,
+  ROI.compute({ pv: PV.scale(perKw, 3), monthlyConsumption: cons, capexMAD: 33000, exportAllowed: false, tariffRise: 0.04 }).npv));
+ok("a steeper rise never proposes a smaller best size", Sizing.options({ perKw, monthlyKwh: cons, tariffRise: 0.04 }).best.kw
+  >= Sizing.options({ perKw, monthlyKwh: cons, tariffRise: 0 }).best.kw);
+
 // ── Quote ─────────────────────────────────────────────────────────────
 ok("quote levels", Quote.check({ kw: 3, priceMAD: 21000 }).level === "low" && Quote.check({ kw: 3, priceMAD: 33000 }).level === "fair"
   && Quote.check({ kw: 3, priceMAD: 42000 }).level === "high" && Quote.check({ kw: 3, priceMAD: 60000 }).level === "over");
