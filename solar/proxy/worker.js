@@ -21,11 +21,17 @@
  *   → { at, net_import_mw }: the Spain–Morocco interconnector now, from
  *     REE, for the energy map. Contract in flow.js.
  *
+ *   GET /et0?lat=..&lon=..
+ *   → { et0_mm_day: [12], elevation_m, source }: a field's reference
+ *     evapotranspiration (FAO-56, from PVGIS's typical year), for the
+ *     solar pumping simulator. Contract in et0.js.
+ *
  * Deploy: automatic on main (.github/workflows/worker.yml). See ../README.md "Proxy operations".
  */
 
 import { handleChat } from "./chat.js";
 import { handleFlow } from "./flow.js";
+import { handleEt0 } from "./et0.js";
 
 const UPSTREAM = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 
@@ -396,6 +402,10 @@ export default {
 
     if (url.pathname === "/flow/es-ma") {
       return handleFlow(request, env, { corsHeaders, errorResponse, rateLimited });
+    }
+
+    if (url.pathname === "/et0") {
+      return handleEt0(request, env, { corsHeaders, errorResponse, rateLimited });
     }
 
     if (request.method !== "GET") {

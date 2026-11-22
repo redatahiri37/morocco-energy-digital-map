@@ -1,0 +1,41 @@
+{
+ "country": "MA",
+ "variable": "annual precipitation",
+ "baseline": "1995-2014",
+ "source": "World Bank Climate Change Knowledge Portal, CMIP6 0.25° ensemble (x0.25), national mean",
+ "source_fr": "Banque mondiale, Climate Change Knowledge Portal, ensemble CMIP6 0,25°, moyenne nationale",
+ "source_url": "https://climateknowledgeportal.worldbank.org/country/morocco/climate-data-projections",
+ "retrieved": "2026-11-13",
+ "note": "Change of each ensemble percentile against the same percentile's 1995-2014 climatology. 2030 = 2020-2039 mean, 2050 = 2040-2059 mean.",
+ "baseline_mm": {
+  "p10": 289.24,
+  "median": 295.65,
+  "p90": 317.42
+ },
+ "change_pct": {
+  "2030": {
+   "ssp245": {
+    "p10": -15.6,
+    "median": -5.3,
+    "p90": 7.8
+   },
+   "ssp585": {
+    "p10": -16.6,
+    "median": -5.8,
+    "p90": 2.6
+   }
+  },
+  "2050": {
+   "ssp245": {
+    "p10": -22.3,
+    "median": -9.5,
+    "p90": 1.0
+   },
+   "ssp585": {
+    "p10": -28.4,
+    "median": -16.4,
+    "p90": -1.8
+   }
+  }
+ }
+}
