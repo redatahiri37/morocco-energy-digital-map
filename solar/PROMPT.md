@@ -80,7 +80,7 @@ The user should be able to say all of these after using the tool:
 | 301–500 | 1.3817 |
 | > 500 | 1.5958 |
 
-Up to 150 kWh/mo the billing is progressive (each tranche at its own price). Above 150 kWh/mo it is **selective**: the whole month is billed at the price of the tranche reached, with a 10 kWh tolerance per tranche (so the price changes above 210, 310 and 510 kWh). The bill jumps at each threshold, so a solar kWh that brings the month back under one is worth far more than its tranche price. The saving is always the bill difference — that is where the money is. (Until November 2026 the engine billed every tranche at its own price above 150 kWh too, which understated both the bill and the saving.)
+Progressive up to 150 kWh/mo (each tranche at its own price). Above, **selective billing: the whole month at the price of the tranche reached**, with 10 kWh of tolerance on each bound (real bounds 151–210, 211–310, 311–510, > 510). PV that brings a month down a tranche reprices every kWh still bought — that is where the money is. Rule taken from distributors' grids; confirm on a real bill.
 
 ### Installed cost (residential grid-tied, 2025)
 - Range 8.5–14 MAD/Wc turnkey. Central 11 MAD/Wc.
@@ -95,7 +95,8 @@ Up to 150 kWh/mo the billing is progressive (each tranche at its own price). Abo
 ### Assumptions in `CONFIG` (easy to swap)
 - Degradation 0.5 %/yr, tariff inflation 2 %/yr, discount rate 5 %, life 25 yr, opex 1 %/yr of capex.
 - Grid CO₂ factor 0.71 kg/kWh (ONEE 2024 mix).
-- Self-consumption ratio heuristic: `0.30 + 0.55·exp(-0.9·(prod/cons))`. Placeholder — replace with measured MA household load-curve data when available.
+- Self-consumption: `D·cons·(1 − exp(−r/D))` with `D` picked by the visitor (0.30 / 0.40 / 0.50, see `solar/README.md` › Model notes). Consumption follows `CONSUMPTION_SEASON`. Both are assumptions — replace with measured MA household load-curve data when available.
+- Sizing proposes two sizes (highest NPV, shortest payback) and a verdict; a quote can be checked against the market range.
 
 ## 8. Engineering best practices
 

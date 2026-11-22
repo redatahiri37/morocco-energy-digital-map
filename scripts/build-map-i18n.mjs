@@ -53,6 +53,7 @@ html = html.replace(/\b(href|src)="\.\/([^"]+)"/g, '$1="../$2"');
 const KEEP = new Set(["wattu", "Energy × Digital", "GitHub", "Reda Tahiri", "OpenInfraMap", "OpenFreeMap",
   "OpenStreetMap", "DATA_SOURCES.md", "ASSUMPTIONS.md", "tiles.openfreemap.org", "openinframap.org",
   "solar-pvgis.redatahiri.workers.dev", "demanda.ree.es", "PVGIS",
+  "Cloudflare Web Analytics", "static.cloudflareinsights.com", "cloudflareinsights.com",
   "source", "source_url", "precision", "/docs/data/morocco/", "enersite.app", "website",
   "width=device-width,initial-scale=1.0",
   ") via MapLibre."]);   // the same words in French

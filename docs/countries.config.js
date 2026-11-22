@@ -12,6 +12,9 @@
 //   grid        transmission lines — styled by status and voltage_kv
 //   industrial  industrial consumers — coloured by palette.sectors
 //   digital     data centres + cable landings — coloured by palette.providers
+//   basin       hydraulic basins (polygons), a wash under the other layers
+//   water       water transfers (lines), dams and desalination plants (points);
+//               `category` per feature: transfer / dam / desalination
 //   oim         OpenInfraMap live grid tiles (worldwide; file: null)
 //   oim-plants  OpenInfraMap live OSM power plants (worldwide; file: null).
 //               Not counted in the KPIs; `visible: false` starts it unticked.
@@ -36,6 +39,13 @@
 //   creditsFr:      the same in French, when it has words to translate
 //   demand:         { source, sourceUrl, figures: [{ label, labelFr, value, unit }] } —
 //                   dated national figures, tiles under the KPIs
+//   damLevels:      file in dataPath, { <feature id>: { capacity_hm3, series: [{ date,
+//                   fill_pct, source, source_url }] } } — the dam chart's readings
+//   rainProjections: file in dataPath, CMIP6 rainfall change (change_pct[year][ssp])
+//                   — the dam chart's and basin popup's projections
+//   lenses:         [{ id, label, labelFr, layers?, fuel?, note?, noteFr? }] — the
+//                   Energy / Water / Nexus switch above the layers; `layers`
+//                   lists the ids switched on (none: each layer's default)
 //   liveFlow:       { path, features, partner, partnerFr, source, sourceUrl } — live flow
 //                   on the interconnectors whose ids are in `features`, read
 //                   from the Wattu Worker at `path`
@@ -143,6 +153,24 @@ window.COUNTRIES = {
       { key:"Government of Morocco", short:"Government" },
       { key:"ADD (Agence de Développement du Digital)", short:"ADD" }
     ],
+    // Read by the dam chart and the basin popup (not drawn): dated fill
+    // readings by feature id, and CMIP6 rainfall change for 2030 / 2050.
+    damLevels: "dam-levels.json",
+    rainProjections: "rain-projections.json",
+    // Perspectives above the layer list. Energy keeps each layer's default;
+    // Water shows the water layers with the grid and the hydro plants;
+    // Nexus shows both systems together.
+    lenses: [
+      { id: "energy", label: "Energy", labelFr: "Énergie" },
+      { id: "water", label: "Water", labelFr: "Eau", fuel: "hydro",
+        layers: ["basins", "water-transfers", "dams", "desalination", "power-plants", "oim-grid"],
+        note: "Water highways, new dams and desalination, with the grid and the hydro plants. Transfers and desalination are electrical loads.",
+        noteFr: "Autoroutes de l'eau, nouveaux barrages et dessalement, avec le réseau et les centrales hydrauliques. Transferts et dessalement sont des charges électriques." },
+      { id: "nexus", label: "Nexus", labelFr: "Nexus",
+        layers: ["power-plants", "oim-grid", "interconnectors", "planned-corridors", "water-transfers", "dams", "desalination", "industrial", "digital", "datacentres"],
+        note: "Energy, water, industry and data centres together: where new loads meet the grid.",
+        noteFr: "Énergie, eau, industrie et data centers ensemble : là où les nouvelles charges rencontrent le réseau." }
+    ],
     layers: [
       { id: "power-plants", file: "power-plants.geojson", kind: "power",
         title: "Power plants", titleFr: "Centrales électriques",
@@ -174,6 +202,31 @@ window.COUNTRIES = {
         sourceFr: "Xlinks · MIICEN · schéma directeur 2018 du Groupe Banque mondiale",
         sourceUrl: "https://datacatalog.worldbank.org/",
         updated: "2026-04" },
+      // Water–energy nexus: inter-basin transfers, new dams, desalination.
+      { id: "basins", file: "basins.geojson", kind: "basin", visible: false,
+        title: "Hydraulic basins", titleFr: "Bassins hydrauliques",
+        source: "HydroBASINS v1c level 6 (Lehner & Grill 2013), grouped into the ten basin agencies by river; approximate, not the official limits",
+        sourceFr: "HydroBASINS v1c niveau 6 (Lehner & Grill 2013), regroupés par fleuve dans les dix agences de bassin ; approximatif, pas les limites officielles",
+        sourceUrl: "https://www.hydrosheds.org/products/hydrobasins",
+        updated: "2026-11" },
+      { id: "water-transfers", file: "water-transfers.geojson", kind: "water", visible: false,
+        title: "Water highways", titleFr: "Autoroutes de l'eau",
+        source: "Ministry of Equipment and Water and ONEE figures as reported by Le Matin, Médias24, TelQuel, L'Économiste; routes schematic",
+        sourceFr: "Chiffres du ministère de l'Équipement et de l'Eau et de l'ONEE repris par Le Matin, Médias24, TelQuel, L'Économiste ; tracés schématiques",
+        sourceUrl: "https://telquel.ma/2026/03/31/autoroute-de-leau-ce-que-le-cahier-des-charges-revele-de-la-phase-ii-du-projet_1981667",
+        updated: "2026-11" },
+      { id: "dams", file: "dams.geojson", kind: "water", visible: false,
+        title: "New dams (2020–2027 programme)", titleFr: "Nouveaux barrages (programme 2020–2027)",
+        source: "Ministry of Equipment and Water figures as reported by Le360, Médias24, Hespress; positions OpenStreetMap or commune (approximate)",
+        sourceFr: "Chiffres du ministère de l'Équipement et de l'Eau repris par Le360, Médias24, Hespress ; positions OpenStreetMap ou commune (approximatives)",
+        sourceUrl: "https://fr.le360.ma/economie/un-stockage-supplementaire-de-49-milliards-de-metres-cubes-deau-voici-ce-que-lon-sait-sur-les_HOQ2O6GTKRAP5DX7TPON67EHAA/",
+        updated: "2026-11" },
+      { id: "desalination", file: "desalination.geojson", kind: "water", visible: false,
+        title: "Desalination plants", titleFr: "Stations de dessalement",
+        source: "ONEE · OCP Green Water · press (LesEco, Le360, Le Desk); positions OpenStreetMap or site (approximate)",
+        sourceFr: "ONEE · OCP Green Water · presse (LesEco, Le360, Le Desk) ; positions OpenStreetMap ou site (approximatives)",
+        sourceUrl: "https://www.fedenerg.ma/2026/07/28/onee-mise-en-service-des-ouvrages-400-kv-destines-a-lalimentation-electrique-de-la-station-de-dessalement-de-la-region-casablanca-settat/",
+        updated: "2026-11" },
       { id: "industrial", file: "industrial.geojson", kind: "industrial",
         title: "Industry", titleFr: "Industrie",
         source: "OCP · Holcim · SONASID · Renault · public disclosures",

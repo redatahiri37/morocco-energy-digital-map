@@ -20,12 +20,15 @@ const DOCS = join(ROOT, "docs");
 // The schema. DATA_SCHEMA.md documents exactly this; the drift check at the
 // bottom fails if a required field below is missing from that document.
 // ---------------------------------------------------------------------------
-const KINDS = ["power", "grid", "industrial", "digital", "oim", "oim-plants"];
+const KINDS = ["power", "grid", "industrial", "digital", "water", "basin", "oim", "oim-plants"];
 const LIVE_KINDS = ["oim", "oim-plants"];  // OpenInfraMap tiles, no file
 
 const POINT_STATUS = ["operational", "construction", "announced", "planned", "idle"];
 // The grid renderer only draws these three; any other status is invisible.
 const GRID_STATUS = ["operational", "planned", "idle"];
+// Water infrastructure (`water`): a transfer is a line, a dam or a
+// desalination plant a point.
+const WATER_GEOMETRY = { transfer: ["LineString", "MultiLineString"], dam: ["Point"], desalination: ["Point"] };
 const FUELS = ["solar", "wind", "hydro", "coal", "gas", "oil", "nuclear", "geothermal", "biomass", "waste"];
 
 const num = (v) => typeof v === "number" && Number.isFinite(v);
@@ -39,7 +42,8 @@ const hasWords = (s) => s.split(/[\s,;:()·/]+/).some((w) => !/[.\d]/.test(w) &&
 
 // Optional fields that must be numbers whenever present, in every kind.
 const NUMERIC_OPTIONAL = ["investment_usd", "commissioning_year", "year", "units",
-  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw", "annual_generation_gwh", "annual_generation_year"];
+  "capacity_mw", "capacity_estimate_mw", "estimated_demand_mw", "annual_generation_gwh", "annual_generation_year",
+  "area_km2", "flow_m3s", "length_km", "pumping_stations", "pumping_mva", "storage_hm3", "height_m", "capacity_hm3_yr", "power_mw"];
 
 // Per kind: geometry types, required fields (with a test), recommended fields.
 export const SCHEMA = {
@@ -74,6 +78,19 @@ export const SCHEMA = {
       operator: str, category: str, capacity_estimate_mw: numOrNull,
     },
     recommended: ["id", "source_url", "precision", "year", "investment_usd"],
+  },
+  water: {
+    geometry: ["Point", "LineString", "MultiLineString"],
+    required: {
+      name: str, status: (v) => POINT_STATUS.includes(v), source: str,
+      category: (v) => Object.hasOwn(WATER_GEOMETRY, v),
+    },
+    recommended: ["id", "source_url", "precision", "year", "region"],
+  },
+  basin: {
+    geometry: ["Polygon", "MultiPolygon"],
+    required: { name: str, source: str },
+    recommended: ["id", "source_url", "precision", "name_fr", "area_km2"],
   },
 };
 
@@ -191,6 +208,10 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
       if (!g || !schema.geometry.includes(g.type)) { fail(fat, `geometry must be ${schema.geometry.join(" or ")}, got ${g && g.type}`); return; }
       const vs = vertices(g);
       if (!vs.every(isLngLat)) { fail(fat, "coordinates must be [lng, lat] in range"); return; }
+      // A water feature's category fixes its geometry: the renderer draws
+      // transfers as lines and the rest as points.
+      if (L.kind === "water" && Object.hasOwn(WATER_GEOMETRY, p.category) && !WATER_GEOMETRY[p.category].includes(g.type))
+        fail(fat, `a ${p.category} must be ${WATER_GEOMETRY[p.category].join(" or ")}, got ${g.type}`);
       for (const [field, test] of Object.entries(schema.required))
         if (!test(p[field])) fail(fat, `${field} ${field in p ? `invalid: ${JSON.stringify(p[field])}` : "missing"}`);
       for (const field of schema.recommended) if (p[field] == null) missingRec[field] = (missingRec[field] || 0) + 1;
@@ -210,6 +231,65 @@ for (const [key, c] of Object.entries(COUNTRIES)) {
     });
     for (const [field, n] of Object.entries(missingRec))
       warn(lat, `${n}/${fc.features.length} features lack recommended field "${field}"`);
+  }
+
+  // Water extras read by the dam chart and the basin popup.
+  const allIds = new Set();
+  for (const L of c.layers || []) {
+    if (!L.file || !existsSync(join(dir, L.file))) continue;
+    try { for (const f of JSON.parse(readFileSync(join(dir, L.file), "utf8")).features || []) if (f.properties && f.properties.id != null) allIds.add(String(f.properties.id)); } catch (e) { /* reported above */ }
+  }
+  const readExtra = (key) => {
+    const at2 = `${at}.${key}`;
+    if (c[key] === undefined) return null;
+    if (!str(c[key]) || !existsSync(join(dir, c[key]))) { fail(at2, `${c.dataPath}${c[key]} does not exist`); return null; }
+    try { return JSON.parse(readFileSync(join(dir, c[key]), "utf8")); }
+    catch (e) { fail(at2, `not valid JSON: ${e.message}`); return null; }
+  };
+  const levels = readExtra("damLevels");
+  if (levels) {
+    for (const [id, v] of Object.entries(levels)) {
+      if (id.startsWith("_")) continue;
+      const lat2 = `${c.dataPath}${c.damLevels} "${id}"`;
+      if (!allIds.has(id)) fail(lat2, "is not the id of a feature in this country's layers");
+      if (v.capacity_hm3 !== undefined && !num(v.capacity_hm3)) fail(lat2, "capacity_hm3 must be a number");
+      if (!Array.isArray(v.series) || !v.series.length) { fail(lat2, "series must be a non-empty list"); continue; }
+      v.series.forEach((r, i) => {
+        if (!/^\d{4}(-\d{2}(-\d{2})?)?$/.test(String(r.date))) fail(`${lat2} #${i}`, `date must be YYYY, YYYY-MM or YYYY-MM-DD, got ${JSON.stringify(r.date)}`);
+        if (!num(r.fill_pct) || r.fill_pct < 0 || r.fill_pct > 200) fail(`${lat2} #${i}`, `fill_pct must be a number from 0 to 200, got ${JSON.stringify(r.fill_pct)}`);
+        if (!str(r.source) || !/^https?:\/\//.test(r.source_url || "")) fail(`${lat2} #${i}`, "needs source and an http(s) source_url");
+      });
+    }
+  }
+  const rain = readExtra("rainProjections");
+  if (rain) {
+    const rat = `${c.dataPath}${c.rainProjections}`;
+    if (!str(rain.source) || !/^https:\/\//.test(rain.source_url || "")) fail(rat, "needs source and an https source_url");
+    for (const yr of ["2030", "2050"]) for (const ssp of ["ssp245", "ssp585"]) {
+      const v = rain.change_pct && rain.change_pct[yr] && rain.change_pct[yr][ssp];
+      if (!v || !["p10", "median", "p90"].every((k) => num(v[k]))) fail(rat, `change_pct.${yr}.${ssp} must have numeric p10, median and p90`);
+    }
+  }
+
+  // Lenses (Energy / Water / Nexus): a layer id that no longer exists would
+  // silently leave the lens without that layer.
+  if (c.lenses !== undefined) {
+    const lat = `${at}.lenses`;
+    if (!Array.isArray(c.lenses) || !c.lenses.length) fail(lat, "must be a non-empty list");
+    else {
+      const ids = new Set();
+      for (const l of c.lenses) {
+        const where = `${lat}.${l && l.id}`;
+        if (!l || !/^[a-z][a-z0-9-]*$/.test(l.id || "")) { fail(lat, `bad lens id ${JSON.stringify(l && l.id)}`); continue; }
+        if (ids.has(l.id)) fail(where, "duplicate lens id"); ids.add(l.id);
+        if (!str(l.label) || !str(l.labelFr)) fail(where, "needs label and labelFr");
+        if (l.layers !== undefined && (!Array.isArray(l.layers) || !l.layers.length)) fail(where, "layers must be a non-empty list of layer ids");
+        for (const id of l.layers || []) if (!seenIds.has(id)) fail(where, `"${id}" is not a layer of ${key}`);
+        if (l.fuel !== undefined && !FUELS.includes(l.fuel)) fail(where, `fuel must be one of the schema's fuel types, got ${JSON.stringify(l.fuel)}`);
+        if ((l.note !== undefined && !str(l.note)) || (l.noteFr !== undefined && !str(l.noteFr))) fail(where, "note and noteFr must be text");
+      }
+      if (!ids.has("energy")) fail(lat, `needs an "energy" lens, the default view`);
+    }
   }
 
   // A renamed interconnector would silently lose its live figure.
