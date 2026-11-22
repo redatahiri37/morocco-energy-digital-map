@@ -20,7 +20,11 @@ Please do not post a working exploit or a credential in a public issue.
   `docs/_headers` and `solar/_headers` (Cloudflare Pages):
   - scripts and styles from the site only, no `'unsafe-inline'`, no
     `eval`; the map's one inline script is allowed by its hash, which CI
-    checks;
+    checks. One exception: the Cloudflare Web Analytics beacon, which
+    Cloudflare injects at the edge (`static.cloudflareinsights.com`,
+    reporting to `cloudflareinsights.com`). Cloudflare's bot "JavaScript
+    detections" inline script stays refused: its ray id changes on every
+    request, so no hash can allow it;
   - every other host a page talks to (tiles, Nominatim, Overpass, the
     Worker) is listed, and anything else is refused;
   - no other site can frame the pages, hold a handle on their window or
