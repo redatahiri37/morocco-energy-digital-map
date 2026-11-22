@@ -13,12 +13,12 @@ what a roof would actually save them.
 
 So I built a free tool that does. Type an address, get one number.
 
-The part most people miss: ONEE's tariff is progressive, so solar
-displaces your *most expensive* kilowatt-hour first. The bigger your
-bill, the faster it pays.
+The part most people miss: above 150 kWh a month, ONEE bills the
+*whole month* at the price of the tranche you reach. Solar that brings
+you down a tranche saves more than the kilowatt-hours it replaces.
 
-→ 400 MAD/month: ~10-year payback
-→ 1 200 MAD/month: ~8 years
+→ 400 MAD/month: ~7-year payback
+→ 1 200 MAD/month: ~8.5 years
 
 No login, no email. I don't sell panels.
 

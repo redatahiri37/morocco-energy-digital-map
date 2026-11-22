@@ -80,7 +80,7 @@ The user should be able to say all of these after using the tool:
 | 301–500 | 1.3817 |
 | > 500 | 1.5958 |
 
-Selective billing above 150 kWh/mo (each tranche at its own price). PV displaces from the **top** tranche downward — that is where the money is.
+Progressive up to 150 kWh/mo (each tranche at its own price). Above, **selective billing: the whole month at the price of the tranche reached**, with 10 kWh of tolerance on each bound (real bounds 151–210, 211–310, 311–510, > 510). PV that brings a month down a tranche reprices every kWh still bought — that is where the money is. Rule taken from distributors' grids; confirm on a real bill.
 
 ### Installed cost (residential grid-tied, 2025)
 - Range 8.5–14 MAD/Wc turnkey. Central 11 MAD/Wc.
@@ -95,7 +95,8 @@ Selective billing above 150 kWh/mo (each tranche at its own price). PV displaces
 ### Assumptions in `CONFIG` (easy to swap)
 - Degradation 0.5 %/yr, tariff inflation 2 %/yr, discount rate 5 %, life 25 yr, opex 1 %/yr of capex.
 - Grid CO₂ factor 0.71 kg/kWh (ONEE 2024 mix).
-- Self-consumption ratio heuristic: `0.30 + 0.55·exp(-0.9·(prod/cons))`. Placeholder — replace with measured MA household load-curve data when available.
+- Self-consumption: `D·cons·(1 − exp(−r/D))` with `D` picked by the visitor (0.30 / 0.40 / 0.50, see `solar/README.md` › Model notes). Consumption follows `CONSUMPTION_SEASON`. Both are assumptions — replace with measured MA household load-curve data when available.
+- Sizing proposes two sizes (highest NPV, shortest payback) and a verdict; a quote can be checked against the market range.
 
 ## 8. Engineering best practices
 
